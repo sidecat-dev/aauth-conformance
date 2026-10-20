@@ -8,7 +8,7 @@ Execution: **passed**.
 
 Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. Loopback HTTP transport does not measure TLS, enrollment or discovery security.
 
-| Clause | Scope | aauth-go (`3ee320484111ea62efb097a41b6c28f9e84143f9`) | aauth-rust (`1d9fe0d2829059806cae92804d7b3dc0a544bd7d`) |
+| Clause | Scope | aauth-go (`3ee320484111ea62efb097a41b6c28f9e84143f9`) | aauth-rust (`b2f4b9e14ba721a36d11fb160bff8afb70e93e2e`) |
 | --- | --- | --- | --- |
 | [ps.person-endpoint](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-endpoint) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
 | [ps.person-structure](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (20 pass, 0 fail, 0 error, 0 unexercised) | pass (20 pass, 0 fail, 0 error, 0 unexercised) |
@@ -256,7 +256,7 @@ Pass means only the listed assertions passed, not the entire section. `adapter-c
 
 Executed 2026-10-20 against tracked-clean Go
 `3ee320484111ea62efb097a41b6c28f9e84143f9` and Rust
-`1d9fe0d2829059806cae92804d7b3dc0a544bd7d`: **12 shared scenarios, 109 passing
+`b2f4b9e14ba721a36d11fb160bff8afb70e93e2e`: **12 shared scenarios, 109 passing
 assertions per implementation, 218 total**. Rust was built from an independent
 clean clone at that exact commit. Full requests, responses and independently
 observed JWT claims are in [the JSON report](person-server-direct.json).
@@ -298,3 +298,8 @@ configuration. No statement is made about TLS, discovery admission, durable
 storage, full retention/revocation, mission/delegation, downstream chaining,
 replay, rotation, interaction or AS federation. Chaining exists in the selected
 Rust implementation but is not measured by this shared Person Server slice.
+
+The previous report at harness `ab50c3c` remains valid for Rust `1d9fe0d`.
+This refresh uses the integrated Rust checkpoint, including current Resource,
+Agent and TLS-example code, with unchanged scenario bytes and expected answers.
+The shared harness itself continues to use loopback HTTP.
