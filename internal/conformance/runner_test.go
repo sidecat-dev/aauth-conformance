@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -102,4 +103,33 @@ func TestAdapterProcess(t *testing.T) {
 	}))
 	json.NewEncoder(os.Stdout).Encode(Ready{Version: 1, URL: server.URL + "/whoami"})
 	select {}
+}
+
+// Adding an implementation name must never change the token, proof or request.
+func TestTargetsReceiveIdenticalScenarioInputs(t *testing.T) {
+	t.Setenv("AAUTH_TEST_ADAPTER", "respond")
+	suite, err := Load("../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	claims := []string{}
+	for _, c := range suite.Catalog.Clauses {
+		if c.Scope != "out-of-slice" {
+			claims = append(claims, c.ID)
+		}
+	}
+	targets := Targets{Version: 1}
+	for _, id := range []string{"first", "second"} {
+		targets.Implementations = append(targets.Implementations, Target{ID: id, Revision: "test", Claims: claims, Command: []string{os.Args[0], "-test.run=^TestAdapterProcess$"}})
+	}
+	report, err := RunSuite(context.Background(), suite, targets, Options{StartupTimeout: time.Second, Timeout: time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, first := range report.Runs[0].Cases {
+		second := report.Runs[1].Cases[i]
+		if first.URL != second.URL || first.Method != second.Method || first.SignatureBase != second.SignatureBase || !reflect.DeepEqual(first.Headers, second.Headers) {
+			t.Fatalf("scenario %s changed between targets", first.ID)
+		}
+	}
 }

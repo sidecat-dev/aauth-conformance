@@ -97,3 +97,14 @@ func TestAssertionsParseStructuredFieldsAndOptionalProblems(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+// A missing JSON member must not satisfy an explicit null expectation.
+func TestJSONMemberRequiresPresenceEvenWhenExpectedNull(t *testing.T) {
+	a := Assertion{ID: "null", Clause: "test", Kind: "json-member", Member: "claim", Equals: json.RawMessage(`null`)}
+	if Check(a, Response{Body: []byte(`{}`)}).State != "fail" {
+		t.Fatal("absent member matched null")
+	}
+	if Check(a, Response{Body: []byte(`{"claim":null}`)}).State != "pass" {
+		t.Fatal("present null failed")
+	}
+}

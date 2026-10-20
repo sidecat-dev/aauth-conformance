@@ -25,7 +25,12 @@ func Check(a Assertion, r Response) Result {
 			result.Detail = err.Error()
 			return result
 		}
-		actual = body[a.Member]
+		var present bool
+		actual, present = body[a.Member]
+		if !present {
+			result.Detail = "missing JSON member"
+			return result
+		}
 	case "sfv-token", "sfv-strings":
 		dictionary, err := httpsfv.UnmarshalDictionary(r.Header.Values(a.Header))
 		if err != nil {
