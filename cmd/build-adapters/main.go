@@ -30,9 +30,7 @@ func run() error {
 	if *goSource == "" && *rustSource == "" {
 		return fmt.Errorf("supply -go-source and/or -rust-source")
 	}
-	if *role == conformance.DeferredRole && *rustSource != "" {
-		return fmt.Errorf("Rust deferred federation is a named gap; no native deferred adapter is available")
-	}
+	nativeFederation := *role == conformance.FederatedRole || *role == conformance.DeferredRole
 	root, err := os.Getwd()
 	if err != nil {
 		return err
@@ -124,7 +122,7 @@ func run() error {
 			if err != nil {
 				return err
 			}
-			if *role == conformance.FederatedRole {
+			if nativeFederation {
 				manifest = append(manifest, []byte("\n[dependencies.aauth-rust-access-server]\nversion = \"=0.1.0-alpha.1\"\n")...)
 			}
 			manifest = append(manifest, []byte("\n[patch.crates-io]\n")...)
@@ -132,7 +130,7 @@ func run() error {
 			if _, e := os.Stat(filepath.Join(source, "crates", "aauth-rust-person-server")); e == nil || *role == conformance.PersonServerRole {
 				names = append(names, "aauth-rust-person-server")
 			}
-			if *role == conformance.FederatedRole {
+			if nativeFederation {
 				names = append(names, "aauth-rust-access-server")
 			}
 			for _, name := range names {
@@ -150,8 +148,12 @@ func run() error {
 				return err
 			}
 			buildArgs := []string{"build", "--target-dir", filepath.Join(directory, "rust-target")}
-			if *role == conformance.FederatedRole {
-				buildArgs = append(buildArgs, "--features", "federation")
+			if nativeFederation {
+				feature := "federation"
+				if *role == conformance.DeferredRole {
+					feature = "deferred"
+				}
+				buildArgs = append(buildArgs, "--features", feature)
 			}
 			if err = command(work, "cargo", buildArgs...); err != nil {
 				return err

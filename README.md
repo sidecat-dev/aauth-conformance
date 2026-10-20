@@ -266,16 +266,26 @@ without payment, denial, an invalid returned grant, and a foreign pending URL.
 They observe native PS-to-AS signed polls, exact initial token forwarding,
 stable pending URLs, verified Agent delivery, protected Resource use and
 single terminal consumption. The [report](reports/deferred-authorization.md)
-records the Go implementation; this profile has no Rust adapter yet.
+records the Go baseline. Both native adapters can run this profile against
+source revisions that provide their deferred AS and PS APIs.
 
 ```sh
-go run ./cmd/build-adapters -role authorization.deferred -go-source /path/to/aauth-go -out build/deferred
+go run ./cmd/build-adapters -role authorization.deferred -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/deferred
 go run ./cmd/aauth-conformance -targets build/deferred/targets.json -report build/deferred-report.json -markdown build/deferred-report.md
 ```
 
-Use a Go revision with the deferred APIs in [ADAPTERS.md](ADAPTERS.md). Supplying
-`-rust-source` for this profile reports the missing adapter. Absence is not a
-pass. Payment processing, billing caches, elapsed-time backoff, expiry,
-concurrent polling, process recovery and companion/delegated/mission
+Use revisions with the deferred APIs in [ADAPTERS.md](ADAPTERS.md). Rust uses
+the `deferred` adapter feature; an older source revision without those native
+APIs fails compilation. Absence is not a pass. Payment processing, billing
+caches, elapsed-time backoff, expiry, concurrent polling, process recovery and
+companion/delegated/mission
 continuations are outside these five scenarios. Native Go tests cover timing,
 concurrency and state-store failure separately. No real payment occurs.
+
+After building this profile, run the Rust adapter's transport tests and strict
+Clippy check against the same selected library checkout:
+
+```sh
+cargo test --manifest-path build/deferred/aauth-rust-adapter/Cargo.toml --features deferred --target-dir build/deferred/rust-target
+cargo clippy --manifest-path build/deferred/aauth-rust-adapter/Cargo.toml --all-targets --features deferred --target-dir build/deferred/rust-target -- -D warnings
+```

@@ -72,7 +72,24 @@ impl Federation for Transport {
     }
     fn send(&self, request: &Request<Vec<u8>>) -> Result<Response<Vec<u8>>, FederationError> {
         if request.uri().to_string() != format!("{}/token", self.issuer) {
-            return Err(FederationError);
+            let issuer: http::Uri = self.issuer.parse().map_err(|_| FederationError)?;
+            let id = request
+                .uri()
+                .path()
+                .strip_prefix("/token/pending/")
+                .ok_or(FederationError)?;
+            if request.uri().scheme_str() != Some("https")
+                || request.uri().authority() != issuer.authority()
+                || request.uri().query().is_some()
+                || id.is_empty()
+                || id.len() > 256
+                || !id
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+                || !["GET", "POST", "DELETE"].contains(&request.method().as_str())
+            {
+                return Err(FederationError);
+            }
         }
         send(&self.physical, request).map_err(|_| FederationError)
     }
@@ -114,6 +131,10 @@ fn ids(prefix: &'static str) -> impl Fn() -> String + Send + Sync {
 }
 
 pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
+    #[cfg(feature = "deferred")]
+    let deferred = config.role == "authorization.deferred";
+    #[cfg(feature = "deferred")]
+    let host_control = Arc::new(super::deferred::HostControl::default());
     let target: http::Uri = config.resource.parse()?;
     let resource_issuer = format!(
         "https://{}",
@@ -168,29 +189,56 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
         issuer: config.access_server.clone(),
         physical: config.federation_transport,
     });
+    #[cfg(feature = "deferred")]
+    let ps = if deferred {
+        let mut pending = aauth_rust_person_server::DeferredConfig::new(
+            aauth_rust_core::continuation::MemoryContinuations::new(64),
+        );
+        pending.lifetime = 30;
+        pending.retry_after = 0;
+        ps.with_deferred(pending)?
+    } else {
+        ps
+    };
     let permitted_ps = config.person_server.clone();
     let permitted_scopes = config.permitted_scopes.clone();
     let lifetime = config.auth_lifetime;
+    let authorize = move |request: &AccessRequest| {
+        if request.person_server != permitted_ps
+            || request
+                .scopes
+                .iter()
+                .any(|scope| !permitted_scopes.contains(scope))
+        {
+            return Err(AccessPolicyError::Denied);
+        }
+        Ok(Decision {
+            scopes: request.scopes.clone(),
+            lifetime,
+        })
+    };
     let access = AccessServer::new(
         AccessConfig::new(&config.access_server, &config.access_kid, as_key),
         keys.clone(),
-        move |request: &AccessRequest| {
-            if request.person_server != permitted_ps
-                || request
-                    .scopes
-                    .iter()
-                    .any(|scope| !permitted_scopes.contains(scope))
-            {
-                return Err(AccessPolicyError::Denied);
-            }
-            Ok(Decision {
-                scopes: request.scopes.clone(),
-                lifetime,
-            })
-        },
+        authorize.clone(),
         move || now,
         ids("access"),
     )?;
+    #[cfg(feature = "deferred")]
+    let access = if deferred {
+        let mut pending = aauth_rust_access_server::DeferredConfig::new(
+            aauth_rust_core::continuation::MemoryContinuations::new(64),
+        );
+        pending.lifetime = 30;
+        pending.retry_after = 0;
+        let host_control = host_control.clone();
+        access.with_deferred(pending, move |context| {
+            authorize(&context.authorization)?;
+            host_control.requirement()
+        })?
+    } else {
+        access
+    };
     let subject = config.person_subject;
     let person_server = config.person_server.clone();
     let resource = PsAuthorizationResource::new_federated(
@@ -239,6 +287,8 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
     // A PS request waits for a second request to this listener at the AS host.
     // Separate workers preserve that native synchronous exchange without a mock.
     for mut incoming in server.incoming_requests() {
+        #[cfg(feature = "deferred")]
+        let host_control = host_control.clone();
         let (ps, access, resource) = (ps.clone(), access.clone(), resource.clone());
         let (ps_host, as_host, resource_host) = (
             ps_authority.clone(),
@@ -255,6 +305,20 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
                     .ok_or("missing actual Host")?
                     .as_str();
                 let response = if host == ps_host.as_str() {
+                    #[cfg(feature = "deferred")]
+                    if deferred && request.uri().path() == "/__fixture/deferred" {
+                        host_control.handle(&request, |reference| {
+                            ps.advance_federation(
+                                reference,
+                                aauth_rust_person_server::FederationInput::Poll,
+                            )
+                            .map(|_| ())
+                            .map_err(|error| error.to_string())
+                        })
+                    } else {
+                        ps.handle(&request)
+                    }
+                    #[cfg(not(feature = "deferred"))]
                     ps.handle(&request)
                 } else if host == as_host.as_str() {
                     access.handle(&request)
@@ -378,6 +442,92 @@ mod tests {
         thread,
         time::{Duration, Instant},
     };
+
+    #[test]
+    fn transport_relays_signed_same_origin_native_pending_poll() {
+        let server = tiny_http::Server::http("127.0.0.1:0").unwrap();
+        let physical = format!("http://{}", server.server_addr());
+        let (done, finished) = std::sync::mpsc::channel();
+        let worker = thread::spawn(move || {
+            let incoming = server
+                .recv_timeout(Duration::from_secs(2))
+                .unwrap()
+                .unwrap();
+            assert_eq!(incoming.method().as_str(), "GET");
+            assert_eq!(incoming.url(), "/token/pending/access-1");
+            assert!(
+                incoming.headers().iter().any(|h| {
+                    h.field.equiv("Signature-Key") && h.value.as_str() == "sig=jwks_uri"
+                })
+            );
+            incoming
+                .respond(
+                    tiny_http::Response::from_string("payment")
+                        .with_status_code(402)
+                        .with_header(
+                            tiny_http::Header::from_bytes(
+                                "Location",
+                                "https://access.conformance.test/token/pending/access-1",
+                            )
+                            .unwrap(),
+                        )
+                        .with_header(
+                            tiny_http::Header::from_bytes(
+                                "WWW-Authenticate",
+                                "Payment id=\"fixture-bill\", method=\"example\"",
+                            )
+                            .unwrap(),
+                        ),
+                )
+                .unwrap();
+            // Keep admission observable while invalid origins/paths are probed.
+            // Any incorrectly relayed request receives a successful HTTP exchange.
+            let mut extra_requests = 0;
+            while matches!(
+                finished.try_recv(),
+                Err(std::sync::mpsc::TryRecvError::Empty)
+            ) {
+                if let Some(incoming) = server.recv_timeout(Duration::from_millis(50)).unwrap() {
+                    extra_requests += 1;
+                    incoming.respond(tiny_http::Response::empty(402)).unwrap();
+                }
+            }
+            extra_requests
+        });
+        let transport = Transport {
+            issuer: "https://access.conformance.test".into(),
+            physical,
+        };
+        let request = Request::builder()
+            .method("GET")
+            .uri("https://access.conformance.test/token/pending/access-1")
+            .header("signature-key", "sig=jwks_uri")
+            .body(Vec::new())
+            .unwrap();
+        let response = transport
+            .send(&request)
+            .expect("native AS pending poll must reach relay");
+        assert_eq!(response.status(), 402);
+        assert_eq!(response.body(), b"payment");
+        assert_eq!(
+            response.headers()["www-authenticate"],
+            "Payment id=\"fixture-bill\", method=\"example\""
+        );
+        // The physical relay must never become unrestricted network admission.
+        for uri in [
+            "http://access.conformance.test/token/pending/access-1",
+            "https://foreign.conformance.test/token/pending/access-1",
+            "https://access.conformance.test/token/pending/access-1?redirect=1",
+            "https://access.conformance.test/other/access-1",
+            "https://access.conformance.test/token/pending/access-1/other",
+            "https://access.conformance.test/token/pending/%2e%2e",
+        ] {
+            let request = Request::builder().uri(uri).body(Vec::new()).unwrap();
+            assert!(transport.send(&request).is_err(), "admitted {uri}");
+        }
+        done.send(()).unwrap();
+        assert_eq!(worker.join().unwrap(), 0, "invalid target reached relay");
+    }
 
     #[test]
     fn transport_preserves_signed_host_headers_body_and_refusal_response() {

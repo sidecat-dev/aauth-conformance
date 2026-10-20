@@ -223,23 +223,32 @@ other roles buildable against earlier native APIs.
 ## Deferred four-party authorization
 
 `role: "authorization.deferred"` uses the four-party fixture and native role
-composition above. Only the Go launcher currently implements it. The build
-helper copies `adapters/go/deferred.go` for this role alone, so earlier role
-launchers remain buildable against earlier implementation revisions.
+composition above. Both launchers implement it. The build helper copies
+`adapters/go/deferred.go` for this role alone. Rust selects the `deferred`
+feature, which includes `federation`, and adds the native Access Server
+dependency. Earlier roles do not compile deferred API calls. A Rust source
+revision without the native deferred APIs fails compilation for this role;
+that build failure is not conformance evidence.
 
-Configure native AS `DeferredConfig` with `testutil.NewAccessAuthorizationStore`
+Go configures native AS `DeferredConfig` with `testutil.NewAccessAuthorizationStore`
 and native PS `FederatedDeferredConfig` with
-`testutil.NewFederatedAuthorizationStore`. Both lifetimes are 30 seconds; the
-fixed clock does not advance, and AS pending decisions advertise zero retry
-delay. Incoming Agent and PS authentication, pending URL creation, continuation
-state, grant verification and terminal consumption remain native code.
+`testutil.NewFederatedAuthorizationStore`. Rust configures native AS and PS
+`DeferredConfig` with separate `MemoryContinuations::new(64)` stores through
+`AccessServer::with_deferred` and `PersonServer::with_deferred`. Both lifetimes
+are 30 seconds; the fixed clock does not advance, and AS pending decisions
+advertise zero retry delay. Rust also sets the PS Agent retry delay to zero.
+Incoming Agent and PS authentication, pending URL creation, continuation state,
+grant verification and terminal consumption remain native code.
 
 The loopback-only host control `POST /__fixture/deferred` accepts
 `{"stage":0,"reference":""}`. Stage 0 represents unsettled payment, stage 1
 settled payment awaiting approval, stage 2 approval, and stage -1 denial.
 The existing scope policy applies first. A nonempty `reference` calls the
-native PS `AdvanceFederation` once after changing host policy. These are host
-inputs, not protocol responses or proof-validation shortcuts. The runner
+native PS `AdvanceFederation` (Go) or `advance_federation` with
+`FederationInput::Poll` (Rust) once after changing host policy. The Rust AS
+deferred callback checks the same scope policy before returning a payment or
+approval requirement, denial, or normal native issuance. These are host inputs,
+not protocol responses or proof-validation shortcuts. The runner
 records control responses separately and requires the corresponding native AS
 and PS exchanges; a successful control response alone cannot pass a clause.
 
@@ -248,3 +257,8 @@ fault injection. It can replace a payment Location with a foreign origin or
 corrupt the final grant presented to the PS. It never repairs native proofs.
 Payment uses a public fixture `WWW-Authenticate` challenge; there is no payment
 provider, money transfer or billing relationship cache in the adapter.
+
+The Rust transport admits native AS `/token/pending/<reference>` paths only on
+the configured HTTPS AS origin, alongside its original `/token` endpoint. The
+relay preserves the native signed method, headers and body. The Agent polls
+only its PS URL; the fixture host explicitly advances PS-to-AS polling.

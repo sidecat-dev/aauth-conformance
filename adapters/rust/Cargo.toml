@@ -7,6 +7,7 @@ publish = false
 
 [features]
 federation = []
+deferred = ["federation"]
 
 [dependencies]
 aauth-rust-jose = "=0.1.0-alpha.1"

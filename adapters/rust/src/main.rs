@@ -1,4 +1,6 @@
 //! Test transport and fixed host configuration around unmodified Rust APIs.
+#[cfg(feature = "deferred")]
+mod deferred;
 #[cfg(feature = "federation")]
 mod federation;
 use aauth_rust_core::{
@@ -117,6 +119,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config: Bootstrap = serde_json::from_reader(std::io::stdin().lock())?;
     if config.version != 1 {
         return Err("bootstrap version must be 1".into());
+    }
+    if config.role == "authorization.deferred" {
+        #[cfg(feature = "deferred")]
+        return federation::run(config);
+        #[cfg(not(feature = "deferred"))]
+        return Err("rebuild this launcher for authorization.deferred".into());
     }
     if config.role == "authorization.federated" {
         #[cfg(feature = "federation")]
