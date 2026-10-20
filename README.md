@@ -1,10 +1,13 @@
 # AAuth conformance scenarios
 
-Run the same wire scenarios against different AAuth implementations. Two roles
+Run the same wire scenarios against different AAuth implementations. Three roles
 are available:
 
 - **Resource in Agent-identity mode:** the harness plays the Agent and Agent
   Provider (AP), creating Ed25519 tokens/proofs and serving fixture metadata/JWKS.
+- **Person Server direct authorization:** the harness plays Agent, AP and Resource,
+  obtains a real Person token over HTTP, constructs a Resource challenge from it,
+  and independently verifies the native PS-issued Auth token.
 - **Agent signing:** the harness plays the AP and receiving Resource. The SUT
   signs outbound requests; the harness independently verifies the received proofs.
 
@@ -74,7 +77,9 @@ in automation. Missing targets never count as passes.
 Target manifests declare the clauses being tested, not an upstream full-conformance
 statement. The matrix distinguishes `pass`, `fail`, `error`, `not_claimed` and
 `not_exercised`. An absent optional Problem Details representation is unexercised,
-not failure or success. The person-token requirement is outside both slices.
+not failure or success. The existing Resource and Agent slices do not test the
+person-token requirement. The separate Person Server slice tests issuance and
+direct grants, not a Resource's person-token challenge behavior.
 
 The valid case's 200 JSON subject echo is labeled `adapter-contract`: the draft
 allows the Resource's own policy and application response. Failure cases check
@@ -98,7 +103,50 @@ slices. The fixed seeds and fixed clock make these repeatable tests.
 HTTPS identities from received Host/path. Fixed clocks, trusted AP documents and
 allow policies are test configuration. These results do not measure TLS,
 enrollment, discovery admission/caching, rotation, replay storage, body digests,
-Person Servers or delegation. Fixture private seeds are public test vectors.
+delegation, or complete Person Server behavior. The separate PS slice below
+tests its stated endpoints only. Fixture private seeds are public test vectors.
+
+## Person Server direct authorization
+
+Build and run the shared Person Server scenarios with:
+
+```sh
+go run ./cmd/build-adapters -role person-server.direct -go-source /path/to/aauth-go -out build/person
+go run ./cmd/aauth-conformance -targets build/person/targets.json -report build/person-report.json -markdown build/person-report.md
+```
+
+The slice currently has **12 scenarios and 109 assertions per implementation**.
+The [Go report](reports/person-server-direct.md) records an executing native Go
+run. Rust adapter integration is in progress; this report makes no Rust claim.
+Add `-rust-source` once the selected Rust checkout and launcher provide the role.
+The same scenario files and expected answers apply to both implementations.
+
+The harness signs JSON POSTs with covered Content-Type and SHA-256 Content-Digest.
+It obtains an actual Person token from `/person`, verifies the returned JWT with
+standard Ed25519 cryptography, then issues a Resource JWT naming those exact
+Person bytes and calls `/token` with `resource_token` and `presented_token`.
+It checks the Auth JWT independently. Negative cases change proofs or body bytes,
+Resource audience/key/person/PS/presented-JTI, expiry, and requested scope. A short
+Agent parent checks both issued lifetime bounds. The expired-presented case
+re-signs the actual returned Person claims under the public fixture PS seed with
+an expired time interval, preserving all lineage fields.
+
+The launchers supply native in-memory retained stores and fixed host binding and
+scope policies. Host-selected subject and exact read-only policy expectations
+are `adapter-contract`; no synthetic state endpoint is used. A passing result
+does not prove storage durability, revocation or retention deadlines. The oracle
+covers this fixture's Ed25519 JWT profile, not every JOSE or JWT validation rule.
+Missions, tenant/account claims, subagents, downstream chaining, AS federation,
+interaction, discovery admission, replay, TLS, and key rotation remain outside
+this PS slice. Returned `expires_in` must agree with the verified signed expiry.
+
+The Go Agent adapter also preserves an explicit signed Request.Host when mapping
+to loopback, using URL.Host only as the empty-Host fallback. Its regression runs
+against the copied adapter module:
+
+```sh
+go test -C build/person/aauth-go-adapter -count=1
+```
 
 ## Extend or contribute
 

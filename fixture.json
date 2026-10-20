@@ -8,5 +8,18 @@
   "kid": "ap-1",
   "subject": "aauth:Agent@ap.conformance.test",
   "ap_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
-  "agent_seed_hex": "0202020202020202020202020202020202020202020202020202020202020202"
+  "agent_seed_hex": "0202020202020202020202020202020202020202020202020202020202020202",
+  "person_server": {
+    "issuer": "https://person.conformance.test",
+    "seed_hex": "0303030303030303030303030303030303030303030303030303030303030303",
+    "kid": "ps-1",
+    "subject": "directed-person-1",
+    "person_lifetime": 300,
+    "auth_lifetime": 180,
+    "permitted_scopes": [
+      "read"
+    ],
+    "resource_seed_hex": "0404040404040404040404040404040404040404040404040404040404040404",
+    "resource_kid": "resource-1"
+  }
 }

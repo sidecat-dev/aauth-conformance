@@ -114,18 +114,32 @@ func (s Suite) validate() error {
 			return fmt.Errorf("invalid/duplicate clause %q", c.ID)
 		}
 		clauses[c.ID] = true
-		if clauseRole(c) != ResourceRole && clauseRole(c) != AgentRole {
+		if clauseRole(c) != ResourceRole && clauseRole(c) != AgentRole && clauseRole(c) != PersonServerRole {
 			return fmt.Errorf("unknown clause role")
 		}
 		clauseRoles[c.ID] = clauseRole(c)
 	}
 	ids := map[string]bool{}
 	for _, scenario := range s.Scenarios {
-		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !slices.Contains([]string{ResourceRole, AgentRole}, scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
+		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !slices.Contains([]string{ResourceRole, AgentRole, PersonServerRole}, scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
 			return fmt.Errorf("invalid scenario %q", scenario.ID)
 		}
 		ids[scenario.ID] = true
+		if scenario.Role == PersonServerRole {
+			if f.Person == nil || scenario.Person == nil {
+				return fmt.Errorf("Person Server fixture/spec required")
+			}
+			if err := validatePersonFixture(*f.Person); err != nil {
+				return err
+			}
+			if !slices.Contains([]string{"none", "tampered-proof", "tampered-body", "wrong-aud", "wrong-jkt", "wrong-sub", "wrong-jti", "wrong-ps", "expired-resource", "expired-presented", "denied-scope", "short-parent"}, scenario.Person.Mutation) {
+				return fmt.Errorf("unsupported Person Server mutation")
+			}
+		}
 		req := scenario.Request
+		if scenario.Role == PersonServerRole && (req.Method != "" || req.Path != "" || req.Proof != "" || req.CreatedOffset != 0 || req.Tamper || len(req.Covered) > 0 || len(req.Headers) > 0) {
+			return fmt.Errorf("PS request profile is prescribed by person.mutation; request fields are unsupported")
+		}
 		if req.CreatedOffset < -86400 || req.CreatedOffset > 86400 || scenario.Token.IATOffset < -86400 || scenario.Token.IATOffset > 86400 || scenario.Token.EXPOffset < -86400 || scenario.Token.EXPOffset > 86400 {
 			return fmt.Errorf("unsupported request profile in %s", scenario.ID)
 		}
@@ -152,11 +166,25 @@ func (s Suite) validate() error {
 		}
 		assertions := map[string]bool{}
 		for _, a := range scenario.Assertions {
-			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers"}, a.Kind) || !json.Valid(a.Equals) {
+			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization"}, a.Kind) || !json.Valid(a.Equals) {
 				return fmt.Errorf("invalid assertion %s/%s (clause %q)", scenario.ID, a.ID, a.Clause)
 			}
-			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") {
+			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") || strings.HasPrefix(a.Kind, "ps-") && scenario.Role != PersonServerRole {
 				return fmt.Errorf("assertion kind does not match role")
+			}
+			if scenario.Role == PersonServerRole {
+				if !slices.Contains([]string{"person", "token"}, a.Stage) || !(strings.HasPrefix(a.Kind, "ps-jwt") || a.Kind == "ps-no-token" || slices.Contains([]string{"status", "sfv-token", "json-member"}, a.Kind)) {
+					return fmt.Errorf("invalid Person Server assertion profile")
+				}
+				if strings.HasPrefix(a.Kind, "ps-jwt") || a.Kind == "ps-no-token" {
+					var b any
+					json.Unmarshal(a.Equals, &b)
+					if _, ok := b.(bool); !ok {
+						return fmt.Errorf("PS JWT assertion requires boolean")
+					}
+				}
+			} else if a.Stage != "" {
+				return fmt.Errorf("stage only supported for Person Server")
 			}
 			assertions[a.ID] = true
 			var value any

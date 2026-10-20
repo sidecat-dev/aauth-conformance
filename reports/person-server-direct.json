@@ -1,0 +1,2272 @@
+{
+  "role": "person-server.direct",
+  "version": 1,
+  "execution": "passed",
+  "suite_sha256": "1b2ca81909e487e8bc2308c0fde0481c057a6cf76997670a81716fc626f10c37",
+  "verifier_unix_seconds": 1800000000,
+  "catalog": {
+    "version": 1,
+    "sources": [
+      {
+        "id": "core",
+        "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
+        "sha256": "99ef2430c7babec7ea9cb2e9af40e3c3c57d18bce5a6e8501e9748063cfd9ab0",
+        "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md"
+      },
+      {
+        "id": "key",
+        "commit": "69f5ba2647be848feed043fb6d8b0790e43cd0b6",
+        "sha256": "b2b43db67a1aa5249d1166589834d44f81e97ea2e6375a07b475115efa196b7d",
+        "url": "https://github.com/dickhardt/signature-key/blob/69f5ba2647be848feed043fb6d8b0790e43cd0b6/draft-hardt-httpbis-signature-key.md"
+      }
+    ],
+    "clauses": [
+      {
+        "role": "person-server.direct",
+        "id": "ps.person-endpoint",
+        "source": "core",
+        "section": "Person Token Endpoint: signed POST and successful person-token response",
+        "anchor": "person-token-endpoint",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.person-structure",
+        "source": "core",
+        "section": "Person Token Structure: exact identity and confirmation-key profile",
+        "anchor": "person-token-structure",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.person-lifetime",
+        "source": "core",
+        "section": "Person Token Structure: one-hour and Agent parent expiry bounds",
+        "anchor": "person-token-structure",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.person-no-authorization",
+        "source": "core",
+        "section": "Person Token Structure: scope and account are forbidden",
+        "anchor": "person-token-structure",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.auth-endpoint",
+        "source": "core",
+        "section": "Auth Token Endpoint: signed POST and direct grant response",
+        "anchor": "ps-token-endpoint",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.resource-verification",
+        "source": "core",
+        "section": "Resource Token Verification: audience, key, person, PS and presented-jti lineage",
+        "anchor": "resource-token-verification",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.auth-structure",
+        "source": "core",
+        "section": "Auth Token Structure: issuer, audience, person, PS and key bindings",
+        "anchor": "auth-tokens",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.auth-lifetime",
+        "source": "core",
+        "section": "Auth Token Structure: one-hour, Agent and presented-token expiry bounds",
+        "anchor": "auth-tokens",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.common-verification",
+        "source": "core",
+        "section": "Common JWT Verification: trusted signed credential profile",
+        "anchor": "common-verification",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.errors",
+        "source": "core",
+        "section": "Token Endpoint Error Codes: parameter-token errors",
+        "anchor": "token-endpoint-error-codes",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.proof-verification",
+        "source": "core",
+        "section": "Verification (Server): proof refusal status and error",
+        "anchor": "verification",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.body-integrity",
+        "source": "core",
+        "section": "Covered Components: covered Content-Type and Content-Digest",
+        "anchor": "covered-components",
+        "scope": "protocol"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.host-scope-policy",
+        "source": "core",
+        "section": "Configured read-only authorization policy and exact granted read scope",
+        "anchor": "ps-token-endpoint",
+        "scope": "adapter-contract"
+      },
+      {
+        "role": "person-server.direct",
+        "id": "ps.host-person-profile",
+        "source": "core",
+        "section": "Configured directed identity and admitted fixture key",
+        "anchor": "person-token-structure",
+        "scope": "adapter-contract"
+      }
+    ]
+  },
+  "runs": [
+    {
+      "implementation": {
+        "id": "aauth-go",
+        "revision": "3ee320484111ea62efb097a41b6c28f9e84143f9",
+        "command": [
+          "/home/jgay-automate/projects/gitlab.com/sidecat-dev/sprint-gen6-20261020/wc-aauth-02/aauth-conformance/build/person/aauth-go-launcher"
+        ],
+        "claims": [
+          "ps.person-endpoint",
+          "ps.person-structure",
+          "ps.person-lifetime",
+          "ps.person-no-authorization",
+          "ps.auth-endpoint",
+          "ps.resource-verification",
+          "ps.auth-structure",
+          "ps.auth-lifetime",
+          "ps.common-verification",
+          "ps.errors",
+          "ps.proof-verification",
+          "ps.body-integrity",
+          "ps.host-scope-policy",
+          "ps.host-person-profile"
+        ]
+      },
+      "cases": [
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:jWGKuND9+n4laPLA24P6e1GI6wDeZQC77/Vvv4ThRYG1Ocj9N0oOEWszGtDZ4csGlY/yjxxuhQ0X4ySaoLkpDA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtdmFsaWQtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.lu_xrUifWcXCBM98qU54FE5cu9W1QwmxoZAPd4fVkNFaMuK4JVx6dR81WwoMZfSsUGdc_tuTAXhbHPx7ijwBAw\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtdmFsaWQtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.lu_xrUifWcXCBM98qU54FE5cu9W1QwmxoZAPd4fVkNFaMuK4JVx6dR81WwoMZfSsUGdc_tuTAXhbHPx7ijwBAw\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "591"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMweElpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5fZWJIbXpuQW9TQnBoRzNFOFdnRG5IUFBIMHBkWDUybzNXLVhLOG0yc25Od1VpTFpDQ1hwSmtSdk1xRVhBMlBIMXdNeUJiTzQxenh5ZW81WlVMbjBDQSIsImV4cGlyZXNfaW4iOjMwMH0K"
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-1",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:ydmNu859Qb9G9ElvSIu08906cpBHRZ74OmKwULIMt+Q=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:7Ijf/oKY+ljFcMOGCt21TFcAhcrkIeGpZmpUdr0WX5bf3VB/INYPFE26WqQ92Ffjzdpp9SYa4Ai/EN9CnTxdDw==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtdmFsaWQtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.lu_xrUifWcXCBM98qU54FE5cu9W1QwmxoZAPd4fVkNFaMuK4JVx6dR81WwoMZfSsUGdc_tuTAXhbHPx7ijwBAw\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMweElpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5fZWJIbXpuQW9TQnBoRzNFOFdnRG5IUFBIMHBkWDUybzNXLVhLOG0yc25Od1VpTFpDQ1hwSmtSdk1xRVhBMlBIMXdNeUJiTzQxenh5ZW81WlVMbjBDQSIsInJlc291cmNlX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpYTJsa0lqb2ljbVZ6YjNWeVkyVXRNU0lzSW5SNWNDSTZJbUZoTFhKbGMyOTFjbU5sSzJwM2RDSjkuZXlKaFoyVnVkRjlxYTNRaU9pSmhWa0owWVhCTVpERXhVMVZXUzBsTlIwcG1VSHBQUlVSMVRqQnpXR050ZWtwUlRsWlVMVjl6UzBWVklpd2lZWFZrSWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW1SM2F5STZJbUZoZFhSb0xYSmxjMjkxY21ObExtcHpiMjRpTENKbGVIQWlPakU0TURBd01EQXhNakFzSW1saGRDSTZNVGM1T1RrNU9UazVPU3dpYVhOeklqb2lhSFIwY0hNNkx5OXlaWE52ZFhKalpTNWpiMjVtYjNKdFlXNWpaUzUwWlhOMElpd2lhblJwSWpvaWNITXRkbUZzYVdRdGNtVnpiM1Z5WTJVaUxDSndjbVZ6Wlc1MFpXUmZhblJwSWpvaVptbDRkSFZ5WlMweElpd2ljSE1pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpYzJOdmNHVWlPaUp5WldGa0lpd2ljM1ZpSWpvaVpHbHlaV04wWldRdGNHVnljMjl1TFRFaWZRLlBzelNYTEFqOVlNaFhKUDV3VmpEdDdoa3dPSnREYmtwWUpBbzhfRGNPdTFac0xVdFJLdVhocTl6N0FjQ0pqbDkwbWR5M2QtNFkzeVFIX1JRcllzakRnIn0=",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtdmFsaWQtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.lu_xrUifWcXCBM98qU54FE5cu9W1QwmxoZAPd4fVkNFaMuK4JVx6dR81WwoMZfSsUGdc_tuTAXhbHPx7ijwBAw\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:ydmNu859Qb9G9ElvSIu08906cpBHRZ74OmKwULIMt+Q=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "658"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJhdXRoX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpZEhsd0lqb2lZV0V0WVhWMGFDdHFkM1FpTENKcmFXUWlPaUp3Y3kweEluMC5leUpwYzNNaU9pSm9kSFJ3Y3pvdkwzQmxjbk52Ymk1amIyNW1iM0p0WVc1alpTNTBaWE4wSWl3aVpIZHJJam9pWVdGMWRHZ3RjR1Z5YzI5dUxtcHpiMjRpTENKaGRXUWlPaUpvZEhSd2N6b3ZMM0psYzI5MWNtTmxMbU52Ym1admNtMWhibU5sTG5SbGMzUWlMQ0pxZEdraU9pSm1hWGgwZFhKbExUSWlMQ0p3Y3lJNkltaDBkSEJ6T2k4dmNHVnljMjl1TG1OdmJtWnZjbTFoYm1ObExuUmxjM1FpTENKemRXSWlPaUprYVhKbFkzUmxaQzF3WlhKemIyNHRNU0lzSW1OdVppSTZleUpxZDJzaU9uc2lhM1I1SWpvaVQwdFFJaXdpWTNKMklqb2lSV1F5TlRVeE9TSXNJbmdpT2lKblZHd3pSSEZvT1VZeE9WZHZNVkp0ZHpCNExYcE5kVTVwY0Vjd04ycGxhVmhtV1ZCWE5GOUtjelZSSWl3aVlXeG5Jam9pUldReU5UVXhPU0o5ZlN3aWFXRjBJam94T0RBd01EQXdNREF3TENKbGVIQWlPakU0TURBd01EQXhPREFzSW5OamIzQmxJam9pY21WaFpDSjkuWk81TE44S2c3MWpJcWVoQnUwd0pJSTJQQm54OUllRlpsOWk4c2ZGRUxWZHRiVHI4SF9rRkUzbENIYVprRlQ4eFhpZ2FweFBfMG91dVNEWHNjc21YQ0EiLCJleHBpcmVzX2luIjoxODB9Cg=="
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": false,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000180,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-2",
+                  "ps": "https://person.conformance.test",
+                  "scope": "read",
+                  "sub": "directed-person-1"
+                }
+              }
+            }
+          ],
+          "id": "ps-valid",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-status",
+              "clause": "ps.auth-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "auth-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-identity",
+              "clause": "ps.auth-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-key",
+              "clause": "ps.auth-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-lifetime",
+              "clause": "ps.auth-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-authorization",
+              "clause": "ps.host-scope-policy",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:VMqeauRHXkRMA59SxGHqQB3e0cjOiENfjT/zwouNq/py2LpxtPd/GA8drhPsqoVXArhLXy+Gk7XM1N3YbBN3CA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtcHJvb2YtdGFtcGVyLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.PtzzkH-65w6ZEqcZuK-Py7oJbomRfQW8DCwsIcScl4NhIvwReu2x13orG3Qb2plUgzOjzgcoOu2uyLJXr0krDg\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtcHJvb2YtdGFtcGVyLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.PtzzkH-65w6ZEqcZuK-Py7oJbomRfQW8DCwsIcScl4NhIvwReu2x13orG3Qb2plUgzOjzgcoOu2uyLJXr0krDg\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 401,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "122"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ],
+                  "Signature-Error": [
+                    "error=invalid_signature"
+                  ]
+                },
+                "body_base64": "eyJ0eXBlIjoidXJuOmlldGY6cGFyYW1zOnNpZy1lcnJvcjppbnZhbGlkX3NpZ25hdHVyZSIsInN0YXR1cyI6NDAxLCJlcnJvciI6ImludmFsaWRfYWdlbnRfdG9rZW4iLCJkZXRhaWwiOiJVbmF1dGhvcml6ZWQifQo="
+              }
+            }
+          ],
+          "id": "ps-proof-tamper",
+          "assertions": [
+            {
+              "assertion": "refusal",
+              "clause": "ps.proof-verification",
+              "state": "pass",
+              "expected": 401,
+              "actual": 401
+            },
+            {
+              "assertion": "signature-error",
+              "clause": "ps.proof-verification",
+              "state": "pass",
+              "expected": "invalid_signature",
+              "actual": "invalid_signature"
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:X3dYVeGg41rFWTq6q42Jx3rAAWoGlAHvnEXBYOi+KJX/tKhwCimrRj7ecNUff0BOMqCkmiMcEPcKl0Roij6IDA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtYm9keS10YW1wZXItYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.l67zj8tMC65T20ycz8-piT-ZZ7Ei4H77_QatmzcSpW-JygjLlcGV4cVYanuMiLb10OUBRf52ULgouijvM6iwDg\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzWCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtYm9keS10YW1wZXItYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.l67zj8tMC65T20ycz8-piT-ZZ7Ei4H77_QatmzcSpW-JygjLlcGV4cVYanuMiLb10OUBRf52ULgouijvM6iwDg\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 401,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "122"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ],
+                  "Signature-Error": [
+                    "error=invalid_signature"
+                  ]
+                },
+                "body_base64": "eyJ0eXBlIjoidXJuOmlldGY6cGFyYW1zOnNpZy1lcnJvcjppbnZhbGlkX3NpZ25hdHVyZSIsInN0YXR1cyI6NDAxLCJlcnJvciI6ImludmFsaWRfYWdlbnRfdG9rZW4iLCJkZXRhaWwiOiJVbmF1dGhvcml6ZWQifQo="
+              }
+            }
+          ],
+          "id": "ps-body-tamper",
+          "assertions": [
+            {
+              "assertion": "refusal",
+              "clause": "ps.body-integrity",
+              "state": "pass",
+              "expected": 401,
+              "actual": 401
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:ErXxXv1bR1Z3gZlLUDbT0fckabgi82h90H0H/T0YGEp7TSPW9sclf4BgOD3Rzo5uMIGCx6lLKVLxTUylYULOCw==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctYXVkaWVuY2UtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.mIAfAP0HAW3IDnvlkrqx7zXpyYC2Apyc93_CH79xt2TSTaZu32D-DLdkLu8c_qLdmHT5sJyCycrG2uJ9BBBTCA\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctYXVkaWVuY2UtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.mIAfAP0HAW3IDnvlkrqx7zXpyYC2Apyc93_CH79xt2TSTaZu32D-DLdkLu8c_qLdmHT5sJyCycrG2uJ9BBBTCA\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "591"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMweklpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5EeHdwcnBtRWluRE55U1QwSjhjSjZiaGRWSkJnczR0aUpabjAzNDBoaXRyU1hkbERHeDFMRk9hS3NXMVJyZXRQNHNDZWx3SllFZXBPVEt3MDFjZ2NDUSIsImV4cGlyZXNfaW4iOjMwMH0K"
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-3",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:pTUvoFcrESM7zx51/l3EbXjtD5q8fQX4ytY5k6SlTOA=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:xCCqe+1tu/XF24WlPP+CKivA1E25BQocUi0Avffuj/NU4v81WZXLfKY474aosAaSdV2i3O5UgB8wFLTc5gTaCg==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctYXVkaWVuY2UtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.mIAfAP0HAW3IDnvlkrqx7zXpyYC2Apyc93_CH79xt2TSTaZu32D-DLdkLu8c_qLdmHT5sJyCycrG2uJ9BBBTCA\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMweklpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5EeHdwcnBtRWluRE55U1QwSjhjSjZiaGRWSkJnczR0aUpabjAzNDBoaXRyU1hkbERHeDFMRk9hS3NXMVJyZXRQNHNDZWx3SllFZXBPVEt3MDFjZ2NDUSIsInJlc291cmNlX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpYTJsa0lqb2ljbVZ6YjNWeVkyVXRNU0lzSW5SNWNDSTZJbUZoTFhKbGMyOTFjbU5sSzJwM2RDSjkuZXlKaFoyVnVkRjlxYTNRaU9pSmhWa0owWVhCTVpERXhVMVZXUzBsTlIwcG1VSHBQUlVSMVRqQnpXR050ZWtwUlRsWlVMVjl6UzBWVklpd2lZWFZrSWpvaWFIUjBjSE02THk5bWIzSmxhV2R1TG1OdmJtWnZjbTFoYm1ObExuUmxjM1FpTENKa2Qyc2lPaUpoWVhWMGFDMXlaWE52ZFhKalpTNXFjMjl1SWl3aVpYaHdJam94T0RBd01EQXdNVEl3TENKcFlYUWlPakUzT1RrNU9UazVPVGtzSW1semN5STZJbWgwZEhCek9pOHZjbVZ6YjNWeVkyVXVZMjl1Wm05eWJXRnVZMlV1ZEdWemRDSXNJbXAwYVNJNkluQnpMWGR5YjI1bkxXRjFaR2xsYm1ObExYSmxjMjkxY21ObElpd2ljSEpsYzJWdWRHVmtYMnAwYVNJNkltWnBlSFIxY21VdE15SXNJbkJ6SWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW5OamIzQmxJam9pY21WaFpDSXNJbk4xWWlJNkltUnBjbVZqZEdWa0xYQmxjbk52YmkweEluMC51U1YxNjRtcnVMQnBzQWRILU1IWlRxeU41dVZRbXJMOGlHSHdzVWdTaU92OTZTSEE5OXlFNmJjb0djQWFyaTdlY3lPMUZLQ2RJSlhpcWVQN1lINVNEQSJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctYXVkaWVuY2UtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.mIAfAP0HAW3IDnvlkrqx7zXpyYC2Apyc93_CH79xt2TSTaZu32D-DLdkLu8c_qLdmHT5sJyCycrG2uJ9BBBTCA\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:pTUvoFcrESM7zx51/l3EbXjtD5q8fQX4ytY5k6SlTOA=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 400,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "71"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJzdGF0dXMiOjQwMCwiZXJyb3IiOiJpbnZhbGlkX3Jlc291cmNlX3Rva2VuIiwiZGV0YWlsIjoiQmFkIFJlcXVlc3QifQo="
+              }
+            }
+          ],
+          "id": "ps-wrong-audience",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "token-refusal",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": 400,
+              "actual": 400
+            },
+            {
+              "assertion": "token-error",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": "invalid_resource_token",
+              "actual": "invalid_resource_token"
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "no-issued-token",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:ZoOtMeTZhXhmEv0sctN1shEIPfrHDBrHt33Bryd9Jikn7j+OQqaPhNpU3YRGCOOF11EWHAuZ78fOIhN3IPDqCw==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3Jvbmcta2V5LWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.nr4ncufmwERvOk5jiX9ao_bHjB97DQl04dE2jlwSIdqjGNy6o7W7CsMsCxv87B3AqarqQMqEf694Dlk-R_sGDQ\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3Jvbmcta2V5LWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.nr4ncufmwERvOk5jiX9ao_bHjB97DQl04dE2jlwSIdqjGNy6o7W7CsMsCxv87B3AqarqQMqEf694Dlk-R_sGDQ\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "591"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwMElpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS56S1Npc1NlNGZ1ejdMaXA3QmhvbDMxSFpHTmdZWmZhdHlkalAzY0UtbFRYdk1BWUUwQ2pYNTB1RE5nZ0tnQlRpelVTY1drUHJGZWZETkx1aHBPVHVDdyIsImV4cGlyZXNfaW4iOjMwMH0K"
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-4",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:qksdfDjZ3Ybfj8FWjAA0T8+wciwbTEW8CR6NNUj+nd0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:io6eZIlWL7JOZRChE45bCQRFPalOT5JD8mqFApome/MaFPv7HC/4zjhJwMR5L/8ZM5gk3CR0GcNFlCtmGo87Bw==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3Jvbmcta2V5LWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.nr4ncufmwERvOk5jiX9ao_bHjB97DQl04dE2jlwSIdqjGNy6o7W7CsMsCxv87B3AqarqQMqEf694Dlk-R_sGDQ\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwMElpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS56S1Npc1NlNGZ1ejdMaXA3QmhvbDMxSFpHTmdZWmZhdHlkalAzY0UtbFRYdk1BWUUwQ2pYNTB1RE5nZ0tnQlRpelVTY1drUHJGZWZETkx1aHBPVHVDdyIsInJlc291cmNlX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpYTJsa0lqb2ljbVZ6YjNWeVkyVXRNU0lzSW5SNWNDSTZJbUZoTFhKbGMyOTFjbU5sSzJwM2RDSjkuZXlKaFoyVnVkRjlxYTNRaU9pSkZPVEUyV0ZScVNrTkxPREoyUVdsaVJVZEhhRUl6YkVSV04zZEJUblpzVEdaNGFVTk9WSEZtYjE5aklpd2lZWFZrSWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW1SM2F5STZJbUZoZFhSb0xYSmxjMjkxY21ObExtcHpiMjRpTENKbGVIQWlPakU0TURBd01EQXhNakFzSW1saGRDSTZNVGM1T1RrNU9UazVPU3dpYVhOeklqb2lhSFIwY0hNNkx5OXlaWE52ZFhKalpTNWpiMjVtYjNKdFlXNWpaUzUwWlhOMElpd2lhblJwSWpvaWNITXRkM0p2Ym1jdGEyVjVMWEpsYzI5MWNtTmxJaXdpY0hKbGMyVnVkR1ZrWDJwMGFTSTZJbVpwZUhSMWNtVXROQ0lzSW5Ceklqb2lhSFIwY0hNNkx5OXdaWEp6YjI0dVkyOXVabTl5YldGdVkyVXVkR1Z6ZENJc0luTmpiM0JsSWpvaWNtVmhaQ0lzSW5OMVlpSTZJbVJwY21WamRHVmtMWEJsY25OdmJpMHhJbjAuaGVnSEdEd05FMGNIbDF6cXJ4NlVNS3hDc0p3dHpBN2pHWi1KcGFQLVhIWEtpdFBma2M4a2xYcXpIakNKZDlHaDhsVm94MHVvdGFQTGdIemVQVk1XQlEifQ==",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3Jvbmcta2V5LWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.nr4ncufmwERvOk5jiX9ao_bHjB97DQl04dE2jlwSIdqjGNy6o7W7CsMsCxv87B3AqarqQMqEf694Dlk-R_sGDQ\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:qksdfDjZ3Ybfj8FWjAA0T8+wciwbTEW8CR6NNUj+nd0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 400,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "71"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJzdGF0dXMiOjQwMCwiZXJyb3IiOiJpbnZhbGlkX3Jlc291cmNlX3Rva2VuIiwiZGV0YWlsIjoiQmFkIFJlcXVlc3QifQo="
+              }
+            }
+          ],
+          "id": "ps-wrong-key",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "token-refusal",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": 400,
+              "actual": 400
+            },
+            {
+              "assertion": "token-error",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": "invalid_resource_token",
+              "actual": "invalid_resource_token"
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "no-issued-token",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:xxvo4A0BilEnsZX82VKH+zwVRm1UPiagL+sPjSBawkpwgcmpYQkf7xM4hBpx+334en8GPlXM4s1gAOkBVcT7Bg==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctcGVyc29uLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.fRc2P5CH6Bn_1MU2bg4ACQ9gqbWFfSetMJvp5WWCNybxq3SLnoDYlkxBNDUm9XN_h-40IxGgqOFahqRCYqSPDg\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctcGVyc29uLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.fRc2P5CH6Bn_1MU2bg4ACQ9gqbWFfSetMJvp5WWCNybxq3SLnoDYlkxBNDUm9XN_h-40IxGgqOFahqRCYqSPDg\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "591"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwMUlpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5hUEtnT2xJYW9JZklpMmN4N2p1enFJM09MOUFKNUFjT1ZWNV83YmlEb09MelRwVGstdHhMeEpLb1V2Q1VGYllIZ0w5QWVIU2JlRmk3ZVY1UkJ2UlFCZyIsImV4cGlyZXNfaW4iOjMwMH0K"
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-5",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:+a2mwn8GniA1R4iL649ZfusJGsSB97v+lchbySHS4SQ=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:8IOZLoFo2harfKsyek8fI/av+91otYEg4E2+00EUdMtW9HMqT/uhTlOb5FoPKl1ZaGBDPELxjWXQF/7IKAW8BA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctcGVyc29uLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.fRc2P5CH6Bn_1MU2bg4ACQ9gqbWFfSetMJvp5WWCNybxq3SLnoDYlkxBNDUm9XN_h-40IxGgqOFahqRCYqSPDg\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwMUlpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5hUEtnT2xJYW9JZklpMmN4N2p1enFJM09MOUFKNUFjT1ZWNV83YmlEb09MelRwVGstdHhMeEpLb1V2Q1VGYllIZ0w5QWVIU2JlRmk3ZVY1UkJ2UlFCZyIsInJlc291cmNlX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpYTJsa0lqb2ljbVZ6YjNWeVkyVXRNU0lzSW5SNWNDSTZJbUZoTFhKbGMyOTFjbU5sSzJwM2RDSjkuZXlKaFoyVnVkRjlxYTNRaU9pSmhWa0owWVhCTVpERXhVMVZXUzBsTlIwcG1VSHBQUlVSMVRqQnpXR050ZWtwUlRsWlVMVjl6UzBWVklpd2lZWFZrSWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW1SM2F5STZJbUZoZFhSb0xYSmxjMjkxY21ObExtcHpiMjRpTENKbGVIQWlPakU0TURBd01EQXhNakFzSW1saGRDSTZNVGM1T1RrNU9UazVPU3dpYVhOeklqb2lhSFIwY0hNNkx5OXlaWE52ZFhKalpTNWpiMjVtYjNKdFlXNWpaUzUwWlhOMElpd2lhblJwSWpvaWNITXRkM0p2Ym1jdGNHVnljMjl1TFhKbGMyOTFjbU5sSWl3aWNISmxjMlZ1ZEdWa1gycDBhU0k2SW1acGVIUjFjbVV0TlNJc0luQnpJam9pYUhSMGNITTZMeTl3WlhKemIyNHVZMjl1Wm05eWJXRnVZMlV1ZEdWemRDSXNJbk5qYjNCbElqb2ljbVZoWkNJc0luTjFZaUk2SW1admNtVnBaMjR0Y0dWeWMyOXVJbjAuM2Zsa1Z1SHBZQ3p6X0JGRjRCT2pwb0V0Qjg5b3V5bG44Sm1CU2lKWVdMNGdSZExTRVE3RXVSdFI4TndWVXZybG5EOEhxRGNOZUhvenpCOUtnWk9NQ0EifQ==",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctcGVyc29uLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.fRc2P5CH6Bn_1MU2bg4ACQ9gqbWFfSetMJvp5WWCNybxq3SLnoDYlkxBNDUm9XN_h-40IxGgqOFahqRCYqSPDg\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:+a2mwn8GniA1R4iL649ZfusJGsSB97v+lchbySHS4SQ=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 400,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "71"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJzdGF0dXMiOjQwMCwiZXJyb3IiOiJpbnZhbGlkX3Jlc291cmNlX3Rva2VuIiwiZGV0YWlsIjoiQmFkIFJlcXVlc3QifQo="
+              }
+            }
+          ],
+          "id": "ps-wrong-person",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "token-refusal",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": 400,
+              "actual": 400
+            },
+            {
+              "assertion": "token-error",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": "invalid_resource_token",
+              "actual": "invalid_resource_token"
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "no-issued-token",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:qqt9U0+o7/sqlB9Lun10TTtT6BUChuOsJVsQE/FZq0EbfI1bSmHCs7zaDOAKWdby+vzNjxB2oRqZV3PnDi1MAA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctbGluZWFnZS1hZ2VudCIsInBzIjoiaHR0cHM6Ly9wZXJzb24uY29uZm9ybWFuY2UudGVzdCIsInN1YiI6ImFhdXRoOkFnZW50QGFwLmNvbmZvcm1hbmNlLnRlc3QifQ.2u40S6Aw0J022sJyFen3aM-mY-V5Hbbrr8Vpdlo4XnbBAef7w2bRktHxzcrNxBvZ8SFK8ZIlHPYya8x1Jz67Aw\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctbGluZWFnZS1hZ2VudCIsInBzIjoiaHR0cHM6Ly9wZXJzb24uY29uZm9ybWFuY2UudGVzdCIsInN1YiI6ImFhdXRoOkFnZW50QGFwLmNvbmZvcm1hbmNlLnRlc3QifQ.2u40S6Aw0J022sJyFen3aM-mY-V5Hbbrr8Vpdlo4XnbBAef7w2bRktHxzcrNxBvZ8SFK8ZIlHPYya8x1Jz67Aw\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "591"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwMklpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS55V2lialdaMllmeWkwcmZPZURtSjNlR2tQRV9NbmVCWXotbGp0eG51RkZ6V1hPY3VCd0xTekMzMUdwLWxISzBYbzVCLU9NTlNnczNWVnY1aG9KZ1BEZyIsImV4cGlyZXNfaW4iOjMwMH0K"
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-6",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:LnA42jFQCzFHmbo99op028iGblepuGq4FCoEJkdZjyk=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:IKptX/r/04BABh85eRkmMfVPysi5fJ7iaNJh+8zUs2cvVpXBL3UN/+qiRU7XT5dFJUKQ3z6tvBq7AMNAN+NbBQ==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctbGluZWFnZS1hZ2VudCIsInBzIjoiaHR0cHM6Ly9wZXJzb24uY29uZm9ybWFuY2UudGVzdCIsInN1YiI6ImFhdXRoOkFnZW50QGFwLmNvbmZvcm1hbmNlLnRlc3QifQ.2u40S6Aw0J022sJyFen3aM-mY-V5Hbbrr8Vpdlo4XnbBAef7w2bRktHxzcrNxBvZ8SFK8ZIlHPYya8x1Jz67Aw\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwMklpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS55V2lialdaMllmeWkwcmZPZURtSjNlR2tQRV9NbmVCWXotbGp0eG51RkZ6V1hPY3VCd0xTekMzMUdwLWxISzBYbzVCLU9NTlNnczNWVnY1aG9KZ1BEZyIsInJlc291cmNlX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpYTJsa0lqb2ljbVZ6YjNWeVkyVXRNU0lzSW5SNWNDSTZJbUZoTFhKbGMyOTFjbU5sSzJwM2RDSjkuZXlKaFoyVnVkRjlxYTNRaU9pSmhWa0owWVhCTVpERXhVMVZXUzBsTlIwcG1VSHBQUlVSMVRqQnpXR050ZWtwUlRsWlVMVjl6UzBWVklpd2lZWFZrSWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW1SM2F5STZJbUZoZFhSb0xYSmxjMjkxY21ObExtcHpiMjRpTENKbGVIQWlPakU0TURBd01EQXhNakFzSW1saGRDSTZNVGM1T1RrNU9UazVPU3dpYVhOeklqb2lhSFIwY0hNNkx5OXlaWE52ZFhKalpTNWpiMjVtYjNKdFlXNWpaUzUwWlhOMElpd2lhblJwSWpvaWNITXRkM0p2Ym1jdGJHbHVaV0ZuWlMxeVpYTnZkWEpqWlNJc0luQnlaWE5sYm5SbFpGOXFkR2tpT2lKbWIzSmxhV2R1TFdwMGFTSXNJbkJ6SWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW5OamIzQmxJam9pY21WaFpDSXNJbk4xWWlJNkltUnBjbVZqZEdWa0xYQmxjbk52YmkweEluMC5KUjZkcjhfUnJKT1RKdkl2YUdqcVVBQ0o5eXZVbUtqTGV6Q2lNakdiNUU5N05ERVQyaFAtdjJ6VjdkeTh2R2FBQ0gxQnlOVzQ1alh6TUxZVmg5UVpCdyJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctbGluZWFnZS1hZ2VudCIsInBzIjoiaHR0cHM6Ly9wZXJzb24uY29uZm9ybWFuY2UudGVzdCIsInN1YiI6ImFhdXRoOkFnZW50QGFwLmNvbmZvcm1hbmNlLnRlc3QifQ.2u40S6Aw0J022sJyFen3aM-mY-V5Hbbrr8Vpdlo4XnbBAef7w2bRktHxzcrNxBvZ8SFK8ZIlHPYya8x1Jz67Aw\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:LnA42jFQCzFHmbo99op028iGblepuGq4FCoEJkdZjyk=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 400,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "71"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJzdGF0dXMiOjQwMCwiZXJyb3IiOiJpbnZhbGlkX3Jlc291cmNlX3Rva2VuIiwiZGV0YWlsIjoiQmFkIFJlcXVlc3QifQo="
+              }
+            }
+          ],
+          "id": "ps-wrong-lineage",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "token-refusal",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": 400,
+              "actual": 400
+            },
+            {
+              "assertion": "token-error",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": "invalid_resource_token",
+              "actual": "invalid_resource_token"
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "no-issued-token",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:3R6ttQC6KbZ0nOSc4p213/mP6CDDZqAi+GFOV+8VZdvV1pH6X+M5RB9KG9BmX695mttLLfitGnEzQ7Sf9YKLAg==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctcHMtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.qK1-CPxZv8PyBGc0hwcrMmUE3wTJtnLvJhId4iGTMuAC3HriIlNs4AnGuzwiUIjGnacBegtsrojyxoWluGPVDw\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctcHMtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.qK1-CPxZv8PyBGc0hwcrMmUE3wTJtnLvJhId4iGTMuAC3HriIlNs4AnGuzwiUIjGnacBegtsrojyxoWluGPVDw\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "591"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwM0lpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5oR0QteVRPOEVIMS1IQV9rRWM3M2FvOGMwLTU0WHdXOXFjQUlVMDByRUNVV0xnTkcxaGZ5MTRKY1JCRDlRRWNYN2RPYldBZzhJc05MdTRDaHcyYm5EQSIsImV4cGlyZXNfaW4iOjMwMH0K"
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-7",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:VJH/xxskq0mCIHPxOe8QtwsajVMeMc77AZdeqYPJJkE=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:lTn28esdVtwA4+hW9yT5P2/Kft5vqR+uyy1aTBcYZlz58LhdPrzool1lGmx3zUqrjZTHCyZcYvMJBZoHz2ZYCQ==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctcHMtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.qK1-CPxZv8PyBGc0hwcrMmUE3wTJtnLvJhId4iGTMuAC3HriIlNs4AnGuzwiUIjGnacBegtsrojyxoWluGPVDw\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwM0lpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5oR0QteVRPOEVIMS1IQV9rRWM3M2FvOGMwLTU0WHdXOXFjQUlVMDByRUNVV0xnTkcxaGZ5MTRKY1JCRDlRRWNYN2RPYldBZzhJc05MdTRDaHcyYm5EQSIsInJlc291cmNlX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpYTJsa0lqb2ljbVZ6YjNWeVkyVXRNU0lzSW5SNWNDSTZJbUZoTFhKbGMyOTFjbU5sSzJwM2RDSjkuZXlKaFoyVnVkRjlxYTNRaU9pSmhWa0owWVhCTVpERXhVMVZXUzBsTlIwcG1VSHBQUlVSMVRqQnpXR050ZWtwUlRsWlVMVjl6UzBWVklpd2lZWFZrSWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW1SM2F5STZJbUZoZFhSb0xYSmxjMjkxY21ObExtcHpiMjRpTENKbGVIQWlPakU0TURBd01EQXhNakFzSW1saGRDSTZNVGM1T1RrNU9UazVPU3dpYVhOeklqb2lhSFIwY0hNNkx5OXlaWE52ZFhKalpTNWpiMjVtYjNKdFlXNWpaUzUwWlhOMElpd2lhblJwSWpvaWNITXRkM0p2Ym1jdGNITXRjbVZ6YjNWeVkyVWlMQ0p3Y21WelpXNTBaV1JmYW5ScElqb2labWw0ZEhWeVpTMDNJaXdpY0hNaU9pSm9kSFJ3Y3pvdkwyWnZjbVZwWjI0dVkyOXVabTl5YldGdVkyVXVkR1Z6ZENJc0luTmpiM0JsSWpvaWNtVmhaQ0lzSW5OMVlpSTZJbVJwY21WamRHVmtMWEJsY25OdmJpMHhJbjAueWdCLWE1YVFqc1BvOXNyM2tyY2Zqc0NvbWItRzVYWVU4YTR6S1NEYkZpbTd6Tml6R3FXX2toMmo4aEszemoxWXBSRWZKVmJrZWpId01xWUJNRl9tRFEifQ==",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtd3JvbmctcHMtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.qK1-CPxZv8PyBGc0hwcrMmUE3wTJtnLvJhId4iGTMuAC3HriIlNs4AnGuzwiUIjGnacBegtsrojyxoWluGPVDw\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:VJH/xxskq0mCIHPxOe8QtwsajVMeMc77AZdeqYPJJkE=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 400,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "71"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJzdGF0dXMiOjQwMCwiZXJyb3IiOiJpbnZhbGlkX3Jlc291cmNlX3Rva2VuIiwiZGV0YWlsIjoiQmFkIFJlcXVlc3QifQo="
+              }
+            }
+          ],
+          "id": "ps-wrong-ps",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "token-refusal",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": 400,
+              "actual": 400
+            },
+            {
+              "assertion": "token-error",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": "invalid_resource_token",
+              "actual": "invalid_resource_token"
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "no-issued-token",
+              "clause": "ps.resource-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:HcHjwXG/aj45Ab0+UqiUrkocdMtoFK7qLVwnJXks3kYUqhb9Wu588dRW7e67UCCdOkmqHEY7f/+f6wr8fInhBA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZXhwaXJlZC1yZXNvdXJjZS1hZ2VudCIsInBzIjoiaHR0cHM6Ly9wZXJzb24uY29uZm9ybWFuY2UudGVzdCIsInN1YiI6ImFhdXRoOkFnZW50QGFwLmNvbmZvcm1hbmNlLnRlc3QifQ.NM6TK_E9NRCqIjBP7MJ3i_zJMHuIFiNDTcEHFj4ElKH_Fqgg18OdKh9qpfDlrAPB6aKEBbLtmhrqwEHBsa0xBQ\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZXhwaXJlZC1yZXNvdXJjZS1hZ2VudCIsInBzIjoiaHR0cHM6Ly9wZXJzb24uY29uZm9ybWFuY2UudGVzdCIsInN1YiI6ImFhdXRoOkFnZW50QGFwLmNvbmZvcm1hbmNlLnRlc3QifQ.NM6TK_E9NRCqIjBP7MJ3i_zJMHuIFiNDTcEHFj4ElKH_Fqgg18OdKh9qpfDlrAPB6aKEBbLtmhrqwEHBsa0xBQ\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "591"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwNElpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5jSlJVOEIwa0RUWk1UOHVjWGpoRy0wbmhJTm1EdDNTakN2Wi1oU0ZZOF9adzlnN0xCaHFYVVFpNzhrSU40b01YV3N1OUNQUnJxMjJJelh4RkpQSDhCdyIsImV4cGlyZXNfaW4iOjMwMH0K"
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-8",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:frzHbnYWBxw59359VjSS/Xe2LNWSuXxlxPu4dm1af2I=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:5HeevjyERYAzCon53gczOb2nT6vHgGRAG5EqH+0+Lzg2rMnDiHQTjvf/WuQ050+eZUMOUFFqrTkK+4Vl4rv9AA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZXhwaXJlZC1yZXNvdXJjZS1hZ2VudCIsInBzIjoiaHR0cHM6Ly9wZXJzb24uY29uZm9ybWFuY2UudGVzdCIsInN1YiI6ImFhdXRoOkFnZW50QGFwLmNvbmZvcm1hbmNlLnRlc3QifQ.NM6TK_E9NRCqIjBP7MJ3i_zJMHuIFiNDTcEHFj4ElKH_Fqgg18OdKh9qpfDlrAPB6aKEBbLtmhrqwEHBsa0xBQ\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwNElpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5jSlJVOEIwa0RUWk1UOHVjWGpoRy0wbmhJTm1EdDNTakN2Wi1oU0ZZOF9adzlnN0xCaHFYVVFpNzhrSU40b01YV3N1OUNQUnJxMjJJelh4RkpQSDhCdyIsInJlc291cmNlX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpYTJsa0lqb2ljbVZ6YjNWeVkyVXRNU0lzSW5SNWNDSTZJbUZoTFhKbGMyOTFjbU5sSzJwM2RDSjkuZXlKaFoyVnVkRjlxYTNRaU9pSmhWa0owWVhCTVpERXhVMVZXUzBsTlIwcG1VSHBQUlVSMVRqQnpXR050ZWtwUlRsWlVMVjl6UzBWVklpd2lZWFZrSWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW1SM2F5STZJbUZoZFhSb0xYSmxjMjkxY21ObExtcHpiMjRpTENKbGVIQWlPakUzT1RrNU9UazVPVGtzSW1saGRDSTZNVGM1T1RrNU9UZzRNQ3dpYVhOeklqb2lhSFIwY0hNNkx5OXlaWE52ZFhKalpTNWpiMjVtYjNKdFlXNWpaUzUwWlhOMElpd2lhblJwSWpvaWNITXRaWGh3YVhKbFpDMXlaWE52ZFhKalpTMXlaWE52ZFhKalpTSXNJbkJ5WlhObGJuUmxaRjlxZEdraU9pSm1hWGgwZFhKbExUZ2lMQ0p3Y3lJNkltaDBkSEJ6T2k4dmNHVnljMjl1TG1OdmJtWnZjbTFoYm1ObExuUmxjM1FpTENKelkyOXdaU0k2SW5KbFlXUWlMQ0p6ZFdJaU9pSmthWEpsWTNSbFpDMXdaWEp6YjI0dE1TSjkuX01oUVF0aGgxT3lmSEV5NHl3SGFjdXh3aVp0QndTSTJyVFhTVERGWlVRQ1l5anp3SUVYZ29wRjdsZzMxUlFwYW8tQ3lpSW1nNW9XWVJkOV9nRUdWQmcifQ==",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZXhwaXJlZC1yZXNvdXJjZS1hZ2VudCIsInBzIjoiaHR0cHM6Ly9wZXJzb24uY29uZm9ybWFuY2UudGVzdCIsInN1YiI6ImFhdXRoOkFnZW50QGFwLmNvbmZvcm1hbmNlLnRlc3QifQ.NM6TK_E9NRCqIjBP7MJ3i_zJMHuIFiNDTcEHFj4ElKH_Fqgg18OdKh9qpfDlrAPB6aKEBbLtmhrqwEHBsa0xBQ\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:frzHbnYWBxw59359VjSS/Xe2LNWSuXxlxPu4dm1af2I=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 400,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "71"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJzdGF0dXMiOjQwMCwiZXJyb3IiOiJleHBpcmVkX3Jlc291cmNlX3Rva2VuIiwiZGV0YWlsIjoiQmFkIFJlcXVlc3QifQo="
+              }
+            }
+          ],
+          "id": "ps-expired-resource",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "token-refusal",
+              "clause": "ps.errors",
+              "state": "pass",
+              "expected": 400,
+              "actual": 400
+            },
+            {
+              "assertion": "token-error",
+              "clause": "ps.errors",
+              "state": "pass",
+              "expected": "expired_resource_token",
+              "actual": "expired_resource_token"
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "no-issued-token",
+              "clause": "ps.errors",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:/cUwNhnjpJ8NX/CXlc5U71nPDZbbGI2HhzfVfdrhAmqhf4mfJe3Foxe/QOZ1lFtggb9JypXSzZD8OBGj0uxBDg==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZXhwaXJlZC1wcmVzZW50ZWQtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.ZiWYcyVgNsC3iUr219X4Hk8fec_Yv3QBlJQgFPm3tm1PKMgMLQ_ieY7yrlNkbm1Nm4jy2B9UXE3poepLUTT_AA\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZXhwaXJlZC1wcmVzZW50ZWQtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.ZiWYcyVgNsC3iUr219X4Hk8fec_Yv3QBlJQgFPm3tm1PKMgMLQ_ieY7yrlNkbm1Nm4jy2B9UXE3poepLUTT_AA\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "591"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMwNUlpd2lhV0YwSWpveE9EQXdNREF3TURBd0xDSmxlSEFpT2pFNE1EQXdNREF6TURCOS5JOHgydWZVQ3JuczMyNjNUYmlrT1JEeUdmdzdlX25yVWYtUnI5T2wxNFBwbG4zaGJlSlFWTHVyb3pSd3NxZW96Zm0wazRBakRnOXV2SXFXaFVSRlRDZyIsImV4cGlyZXNfaW4iOjMwMH0K"
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-9",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:jdDy7HVo3XWPrf9fRtq6Le3hUux0GNkDL2z5Y2ElCss=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:55ifgd2HZ0cYnTjDLDXsdq09zz37wEgp6pc6G9TgSwQ0tYu1XgxCV9AgxYowFqQRwB1/lsihA/fzd06Am+IaCg==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZXhwaXJlZC1wcmVzZW50ZWQtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.ZiWYcyVgNsC3iUr219X4Hk8fec_Yv3QBlJQgFPm3tm1PKMgMLQ_ieY7yrlNkbm1Nm4jy2B9UXE3poepLUTT_AA\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lhMmxrSWpvaWNITXRNU0lzSW5SNWNDSTZJbUZoTFhCbGNuTnZiaXRxZDNRaWZRLmV5SmhkV1FpT2lKb2RIUndjem92TDNKbGMyOTFjbU5sTG1OdmJtWnZjbTFoYm1ObExuUmxjM1FpTENKamJtWWlPbnNpYW5kcklqcDdJbUZzWnlJNklrVmtNalUxTVRraUxDSmpjbllpT2lKRlpESTFOVEU1SWl3aWEzUjVJam9pVDB0UUlpd2llQ0k2SW1kVWJETkVjV2c1UmpFNVYyOHhVbTEzTUhndGVrMTFUbWx3UnpBM2FtVnBXR1paVUZjMFgwcHpOVkVpZlgwc0ltUjNheUk2SW1GaGRYUm9MWEJsY25OdmJpNXFjMjl1SWl3aVpYaHdJam94TnprNU9UazVPVGs1TENKcFlYUWlPakUzT1RrNU9UazRPREFzSW1semN5STZJbWgwZEhCek9pOHZjR1Z5YzI5dUxtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnFkR2tpT2lKbWFYaDBkWEpsTFRraUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNKOS5PSTkxTlVOc2txOVNGUGlZb0JicXBoMXVLbjhDeEwydjlkbmFiY09VTkdTWl9XMFpMN1BSVl9OTTEwekVwNTlWcmpMbWx6bGJTUHgtRkF0dXBUSF9EQSIsInJlc291cmNlX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpYTJsa0lqb2ljbVZ6YjNWeVkyVXRNU0lzSW5SNWNDSTZJbUZoTFhKbGMyOTFjbU5sSzJwM2RDSjkuZXlKaFoyVnVkRjlxYTNRaU9pSmhWa0owWVhCTVpERXhVMVZXUzBsTlIwcG1VSHBQUlVSMVRqQnpXR050ZWtwUlRsWlVMVjl6UzBWVklpd2lZWFZrSWpvaWFIUjBjSE02THk5d1pYSnpiMjR1WTI5dVptOXliV0Z1WTJVdWRHVnpkQ0lzSW1SM2F5STZJbUZoZFhSb0xYSmxjMjkxY21ObExtcHpiMjRpTENKbGVIQWlPakU0TURBd01EQXhNakFzSW1saGRDSTZNVGM1T1RrNU9UazVPU3dpYVhOeklqb2lhSFIwY0hNNkx5OXlaWE52ZFhKalpTNWpiMjVtYjNKdFlXNWpaUzUwWlhOMElpd2lhblJwSWpvaWNITXRaWGh3YVhKbFpDMXdjbVZ6Wlc1MFpXUXRjbVZ6YjNWeVkyVWlMQ0p3Y21WelpXNTBaV1JmYW5ScElqb2labWw0ZEhWeVpTMDVJaXdpY0hNaU9pSm9kSFJ3Y3pvdkwzQmxjbk52Ymk1amIyNW1iM0p0WVc1alpTNTBaWE4wSWl3aWMyTnZjR1VpT2lKeVpXRmtJaXdpYzNWaUlqb2laR2x5WldOMFpXUXRjR1Z5YzI5dUxURWlmUS5mWjUwRDRDVWppMC1taHhUOVcwZkxGazVQQXZTcURGTDZfcjdBSWs1d1VQX2ZRVE9UYkVmTXctZ3FuWEhrSFlPc1loeXVfOVNWYlpOd1dGMnZBOXNEQSJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZXhwaXJlZC1wcmVzZW50ZWQtYWdlbnQiLCJwcyI6Imh0dHBzOi8vcGVyc29uLmNvbmZvcm1hbmNlLnRlc3QiLCJzdWIiOiJhYXV0aDpBZ2VudEBhcC5jb25mb3JtYW5jZS50ZXN0In0.ZiWYcyVgNsC3iUr219X4Hk8fec_Yv3QBlJQgFPm3tm1PKMgMLQ_ieY7yrlNkbm1Nm4jy2B9UXE3poepLUTT_AA\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:jdDy7HVo3XWPrf9fRtq6Le3hUux0GNkDL2z5Y2ElCss=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 400,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "72"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJzdGF0dXMiOjQwMCwiZXJyb3IiOiJleHBpcmVkX3ByZXNlbnRlZF90b2tlbiIsImRldGFpbCI6IkJhZCBSZXF1ZXN0In0K"
+              }
+            }
+          ],
+          "id": "ps-expired-presented",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "token-refusal",
+              "clause": "ps.errors",
+              "state": "pass",
+              "expected": 400,
+              "actual": 400
+            },
+            {
+              "assertion": "token-error",
+              "clause": "ps.errors",
+              "state": "pass",
+              "expected": "expired_presented_token",
+              "actual": "expired_presented_token"
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "no-issued-token",
+              "clause": "ps.errors",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:/qBp1mcUBugIi+CFl1XqwEmvr6v1941GyrooD4j9uPoED0R2j/bLsBaMjR/Pt6VKeavavnPQFw5Q3fzlV8UZCA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZGVuaWVkLXNjb3BlLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.Bx88n5ocS5TwAZd0d-O_Qj4DXGM35N7l1R28i-0lwXfRDgsH-6uOaRG1GRwuUuycEtOmB5-oSA7sVCz0vcnjAQ\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZGVuaWVkLXNjb3BlLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.Bx88n5ocS5TwAZd0d-O_Qj4DXGM35N7l1R28i-0lwXfRDgsH-6uOaRG1GRwuUuycEtOmB5-oSA7sVCz0vcnjAQ\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "593"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMweE1DSXNJbWxoZENJNk1UZ3dNREF3TURBd01Dd2laWGh3SWpveE9EQXdNREF3TXpBd2ZRLkRBNTE1STVBYmk4cFdpZ3ZqTFE3bGRRSHRpc0Z5YW1KckxLSWZMX1g0UEVOTTBsZzIyQnNGanY4bnExalB5V1hzZjNaYWRBczYtSjBISzhabl8tcERnIiwiZXhwaXJlc19pbiI6MzAwfQo="
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000300,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-10",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:TUUR55ZgprD1Er+OJaXwjo5FWFbVxaHcxfhEBY52TIE=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:5Cofb7P3eqgc/SStwUz0br0MvLLAAnkhd305riLf3sXeSEdaVyd55Skej+y3uomFcZ8gk8PNsPqw/uttkiPEBA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZGVuaWVkLXNjb3BlLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.Bx88n5ocS5TwAZd0d-O_Qj4DXGM35N7l1R28i-0lwXfRDgsH-6uOaRG1GRwuUuycEtOmB5-oSA7sVCz0vcnjAQ\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMweE1DSXNJbWxoZENJNk1UZ3dNREF3TURBd01Dd2laWGh3SWpveE9EQXdNREF3TXpBd2ZRLkRBNTE1STVBYmk4cFdpZ3ZqTFE3bGRRSHRpc0Z5YW1KckxLSWZMX1g0UEVOTTBsZzIyQnNGanY4bnExalB5V1hzZjNaYWRBczYtSjBISzhabl8tcERnIiwicmVzb3VyY2VfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lhMmxrSWpvaWNtVnpiM1Z5WTJVdE1TSXNJblI1Y0NJNkltRmhMWEpsYzI5MWNtTmxLMnAzZENKOS5leUpoWjJWdWRGOXFhM1FpT2lKaFZrSjBZWEJNWkRFeFUxVldTMGxOUjBwbVVIcFBSVVIxVGpCeldHTnRla3BSVGxaVUxWOXpTMFZWSWl3aVlYVmtJam9pYUhSMGNITTZMeTl3WlhKemIyNHVZMjl1Wm05eWJXRnVZMlV1ZEdWemRDSXNJbVIzYXlJNkltRmhkWFJvTFhKbGMyOTFjbU5sTG1wemIyNGlMQ0psZUhBaU9qRTRNREF3TURBeE1qQXNJbWxoZENJNk1UYzVPVGs1T1RrNU9Td2lhWE56SWpvaWFIUjBjSE02THk5eVpYTnZkWEpqWlM1amIyNW1iM0p0WVc1alpTNTBaWE4wSWl3aWFuUnBJam9pY0hNdFpHVnVhV1ZrTFhOamIzQmxMWEpsYzI5MWNtTmxJaXdpY0hKbGMyVnVkR1ZrWDJwMGFTSTZJbVpwZUhSMWNtVXRNVEFpTENKd2N5STZJbWgwZEhCek9pOHZjR1Z5YzI5dUxtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpZMjl3WlNJNkltRmtiV2x1SWl3aWMzVmlJam9pWkdseVpXTjBaV1F0Y0dWeWMyOXVMVEVpZlEuRm1HWHZyQk4ya3JXRzZ1d2I0dGJScVFvR3daVFdibWdOQUd2TVRteXVyck5kVkVpWThqVms2aXpQMTUzeGZrZmY5a2IwOHhiUHowcHBwQVZqMUtVQkEifQ==",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDA2MDAsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtZGVuaWVkLXNjb3BlLWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.Bx88n5ocS5TwAZd0d-O_Qj4DXGM35N7l1R28i-0lwXfRDgsH-6uOaRG1GRwuUuycEtOmB5-oSA7sVCz0vcnjAQ\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:TUUR55ZgprD1Er+OJaXwjo5FWFbVxaHcxfhEBY52TIE=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 403,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "60"
+                  ],
+                  "Content-Type": [
+                    "application/problem+json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJzdGF0dXMiOjQwMywiZXJyb3IiOiJhY2Nlc3NfZGVuaWVkIiwiZGV0YWlsIjoiRm9yYmlkZGVuIn0K"
+              }
+            }
+          ],
+          "id": "ps-denied-scope",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "token-refusal",
+              "clause": "ps.host-scope-policy",
+              "state": "pass",
+              "expected": 403,
+              "actual": 403
+            },
+            {
+              "assertion": "token-error",
+              "clause": "ps.host-scope-policy",
+              "state": "pass",
+              "expected": "access_denied",
+              "actual": "access_denied"
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "no-issued-token",
+              "clause": "ps.host-scope-policy",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        },
+        {
+          "exchanges": [
+            {
+              "stage": "person",
+              "method": "POST",
+              "url": "https://person.conformance.test/person",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:654xOT1xyXtRIX7ovEAdUOIEVT/AFO+t13kRk0GYLHo07mmav1XYB0+8eBHeKZkO1TcCpXQjWUZSECORrX6aBA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDAwNDUsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtc2hvcnQtcGFyZW50LWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.yToUgfOo9hcMJVgcWtzUFhKmemkelG7gGNYm3RC8bflkWuHVgN89PSG2Xaz5E1SssaBRGGzO3U7LW6VZp9MCDA\""
+                ]
+              },
+              "request_body_base64": "eyJyZXNvdXJjZSI6Imh0dHBzOi8vcmVzb3VyY2UuY29uZm9ybWFuY2UudGVzdCJ9",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /person\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDAwNDUsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtc2hvcnQtcGFyZW50LWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.yToUgfOo9hcMJVgcWtzUFhKmemkelG7gGNYm3RC8bflkWuHVgN89PSG2Xaz5E1SssaBRGGzO3U7LW6VZp9MCDA\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:BR8rB/oQG7YIqKhG9sDz7fHaHtQk/2fvHELnd3o//f0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "592"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJwZXJzb25fdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMweE1TSXNJbWxoZENJNk1UZ3dNREF3TURBd01Dd2laWGh3SWpveE9EQXdNREF3TURRMWZRLk5IdzdHa1FwNTJHdExzZC1ZamlocmoxX0M2UFZJRFpzZFVIVk9OLWJCZHZ5cEVwWTdCaFlQSWl3TUFROXFFODhqSmN3VGt2VEVkUVgzSUZfb1VrWkRRIiwiZXhwaXJlc19pbiI6NDV9Cg=="
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": true,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000045,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-11",
+                  "sub": "directed-person-1"
+                }
+              }
+            },
+            {
+              "stage": "token",
+              "method": "POST",
+              "url": "https://person.conformance.test/token",
+              "request_headers": {
+                "Content-Digest": [
+                  "sha-256=:XMgp2l/6+RqKd6dpBmeEEObHkXJVpaOEbV+7BklkGu0=:"
+                ],
+                "Content-Type": [
+                  "application/json"
+                ],
+                "Signature": [
+                  "sig=:tXU5L0EWcgy3laOdUIgrGRr7Ogh9lRMxSqtvq5hdCvVZ3yNYA1UxH0I+fRnr0gtd+EL6nMEXAdGlHK5EI726CA==:"
+                ],
+                "Signature-Input": [
+                  "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000"
+                ],
+                "Signature-Key": [
+                  "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDAwNDUsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtc2hvcnQtcGFyZW50LWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.yToUgfOo9hcMJVgcWtzUFhKmemkelG7gGNYm3RC8bflkWuHVgN89PSG2Xaz5E1SssaBRGGzO3U7LW6VZp9MCDA\""
+                ]
+              },
+              "request_body_base64": "eyJwcmVzZW50ZWRfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lkSGx3SWpvaVlXRXRjR1Z5YzI5dUsycDNkQ0lzSW10cFpDSTZJbkJ6TFRFaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDNCbGNuTnZiaTVqYjI1bWIzSnRZVzVqWlM1MFpYTjBJaXdpWkhkcklqb2lZV0YxZEdndGNHVnljMjl1TG1wemIyNGlMQ0poZFdRaU9pSm9kSFJ3Y3pvdkwzSmxjMjkxY21ObExtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpkV0lpT2lKa2FYSmxZM1JsWkMxd1pYSnpiMjR0TVNJc0ltTnVaaUk2ZXlKcWQyc2lPbnNpYTNSNUlqb2lUMHRRSWl3aVkzSjJJam9pUldReU5UVXhPU0lzSW5naU9pSm5WR3d6UkhGb09VWXhPVmR2TVZKdGR6QjRMWHBOZFU1cGNFY3dOMnBsYVZobVdWQlhORjlLY3pWUklpd2lZV3huSWpvaVJXUXlOVFV4T1NKOWZTd2lhblJwSWpvaVptbDRkSFZ5WlMweE1TSXNJbWxoZENJNk1UZ3dNREF3TURBd01Dd2laWGh3SWpveE9EQXdNREF3TURRMWZRLk5IdzdHa1FwNTJHdExzZC1ZamlocmoxX0M2UFZJRFpzZFVIVk9OLWJCZHZ5cEVwWTdCaFlQSWl3TUFROXFFODhqSmN3VGt2VEVkUVgzSUZfb1VrWkRRIiwicmVzb3VyY2VfdG9rZW4iOiJleUpoYkdjaU9pSkZaREkxTlRFNUlpd2lhMmxrSWpvaWNtVnpiM1Z5WTJVdE1TSXNJblI1Y0NJNkltRmhMWEpsYzI5MWNtTmxLMnAzZENKOS5leUpoWjJWdWRGOXFhM1FpT2lKaFZrSjBZWEJNWkRFeFUxVldTMGxOUjBwbVVIcFBSVVIxVGpCeldHTnRla3BSVGxaVUxWOXpTMFZWSWl3aVlYVmtJam9pYUhSMGNITTZMeTl3WlhKemIyNHVZMjl1Wm05eWJXRnVZMlV1ZEdWemRDSXNJbVIzYXlJNkltRmhkWFJvTFhKbGMyOTFjbU5sTG1wemIyNGlMQ0psZUhBaU9qRTRNREF3TURBeE1qQXNJbWxoZENJNk1UYzVPVGs1T1RrNU9Td2lhWE56SWpvaWFIUjBjSE02THk5eVpYTnZkWEpqWlM1amIyNW1iM0p0WVc1alpTNTBaWE4wSWl3aWFuUnBJam9pY0hNdGMyaHZjblF0Y0dGeVpXNTBMWEpsYzI5MWNtTmxJaXdpY0hKbGMyVnVkR1ZrWDJwMGFTSTZJbVpwZUhSMWNtVXRNVEVpTENKd2N5STZJbWgwZEhCek9pOHZjR1Z5YzI5dUxtTnZibVp2Y20xaGJtTmxMblJsYzNRaUxDSnpZMjl3WlNJNkluSmxZV1FpTENKemRXSWlPaUprYVhKbFkzUmxaQzF3WlhKemIyNHRNU0o5Lk1oMlFDbTZoQV9qNnhnRnNUZktPYWdrSVpIYzIxRGZYcjVUYVdTdElGeDZLM0VoT1JRMTJla0tuMnZsT0xTYVp6dmtiMXZiaHhlS1M1dzJ0MTJLREN3In0=",
+              "signature_base": "\"@method\": POST\n\"@authority\": person.conformance.test\n\"@path\": /token\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtMSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdUbDNEcWg5RjE5V28xUm13MHgtek11TmlwRzA3amVpWGZZUFc0X0pzNVEifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDAwNDUsImlhdCI6MTc5OTk5OTk5MCwiaXNzIjoiaHR0cHM6Ly9hcC5jb25mb3JtYW5jZS50ZXN0IiwianRpIjoicHMtc2hvcnQtcGFyZW50LWFnZW50IiwicHMiOiJodHRwczovL3BlcnNvbi5jb25mb3JtYW5jZS50ZXN0Iiwic3ViIjoiYWF1dGg6QWdlbnRAYXAuY29uZm9ybWFuY2UudGVzdCJ9.yToUgfOo9hcMJVgcWtzUFhKmemkelG7gGNYm3RC8bflkWuHVgN89PSG2Xaz5E1SssaBRGGzO3U7LW6VZp9MCDA\"\n\"content-type\": application/json\n\"content-digest\": sha-256=:XMgp2l/6+RqKd6dpBmeEEObHkXJVpaOEbV+7BklkGu0=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-type\" \"content-digest\");created=1800000000",
+              "response": {
+                "status": 200,
+                "headers": {
+                  "Cache-Control": [
+                    "no-store"
+                  ],
+                  "Content-Length": [
+                    "659"
+                  ],
+                  "Content-Type": [
+                    "application/json"
+                  ],
+                  "Date": [
+                    "Tue, 20 Oct 2026 11:49:51 GMT"
+                  ]
+                },
+                "body_base64": "eyJhdXRoX3Rva2VuIjoiZXlKaGJHY2lPaUpGWkRJMU5URTVJaXdpZEhsd0lqb2lZV0V0WVhWMGFDdHFkM1FpTENKcmFXUWlPaUp3Y3kweEluMC5leUpwYzNNaU9pSm9kSFJ3Y3pvdkwzQmxjbk52Ymk1amIyNW1iM0p0WVc1alpTNTBaWE4wSWl3aVpIZHJJam9pWVdGMWRHZ3RjR1Z5YzI5dUxtcHpiMjRpTENKaGRXUWlPaUpvZEhSd2N6b3ZMM0psYzI5MWNtTmxMbU52Ym1admNtMWhibU5sTG5SbGMzUWlMQ0pxZEdraU9pSm1hWGgwZFhKbExURXlJaXdpY0hNaU9pSm9kSFJ3Y3pvdkwzQmxjbk52Ymk1amIyNW1iM0p0WVc1alpTNTBaWE4wSWl3aWMzVmlJam9pWkdseVpXTjBaV1F0Y0dWeWMyOXVMVEVpTENKamJtWWlPbnNpYW5kcklqcDdJbXQwZVNJNklrOUxVQ0lzSW1OeWRpSTZJa1ZrTWpVMU1Ua2lMQ0o0SWpvaVoxUnNNMFJ4YURsR01UbFhiekZTYlhjd2VDMTZUWFZPYVhCSE1EZHFaV2xZWmxsUVZ6UmZTbk0xVVNJc0ltRnNaeUk2SWtWa01qVTFNVGtpZlgwc0ltbGhkQ0k2TVRnd01EQXdNREF3TUN3aVpYaHdJam94T0RBd01EQXdNRFExTENKelkyOXdaU0k2SW5KbFlXUWlmUS5iQzF1bXBRLXBJU1NYNWNUd09TajRrN2dXSVpJQWFlZ0t6aTkwVDM0aFNRUzdUUnBRU3YxSFZOWUs2QVdkbk5CSjdfeDc1LU9KQUYwVGdDYWlhemlCZyIsImV4cGlyZXNfaW4iOjQ1fQo="
+              },
+              "jwt": {
+                "configured_subject": true,
+                "valid": true,
+                "signature": true,
+                "identity": true,
+                "key": true,
+                "lifetime": true,
+                "scope": true,
+                "no_authorization": false,
+                "claims": {
+                  "aud": "https://resource.conformance.test",
+                  "cnf": {
+                    "jwk": {
+                      "alg": "Ed25519",
+                      "crv": "Ed25519",
+                      "kty": "OKP",
+                      "x": "gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+                    }
+                  },
+                  "dwk": "aauth-person.json",
+                  "exp": 1800000045,
+                  "iat": 1800000000,
+                  "iss": "https://person.conformance.test",
+                  "jti": "fixture-12",
+                  "ps": "https://person.conformance.test",
+                  "scope": "read",
+                  "sub": "directed-person-1"
+                }
+              }
+            }
+          ],
+          "id": "ps-short-parent",
+          "assertions": [
+            {
+              "assertion": "person-status",
+              "clause": "ps.person-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "person-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-identity",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-key",
+              "clause": "ps.person-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-lifetime",
+              "clause": "ps.person-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "person-authorization",
+              "clause": "ps.person-no-authorization",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-status",
+              "clause": "ps.auth-endpoint",
+              "state": "pass",
+              "expected": 200,
+              "actual": 200
+            },
+            {
+              "assertion": "auth-signature",
+              "clause": "ps.common-verification",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-identity",
+              "clause": "ps.auth-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-key",
+              "clause": "ps.auth-structure",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-lifetime",
+              "clause": "ps.auth-lifetime",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "auth-authorization",
+              "clause": "ps.host-scope-policy",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            },
+            {
+              "assertion": "configured-person",
+              "clause": "ps.host-person-profile",
+              "state": "pass",
+              "expected": true,
+              "actual": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

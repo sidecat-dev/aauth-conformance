@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "ps-proof-tamper",
+  "title": "Tampered Person endpoint HTTP proof",
+  "role_under_test": "person-server.direct",
+  "given": "agent-identity",
+  "person": {
+    "mutation": "tampered-proof"
+  },
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "assertions": [
+    {
+      "id": "refusal",
+      "clause": "ps.proof-verification",
+      "kind": "status",
+      "stage": "person",
+      "equals": 401
+    },
+    {
+      "id": "signature-error",
+      "clause": "ps.proof-verification",
+      "kind": "sfv-token",
+      "stage": "person",
+      "equals": "invalid_signature",
+      "header": "Signature-Error",
+      "member": "error"
+    }
+  ]
+}

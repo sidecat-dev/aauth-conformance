@@ -8,6 +8,7 @@ import (
 )
 
 type Case struct {
+	Exchanges       []PersonExchange    `json:"exchanges,omitempty"`
 	SigningInput    *AgentJob           `json:"signing_input,omitempty"`
 	ControlResponse *Response           `json:"control_response,omitempty"`
 	RequestBody     []byte              `json:"request_body_base64,omitempty"`
@@ -101,6 +102,9 @@ func (r Report) Success() bool {
 func (r Report) Markdown(out io.Writer) error {
 	var b strings.Builder
 	title := "Resource agent-identity"
+	if r.Role == PersonServerRole {
+		title = "Person Server direct authorization"
+	}
 	if r.Role == AgentRole {
 		title = "Agent signing"
 	}

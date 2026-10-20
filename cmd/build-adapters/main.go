@@ -25,7 +25,7 @@ func run() error {
 	goSource := flag.String("go-source", "", "aauth-go checkout (optional)")
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (optional)")
 	out := flag.String("out", "build", "build output directory")
-	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity or agent.signing")
+	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing or person-server.direct")
 	flag.Parse()
 	if *goSource == "" && *rustSource == "" {
 		return fmt.Errorf("supply -go-source and/or -rust-source")
@@ -83,6 +83,9 @@ func run() error {
 			if err = copyFile(filepath.Join(root, "adapters/go/main.go"), filepath.Join(work, "main.go")); err != nil {
 				return err
 			}
+			if err = copyFile(filepath.Join(root, "adapters/go/main_test.go"), filepath.Join(work, "main_test.go")); err != nil {
+				return err
+			}
 			if err = copyFile(filepath.Join(root, "adapters/go/go.mod"), filepath.Join(work, "go.mod")); err != nil {
 				return err
 			}
@@ -107,7 +110,11 @@ func run() error {
 				return err
 			}
 			manifest = append(manifest, []byte("\n[patch.crates-io]\n")...)
-			for _, name := range []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose"} {
+			names := []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose"}
+			if _, e := os.Stat(filepath.Join(source, "crates", "aauth-rust-person-server")); e == nil || *role == conformance.PersonServerRole {
+				names = append(names, "aauth-rust-person-server")
+			}
+			for _, name := range names {
 				manifest = append(manifest, []byte(name+" = { path = "+strconv.Quote(filepath.ToSlash(filepath.Join(source, "crates", name)))+" }\n")...)
 			}
 			if err = os.WriteFile(filepath.Join(work, "Cargo.toml"), manifest, 0644); err != nil {

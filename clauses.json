@@ -133,6 +133,118 @@
       "anchor": "requirement-person-token",
       "scope": "out-of-slice",
       "role": "agent.signing"
+    },
+    {
+      "id": "ps.person-endpoint",
+      "source": "core",
+      "section": "Person Token Endpoint: signed POST and successful person-token response",
+      "anchor": "person-token-endpoint",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.person-structure",
+      "source": "core",
+      "section": "Person Token Structure: exact identity and confirmation-key profile",
+      "anchor": "person-token-structure",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.person-lifetime",
+      "source": "core",
+      "section": "Person Token Structure: one-hour and Agent parent expiry bounds",
+      "anchor": "person-token-structure",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.person-no-authorization",
+      "source": "core",
+      "section": "Person Token Structure: scope and account are forbidden",
+      "anchor": "person-token-structure",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.auth-endpoint",
+      "source": "core",
+      "section": "Auth Token Endpoint: signed POST and direct grant response",
+      "anchor": "ps-token-endpoint",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.resource-verification",
+      "source": "core",
+      "section": "Resource Token Verification: audience, key, person, PS and presented-jti lineage",
+      "anchor": "resource-token-verification",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.auth-structure",
+      "source": "core",
+      "section": "Auth Token Structure: issuer, audience, person, PS and key bindings",
+      "anchor": "auth-tokens",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.auth-lifetime",
+      "source": "core",
+      "section": "Auth Token Structure: one-hour, Agent and presented-token expiry bounds",
+      "anchor": "auth-tokens",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.common-verification",
+      "source": "core",
+      "section": "Common JWT Verification: trusted signed credential profile",
+      "anchor": "common-verification",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.errors",
+      "source": "core",
+      "section": "Token Endpoint Error Codes: parameter-token errors",
+      "anchor": "token-endpoint-error-codes",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.proof-verification",
+      "source": "core",
+      "section": "Verification (Server): proof refusal status and error",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.body-integrity",
+      "source": "core",
+      "section": "Covered Components: covered Content-Type and Content-Digest",
+      "anchor": "covered-components",
+      "scope": "protocol",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.host-scope-policy",
+      "source": "core",
+      "section": "Configured read-only authorization policy and exact granted read scope",
+      "anchor": "ps-token-endpoint",
+      "scope": "adapter-contract",
+      "role": "person-server.direct"
+    },
+    {
+      "id": "ps.host-person-profile",
+      "source": "core",
+      "section": "Configured directed identity and admitted fixture key",
+      "anchor": "person-token-structure",
+      "scope": "adapter-contract",
+      "role": "person-server.direct"
     }
   ]
 }

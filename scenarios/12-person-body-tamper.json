@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "ps-body-tamper",
+  "title": "Person endpoint body changed after digest signing",
+  "role_under_test": "person-server.direct",
+  "given": "agent-identity",
+  "person": {
+    "mutation": "tampered-body"
+  },
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "assertions": [
+    {
+      "id": "refusal",
+      "clause": "ps.body-integrity",
+      "kind": "status",
+      "stage": "person",
+      "equals": 401
+    }
+  ]
+}

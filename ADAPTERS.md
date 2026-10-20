@@ -100,3 +100,51 @@ client; this adapter does not imply feature parity with Go's client orchestratio
 Both launchers are compiled against the chosen checkout, including the Agent and
 JOSE crates for Rust. Generated Go launcher modules disable VCS executable
 stamping; selected SUT HEAD/dirty state is recorded in the target manifest.
+
+## Person Server direct authorization role
+
+`role: "person-server.direct"` selects a native Person Server that issues Person
+and direct Auth tokens. Bootstrap keeps existing `now`, AP `issuer`, `resource`
+and `ap_transport`, and adds:
+
+```json
+{
+  "person_server": "https://person.conformance.test",
+  "person_seed_hex": "<public fixture 32-byte Ed25519 seed>",
+  "person_kid": "ps-1",
+  "person_subject": "directed-person-1",
+  "person_lifetime": 300,
+  "auth_lifetime": 180,
+  "permitted_scopes": ["read"],
+  "resource_kid": "resource-1",
+  "resource_jwk": {"kty":"OKP","crv":"Ed25519","alg":"Ed25519","x":"<public key>"}
+}
+```
+
+Lifetimes are seconds. `resource` identifies the fixture Resource, not this PS.
+Configure admitted AP/Resource public keys and the PS's own public key for
+presented-token verification. Construct a native PS with fixed clock, unique
+native issuance IDs, a retained in-memory store, a binding callback returning
+the configured opaque subject/lifetime, and an authorization callback granting
+requested permitted scopes with the configured lifetime. Deliberately deny a
+scope outside that list using the native policy-denial API. Neither callback
+receives a scenario name or expected response. Do not synthesize protocol
+refusals, verify incoming credentials outside the SUT, or mint response tokens
+outside its native implementation.
+
+Announce `{"version":1,"url":"http://127.0.0.1:<port>/person"}` and serve the
+same listener's native `/person` and `/token` endpoints. Reconstruct logical HTTPS
+using the **received** Host and path. Preserve body bytes and signature headers;
+do not replace authority with the configured PS or repair a malformed proof.
+Return native status, headers and body unchanged. No control endpoint is needed.
+The runner supplies the HTTP proofs and the Resource JWT, including the actual
+presented Person token obtained from that launcher.
+
+Go uses `personserver.NewPSAuthorization`, `testutil.NewMissionStore` as its
+TokenStore, fixed ClockFunc, native BindPerson/Authorize callbacks and native
+Handler. The store is an in-memory development helper, not persistence evidence.
+The runner's PS oracle uses no AAuth package.
+
+The build helper also copies Go adapter tests so explicit Host preservation
+and its empty-Host fallback can be tested in the generated module. That Agent
+transport correction is separate from PS protocol coverage.

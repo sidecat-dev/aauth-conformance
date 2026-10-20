@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "id": "ps-wrong-person",
+  "title": "Resource token changes presented person",
+  "role_under_test": "person-server.direct",
+  "given": "agent-identity",
+  "person": {
+    "mutation": "wrong-sub"
+  },
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "assertions": [
+    {
+      "id": "person-status",
+      "clause": "ps.person-endpoint",
+      "kind": "status",
+      "stage": "person",
+      "equals": 200
+    },
+    {
+      "id": "person-signature",
+      "clause": "ps.common-verification",
+      "kind": "ps-jwt-signature",
+      "stage": "person",
+      "equals": true
+    },
+    {
+      "id": "person-identity",
+      "clause": "ps.person-structure",
+      "kind": "ps-jwt-identity",
+      "stage": "person",
+      "equals": true
+    },
+    {
+      "id": "person-key",
+      "clause": "ps.person-structure",
+      "kind": "ps-jwt-key",
+      "stage": "person",
+      "equals": true
+    },
+    {
+      "id": "person-lifetime",
+      "clause": "ps.person-lifetime",
+      "kind": "ps-jwt-lifetime",
+      "stage": "person",
+      "equals": true
+    },
+    {
+      "id": "person-authorization",
+      "clause": "ps.person-no-authorization",
+      "kind": "ps-jwt-no-authorization",
+      "stage": "person",
+      "equals": true
+    },
+    {
+      "id": "token-refusal",
+      "clause": "ps.resource-verification",
+      "kind": "status",
+      "stage": "token",
+      "equals": 400
+    },
+    {
+      "id": "token-error",
+      "clause": "ps.resource-verification",
+      "kind": "json-member",
+      "stage": "token",
+      "equals": "invalid_resource_token",
+      "member": "error"
+    },
+    {
+      "id": "configured-person",
+      "clause": "ps.host-person-profile",
+      "kind": "ps-jwt-subject",
+      "stage": "person",
+      "equals": true
+    },
+    {
+      "id": "no-issued-token",
+      "clause": "ps.resource-verification",
+      "kind": "ps-no-token",
+      "stage": "token",
+      "equals": true
+    }
+  ]
+}

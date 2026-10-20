@@ -114,6 +114,10 @@ func startAdapter(ctx context.Context, t Target, config Bootstrap, options Optio
 	if err == nil {
 		u, e := url.Parse(value.URL)
 		target, targetError := url.Parse(config.Resource)
+		if config.Role == PersonServerRole && targetError == nil {
+			target.Path = "/person"
+			target.RawPath = ""
+		}
 		if config.Role == AgentRole && targetError == nil {
 			target.Path = "/control"
 			target.RawPath = ""
@@ -157,6 +161,9 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 		return report, err
 	}
 	defer closeAP()
+	if role == PersonServerRole {
+		return runPersonServers(ctx, s, targets, options, ap, report), nil
+	}
 	if role == AgentRole {
 		return runAgents(ctx, s, targets, options, ap, report), nil
 	}

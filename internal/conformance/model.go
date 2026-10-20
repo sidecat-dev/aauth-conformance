@@ -7,16 +7,17 @@ import (
 )
 
 type Fixture struct {
-	Version   int    `json:"version"`
-	ID        string `json:"id"`
-	Now       int64  `json:"now"`
-	Issuer    string `json:"issuer"`
-	Origin    string `json:"origin"`
-	Path      string `json:"path"`
-	Kid       string `json:"kid"`
-	Subject   string `json:"subject"`
-	APSeed    string `json:"ap_seed_hex"`
-	AgentSeed string `json:"agent_seed_hex"`
+	Version   int            `json:"version"`
+	ID        string         `json:"id"`
+	Now       int64          `json:"now"`
+	Issuer    string         `json:"issuer"`
+	Origin    string         `json:"origin"`
+	Path      string         `json:"path"`
+	Kid       string         `json:"kid"`
+	Subject   string         `json:"subject"`
+	APSeed    string         `json:"ap_seed_hex"`
+	AgentSeed string         `json:"agent_seed_hex"`
+	Person    *PersonFixture `json:"person_server,omitempty"`
 }
 type TokenSpec struct {
 	IATOffset int64 `json:"iat_offset"`
@@ -39,9 +40,11 @@ type Scenario struct {
 	Given      string      `json:"given"`
 	Token      TokenSpec   `json:"token"`
 	Request    RequestSpec `json:"request"`
+	Person     *PersonSpec `json:"person,omitempty"`
 	Assertions []Assertion `json:"assertions"`
 }
 type Assertion struct {
+	Stage  string          `json:"stage,omitempty"`
 	ID     string          `json:"id"`
 	Clause string          `json:"clause"`
 	Kind   string          `json:"kind"`
@@ -86,14 +89,23 @@ type Targets struct {
 	Implementations []Target `json:"implementations"`
 }
 type Bootstrap struct {
-	Role        string `json:"role,omitempty"`
-	AgentSeed   string `json:"agent_seed_hex,omitempty"`
-	Subject     string `json:"subject,omitempty"`
-	Version     int    `json:"version"`
-	Now         int64  `json:"now"`
-	Issuer      string `json:"issuer"`
-	Resource    string `json:"resource"`
-	APTransport string `json:"ap_transport"`
+	PersonServer    string         `json:"person_server,omitempty"`
+	PersonSeed      string         `json:"person_seed_hex,omitempty"`
+	PersonKid       string         `json:"person_kid,omitempty"`
+	PersonSubject   string         `json:"person_subject,omitempty"`
+	PersonLifetime  int64          `json:"person_lifetime,omitempty"`
+	AuthLifetime    int64          `json:"auth_lifetime,omitempty"`
+	PermittedScopes []string       `json:"permitted_scopes,omitempty"`
+	ResourceKid     string         `json:"resource_kid,omitempty"`
+	ResourceJWK     map[string]any `json:"resource_jwk,omitempty"`
+	Role            string         `json:"role,omitempty"`
+	AgentSeed       string         `json:"agent_seed_hex,omitempty"`
+	Subject         string         `json:"subject,omitempty"`
+	Version         int            `json:"version"`
+	Now             int64          `json:"now"`
+	Issuer          string         `json:"issuer"`
+	Resource        string         `json:"resource"`
+	APTransport     string         `json:"ap_transport"`
 }
 type Ready struct {
 	Version int    `json:"version"`
