@@ -14,7 +14,7 @@
     "seed_hex": "0303030303030303030303030303030303030303030303030303030303030303",
     "kid": "ps-1",
     "subject": "directed-person-1",
-    "person_lifetime": 300,
+    "person_lifetime": 60,
     "auth_lifetime": 180,
     "permitted_scopes": [
       "read"

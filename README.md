@@ -120,9 +120,23 @@ go run ./cmd/aauth-conformance -targets build/person/targets.json -report build/
 
 The slice currently has **12 scenarios and 109 assertions per implementation**.
 The [dual implementation report](reports/person-server-direct.md) records
-**218 passing assertions** against Go `3ee3204` and rebased Rust `24efc72`. Add
+**218 passing assertions** against Go `d914b4f` and Rust `0adca34`. Add
 `-rust-source /path/to/aauth-rust` to the build command to select both targets.
 The same scenario files and expected answers apply to both implementations.
+
+The positive fixture requests a 60-second Person token, a 180-second Auth grant
+and a 600-second Agent token. This makes the presented-token ceiling decisive
+independently of the Agent ceiling; the separate 45-second Agent case exercises
+that other parent. A regression supplies a correctly signed grant that omits
+only the presented ceiling and requires the auth-lifetime assertion to fail.
+These short fixtures do not drive the one-hour limit to its boundary. A passing
+row records these observations, not every condition in the cited section.
+
+Confirmation keys are compared by validated public Ed25519 key material,
+including required algorithm/shape and canonical 32-byte key encoding. Optional
+public JWK metadata such as `kid` or `use` need not be echoed identically. Private
+key material, a wrong algorithm or a genuinely different key still fails. JWT
+signatures are verified over their original compact segments before this check.
 
 The harness signs JSON POSTs with covered Content-Type and SHA-256 Content-Digest.
 It obtains an actual Person token from `/person`, verifies the returned JWT with

@@ -203,7 +203,7 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 	}
 	cnf, ok := c["cnf"].(map[string]any)
 	if ok {
-		o.Key = reflect.DeepEqual(cnf["jwk"], publicJWK(f.AgentSeed))
+		o.Key = bytes.Equal(confirmationPublicKey(cnf["jwk"]), seedKey(f.AgentSeed).Public().(ed25519.PublicKey))
 	}
 	iat, iatOK := c["iat"].(float64)
 	exp, expOK := c["exp"].(float64)
@@ -240,6 +240,27 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 	}
 	return o
 }
+
+// Confirmation equality is key material, not optional public JWK metadata.
+func confirmationPublicKey(value any) ed25519.PublicKey {
+	key, ok := value.(map[string]any)
+	if !ok || key["kty"] != "OKP" || key["crv"] != "Ed25519" || key["alg"] != "Ed25519" {
+		return nil
+	}
+	if _, private := key["d"]; private {
+		return nil
+	}
+	encoded, ok := key["x"].(string)
+	if !ok {
+		return nil
+	}
+	material, err := base64.RawURLEncoding.Strict().DecodeString(encoded)
+	if err != nil || len(material) != ed25519.PublicKeySize || base64.RawURLEncoding.EncodeToString(material) != encoded {
+		return nil
+	}
+	return ed25519.PublicKey(material)
+}
+
 func checkPerson(a Assertion, r Response, o PersonObservation) Result {
 	if a.Kind == "ps-no-token" {
 		result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "fail"}

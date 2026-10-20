@@ -1,6 +1,6 @@
 # Person Server direct authorization report
 
-Suite SHA-256: `1b2ca81909e487e8bc2308c0fde0481c057a6cf76997670a81716fc626f10c37`
+Suite SHA-256: `85ff645db83ca9f3d29dd4986720879b397249aef6da007cee904b6ace7880af`
 
 Verifier clock: `1800000000` Unix seconds
 
@@ -8,7 +8,7 @@ Execution: **passed**.
 
 Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. Loopback HTTP transport does not measure TLS, enrollment or discovery security.
 
-| Clause | Scope | aauth-go (`3ee320484111ea62efb097a41b6c28f9e84143f9`) | aauth-rust (`24efc72f6354aef90297edb266230216ea27534e`) |
+| Clause | Scope | aauth-go (`d914b4fd22e1c2b0740699debae10b364cda581d`) | aauth-rust (`0adca348341bffbad4d8e209efa84fa58465a76a`) |
 | --- | --- | --- | --- |
 | [ps.person-endpoint](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-endpoint) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
 | [ps.person-structure](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (20 pass, 0 fail, 0 error, 0 unexercised) | pass (20 pass, 0 fail, 0 error, 0 unexercised) |
@@ -250,65 +250,3 @@ Pass means only the listed assertions passed, not the entire section. `adapter-c
 - `ps-short-parent/auth-lifetime` — `ps.auth-lifetime`: **pass**
 - `ps-short-parent/auth-authorization` — `ps.host-scope-policy`: **pass**
 - `ps-short-parent/configured-person` — `ps.host-person-profile`: **pass**
-
-
-## Recorded run boundary
-
-Executed 2026-10-20 against tracked-clean Go
-`3ee320484111ea62efb097a41b6c28f9e84143f9` and Rust
-`24efc72f6354aef90297edb266230216ea27534e` (rebased target): **12 shared scenarios, 109 passing
-assertions per implementation, 218 total**. Rust was built from an independent
-clean clone at that exact commit. Full requests, responses and independently
-observed JWT claims are in [the JSON report](person-server-direct.json).
-Core authority is `70d67375deb0bb002af7da0711fc58f6e8926e7e`; Go's broader
-baseline remains older with targeted overlays. The result measures the listed
-shared fixture assertions, not agreement on every draft interpretation.
-
-Reproduce with compatible checkouts at those revisions:
-
-```sh
-go run ./cmd/build-adapters -role person-server.direct \
-  -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/person
-go run ./cmd/aauth-conformance -targets build/person/targets.json \
-  -report build/person-report.json -markdown build/person-report.md
-cargo test --manifest-path build/person/aauth-rust-adapter/Cargo.toml \
-  --target-dir build/person/rust-target
-go test -C build/person/aauth-go-adapter -count=1
-```
-
-Both native adapters provide host configuration and retained in-memory stores;
-all protocol verification, issuance and refusal responses belong to the native
-SUT. The harness verifies returned compact JWT bytes with standard cryptography
-and derives Resource challenges from the actual issued Person token. It never
-receives token assertions from the adapter as a substitute for verification.
-The Rust bridge regression preserves incoming authority/body/proof fields,
-including a deliberately foreign Host; the separate Agent transport regression
-rejects a signer-added body. The Go Agent Host regression preserves explicit
-Host with URL.Host as its empty fallback.
-
-At the adapter integration checkpoints, harness `go test -race ./... -count=1`,
-`go vet ./...`, both Rust adapter tests, Go adapter tests, Rust adapter Clippy
-with `-D warnings`, and formatting passed. This exact-head refresh rebuilt Rust
-and reran the three role suites, reusing the unchanged Go launcher. The adapter
-code and scenario expectations are unchanged. Using these source revisions and
-launcher binaries, the existing Resource
-role passed **34/34** assertions and Agent role **32/32**. Initial missing-role
-execution produced 109 errors before Rust integration, and its transport test
-failed before the new request bridge existed.
-
-Fixed public keys, trusted metadata snapshots and direct host policies are test
-configuration. No statement is made about TLS, discovery admission, durable
-storage, full retention/revocation, mission/delegation, downstream chaining,
-replay, rotation, interaction or AS federation. Chaining exists in the selected
-Rust implementation but is not measured by this shared Person Server slice.
-
-The previous report at harness `ab50c3c` remains valid for Rust `1d9fe0d`.
-This refresh uses the integrated Rust checkpoint, including current Resource,
-Agent and TLS-example code, with unchanged scenario bytes and expected answers.
-The shared harness itself continues to use loopback HTTP.
-
-The prior integrated-head report at harness `765ac11` remains valid for Rust
-`b2f4b9e`. This final refresh names rebased Rust
-`24efc72f6354aef90297edb266230216ea27534e`, based on Rust02 main
-`fc4ec2f740cdf8c371179cd3ba3c17b1d49c69de`. The selected tree is
-`3ee4e84fefa57a27c270b1664cc42f271c21eb3f`. All three suites passed unchanged.

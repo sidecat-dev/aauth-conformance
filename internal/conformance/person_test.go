@@ -162,3 +162,74 @@ func TestPersonScenarioValidationRejectsIgnoredInputsAndNullBooleans(t *testing.
 func defaultPersonFixture() PersonFixture {
 	return PersonFixture{Issuer: "https://person.conformance.test", Seed: strings.Repeat("03", 32), Kid: "ps-1", Subject: "directed-person-1", Lifetime: 300, AuthLifetime: 180, PermittedScopes: []string{"read"}, ResourceSeed: strings.Repeat("04", 32), ResourceKid: "resource-1"}
 }
+
+func TestPersonConfirmationKeyAllowsPublicMetadataButNotDifferentMaterial(t *testing.T) {
+	f := fixture()
+	ps := defaultPersonFixture()
+	for _, kind := range []string{"person", "auth"} {
+		for _, tc := range []struct {
+			name string
+			key  map[string]any
+			want bool
+		}{
+			{"kid", map[string]any{"kty": "OKP", "crv": "Ed25519", "x": publicJWK(f.AgentSeed)["x"], "alg": "Ed25519", "kid": "agent-key-1", "use": "sig"}, true},
+			{"different-key", publicJWK(strings.Repeat("08", 32)), false},
+			{"private", map[string]any{"kty": "OKP", "crv": "Ed25519", "x": publicJWK(f.AgentSeed)["x"], "alg": "Ed25519", "d": "secret"}, false},
+			{"wrong-alg", map[string]any{"kty": "OKP", "crv": "Ed25519", "x": publicJWK(f.AgentSeed)["x"], "alg": "EdDSA"}, false},
+			{"bad-x", map[string]any{"kty": "OKP", "crv": "Ed25519", "x": "bad", "alg": "Ed25519"}, false},
+		} {
+			t.Run(kind+"/"+tc.name, func(t *testing.T) {
+				claims := map[string]any{"iss": ps.Issuer, "dwk": "aauth-person.json", "aud": f.Origin, "sub": ps.Subject, "jti": "issued", "iat": f.Now, "exp": f.Now + 60, "cnf": map[string]any{"jwk": tc.key}}
+				parent := map[string]any{"sub": ps.Subject, "exp": float64(f.Now + 120)}
+				typ := "aa-person+jwt"
+				if kind == "auth" {
+					typ = "aa-auth+jwt"
+					claims["ps"] = ps.Issuer
+					claims["scope"] = "read"
+				}
+				compact, err := mintJWT(ps.Seed, ps.Kid, typ, claims)
+				if err != nil {
+					t.Fatal(err)
+				}
+				got := observePersonJWT(f, ps, compact, kind, parent, f.Now+600)
+				if !got.Signature || got.Key != tc.want || got.Valid != tc.want {
+					t.Fatalf("want key/valid=%v, got %+v", tc.want, got)
+				}
+			})
+		}
+	}
+}
+
+func TestPublishedPersonFixtureSeparatesThePresentedExpiryBound(t *testing.T) {
+	suite, err := Load("../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ps := *suite.Fixture.Person
+	var valid Scenario
+	for _, s := range suite.Scenarios {
+		if s.ID == "ps-valid" {
+			valid = s
+		}
+	}
+	if valid.ID == "" {
+		t.Fatal("missing valid PS scenario")
+	}
+	if !(ps.Lifetime < ps.AuthLifetime && ps.Lifetime < valid.Token.EXPOffset && ps.AuthLifetime < 3600) {
+		t.Fatalf("presented cap is masked: person=%d auth=%d agent=%d", ps.Lifetime, ps.AuthLifetime, valid.Token.EXPOffset)
+	}
+	// Simulate a correctly signed SUT grant that omits only the presented cap.
+	f := suite.Fixture
+	claims := map[string]any{"iss": ps.Issuer, "dwk": "aauth-person.json", "aud": f.Origin, "ps": ps.Issuer, "sub": ps.Subject, "jti": "bad-cap", "iat": f.Now, "exp": f.Now + ps.AuthLifetime, "scope": "read", "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}}
+	token, err := mintJWT(ps.Seed, ps.Kid, "aa-auth+jwt", claims)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parent := map[string]any{"sub": ps.Subject, "exp": float64(f.Now + ps.Lifetime)}
+	observed := observePersonJWT(f, ps, token, "auth", parent, f.Now+valid.Token.EXPOffset)
+	assertion := Assertion{ID: "auth-lifetime", Clause: "ps.auth-lifetime", Kind: "ps-jwt-lifetime", Equals: json.RawMessage(`true`)}
+	result := checkPerson(assertion, Response{Status: 200}, observed)
+	if !observed.Signature || !observed.Identity || !observed.Key || !observed.Scope || result.State != "fail" {
+		t.Fatalf("fault escaped targeted lifetime assertion: %+v %+v", observed, result)
+	}
+}
