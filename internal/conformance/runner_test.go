@@ -1,0 +1,105 @@
+package conformance
+
+import (
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
+	"time"
+)
+
+// Catches following a redirect to a different role or accepting truncated evidence.
+func TestExchangeRejectsRedirectOversizeAndTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/redirect":
+			http.Redirect(w, r, "/ok", 302)
+		case "/large":
+			w.Write(make([]byte, 65537))
+		case "/slow":
+			<-r.Context().Done()
+		default:
+			w.Write([]byte("ok"))
+		}
+	}))
+	defer server.Close()
+	for _, path := range []string{"/redirect", "/large", "/slow"} {
+		req, _ := http.NewRequest("GET", "https://resource.conformance.test"+path, nil)
+		if _, err := Exchange(context.Background(), req, server.URL+path, 50*time.Millisecond); err == nil {
+			t.Fatal("accepted", path)
+		}
+	}
+	req, _ := http.NewRequest("GET", "https://resource.conformance.test/ok", nil)
+	response, err := Exchange(context.Background(), req, server.URL+"/ok", time.Second)
+	if err != nil || string(response.Body) != "ok" {
+		t.Fatalf("%+v %v", response, err)
+	}
+}
+
+// Catches startup failures being counted as passing refusals and tests process cleanup.
+func TestRunnerPreservesRealHTTPFailureAndStartupErrors(t *testing.T) {
+	s, err := Load("../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	claims := []string{}
+	for _, c := range s.Catalog.Clauses {
+		if c.Scope != "out-of-slice" {
+			claims = append(claims, c.ID)
+		}
+	}
+	for _, mode := range []string{"respond", "silent", "missing"} {
+		t.Run(mode, func(t *testing.T) {
+			t.Setenv("AAUTH_TEST_ADAPTER", mode)
+			command := []string{os.Args[0], "-test.run=^TestAdapterProcess$"}
+			if mode == "missing" {
+				command = []string{"/no-such-aauth-adapter"}
+			}
+			report, err := RunSuite(context.Background(), s, Targets{Version: 1, Implementations: []Target{{ID: "test", Revision: "test-process", Command: command, Claims: claims}}}, Options{Timeout: time.Second, StartupTimeout: 200 * time.Millisecond, Stderr: io.Discard})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if report.Success() || len(report.Runs) != 1 || len(report.Runs[0].Cases) != 6 {
+				t.Fatalf("false green: %+v", report)
+			}
+			if mode == "respond" {
+				if report.Runs[0].Cases[0].Response.Status != 200 {
+					t.Fatal("did not observe test server")
+				}
+			} else if report.Runs[0].Error == "" {
+				t.Fatal("startup error missing")
+			}
+		})
+	}
+}
+
+func TestAdapterProcess(t *testing.T) {
+	mode := os.Getenv("AAUTH_TEST_ADAPTER")
+	if mode == "" {
+		t.Skip("subprocess helper")
+	}
+	if mode == "silent" {
+		select {}
+	}
+	var config Bootstrap
+	if err := json.NewDecoder(os.Stdin).Decode(&config); err != nil {
+		os.Exit(11)
+	}
+	for _, path := range []string{"/.well-known/aauth-agent.json", "/.well-known/jwks.json"} {
+		r, e := http.Get(config.APTransport + path)
+		if e != nil || r.StatusCode != 200 {
+			os.Exit(12)
+		}
+		io.Copy(io.Discard, r.Body)
+		r.Body.Close()
+	}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"sub":"wrong"}`))
+	}))
+	json.NewEncoder(os.Stdout).Encode(Ready{Version: 1, URL: server.URL + "/whoami"})
+	select {}
+}
