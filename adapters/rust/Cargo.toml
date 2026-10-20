@@ -10,6 +10,7 @@ aauth-rust-jose = "=0.1.0-alpha.1"
 aauth-rust-agent = "=0.1.0-alpha.1"
 aauth-rust-core = "=0.1.0-alpha.1"
 aauth-rust-resource = "=0.1.0-alpha.1"
+aauth-rust-person-server = "=0.1.0-alpha.1"
 http = "1"
 httparse = "1"
 serde = { version = "1", features = ["derive"] }

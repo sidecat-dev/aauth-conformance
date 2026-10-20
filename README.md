@@ -30,7 +30,10 @@ Install Go 1.25 or later. For the Rust launcher, install rustup and put
 `~/.cargo/bin` on PATH. The build helper copies the selected implementation's
 `rust-toolchain.toml`; first builds may download that toolchain and dependencies.
 Use implementation checkouts with the APIs in [ADAPTERS.md](ADAPTERS.md); tested
-commits appear in the example report. The Rust alpha crates need not be published.
+commits appear in the example report. The current Rust launcher links the Person
+Server crate as well as Agent/Core/JOSE/Resource, so select a checkout containing
+all five crates. Historical reports identify their then-current launcher
+and source revisions. The Rust alpha crates need not be published.
 
 From this checkout:
 
@@ -116,9 +119,9 @@ go run ./cmd/aauth-conformance -targets build/person/targets.json -report build/
 ```
 
 The slice currently has **12 scenarios and 109 assertions per implementation**.
-The [Go report](reports/person-server-direct.md) records an executing native Go
-run. Rust adapter integration is in progress; this report makes no Rust claim.
-Add `-rust-source` once the selected Rust checkout and launcher provide the role.
+The [dual implementation report](reports/person-server-direct.md) records
+**218 passing assertions** against Go `3ee3204` and Rust `1d9fe0d`. Add
+`-rust-source /path/to/aauth-rust` to the build command to select both targets.
 The same scenario files and expected answers apply to both implementations.
 
 The harness signs JSON POSTs with covered Content-Type and SHA-256 Content-Digest.

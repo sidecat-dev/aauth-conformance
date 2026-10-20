@@ -1,7 +1,7 @@
 # Launcher protocol, version 1
 
 A launcher supplies host configuration and transport around one implementation's
-native Resource or Agent API. The optional bootstrap `role` defaults to
+native Resource, Agent or Person Server API. The optional bootstrap `role` defaults to
 `resource.agent-identity`; `agent.signing` selects the outbound signer contract
 below.
 
@@ -144,6 +144,19 @@ Go uses `personserver.NewPSAuthorization`, `testutil.NewMissionStore` as its
 TokenStore, fixed ClockFunc, native BindPerson/Authorize callbacks and native
 Handler. The store is an in-memory development helper, not persistence evidence.
 The runner's PS oracle uses no AAuth package.
+
+Rust uses `PersonServer::new`, `Config`, `MemoryStore::default`, and a native
+`Policy` implementation. Config receives the fixed Person lifetime; the policy
+returns the configured Auth lifetime and requested allowed scopes or
+`PolicyError::Denied`. The native server owns proof verification, incoming token
+verification, retained lineage, JWT issuance, and refusal responses. Host-supplied
+AP and Resource keys use `AgentProviderKeys` and `TrustedIssuerKeys`; the native
+PS also resolves its own signing key for presented-token verification. The
+buffered `http::Request<Vec<u8>>` retains actual received Host, path, body and
+proof fields, and `handle` supplies the response unchanged. The transport
+regression checks those bytes with an intentionally foreign received authority.
+The Rust launcher now requires the Person Server crate in the selected checkout
+alongside Agent, Core, JOSE and Resource.
 
 The build helper also copies Go adapter tests so explicit Host preservation
 and its empty-Host fallback can be tested in the generated module. That Agent

@@ -1,11 +1,18 @@
 //! Test transport and fixed host configuration around unmodified Rust APIs.
-use aauth_rust_core::{AgentProviderKeys, VerifiedAgentToken};
+use aauth_rust_core::{
+    AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAgentToken,
+};
+use aauth_rust_person_server::{
+    AuthorizationRequest, Config as PersonConfig, Grant, MemoryStore, Person, PersonRequest,
+    PersonServer, Policy, PolicyError,
+};
 use aauth_rust_resource::AgentIdentityResource;
 use http::Request;
 use serde::Deserialize;
 use std::{
     io::{Read, Write},
     net::{SocketAddr, TcpStream},
+    sync::atomic::{AtomicU64, Ordering},
     time::Duration,
 };
 
@@ -20,6 +27,24 @@ struct Bootstrap {
     issuer: String,
     resource: String,
     ap_transport: String,
+    #[serde(default)]
+    person_server: String,
+    #[serde(default)]
+    person_seed_hex: String,
+    #[serde(default)]
+    person_kid: String,
+    #[serde(default)]
+    person_subject: String,
+    #[serde(default)]
+    person_lifetime: i64,
+    #[serde(default)]
+    auth_lifetime: i64,
+    #[serde(default)]
+    permitted_scopes: Vec<String>,
+    #[serde(default)]
+    resource_kid: String,
+    #[serde(default)]
+    resource_jwk: serde_json::Value,
 }
 
 // The harness's bounded fixture AP explicitly sends Content-Length and closes.
@@ -76,6 +101,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if config.version != 1 {
         return Err("bootstrap version must be 1".into());
     }
+    if config.role == "person-server.direct" {
+        return run_person_server(config);
+    }
     if config.role == "agent.signing" {
         return run_agent(config);
     }
@@ -127,6 +155,155 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )?)?,
             Err(response) => *response,
         };
+        let mut wire = tiny_http::Response::from_data(response.body().clone())
+            .with_status_code(response.status().as_u16());
+        for (name, value) in response.headers() {
+            wire.add_header(
+                tiny_http::Header::from_bytes(name.as_str().as_bytes(), value.as_bytes())
+                    .map_err(|_| "invalid response header")?,
+            );
+        }
+        incoming.respond(wire)?;
+    }
+    Ok(())
+}
+
+// Trusted snapshots are host configuration, never a credential decision made
+// by the adapter. The native PS handles all HTTP proof/JWT verification.
+struct PersonKeys {
+    ap: AgentProviderKeys,
+    resource: TrustedIssuerKeys,
+}
+impl AgentKeyResolver for PersonKeys {
+    fn key(&self, issuer: &str, dwk: &str, kid: &str) -> Result<aauth_rust_jose::Jwk, TokenError> {
+        if dwk == "aauth-agent.json" {
+            self.ap.key(issuer, dwk, kid)
+        } else {
+            self.resource.key(issuer, dwk, kid)
+        }
+    }
+}
+struct FixturePolicy {
+    subject: String,
+    scopes: Vec<String>,
+    auth_lifetime: i64,
+}
+impl Policy for FixturePolicy {
+    fn bind_person(&self, _: &PersonRequest) -> Result<Person, PolicyError> {
+        Ok(Person {
+            id: "conformance-internal-person".into(),
+            subject: self.subject.clone(),
+            tenant: None,
+        })
+    }
+    fn authorize(&self, request: &AuthorizationRequest) -> Result<Grant, PolicyError> {
+        if request
+            .scopes
+            .iter()
+            .any(|scope| !self.scopes.contains(scope))
+        {
+            return Err(PolicyError::Denied);
+        }
+        Ok(Grant {
+            scopes: request.scopes.clone(),
+            lifetime: self.auth_lifetime,
+        })
+    }
+}
+
+// Preserve actual received Host, method, path, headers and body. Logical HTTPS
+// is the only transport reconstruction; configured PS authority is never used
+// to replace an incoming authority or repair a proof.
+fn person_request(
+    incoming: &mut tiny_http::Request,
+) -> Result<Request<Vec<u8>>, Box<dyn std::error::Error>> {
+    let host = incoming
+        .headers()
+        .iter()
+        .find(|header| header.field.equiv("Host"))
+        .map(|header| header.value.as_str())
+        .ok_or("missing Host")?;
+    let mut request = Request::builder()
+        .method(incoming.method().as_str())
+        .uri(format!("https://{host}{}", incoming.url()));
+    for header in incoming.headers() {
+        request = request.header(header.field.as_str().as_str(), header.value.as_str());
+    }
+    let mut body = Vec::new();
+    // One byte above the native limit lets the SUT classify oversize requests.
+    incoming
+        .as_reader()
+        .take(1024 * 1024 + 1)
+        .read_to_end(&mut body)?;
+    Ok(request.body(body)?)
+}
+
+fn run_person_server(config: Bootstrap) -> Result<(), Box<dyn std::error::Error>> {
+    if config.person_seed_hex.len() != 64 {
+        return Err("Person Server seed must be 32-byte hex".into());
+    }
+    let mut seed = [0u8; 32];
+    for (i, byte) in seed.iter_mut().enumerate() {
+        *byte = u8::from_str_radix(&config.person_seed_hex[i * 2..i * 2 + 2], 16)?;
+    }
+    let ap = AgentProviderKeys::from_documents(
+        &config.issuer,
+        &fetch(&config.ap_transport, "/.well-known/aauth-agent.json")?,
+        &fetch(&config.ap_transport, "/.well-known/jwks.json")?,
+    )?;
+    let target: http::Uri = config.resource.parse()?;
+    let resource_issuer = format!(
+        "{}://{}",
+        target.scheme_str().ok_or("missing Resource scheme")?,
+        target.authority().ok_or("missing Resource authority")?
+    );
+    let metadata = serde_json::to_vec(&serde_json::json!({
+        "issuer":resource_issuer,
+        "jwks_uri":format!("{resource_issuer}/.well-known/jwks.json")
+    }))?;
+    let mut resource_jwk = config.resource_jwk;
+    resource_jwk
+        .as_object_mut()
+        .ok_or("Resource JWK must be an object")?
+        .insert("kid".into(), config.resource_kid.into());
+    let jwks = serde_json::to_vec(&serde_json::json!({"keys":[resource_jwk]}))?;
+    let resource = TrustedIssuerKeys::from_documents(
+        &resource_issuer,
+        "aauth-resource.json",
+        &metadata,
+        &jwks,
+    )?;
+    let mut person_config = PersonConfig::new(
+        &config.person_server,
+        &config.person_kid,
+        aauth_rust_jose::SigningKey::from_seed(seed),
+    );
+    person_config.person_lifetime = config.person_lifetime;
+    let policy = FixturePolicy {
+        subject: config.person_subject,
+        scopes: config.permitted_scopes,
+        auth_lifetime: config.auth_lifetime,
+    };
+    let sequence = AtomicU64::new(0);
+    let now = config.now;
+    let sut = PersonServer::new(
+        person_config,
+        PersonKeys { ap, resource },
+        MemoryStore::default(),
+        policy,
+        move || now,
+        move || format!("fixture-{}", sequence.fetch_add(1, Ordering::Relaxed) + 1),
+    )?;
+    let server = tiny_http::Server::http("127.0.0.1:0").map_err(|e| e.to_string())?;
+    let address = server.server_addr().to_ip().ok_or("expected IP listener")?;
+    println!(
+        "{}",
+        serde_json::json!({"version":1,"url":format!("http://{address}/person")})
+    );
+    std::io::stdout().flush()?;
+    for mut incoming in server.incoming_requests() {
+        let request = person_request(&mut incoming)?;
+        let response = sut.handle(&request);
         let mut wire = tiny_http::Response::from_data(response.body().clone())
             .with_status_code(response.status().as_u16());
         for (name, value) in response.headers() {
@@ -242,39 +419,73 @@ mod tests {
     use std::{net::TcpListener, sync::mpsc, thread};
 
     #[test]
+    fn person_bridge_preserves_received_authority_body_and_proof_fields() {
+        let server = tiny_http::Server::http("127.0.0.1:0").unwrap();
+        let address = server.server_addr().to_ip().unwrap();
+        let body = br#"{"resource":"https://resource.conformance.test"}"#;
+        let worker = thread::spawn(move || {
+            let mut incoming = server.recv().unwrap();
+            let request = person_request(&mut incoming).unwrap();
+            incoming.respond(tiny_http::Response::empty(200)).unwrap();
+            request
+        });
+        let mut socket = TcpStream::connect(address).unwrap();
+        write!(socket, "POST /person HTTP/1.1\r\nHost: foreign.example\r\nSignature-Key: sig=jwt;jwt=\"unchanged\"\r\nSignature-Input: sig=(\"@authority\" \"content-digest\");created=1800000000\r\nSignature: sig=:AQID:\r\nContent-Type: application/json\r\nContent-Digest: sha-256=:AQID:\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len()).unwrap();
+        socket.write_all(body).unwrap();
+        let mut response = Vec::new();
+        socket.read_to_end(&mut response).unwrap();
+        let request = worker.join().unwrap();
+        assert_eq!(request.uri().to_string(), "https://foreign.example/person");
+        assert_eq!(request.method(), "POST");
+        assert_eq!(request.body(), body);
+        assert_eq!(
+            request.headers()["signature-key"],
+            "sig=jwt;jwt=\"unchanged\""
+        );
+        assert_eq!(
+            request.headers()["signature-input"],
+            "sig=(\"@authority\" \"content-digest\");created=1800000000"
+        );
+        assert_eq!(request.headers()["signature"], "sig=:AQID:");
+        assert_eq!(request.headers()["content-digest"], "sha-256=:AQID:");
+    }
+
+    #[test]
     fn nonempty_signed_output_cannot_become_a_successful_empty_request() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let base = format!("http://{}", listener.local_addr().unwrap());
         listener.set_nonblocking(true).unwrap();
         let (done, stopped) = mpsc::channel::<()>();
-        let peer = thread::spawn(move || loop {
-            match listener.accept() {
-                Ok((mut socket, _)) => {
-                    socket
-                        .set_read_timeout(Some(Duration::from_secs(1)))
-                        .unwrap();
-                    let mut received = Vec::new();
-                    let mut byte = [0u8; 1];
-                    while !received.ends_with(b"\r\n\r\n") {
-                        if socket.read(&mut byte).unwrap() == 0 {
-                            break;
+        let peer = thread::spawn(move || {
+            loop {
+                match listener.accept() {
+                    Ok((mut socket, _)) => {
+                        socket
+                            .set_read_timeout(Some(Duration::from_secs(1)))
+                            .unwrap();
+                        let mut received = Vec::new();
+                        let mut byte = [0u8; 1];
+                        while !received.ends_with(b"\r\n\r\n") {
+                            if socket.read(&mut byte).unwrap() == 0 {
+                                break;
+                            }
+                            received.push(byte[0]);
                         }
-                        received.push(byte[0]);
-                    }
-                    socket
+                        socket
                         .write_all(
                             b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
                         )
                         .unwrap();
-                    return received;
-                }
-                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-                    if stopped.try_recv() == Err(mpsc::TryRecvError::Disconnected) {
-                        return Vec::new();
+                        return received;
                     }
-                    thread::sleep(Duration::from_millis(1));
+                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                        if stopped.try_recv() == Err(mpsc::TryRecvError::Disconnected) {
+                            return Vec::new();
+                        }
+                        thread::sleep(Duration::from_millis(1));
+                    }
+                    Err(error) => panic!("peer accept: {error}"),
                 }
-                Err(error) => panic!("peer accept: {error}"),
             }
         });
         let request = Request::builder()

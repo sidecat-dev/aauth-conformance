@@ -8,22 +8,22 @@ Execution: **passed**.
 
 Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. Loopback HTTP transport does not measure TLS, enrollment or discovery security.
 
-| Clause | Scope | aauth-go (`3ee320484111ea62efb097a41b6c28f9e84143f9`) |
-| --- | --- | --- |
-| [ps.person-endpoint](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-endpoint) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.person-structure](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (20 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.person-lifetime](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.person-no-authorization](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.auth-endpoint](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#ps-token-endpoint) | protocol | pass (2 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.resource-verification](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#resource-token-verification) | protocol | pass (15 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.auth-structure](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#auth-tokens) | protocol | pass (4 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.auth-lifetime](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#auth-tokens) | protocol | pass (2 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.common-verification](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#common-verification) | protocol | pass (12 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.errors](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#token-endpoint-error-codes) | protocol | pass (6 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.proof-verification](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#verification) | protocol | pass (2 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.body-integrity](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#covered-components) | protocol | pass (1 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.host-scope-policy](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#ps-token-endpoint) | adapter-contract | pass (5 pass, 0 fail, 0 error, 0 unexercised) |
-| [ps.host-person-profile](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | adapter-contract | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
+| Clause | Scope | aauth-go (`3ee320484111ea62efb097a41b6c28f9e84143f9`) | aauth-rust (`1d9fe0d2829059806cae92804d7b3dc0a544bd7d`) |
+| --- | --- | --- | --- |
+| [ps.person-endpoint](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-endpoint) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.person-structure](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (20 pass, 0 fail, 0 error, 0 unexercised) | pass (20 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.person-lifetime](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.person-no-authorization](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.auth-endpoint](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#ps-token-endpoint) | protocol | pass (2 pass, 0 fail, 0 error, 0 unexercised) | pass (2 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.resource-verification](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#resource-token-verification) | protocol | pass (15 pass, 0 fail, 0 error, 0 unexercised) | pass (15 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.auth-structure](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#auth-tokens) | protocol | pass (4 pass, 0 fail, 0 error, 0 unexercised) | pass (4 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.auth-lifetime](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#auth-tokens) | protocol | pass (2 pass, 0 fail, 0 error, 0 unexercised) | pass (2 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.common-verification](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#common-verification) | protocol | pass (12 pass, 0 fail, 0 error, 0 unexercised) | pass (12 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.errors](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#token-endpoint-error-codes) | protocol | pass (6 pass, 0 fail, 0 error, 0 unexercised) | pass (6 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.proof-verification](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#verification) | protocol | pass (2 pass, 0 fail, 0 error, 0 unexercised) | pass (2 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.body-integrity](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#covered-components) | protocol | pass (1 pass, 0 fail, 0 error, 0 unexercised) | pass (1 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.host-scope-policy](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#ps-token-endpoint) | adapter-contract | pass (5 pass, 0 fail, 0 error, 0 unexercised) | pass (5 pass, 0 fail, 0 error, 0 unexercised) |
+| [ps.host-person-profile](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | adapter-contract | pass (10 pass, 0 fail, 0 error, 0 unexercised) | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
 
 ## Assertion evidence
 
@@ -139,36 +139,162 @@ Pass means only the listed assertions passed, not the entire section. `adapter-c
 - `ps-short-parent/auth-authorization` — `ps.host-scope-policy`: **pass**
 - `ps-short-parent/configured-person` — `ps.host-person-profile`: **pass**
 
+### aauth-rust
+
+- `ps-valid/person-status` — `ps.person-endpoint`: **pass**
+- `ps-valid/person-signature` — `ps.common-verification`: **pass**
+- `ps-valid/person-identity` — `ps.person-structure`: **pass**
+- `ps-valid/person-key` — `ps.person-structure`: **pass**
+- `ps-valid/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-valid/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-valid/auth-status` — `ps.auth-endpoint`: **pass**
+- `ps-valid/auth-signature` — `ps.common-verification`: **pass**
+- `ps-valid/auth-identity` — `ps.auth-structure`: **pass**
+- `ps-valid/auth-key` — `ps.auth-structure`: **pass**
+- `ps-valid/auth-lifetime` — `ps.auth-lifetime`: **pass**
+- `ps-valid/auth-authorization` — `ps.host-scope-policy`: **pass**
+- `ps-valid/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-proof-tamper/refusal` — `ps.proof-verification`: **pass**
+- `ps-proof-tamper/signature-error` — `ps.proof-verification`: **pass**
+- `ps-body-tamper/refusal` — `ps.body-integrity`: **pass**
+- `ps-wrong-audience/person-status` — `ps.person-endpoint`: **pass**
+- `ps-wrong-audience/person-signature` — `ps.common-verification`: **pass**
+- `ps-wrong-audience/person-identity` — `ps.person-structure`: **pass**
+- `ps-wrong-audience/person-key` — `ps.person-structure`: **pass**
+- `ps-wrong-audience/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-wrong-audience/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-wrong-audience/token-refusal` — `ps.resource-verification`: **pass**
+- `ps-wrong-audience/token-error` — `ps.resource-verification`: **pass**
+- `ps-wrong-audience/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-wrong-audience/no-issued-token` — `ps.resource-verification`: **pass**
+- `ps-wrong-key/person-status` — `ps.person-endpoint`: **pass**
+- `ps-wrong-key/person-signature` — `ps.common-verification`: **pass**
+- `ps-wrong-key/person-identity` — `ps.person-structure`: **pass**
+- `ps-wrong-key/person-key` — `ps.person-structure`: **pass**
+- `ps-wrong-key/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-wrong-key/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-wrong-key/token-refusal` — `ps.resource-verification`: **pass**
+- `ps-wrong-key/token-error` — `ps.resource-verification`: **pass**
+- `ps-wrong-key/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-wrong-key/no-issued-token` — `ps.resource-verification`: **pass**
+- `ps-wrong-person/person-status` — `ps.person-endpoint`: **pass**
+- `ps-wrong-person/person-signature` — `ps.common-verification`: **pass**
+- `ps-wrong-person/person-identity` — `ps.person-structure`: **pass**
+- `ps-wrong-person/person-key` — `ps.person-structure`: **pass**
+- `ps-wrong-person/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-wrong-person/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-wrong-person/token-refusal` — `ps.resource-verification`: **pass**
+- `ps-wrong-person/token-error` — `ps.resource-verification`: **pass**
+- `ps-wrong-person/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-wrong-person/no-issued-token` — `ps.resource-verification`: **pass**
+- `ps-wrong-lineage/person-status` — `ps.person-endpoint`: **pass**
+- `ps-wrong-lineage/person-signature` — `ps.common-verification`: **pass**
+- `ps-wrong-lineage/person-identity` — `ps.person-structure`: **pass**
+- `ps-wrong-lineage/person-key` — `ps.person-structure`: **pass**
+- `ps-wrong-lineage/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-wrong-lineage/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-wrong-lineage/token-refusal` — `ps.resource-verification`: **pass**
+- `ps-wrong-lineage/token-error` — `ps.resource-verification`: **pass**
+- `ps-wrong-lineage/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-wrong-lineage/no-issued-token` — `ps.resource-verification`: **pass**
+- `ps-wrong-ps/person-status` — `ps.person-endpoint`: **pass**
+- `ps-wrong-ps/person-signature` — `ps.common-verification`: **pass**
+- `ps-wrong-ps/person-identity` — `ps.person-structure`: **pass**
+- `ps-wrong-ps/person-key` — `ps.person-structure`: **pass**
+- `ps-wrong-ps/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-wrong-ps/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-wrong-ps/token-refusal` — `ps.resource-verification`: **pass**
+- `ps-wrong-ps/token-error` — `ps.resource-verification`: **pass**
+- `ps-wrong-ps/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-wrong-ps/no-issued-token` — `ps.resource-verification`: **pass**
+- `ps-expired-resource/person-status` — `ps.person-endpoint`: **pass**
+- `ps-expired-resource/person-signature` — `ps.common-verification`: **pass**
+- `ps-expired-resource/person-identity` — `ps.person-structure`: **pass**
+- `ps-expired-resource/person-key` — `ps.person-structure`: **pass**
+- `ps-expired-resource/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-expired-resource/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-expired-resource/token-refusal` — `ps.errors`: **pass**
+- `ps-expired-resource/token-error` — `ps.errors`: **pass**
+- `ps-expired-resource/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-expired-resource/no-issued-token` — `ps.errors`: **pass**
+- `ps-expired-presented/person-status` — `ps.person-endpoint`: **pass**
+- `ps-expired-presented/person-signature` — `ps.common-verification`: **pass**
+- `ps-expired-presented/person-identity` — `ps.person-structure`: **pass**
+- `ps-expired-presented/person-key` — `ps.person-structure`: **pass**
+- `ps-expired-presented/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-expired-presented/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-expired-presented/token-refusal` — `ps.errors`: **pass**
+- `ps-expired-presented/token-error` — `ps.errors`: **pass**
+- `ps-expired-presented/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-expired-presented/no-issued-token` — `ps.errors`: **pass**
+- `ps-denied-scope/person-status` — `ps.person-endpoint`: **pass**
+- `ps-denied-scope/person-signature` — `ps.common-verification`: **pass**
+- `ps-denied-scope/person-identity` — `ps.person-structure`: **pass**
+- `ps-denied-scope/person-key` — `ps.person-structure`: **pass**
+- `ps-denied-scope/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-denied-scope/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-denied-scope/token-refusal` — `ps.host-scope-policy`: **pass**
+- `ps-denied-scope/token-error` — `ps.host-scope-policy`: **pass**
+- `ps-denied-scope/configured-person` — `ps.host-person-profile`: **pass**
+- `ps-denied-scope/no-issued-token` — `ps.host-scope-policy`: **pass**
+- `ps-short-parent/person-status` — `ps.person-endpoint`: **pass**
+- `ps-short-parent/person-signature` — `ps.common-verification`: **pass**
+- `ps-short-parent/person-identity` — `ps.person-structure`: **pass**
+- `ps-short-parent/person-key` — `ps.person-structure`: **pass**
+- `ps-short-parent/person-lifetime` — `ps.person-lifetime`: **pass**
+- `ps-short-parent/person-authorization` — `ps.person-no-authorization`: **pass**
+- `ps-short-parent/auth-status` — `ps.auth-endpoint`: **pass**
+- `ps-short-parent/auth-signature` — `ps.common-verification`: **pass**
+- `ps-short-parent/auth-identity` — `ps.auth-structure`: **pass**
+- `ps-short-parent/auth-key` — `ps.auth-structure`: **pass**
+- `ps-short-parent/auth-lifetime` — `ps.auth-lifetime`: **pass**
+- `ps-short-parent/auth-authorization` — `ps.host-scope-policy`: **pass**
+- `ps-short-parent/configured-person` — `ps.host-person-profile`: **pass**
+
 
 ## Recorded run boundary
 
-Executed against tracked-clean Go `3ee320484111ea62efb097a41b6c28f9e84143f9` with
-12 unchanged Person Server scenarios and 109 passing assertions. Rust has not
-been measured by this retained report. Full wire requests, responses and
-independently observed JWT claims are in [the JSON report](person-server-direct.json).
-The common clause source is Core `70d67375deb0bb002af7da0711fc58f6e8926e7e`;
-Go's documented broader baseline remains older with targeted overlays. This run
-is shared-fixture evidence, not a declaration that the implementations share
-every draft interpretation.
+Executed 2026-10-20 against tracked-clean Go
+`3ee320484111ea62efb097a41b6c28f9e84143f9` and Rust
+`1d9fe0d2829059806cae92804d7b3dc0a544bd7d`: **12 shared scenarios, 109 passing
+assertions per implementation, 218 total**. Rust was built from an independent
+clean clone at that exact commit. Full requests, responses and independently
+observed JWT claims are in [the JSON report](person-server-direct.json).
+Core authority is `70d67375deb0bb002af7da0711fc58f6e8926e7e`; Go's broader
+baseline remains older with targeted overlays. The result measures the listed
+shared fixture assertions, not agreement on every draft interpretation.
 
-Launch commands:
+Reproduce with compatible checkouts at those revisions:
 
 ```sh
-go run ./cmd/build-adapters -role person-server.direct -go-source /path/to/aauth-go -out build/person
-go run ./cmd/aauth-conformance -targets build/person/targets.json -report build/person-report.json -markdown build/person-report.md
+go run ./cmd/build-adapters -role person-server.direct \
+  -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/person
+go run ./cmd/aauth-conformance -targets build/person/targets.json \
+  -report build/person-report.json -markdown build/person-report.md
+cargo test --manifest-path build/person/aauth-rust-adapter/Cargo.toml \
+  --target-dir build/person/rust-target
+go test -C build/person/aauth-go-adapter -count=1
 ```
 
-Fixed public test keys, trusted metadata, direct host policy and retained
-in-memory state are adapter configuration. No statement is made about TLS,
-discovery admission, durable storage, mission/delegation, chaining, replay,
-rotation, revocation, interaction or AS federation.
+Both native adapters provide host configuration and retained in-memory stores;
+all protocol verification, issuance and refusal responses belong to the native
+SUT. The harness verifies returned compact JWT bytes with standard cryptography
+and derives Resource challenges from the actual issued Person token. It never
+receives token assertions from the adapter as a substitute for verification.
+The Rust bridge regression preserves incoming authority/body/proof fields,
+including a deliberately foreign Host; the separate Agent transport regression
+rejects a signer-added body. The Go Agent Host regression preserves explicit
+Host with URL.Host as its empty fallback.
 
-Harness verification: `go test -race ./... -count=1`, `go vet ./...`,
-and the copied Go adapter's `go test -count=1` passed. The existing Go Resource
-and Agent roles also passed their unchanged 17 and 16 assertions respectively.
-Test-first checks observed the missing PS APIs fail before implementation,
-then covered untrusted JWT signatures, altered person/audience/key/PS/scope,
-parent expiry, absent adapters, token release on refusal, and ignored/null
-scenario inputs. The Host-preservation regression was also run against an
-isolated copy using the old unconditional mapping: it failed on an explicit
-foreign Host and passed against the corrected mapping.
+Harness `go test -race ./... -count=1`, `go vet ./...`, both Rust adapter tests,
+Go adapter tests, Rust adapter Clippy with `-D warnings`, and formatting passed.
+Using these same source revisions and launcher binaries, the existing Resource
+role passed **34/34** assertions and Agent role **32/32**. Initial missing-role
+execution produced 109 errors before Rust integration, and its transport test
+failed before the new request bridge existed.
+
+Fixed public keys, trusted metadata snapshots and direct host policies are test
+configuration. No statement is made about TLS, discovery admission, durable
+storage, full retention/revocation, mission/delegation, downstream chaining,
+replay, rotation, interaction or AS federation. Chaining exists in the selected
+Rust implementation but is not measured by this shared Person Server slice.
