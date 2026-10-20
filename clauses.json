@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "core",
+      "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
+      "sha256": "99ef2430c7babec7ea9cb2e9af40e3c3c57d18bce5a6e8501e9748063cfd9ab0",
+      "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md"
+    },
+    {
+      "id": "key",
+      "commit": "69f5ba2647be848feed043fb6d8b0790e43cd0b6",
+      "sha256": "b2b43db67a1aa5249d1166589834d44f81e97ea2e6375a07b475115efa196b7d",
+      "url": "https://github.com/dickhardt/signature-key/blob/69f5ba2647be848feed043fb6d8b0790e43cd0b6/draft-hardt-httpbis-signature-key.md"
+    }
+  ],
+  "clauses": [
+    {
+      "id": "core.agent-token-required",
+      "source": "core",
+      "section": "Agent Token Required",
+      "anchor": "requirement-agent-token",
+      "scope": "protocol"
+    },
+    {
+      "id": "core.agent-identity",
+      "source": "core",
+      "section": "Agent Identity Access (200 and subject echo are adapter contract)",
+      "anchor": "overview-identity-access",
+      "scope": "adapter-contract"
+    },
+    {
+      "id": "core.verification",
+      "source": "core",
+      "section": "Verification (Server), steps 2, 3, 5 and 7",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "key.invalid-signature",
+      "source": "key",
+      "section": "invalid_signature",
+      "anchor": "invalid_signature",
+      "scope": "protocol"
+    },
+    {
+      "id": "key.expired-jwt",
+      "source": "key",
+      "section": "expired_jwt",
+      "anchor": "expired_jwt",
+      "scope": "protocol"
+    },
+    {
+      "id": "key.invalid-input",
+      "source": "key",
+      "section": "invalid_input",
+      "anchor": "invalid_input",
+      "scope": "protocol"
+    },
+    {
+      "id": "key.clock-skew",
+      "source": "key",
+      "section": "clock_skew",
+      "anchor": "clock_skew",
+      "scope": "protocol"
+    },
+    {
+      "id": "key.response-body",
+      "source": "key",
+      "section": "Signature-Error / Response Body (conditional on Problem Details)",
+      "anchor": "response-body",
+      "scope": "protocol"
+    },
+    {
+      "id": "core.person-token-required",
+      "source": "core",
+      "section": "Person Token Required (outside first slice)",
+      "anchor": "requirement-person-token",
+      "scope": "out-of-slice"
+    }
+  ]
+}

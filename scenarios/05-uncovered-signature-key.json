@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "id": "uncovered-signature-key",
+  "title": "Uncovered signature key",
+  "role_under_test": "resource.agent-identity",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300
+  },
+  "request": {
+    "method": "GET",
+    "path": "/whoami",
+    "proof": "jwt",
+    "created_offset": 0,
+    "covered": [
+      "@method",
+      "@authority",
+      "@path"
+    ],
+    "tamper_signature": false
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "core.verification",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "key.invalid-input",
+      "kind": "sfv-token",
+      "equals": "invalid_input",
+      "header": "Signature-Error",
+      "member": "error"
+    },
+    {
+      "id": "problem-type",
+      "clause": "key.response-body",
+      "kind": "problem-if-present",
+      "equals": "invalid_input"
+    },
+    {
+      "id": "required-coverage",
+      "clause": "core.verification",
+      "kind": "sfv-strings",
+      "equals": [
+        "@method",
+        "@authority",
+        "@path",
+        "signature-key"
+      ],
+      "header": "Signature-Error",
+      "member": "required_input"
+    }
+  ]
+}

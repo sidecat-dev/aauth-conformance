@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "id": "agent-identity",
+  "now": 1800000000,
+  "issuer": "https://ap.conformance.test",
+  "origin": "https://resource.conformance.test",
+  "path": "/whoami",
+  "kid": "ap-1",
+  "subject": "aauth:Agent@ap.conformance.test",
+  "ap_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+  "agent_seed_hex": "0202020202020202020202020202020202020202020202020202020202020202"
+}
