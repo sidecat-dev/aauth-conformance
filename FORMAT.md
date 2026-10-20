@@ -16,29 +16,40 @@ and expectations, including formatting; it does not identify the runner executab
 
 The catalog has `version: 1`, `sources` and `clauses`. Sources record full commit,
 SHA-256 and permanent URL. Each clause has `id`, `source`, `section`, URL `anchor`
-and `scope`: `protocol`, `adapter-contract` or `out-of-slice`. These reference
+and `scope`: `protocol`, `adapter-contract` or `out-of-slice`. Optional `role`
+defaults to `resource.agent-identity`; Agent clauses use `agent.signing`. These reference
 source headings rather than replace normative text. Re-pinning requires reviewing
 the referenced text and expectations even when clause IDs stay unchanged.
 
 ## Requests and assertions
 
 A scenario has `version`, unique `id`, `title`,
-`role_under_test: "resource.agent-identity"`, `given` matching the fixture ID,
+`role_under_test` (`resource.agent-identity` or `agent.signing`), `given` matching the fixture ID,
 `token`, `request` and nonempty `assertions`. See [valid](scenarios/02-valid.json).
 
 `token.iat_offset`/`exp_offset` are seconds relative to the fixed clock. JWT `jti`
 is the scenario ID; `dwk` is `aauth-agent.json`. Issuer, subject and confirmation
 key come from the fixture. Protected `alg` is `Ed25519`, `typ` is `aa-agent+jwt`.
 
-In v1, `request.method` is GET and `path` equals the fixture path; bodies, queries,
-custom headers and multiple exchanges are future slices. `proof` is `unsigned`
+For `resource.agent-identity`, `request.method` is GET and `path` equals the fixture
+path; bodies, queries, custom headers and multiple exchanges are outside that
+profile. `proof` is `unsigned`
 or `jwt`; `created_offset` is relative to the fixed clock. `covered` is an ordered,
 non-repeating list from `@method`, `@authority`, `@path`, `signature-key`. Omitting
 a component creates a valid signature over deliberately incomplete coverage.
 `tamper_signature: true` flips a signature byte after signing. Only physical
 loopback addresses differ between targets; logical requests/JWTs/proofs are identical.
 
-Every assertion has unique scenario-local `id`, `clause`, `kind`, and `equals`:
+For `agent.signing`, method is GET or POST, path is an origin-relative path with
+optional query, `proof` is `sut`, and optional `headers` accepts Authorization.
+Bodies are empty, `created_offset` is zero, and the Agent receives a valid fixture
+token. Its native API generates Signature-Key/Input/Signature. No expected
+signature bytes or signature base are sent to the launcher. The third scenario
+requires query and Authorization coverage as a receiving application profile;
+there is no additional-component API argument in this limited adapter contract.
+
+Every assertion has unique scenario-local `id`, `clause`, `kind`, and `equals`.
+Resource kinds:
 
 | Kind | Other fields | Check |
 | --- | --- | --- |
@@ -49,13 +60,33 @@ Every assertion has unique scenario-local `id`, `clause`, `kind`, and `equals`:
 | `json-member` | `member` | Object contains that top-level member with equal value/type. Absence differs from null. |
 | `problem-if-present` | — | On application/problem+json, require object type `urn:ietf:params:sig-error:` plus expected code, and any status must match HTTP. Other body representations yield `not_exercised`. |
 
+Agent kinds (each clause must belong to the scenario's role):
+
+| Kind | Check |
+| --- | --- |
+| `wire-preserved` | Method, logical URL, empty body, exact presented token and canonical Authorization value match the input; an invented Authorization also fails. |
+| `wire-proof` | Independent Ed25519 verification of the actual received signature base, with matching Signature-Key/Input/Signature labels and AP-bound confirmation key. |
+| `wire-token` | Presented JWT verifies under the fixture AP, with expected alg/type/kid/issuer/subject/discovery document/confirmation key and unexpired `exp`. This checks presentation, not SUT client verification. |
+| `wire-created` | Signature-Input `created` equals the configured Unix-second clock. |
+| `wire-covers` | Listed component Strings are covered; order may differ and additional supported fields may be present. |
+
+The Agent oracle supports only Ed25519 JWT credentials, bodyless requests,
+`@method`, `@authority`, `@path`, `@query`, `signature-key` and `authorization`,
+without component parameters. Header values use RFC 9421 field canonicalization
+(trim outer SP/HTAB, combine field lines with comma-space). The oracle is not a
+general AAuth server or JWT validator. Other algorithms, full Signature Parameter
+validation, bad-token client behavior and discovery negotiation need later cases.
+
 ## Targets and reports
 
-A target file has `version: 1` and nonempty `implementations`. Each entry has
+A target file has `version: 1`, optional `role` (default `resource.agent-identity`)
+and nonempty `implementations`. `agent.signing` selects the three Agent cases.
+Reports contain only the selected role's clauses/cases; the suite digest still
+covers all files, so adding another role changes it. Each entry has
 unique `id`, `revision`, executable `command` array and explicit `claims` of known
 clause IDs. Commands execute directly without a shell; relative commands resolve
-from the runner's working directory. The helper declares the tested first-slice
-clauses; edit the manifest to narrow claims. Reports retain declared provenance.
+from the runner's working directory. The helper declares the selected role's
+non-out-of-slice clauses; edit the manifest to narrow claims. Reports retain declared provenance.
 
 Unclaimed assertions are `not_claimed`. Claimed assertions are `pass`, `fail`,
 `error` (transport/startup) or `not_exercised` (conditional representation absent).

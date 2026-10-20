@@ -1,15 +1,25 @@
 # AAuth conformance scenarios
 
-Run the same wire scenarios against different AAuth implementations. The first
-slice tests a **Resource in Agent-identity mode**. The harness plays the Agent
-and Agent Provider (AP), creating its own Ed25519 tokens and HTTP signatures and
-serving fixture metadata/JWKS. It uses no AAuth library to generate test inputs.
+Run the same wire scenarios against different AAuth implementations. Two roles
+are available:
+
+- **Resource in Agent-identity mode:** the harness plays the Agent and Agent
+  Provider (AP), creating Ed25519 tokens/proofs and serving fixture metadata/JWKS.
+- **Agent signing:** the harness plays the AP and receiving Resource. The SUT
+  signs outbound requests; the harness independently verifies the received proofs.
+
+The harness uses no AAuth library to generate inputs or grade either role.
 
 Six scenarios—unsigned request, accepted identity, tampered signature, expired
 token, uncovered Signature-Key and future `created`—produce 17 assertions per
 implementation. Every assertion names a pinned draft clause. The
 [example report](reports/first-slice.md) records a real Go/Rust run. Its counts
 cover these assertions, not entire draft sections or complete AAuth conformance.
+
+The Agent role adds GET, empty POST to another path, and GET with query and
+Authorization: 16 assertions per implementation. The [Agent report](reports/agent-signing.md)
+records both native signers. Only valid AP-token inputs are supplied; this does
+not test the Agent's rejection of bad AP tokens or its Person Server flows.
 
 ## Run against local checkouts
 
@@ -26,12 +36,25 @@ go run ./cmd/build-adapters -go-source /path/to/aauth-go -rust-source /path/to/a
 go run ./cmd/aauth-conformance
 ```
 
+These commands select the Resource role by default. To test the Agent instead:
+
+```sh
+go run ./cmd/build-adapters -role agent.signing -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/agent
+go run ./cmd/aauth-conformance -targets build/agent/targets.json -report build/agent-report.json -markdown build/agent-report.md
+```
+
+The Agent cases require the APIs at Go `e93fd53` / Rust `934217d` or compatible
+successors. Role selection lives in the generated manifest; the scenario files
+run unchanged for every implementation.
+
 The helper builds launchers and `build/targets.json`, recording source revisions
 without editing the implementation checkouts. The runner starts its AP and each
 launcher on random loopback ports, executes the same files and stops its children.
 It writes `build/report.md` (clause matrix and assertion evidence) and
 `build/report.json` (pins, suite digest, revisions, logical request headers/base,
-observed responses and per-assertion results). Response bodies are base64 encoded.
+observed responses and per-assertion results). Agent reports also retain the
+signing command, actual received headers/body and control response. Response
+bodies are base64 encoded.
 
 To run only Go, omit `-rust-source`; to run only Rust, omit `-go-source`.
 The scenarios stay unchanged. You can also build a standalone runner:
@@ -51,11 +74,25 @@ in automation. Missing targets never count as passes.
 Target manifests declare the clauses being tested, not an upstream full-conformance
 statement. The matrix distinguishes `pass`, `fail`, `error`, `not_claimed` and
 `not_exercised`. An absent optional Problem Details representation is unexercised,
-not failure or success. The person-token requirement is outside this slice.
+not failure or success. The person-token requirement is outside both slices.
 
 The valid case's 200 JSON subject echo is labeled `adapter-contract`: the draft
 allows the Resource's own policy and application response. Failure cases check
 AAuth's 401 mapping, typed Structured Fields and conditional Problem Details URNs.
+
+Agent assertions check input preservation, mathematical Ed25519 proof over the
+received method/authority/path/headers, mandatory coverage, the configured
+Unix-second `created`, and AP-signed token presentation with the correct
+confirmation key. Query and Authorization coverage is required by this receiving
+Resource profile and labeled `adapter-contract`; both native signers provide it.
+Signature labels may differ. The verifier checks the listed fields, not every
+Signature Parameter rule or every JWT claim rule in the cited sections.
+
+All Agent requests have **empty bodies**, including POST. This result says
+nothing about body integrity. A host sending a body must arrange covered
+`content-digest` generation and verification. Identical signed requests are
+accepted again here: replay detection and storage are host duties outside these
+slices. The fixed seeds and fixed clock make these repeatable tests.
 
 **This slice uses loopback HTTP test transport.** Launchers reconstruct logical
 HTTPS identities from received Host/path. Fixed clocks, trusted AP documents and
@@ -77,7 +114,7 @@ gofmt -l cmd internal adapters/go
 ```
 
 The race check needs a platform C compiler; the runner builds with
-`CGO_ENABLED=0`. CI tests and builds the runner on Linux x86_64/ARM64. Actual Resource runs require
+`CGO_ENABLED=0`. CI tests and builds the runner on Linux x86_64/ARM64. Actual SUT runs require
 separately selected source checkouts and are distinct from runner unit tests.
 The generic Structured Fields parser is also used by aauth-go; parser agreement
 alone is not independent RFC 9651 proof. See [third-party notices](THIRD-PARTY-NOTICES.md).

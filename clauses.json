@@ -77,6 +77,62 @@
       "section": "Person Token Required (outside first slice)",
       "anchor": "requirement-person-token",
       "scope": "out-of-slice"
+    },
+    {
+      "id": "agent.input-profile",
+      "source": "core",
+      "section": "Configured outbound request preservation",
+      "anchor": "signing-agent",
+      "scope": "adapter-contract",
+      "role": "agent.signing"
+    },
+    {
+      "id": "core.agent-signing",
+      "source": "core",
+      "section": "Signing (Agent)",
+      "anchor": "signing-agent",
+      "scope": "protocol",
+      "role": "agent.signing"
+    },
+    {
+      "id": "core.agent-coverage",
+      "source": "core",
+      "section": "Covered Components",
+      "anchor": "covered-components",
+      "scope": "protocol",
+      "role": "agent.signing"
+    },
+    {
+      "id": "core.agent-created",
+      "source": "core",
+      "section": "Signature Parameters",
+      "anchor": "signature-parameters",
+      "scope": "protocol",
+      "role": "agent.signing"
+    },
+    {
+      "id": "core.agent-presentation",
+      "source": "core",
+      "section": "Agent Token Usage",
+      "anchor": "agent-token-usage",
+      "scope": "protocol",
+      "role": "agent.signing"
+    },
+    {
+      "id": "agent.additional-coverage",
+      "source": "core",
+      "section": "Resource-required query and Authorization profile",
+      "anchor": "covered-components",
+      "scope": "adapter-contract",
+      "role": "agent.signing"
+    },
+    {
+      "id": "agent.person-flow",
+      "source": "core",
+      "section": "Person Token Required (outside signing slice)",
+      "anchor": "requirement-person-token",
+      "scope": "out-of-slice",
+      "role": "agent.signing"
     }
   ]
 }

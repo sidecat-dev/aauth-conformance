@@ -108,21 +108,40 @@ func (s Suite) validate() error {
 		sources[source.ID] = true
 	}
 	clauses := map[string]bool{}
+	clauseRoles := map[string]string{}
 	for _, c := range s.Catalog.Clauses {
 		if c.ID == "" || clauses[c.ID] || !sources[c.Source] || c.Section == "" || c.Anchor == "" || !slices.Contains([]string{"protocol", "adapter-contract", "out-of-slice"}, c.Scope) {
 			return fmt.Errorf("invalid/duplicate clause %q", c.ID)
 		}
 		clauses[c.ID] = true
+		if clauseRole(c) != ResourceRole && clauseRole(c) != AgentRole {
+			return fmt.Errorf("unknown clause role")
+		}
+		clauseRoles[c.ID] = clauseRole(c)
 	}
 	ids := map[string]bool{}
 	for _, scenario := range s.Scenarios {
-		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || scenario.Role != "resource.agent-identity" || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
+		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !slices.Contains([]string{ResourceRole, AgentRole}, scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
 			return fmt.Errorf("invalid scenario %q", scenario.ID)
 		}
 		ids[scenario.ID] = true
 		req := scenario.Request
-		if req.Method != "GET" || req.Path != f.Path || !slices.Contains([]string{"unsigned", "jwt"}, req.Proof) || req.CreatedOffset < -86400 || req.CreatedOffset > 86400 || scenario.Token.IATOffset < -86400 || scenario.Token.IATOffset > 86400 || scenario.Token.EXPOffset < -86400 || scenario.Token.EXPOffset > 86400 {
+		if req.CreatedOffset < -86400 || req.CreatedOffset > 86400 || scenario.Token.IATOffset < -86400 || scenario.Token.IATOffset > 86400 || scenario.Token.EXPOffset < -86400 || scenario.Token.EXPOffset > 86400 {
 			return fmt.Errorf("unsupported request profile in %s", scenario.ID)
+		}
+		if scenario.Role == ResourceRole && (req.Method != "GET" || req.Path != f.Path || !slices.Contains([]string{"unsigned", "jwt"}, req.Proof) || len(req.Headers) > 0) {
+			return fmt.Errorf("invalid Resource request")
+		}
+		if scenario.Role == AgentRole {
+			path, err := url.ParseRequestURI(req.Path)
+			if err != nil || path.IsAbs() || !strings.HasPrefix(req.Path, "/") || !slices.Contains([]string{"GET", "POST"}, req.Method) || req.Proof != "sut" || req.CreatedOffset != 0 {
+				return fmt.Errorf("invalid Agent request")
+			}
+			for key := range req.Headers {
+				if !strings.EqualFold(key, "Authorization") {
+					return fmt.Errorf("only Authorization is supported in Agent profile")
+				}
+			}
 		}
 		covered := map[string]bool{}
 		for _, c := range req.Covered {
@@ -133,12 +152,36 @@ func (s Suite) validate() error {
 		}
 		assertions := map[string]bool{}
 		for _, a := range scenario.Assertions {
-			if a.ID == "" || assertions[a.ID] || !clauses[a.Clause] || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present"}, a.Kind) || !json.Valid(a.Equals) {
+			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers"}, a.Kind) || !json.Valid(a.Equals) {
 				return fmt.Errorf("invalid assertion %s/%s (clause %q)", scenario.ID, a.ID, a.Clause)
+			}
+			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") {
+				return fmt.Errorf("assertion kind does not match role")
 			}
 			assertions[a.ID] = true
 			var value any
 			json.Unmarshal(a.Equals, &value)
+			if slices.Contains([]string{"wire-preserved", "wire-proof", "wire-token"}, a.Kind) {
+				if _, ok := value.(bool); !ok {
+					return fmt.Errorf("Agent boolean assertion required")
+				}
+			}
+			if a.Kind == "wire-created" {
+				if _, ok := value.(float64); !ok {
+					return fmt.Errorf("Agent timestamp required")
+				}
+			}
+			if a.Kind == "wire-covers" {
+				values, ok := value.([]any)
+				if !ok {
+					return fmt.Errorf("coverage list required")
+				}
+				for _, v := range values {
+					if _, ok := v.(string); !ok {
+						return fmt.Errorf("coverage Strings required")
+					}
+				}
+			}
 			if a.Kind == "status" {
 				n, ok := value.(float64)
 				if !ok || n < 100 || n > 599 || n != float64(int(n)) {

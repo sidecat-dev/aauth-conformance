@@ -1,6 +1,6 @@
 # Resource agent-identity report
 
-Suite SHA-256: `9ee0b94ec0ad92bf79b4ddeea4c743132a7b082ae5702fa03e6a96edf2c903f9`
+Suite SHA-256: `67c30015bb2b73eae38a50e671d0640e7635ae2b73045186084d5826df4fc1fe`
 
 Verifier clock: `1800000000` Unix seconds
 
@@ -8,7 +8,7 @@ Execution: **passed**.
 
 Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. Loopback HTTP transport does not measure TLS, enrollment or discovery security.
 
-| Clause | Scope | aauth-go (`af030bfc93e3195c687abaea108a9bd3fea8b29b`) | aauth-rust (`5be4ec2888751c940118ccd1e0fe0a5a8f59462a`) |
+| Clause | Scope | aauth-go (`e93fd538022040ab963676b9291db7ee5cef3668`) | aauth-rust (`934217d0c43bf52399d996be012d82c57fc8f1f9`) |
 | --- | --- | --- | --- |
 | [core.agent-token-required](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#requirement-agent-token) | protocol | pass (2 pass, 0 fail, 0 error, 0 unexercised) | pass (2 pass, 0 fail, 0 error, 0 unexercised) |
 | [core.agent-identity](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#overview-identity-access) | adapter-contract | pass (2 pass, 0 fail, 0 error, 0 unexercised) | pass (2 pass, 0 fail, 0 error, 0 unexercised) |

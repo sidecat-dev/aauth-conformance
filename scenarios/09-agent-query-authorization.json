@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "id": "agent-query-authorization",
+  "title": "agent query authorization",
+  "role_under_test": "agent.signing",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300
+  },
+  "request": {
+    "method": "GET",
+    "path": "/whoami?view=full%2Fdetail",
+    "proof": "sut",
+    "headers": {
+      "Authorization": "AAuth fixture-session"
+    }
+  },
+  "assertions": [
+    {
+      "id": "input",
+      "clause": "agent.input-profile",
+      "kind": "wire-preserved",
+      "equals": true
+    },
+    {
+      "id": "proof",
+      "clause": "core.agent-signing",
+      "kind": "wire-proof",
+      "equals": true
+    },
+    {
+      "id": "coverage",
+      "clause": "core.agent-coverage",
+      "kind": "wire-covers",
+      "equals": [
+        "@method",
+        "@authority",
+        "@path",
+        "signature-key"
+      ]
+    },
+    {
+      "id": "created",
+      "clause": "core.agent-created",
+      "kind": "wire-created",
+      "equals": 1800000000
+    },
+    {
+      "id": "agent-token",
+      "clause": "core.agent-presentation",
+      "kind": "wire-token",
+      "equals": true
+    },
+    {
+      "id": "extra-coverage",
+      "clause": "agent.additional-coverage",
+      "kind": "wire-covers",
+      "equals": [
+        "@query",
+        "authorization"
+      ]
+    }
+  ]
+}

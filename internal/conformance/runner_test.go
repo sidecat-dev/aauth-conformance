@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -46,12 +47,7 @@ func TestRunnerPreservesRealHTTPFailureAndStartupErrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	claims := []string{}
-	for _, c := range s.Catalog.Clauses {
-		if c.Scope != "out-of-slice" {
-			claims = append(claims, c.ID)
-		}
-	}
+	claims := Claims(s, ResourceRole)
 	for _, mode := range []string{"respond", "silent", "missing", "wrong-path", "empty-query"} {
 		t.Run(mode, func(t *testing.T) {
 			t.Setenv("AAUTH_TEST_ADAPTER", mode)
@@ -96,6 +92,10 @@ func TestAdapterProcess(t *testing.T) {
 		}
 		io.Copy(io.Discard, r.Body)
 		r.Body.Close()
+	}
+	if strings.HasPrefix(mode, "agent-") {
+		runAgentTestProcess(config, mode)
+		return
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if mode == "drop-signed" {
@@ -165,12 +165,7 @@ func TestTargetsReceiveIdenticalScenarioInputs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	claims := []string{}
-	for _, c := range suite.Catalog.Clauses {
-		if c.Scope != "out-of-slice" {
-			claims = append(claims, c.ID)
-		}
-	}
+	claims := Claims(suite, ResourceRole)
 	targets := Targets{Version: 1}
 	for _, id := range []string{"first", "second"} {
 		targets.Implementations = append(targets.Implementations, Target{ID: id, Revision: "test", Claims: claims, Command: []string{os.Args[0], "-test.run=^TestAdapterProcess$"}})

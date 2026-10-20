@@ -23,12 +23,13 @@ type TokenSpec struct {
 	EXPOffset int64 `json:"exp_offset"`
 }
 type RequestSpec struct {
-	Method        string   `json:"method"`
-	Path          string   `json:"path"`
-	Proof         string   `json:"proof"`
-	CreatedOffset int64    `json:"created_offset"`
-	Covered       []string `json:"covered"`
-	Tamper        bool     `json:"tamper_signature"`
+	Headers       map[string]string `json:"headers,omitempty"`
+	Method        string            `json:"method"`
+	Path          string            `json:"path"`
+	Proof         string            `json:"proof"`
+	CreatedOffset int64             `json:"created_offset"`
+	Covered       []string          `json:"covered"`
+	Tamper        bool              `json:"tamper_signature"`
 }
 type Scenario struct {
 	Version    int         `json:"version"`
@@ -55,6 +56,7 @@ type Source struct {
 	URL    string `json:"url"`
 }
 type Clause struct {
+	Role    string `json:"role,omitempty"`
 	ID      string `json:"id"`
 	Source  string `json:"source"`
 	Section string `json:"section"`
@@ -79,10 +81,14 @@ type Target struct {
 	Claims   []string `json:"claims"`
 }
 type Targets struct {
+	Role            string   `json:"role,omitempty"`
 	Version         int      `json:"version"`
 	Implementations []Target `json:"implementations"`
 }
 type Bootstrap struct {
+	Role        string `json:"role,omitempty"`
+	AgentSeed   string `json:"agent_seed_hex,omitempty"`
+	Subject     string `json:"subject,omitempty"`
 	Version     int    `json:"version"`
 	Now         int64  `json:"now"`
 	Issuer      string `json:"issuer"`

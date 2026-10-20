@@ -66,7 +66,7 @@ func run() int {
 			}
 		}
 	}
-	fmt.Printf("%d scenarios × %d implementations; assertions %v\nReports: %s %s\n", len(suite.Scenarios), len(report.Runs), counts, *reportPath, *markdownPath)
+	fmt.Printf("%d scenarios × %d implementations; assertions %v\nReports: %s %s\n", len(report.Runs[0].Cases), len(report.Runs), counts, *reportPath, *markdownPath)
 	if !report.Success() {
 		return 1
 	}

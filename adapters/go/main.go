@@ -1,7 +1,9 @@
-// This launcher supplies host configuration; all AAuth verification is the SUT's.
+// This launcher supplies host configuration; AAuth signing/verification is the SUT's.
 package main
 
 import (
+	"crypto/ed25519"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,10 +14,22 @@ import (
 	"time"
 
 	aauth "gitlab.com/sidecat-dev/aauth-go"
+	"gitlab.com/sidecat-dev/aauth-go/agent"
 	"gitlab.com/sidecat-dev/aauth-go/jose"
 	"gitlab.com/sidecat-dev/aauth-go/resource"
 	"gitlab.com/sidecat-dev/aauth-go/signaturekey"
 )
+
+type bootstrap struct {
+	Version     int    `json:"version"`
+	Now         int64  `json:"now"`
+	Issuer      string `json:"issuer"`
+	Resource    string `json:"resource"`
+	APTransport string `json:"ap_transport"`
+	Role        string `json:"role"`
+	AgentSeed   string `json:"agent_seed_hex"`
+	Subject     string `json:"subject"`
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -24,13 +38,7 @@ func main() {
 	}
 }
 func run() error {
-	var config struct {
-		Version     int    `json:"version"`
-		Now         int64  `json:"now"`
-		Issuer      string `json:"issuer"`
-		Resource    string `json:"resource"`
-		APTransport string `json:"ap_transport"`
-	}
+	var config bootstrap
 	if err := json.NewDecoder(os.Stdin).Decode(&config); err != nil {
 		return err
 	}
@@ -80,6 +88,9 @@ func run() error {
 	for _, key := range jwks.Keys {
 		keys[signaturekey.StaticKeyReference{Issuer: config.Issuer, DiscoveryDocument: "aauth-agent.json", KeyID: key.Kid}] = key
 	}
+	if config.Role == "agent.signing" {
+		return runAgent(config, keys)
+	}
 	sut, err := resource.NewAgentIdentity(resource.AgentIdentityConfig{
 		Issuer: origin.Scheme + "://" + origin.Host, KeyResolver: keys, Clock: aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() }),
 		Protected: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -113,4 +124,81 @@ func run() error {
 		return err
 	}
 	return (&http.Server{Handler: bridge, ReadHeaderTimeout: 5 * time.Second}).Serve(listener)
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func runAgent(config bootstrap, keys signaturekey.StaticKeyResolver) error {
+	seed, err := hex.DecodeString(config.AgentSeed)
+	if err != nil || len(seed) != 32 {
+		return fmt.Errorf("Agent seed must be 32-byte hex")
+	}
+	key, err := jose.NewEd25519SigningKey("fixture-agent", ed25519.NewKeyFromSeed(seed))
+	if err != nil {
+		return err
+	}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var job struct {
+			Method    string            `json:"method"`
+			URL       string            `json:"url"`
+			Headers   map[string]string `json:"headers"`
+			Token     string            `json:"token"`
+			Transport string            `json:"transport"`
+		}
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16384)).Decode(&job); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		physical, err := url.Parse(job.Transport)
+		if err != nil || physical.Scheme != "http" || !net.ParseIP(physical.Hostname()).IsLoopback() {
+			http.Error(w, "loopback transport required", 400)
+			return
+		}
+		request, err := http.NewRequestWithContext(r.Context(), job.Method, job.URL, nil)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		for name, value := range job.Headers {
+			request.Header.Set(name, value)
+		}
+		transport := &http.Transport{Proxy: nil, DisableKeepAlives: true}
+		defer transport.CloseIdleConnections()
+		client, err := agent.New(r.Context(), agent.Config{Identifier: config.Subject, SigningKey: key, AgentToken: job.Token, KeyResolver: keys, Clock: aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() }), HTTPClient: &http.Client{Timeout: 5 * time.Second, Transport: roundTripFunc(func(signed *http.Request) (*http.Response, error) {
+			mapped := signed.Clone(signed.Context())
+			target := *signed.URL
+			target.Scheme = physical.Scheme
+			target.Host = physical.Host
+			mapped.Host = signed.URL.Host
+			mapped.URL = &target
+			return transport.RoundTrip(mapped)
+		})}})
+		if err != nil {
+			http.Error(w, err.Error(), 422)
+			return
+		}
+		response, err := client.CallAsAgentWithComponents(r.Context(), request, nil)
+		if err != nil {
+			http.Error(w, err.Error(), 422)
+			return
+		}
+		defer response.Body.Close()
+		if _, err = io.Copy(io.Discard, io.LimitReader(response.Body, 65537)); err != nil {
+			http.Error(w, err.Error(), 502)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]int{"status": response.StatusCode})
+	})
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return err
+	}
+	defer listener.Close()
+	if err = json.NewEncoder(os.Stdout).Encode(map[string]any{"version": 1, "url": "http://" + listener.Addr().String() + "/control"}); err != nil {
+		return err
+	}
+	return (&http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second}).Serve(listener)
 }

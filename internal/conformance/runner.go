@@ -114,6 +114,10 @@ func startAdapter(ctx context.Context, t Target, config Bootstrap, options Optio
 	if err == nil {
 		u, e := url.Parse(value.URL)
 		target, targetError := url.Parse(config.Resource)
+		if config.Role == AgentRole && targetError == nil {
+			target.Path = "/control"
+			target.RawPath = ""
+		}
 		if e != nil || targetError != nil || value.Version != 1 || u.Scheme != "http" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || !net.ParseIP(u.Hostname()).IsLoopback() || u.EscapedPath() != target.EscapedPath() {
 			err = fmt.Errorf("adapter must advertise version 1 and a loopback HTTP URL matching the configured path, without query or fragment")
 		}
@@ -126,7 +130,13 @@ func startAdapter(ctx context.Context, t Target, config Bootstrap, options Optio
 }
 
 func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (Report, error) {
-	report := Report{Version: 1, SuiteSHA256: s.Digest, Clock: s.Fixture.Now, Catalog: s.Catalog}
+	role := targetRole(targets.Role)
+	selected, selectError := s.ForRole(role)
+	if selectError != nil {
+		return Report{}, selectError
+	}
+	s = selected
+	report := Report{Version: 1, Role: role, SuiteSHA256: s.Digest, Clock: s.Fixture.Now, Catalog: s.Catalog}
 	if err := s.validate(); err != nil {
 		return report, err
 	}
@@ -147,6 +157,9 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 		return report, err
 	}
 	defer closeAP()
+	if role == AgentRole {
+		return runAgents(ctx, s, targets, options, ap, report), nil
+	}
 	for _, target := range targets.Implementations {
 		run := Run{Target: target}
 		config := Bootstrap{Version: 1, Now: s.Fixture.Now, Issuer: s.Fixture.Issuer, Resource: s.Fixture.Origin + s.Fixture.Path, APTransport: ap}

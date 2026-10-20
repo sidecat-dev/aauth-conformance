@@ -25,6 +25,7 @@ func run() error {
 	goSource := flag.String("go-source", "", "aauth-go checkout (optional)")
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (optional)")
 	out := flag.String("out", "build", "build output directory")
+	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity or agent.signing")
 	flag.Parse()
 	if *goSource == "" && *rustSource == "" {
 		return fmt.Errorf("supply -go-source and/or -rust-source")
@@ -44,13 +45,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	claims := []string{}
-	for _, c := range suite.Catalog.Clauses {
-		if c.Scope != "out-of-slice" {
-			claims = append(claims, c.ID)
-		}
+	if _, err = suite.ForRole(*role); err != nil {
+		return err
 	}
-	targets := conformance.Targets{Version: 1}
+	claims := conformance.Claims(suite, *role)
+	targets := conformance.Targets{Version: 1, Role: *role}
 	suffix := ""
 	if runtime.GOOS == "windows" {
 		suffix = ".exe"
@@ -79,7 +78,7 @@ func run() error {
 		if err = os.MkdirAll(work, 0755); err != nil {
 			return err
 		}
-		binary := filepath.Join(directory, item.id+"-resource"+suffix)
+		binary := filepath.Join(directory, item.id+"-launcher"+suffix)
 		if item.id == "aauth-go" {
 			if err = copyFile(filepath.Join(root, "adapters/go/main.go"), filepath.Join(work, "main.go")); err != nil {
 				return err
@@ -93,7 +92,7 @@ func run() error {
 			if err = command(work, "go", "mod", "tidy"); err != nil {
 				return err
 			}
-			if err = command(work, "go", "build", "-o", binary, "."); err != nil {
+			if err = command(work, "go", "build", "-buildvcs=false", "-o", binary, "."); err != nil {
 				return err
 			}
 		} else {
@@ -108,7 +107,7 @@ func run() error {
 				return err
 			}
 			manifest = append(manifest, []byte("\n[patch.crates-io]\n")...)
-			for _, name := range []string{"aauth-rust-core", "aauth-rust-resource"} {
+			for _, name := range []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose"} {
 				manifest = append(manifest, []byte(name+" = { path = "+strconv.Quote(filepath.ToSlash(filepath.Join(source, "crates", name)))+" }\n")...)
 			}
 			if err = os.WriteFile(filepath.Join(work, "Cargo.toml"), manifest, 0644); err != nil {

@@ -8,14 +8,17 @@ import (
 )
 
 type Case struct {
-	ID            string              `json:"id"`
-	Error         string              `json:"error,omitempty"`
-	Method        string              `json:"method,omitempty"`
-	URL           string              `json:"url,omitempty"`
-	Headers       map[string][]string `json:"request_headers,omitempty"`
-	SignatureBase string              `json:"signature_base,omitempty"`
-	Response      *Response           `json:"response,omitempty"`
-	Results       []Result            `json:"assertions"`
+	SigningInput    *AgentJob           `json:"signing_input,omitempty"`
+	ControlResponse *Response           `json:"control_response,omitempty"`
+	RequestBody     []byte              `json:"request_body_base64,omitempty"`
+	ID              string              `json:"id"`
+	Error           string              `json:"error,omitempty"`
+	Method          string              `json:"method,omitempty"`
+	URL             string              `json:"url,omitempty"`
+	Headers         map[string][]string `json:"request_headers,omitempty"`
+	SignatureBase   string              `json:"signature_base,omitempty"`
+	Response        *Response           `json:"response,omitempty"`
+	Results         []Result            `json:"assertions"`
 }
 type Run struct {
 	Target Target `json:"implementation"`
@@ -23,6 +26,7 @@ type Run struct {
 	Cases  []Case `json:"cases"`
 }
 type Report struct {
+	Role        string  `json:"role"`
 	Version     int     `json:"version"`
 	Execution   string  `json:"execution"`
 	SuiteSHA256 string  `json:"suite_sha256"`
@@ -96,7 +100,11 @@ func (r Report) Success() bool {
 }
 func (r Report) Markdown(out io.Writer) error {
 	var b strings.Builder
-	fmt.Fprintf(&b, "# Resource agent-identity report\n\nSuite SHA-256: `%s`\n\nVerifier clock: `%d` Unix seconds\n\n", r.SuiteSHA256, r.Clock)
+	title := "Resource agent-identity"
+	if r.Role == AgentRole {
+		title = "Agent signing"
+	}
+	fmt.Fprintf(&b, "# %s report\n\nSuite SHA-256: `%s`\n\nVerifier clock: `%d` Unix seconds\n\n", title, r.SuiteSHA256, r.Clock)
 	state := "failed or incomplete"
 	if r.Success() {
 		state = "passed"

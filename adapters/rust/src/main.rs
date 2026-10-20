@@ -1,4 +1,4 @@
-//! Test transport and fixed host configuration around the unmodified Rust Resource.
+//! Test transport and fixed host configuration around unmodified Rust APIs.
 use aauth_rust_core::{AgentProviderKeys, VerifiedAgentToken};
 use aauth_rust_resource::AgentIdentityResource;
 use http::Request;
@@ -11,6 +11,10 @@ use std::{
 
 #[derive(Deserialize)]
 struct Bootstrap {
+    #[serde(default)]
+    role: String,
+    #[serde(default)]
+    agent_seed_hex: String,
     version: u32,
     now: i64,
     issuer: String,
@@ -72,6 +76,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if config.version != 1 {
         return Err("bootstrap version must be 1".into());
     }
+    if config.role == "agent.signing" {
+        return run_agent(config);
+    }
     let keys = AgentProviderKeys::from_documents(
         &config.issuer,
         &fetch(&config.ap_transport, "/.well-known/aauth-agent.json")?,
@@ -129,6 +136,99 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
         }
         incoming.respond(wire)?;
+    }
+    Ok(())
+}
+
+#[derive(Deserialize)]
+struct AgentJob {
+    method: String,
+    url: String,
+    headers: std::collections::BTreeMap<String, String>,
+    token: String,
+    transport: String,
+}
+
+fn send_signed(base: &str, request: &Request<Vec<u8>>) -> Result<u16, Box<dyn std::error::Error>> {
+    let address: SocketAddr = base
+        .strip_prefix("http://")
+        .ok_or("expected HTTP loopback")?
+        .parse()?;
+    if !address.ip().is_loopback() {
+        return Err("loopback transport required".into());
+    }
+    let mut socket = TcpStream::connect_timeout(&address, Duration::from_secs(5))?;
+    socket.set_read_timeout(Some(Duration::from_secs(5)))?;
+    socket.set_write_timeout(Some(Duration::from_secs(5)))?;
+    let path = request.uri().path_and_query().ok_or("missing path")?;
+    let host = request.uri().authority().ok_or("missing authority")?;
+    write!(
+        socket,
+        "{} {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\nContent-Length: 0\r\n",
+        request.method(),
+        path,
+        host
+    )?;
+    for (name, value) in request.headers() {
+        write!(socket, "{}: {}\r\n", name, value.to_str()?)?;
+    }
+    write!(socket, "\r\n")?;
+    let mut bytes = Vec::new();
+    socket.take(65537).read_to_end(&mut bytes)?;
+    if bytes.len() > 65536 {
+        return Err("peer response too large".into());
+    }
+    let mut headers = [httparse::EMPTY_HEADER; 32];
+    let mut response = httparse::Response::new(&mut headers);
+    if !response.parse(&bytes)?.is_complete() {
+        return Err("incomplete response".into());
+    }
+    response.code.ok_or("missing response status".into())
+}
+
+fn run_agent(config: Bootstrap) -> Result<(), Box<dyn std::error::Error>> {
+    if config.agent_seed_hex.len() != 64 {
+        return Err("Agent seed must be 32-byte hex".into());
+    }
+    let mut seed = [0u8; 32];
+    for (i, byte) in seed.iter_mut().enumerate() {
+        *byte = u8::from_str_radix(&config.agent_seed_hex[i * 2..i * 2 + 2], 16)?;
+    }
+    let server = tiny_http::Server::http("127.0.0.1:0").map_err(|e| e.to_string())?;
+    let address = server.server_addr().to_ip().ok_or("expected IP listener")?;
+    println!(
+        "{}",
+        serde_json::json!({"version":1,"url":format!("http://{address}/control")})
+    );
+    std::io::stdout().flush()?;
+    for mut incoming in server.incoming_requests() {
+        let operation = (|| -> Result<u16, Box<dyn std::error::Error>> {
+            let mut body = Vec::new();
+            incoming.as_reader().take(16385).read_to_end(&mut body)?;
+            if body.len() > 16384 {
+                return Err("control body limit".into());
+            }
+            let job: AgentJob = serde_json::from_slice(&body)?;
+            let agent = aauth_rust_agent::Agent::new(
+                aauth_rust_jose::SigningKey::from_seed(seed),
+                job.token,
+            )?;
+            let mut builder = Request::builder()
+                .method(job.method.as_str())
+                .uri(job.url.as_str());
+            for (name, value) in job.headers {
+                builder = builder.header(name, value);
+            }
+            let mut request = builder.body(Vec::new())?;
+            agent.sign(&mut request, config.now)?;
+            send_signed(&job.transport, &request)
+        })();
+        let (status, body) = match operation {
+            Ok(status) => (200, serde_json::json!({"status":status})),
+            Err(error) => (422, serde_json::json!({"error":error.to_string()})),
+        };
+        incoming
+            .respond(tiny_http::Response::from_string(body.to_string()).with_status_code(status))?;
     }
     Ok(())
 }

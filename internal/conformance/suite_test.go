@@ -14,7 +14,7 @@ func TestSuiteValidationAndDigest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(suite.Scenarios) != 6 || len(suite.Digest) != 64 {
+	if len(suite.Scenarios) != 9 || len(suite.Digest) != 64 {
 		t.Fatalf("%+v", suite)
 	}
 	for _, mutate := range []func(string){
