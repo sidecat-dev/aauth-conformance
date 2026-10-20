@@ -114,14 +114,14 @@ func (s Suite) validate() error {
 			return fmt.Errorf("invalid/duplicate clause %q", c.ID)
 		}
 		clauses[c.ID] = true
-		if clauseRole(c) != ResourceRole && clauseRole(c) != AgentRole && clauseRole(c) != PersonServerRole && clauseRole(c) != FederatedRole {
+		if clauseRole(c) != ResourceRole && clauseRole(c) != AgentRole && clauseRole(c) != PersonServerRole && clauseRole(c) != FederatedRole && clauseRole(c) != DeferredRole {
 			return fmt.Errorf("unknown clause role")
 		}
 		clauseRoles[c.ID] = clauseRole(c)
 	}
 	ids := map[string]bool{}
 	for _, scenario := range s.Scenarios {
-		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !slices.Contains([]string{ResourceRole, AgentRole, PersonServerRole, FederatedRole}, scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
+		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !slices.Contains([]string{ResourceRole, AgentRole, PersonServerRole, FederatedRole, DeferredRole}, scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
 			return fmt.Errorf("invalid scenario %q", scenario.ID)
 		}
 		ids[scenario.ID] = true
@@ -135,6 +135,13 @@ func (s Suite) validate() error {
 			if !slices.Contains([]string{"none", "tampered-proof", "tampered-body", "wrong-aud", "wrong-jkt", "wrong-sub", "wrong-jti", "wrong-ps", "expired-resource", "expired-presented", "denied-scope", "short-parent"}, scenario.Person.Mutation) {
 				return fmt.Errorf("unsupported Person Server mutation")
 			}
+		}
+		if scenario.Role == DeferredRole {
+			if err := validateDeferredScenario(f, scenario); err != nil {
+				return err
+			}
+		} else if scenario.Deferred != nil {
+			return fmt.Errorf("deferred inputs require deferred role")
 		}
 		if scenario.Role == FederatedRole {
 			if err := validateFederatedScenario(f, scenario); err != nil {
@@ -173,10 +180,10 @@ func (s Suite) validate() error {
 		}
 		assertions := map[string]bool{}
 		for _, a := range scenario.Assertions {
-			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded"}, a.Kind) || !json.Valid(a.Equals) {
+			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded", "deferred-pending", "deferred-proof", "deferred-forwarded", "deferred-stable"}, a.Kind) || !json.Valid(a.Equals) {
 				return fmt.Errorf("invalid assertion %s/%s (clause %q)", scenario.ID, a.ID, a.Clause)
 			}
-			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") || strings.HasPrefix(a.Kind, "ps-") && scenario.Role != PersonServerRole && scenario.Role != FederatedRole || strings.HasPrefix(a.Kind, "fed-") && scenario.Role != FederatedRole {
+			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") || strings.HasPrefix(a.Kind, "ps-") && scenario.Role != PersonServerRole && scenario.Role != FederatedRole && scenario.Role != DeferredRole || strings.HasPrefix(a.Kind, "fed-") && scenario.Role != FederatedRole {
 				return fmt.Errorf("assertion kind does not match role")
 			}
 			if scenario.Role == PersonServerRole {
@@ -201,6 +208,10 @@ func (s Suite) validate() error {
 					if _, ok := b.(bool); !ok {
 						return fmt.Errorf("federation assertion requires boolean")
 					}
+				}
+			} else if scenario.Role == DeferredRole {
+				if !validDeferredAssertion(a) {
+					return fmt.Errorf("invalid deferred assertion")
 				}
 			} else if a.Stage != "" {
 				return fmt.Errorf("stage only supported for Person Server")

@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "id": "deferred-denied",
+  "title": "Deferred federation: denied",
+  "role_under_test": "authorization.deferred",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "deferred": {
+    "outcome": "denied"
+  },
+  "assertions": [
+    {
+      "id": "access-status-0",
+      "stage": "access",
+      "kind": "status",
+      "equals": 402,
+      "clause": "deferred.payment"
+    },
+    {
+      "id": "access-deferred-pending-1",
+      "stage": "access",
+      "kind": "deferred-pending",
+      "equals": true,
+      "clause": "deferred.payment"
+    },
+    {
+      "id": "access-deferred-proof-2",
+      "stage": "access",
+      "kind": "deferred-proof",
+      "equals": true,
+      "clause": "deferred.proof"
+    },
+    {
+      "id": "access-deferred-forwarded-3",
+      "stage": "access",
+      "kind": "deferred-forwarded",
+      "equals": true,
+      "clause": "deferred.forwarding"
+    },
+    {
+      "id": "pending-status-4",
+      "stage": "pending",
+      "kind": "status",
+      "equals": 202,
+      "clause": "deferred.pending"
+    },
+    {
+      "id": "pending-deferred-pending-5",
+      "stage": "pending",
+      "kind": "deferred-pending",
+      "equals": true,
+      "clause": "deferred.pending"
+    },
+    {
+      "id": "pending-ps-no-token-6",
+      "stage": "pending",
+      "kind": "ps-no-token",
+      "equals": true,
+      "clause": "deferred.delivery"
+    },
+    {
+      "id": "waiting-status-7",
+      "stage": "waiting",
+      "kind": "status",
+      "equals": 202,
+      "clause": "deferred.pending"
+    },
+    {
+      "id": "waiting-deferred-stable-8",
+      "stage": "waiting",
+      "kind": "deferred-stable",
+      "equals": true,
+      "clause": "deferred.pending"
+    },
+    {
+      "id": "result-status-9",
+      "stage": "result",
+      "kind": "status",
+      "equals": 403,
+      "clause": "deferred.delivery"
+    },
+    {
+      "id": "result-deferred-proof-10",
+      "stage": "result",
+      "kind": "deferred-proof",
+      "equals": true,
+      "clause": "deferred.proof"
+    },
+    {
+      "id": "token-status-11",
+      "stage": "token",
+      "kind": "status",
+      "equals": 403,
+      "clause": "deferred.delivery"
+    },
+    {
+      "id": "token-json-member-12",
+      "stage": "token",
+      "kind": "json-member",
+      "equals": "denied",
+      "clause": "deferred.delivery",
+      "member": "error"
+    },
+    {
+      "id": "token-ps-no-token-13",
+      "stage": "token",
+      "kind": "ps-no-token",
+      "equals": true,
+      "clause": "deferred.delivery"
+    },
+    {
+      "id": "gone-status-14",
+      "stage": "gone",
+      "kind": "status",
+      "equals": 410,
+      "clause": "deferred.gone"
+    },
+    {
+      "id": "as-gone-status",
+      "stage": "as-gone",
+      "kind": "status",
+      "equals": 410,
+      "clause": "deferred.gone"
+    }
+  ]
+}

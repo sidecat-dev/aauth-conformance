@@ -25,10 +25,13 @@ func run() error {
 	goSource := flag.String("go-source", "", "aauth-go checkout (optional)")
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (optional)")
 	out := flag.String("out", "build", "build output directory")
-	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing, person-server.direct or authorization.federated")
+	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing, person-server.direct, authorization.federated or authorization.deferred")
 	flag.Parse()
 	if *goSource == "" && *rustSource == "" {
 		return fmt.Errorf("supply -go-source and/or -rust-source")
+	}
+	if *role == conformance.DeferredRole && *rustSource != "" {
+		return fmt.Errorf("Rust deferred federation is a named gap; no native deferred adapter is available")
 	}
 	root, err := os.Getwd()
 	if err != nil {
@@ -80,6 +83,9 @@ func run() error {
 		}
 		binary := filepath.Join(directory, item.id+"-launcher"+suffix)
 		if item.id == "aauth-go" {
+			if err = selectGoRoleSource(root, work, *role); err != nil {
+				return err
+			}
 			if err = copyFile(filepath.Join(root, "adapters/go/main.go"), filepath.Join(work, "main.go")); err != nil {
 				return err
 			}
@@ -178,6 +184,19 @@ func command(dir, name string, args ...string) error {
 	c.Env = append(os.Environ(), "GOWORK=off")
 	if err := c.Run(); err != nil {
 		return fmt.Errorf("%s: %w", name, err)
+	}
+	return nil
+}
+
+// Remove role-specific sources when an output directory is reused for another
+// profile. Earlier implementation revisions need only the common launcher.
+func selectGoRoleSource(root, work, role string) error {
+	destination := filepath.Join(work, "deferred.go")
+	if role == conformance.DeferredRole {
+		return copyFile(filepath.Join(root, "adapters/go/deferred.go"), destination)
+	}
+	if err := os.Remove(destination); err != nil && !os.IsNotExist(err) {
+		return err
 	}
 	return nil
 }

@@ -84,28 +84,39 @@ func observeFederatedResource(f Fixture, compact string, parent map[string]any) 
 }
 
 func observePSProof(f Fixture, captured Captured) Observation {
+	return observePSRequestProof(f, captured, f.Access.Issuer+"/token", "POST")
+}
+func observePSPollProof(f Fixture, captured Captured, location string) Observation {
+	if len(captured.Body) != 0 {
+		return Observation{Error: "poll carried a body"}
+	}
+	return observePSRequestProof(f, captured, location, "GET")
+}
+func observePSRequestProof(f Fixture, captured Captured, location, method string) Observation {
 	failed := Observation{Error: "PS proof, coverage or actual body digest did not verify"}
 	target, err := url.Parse(captured.URL)
-	if err != nil || captured.URL != f.Access.Issuer+"/token" || captured.Method != "POST" {
+	if err != nil || captured.URL != location || captured.Method != method {
 		return failed
 	}
-	mediaType, _, err := mime.ParseMediaType(canonicalField(captured.Headers, "Content-Type"))
-	if err != nil || !strings.EqualFold(mediaType, "application/json") {
-		return failed
-	}
-	digests, err := httpsfv.UnmarshalDictionary(captured.Headers.Values("Content-Digest"))
-	if err != nil || len(digests.Names()) != 1 {
-		return failed
-	}
-	digestValue, _ := digests.Get("sha-256")
-	digestItem, ok := digestValue.(httpsfv.Item)
-	if !ok || digestItem.Params != nil && len(digestItem.Params.Names()) != 0 {
-		return failed
-	}
-	digestBytes, ok := digestItem.Value.([]byte)
-	expectedDigest := sha256.Sum256(captured.Body)
-	if !ok || !bytes.Equal(digestBytes, expectedDigest[:]) {
-		return failed
+	if method == "POST" {
+		mediaType, _, err := mime.ParseMediaType(canonicalField(captured.Headers, "Content-Type"))
+		if err != nil || !strings.EqualFold(mediaType, "application/json") {
+			return failed
+		}
+		digests, err := httpsfv.UnmarshalDictionary(captured.Headers.Values("Content-Digest"))
+		if err != nil || len(digests.Names()) != 1 {
+			return failed
+		}
+		digestValue, _ := digests.Get("sha-256")
+		digestItem, ok := digestValue.(httpsfv.Item)
+		if !ok || digestItem.Params != nil && len(digestItem.Params.Names()) != 0 {
+			return failed
+		}
+		digestBytes, ok := digestItem.Value.([]byte)
+		expectedDigest := sha256.Sum256(captured.Body)
+		if !ok || !bytes.Equal(digestBytes, expectedDigest[:]) {
+			return failed
+		}
 	}
 	keys, err := httpsfv.UnmarshalDictionary(captured.Headers.Values("Signature-Key"))
 	if err != nil {
@@ -167,7 +178,11 @@ func observePSProof(f Fixture, captured Captured) Observation {
 			}
 			lines = append(lines, fmt.Sprintf("%q: %s", component, field))
 		}
-		for _, required := range []string{"@method", "@authority", "@path", "signature-key", "content-type", "content-digest"} {
+		requiredComponents := []string{"@method", "@authority", "@path", "signature-key"}
+		if method == "POST" {
+			requiredComponents = append(requiredComponents, "content-type", "content-digest")
+		}
+		for _, required := range requiredComponents {
 			valid = valid && seen[required]
 		}
 		params, err := httpsfv.Marshal(input)

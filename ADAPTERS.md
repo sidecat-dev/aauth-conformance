@@ -219,3 +219,32 @@ and `testutil.NewMissionStore` for PS state. Rust uses
 endpoint resolution and transport. The build helper includes the Rust AS crate
 and enables the launcher's `federation` feature only for this role, leaving the
 other roles buildable against earlier native APIs.
+
+## Deferred four-party authorization
+
+`role: "authorization.deferred"` uses the four-party fixture and native role
+composition above. Only the Go launcher currently implements it. The build
+helper copies `adapters/go/deferred.go` for this role alone, so earlier role
+launchers remain buildable against earlier implementation revisions.
+
+Configure native AS `DeferredConfig` with `testutil.NewAccessAuthorizationStore`
+and native PS `FederatedDeferredConfig` with
+`testutil.NewFederatedAuthorizationStore`. Both lifetimes are 30 seconds; the
+fixed clock does not advance, and AS pending decisions advertise zero retry
+delay. Incoming Agent and PS authentication, pending URL creation, continuation
+state, grant verification and terminal consumption remain native code.
+
+The loopback-only host control `POST /__fixture/deferred` accepts
+`{"stage":0,"reference":""}`. Stage 0 represents unsettled payment, stage 1
+settled payment awaiting approval, stage 2 approval, and stage -1 denial.
+The existing scope policy applies first. A nonempty `reference` calls the
+native PS `AdvanceFederation` once after changing host policy. These are host
+inputs, not protocol responses or proof-validation shortcuts. The runner
+records control responses separately and requires the corresponding native AS
+and PS exchanges; a successful control response alone cannot pass a clause.
+
+The relay observes every PS request and native AS response separately from
+fault injection. It can replace a payment Location with a foreign origin or
+corrupt the final grant presented to the PS. It never repairs native proofs.
+Payment uses a public fixture `WWW-Authenticate` challenge; there is no payment
+provider, money transfer or billing relationship cache in the adapter.

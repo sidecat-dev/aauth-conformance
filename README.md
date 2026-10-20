@@ -1,6 +1,6 @@
 # AAuth conformance scenarios
 
-Run the same wire scenarios against different AAuth implementations. Four roles
+Run the same wire scenarios against different AAuth implementations. Five roles
 are available:
 
 - **Resource in Agent-identity mode:** the harness plays the Agent and Agent
@@ -13,6 +13,10 @@ are available:
 - **Four-party authorization:** the harness plays Agent and Person Server (PS)
   against native Resource and Access Server (AS). Additional cases exercise a
   native PS too, observing its signed handoff and grant verification.
+
+- **Deferred four-party authorization:** the harness plays Agent and AP while
+  native PS and AS retain payment/approval continuations. Host controls simulate
+  settlement and approval; the runner grades signed requests and native responses.
 
 The harness uses no AAuth library to generate inputs or grade these roles.
 
@@ -254,3 +258,24 @@ alone is not independent RFC 9651 proof. See [third-party notices](THIRD-PARTY-N
 
 MIT licensed. Canonical home:
 [sidecat-dev/aauth-conformance](https://gitlab.com/sidecat-dev/aauth-conformance).
+
+## Deferred authorization and payment
+
+Five scenarios add 88 assertions for payment followed by approval, approval
+without payment, denial, an invalid returned grant, and a foreign pending URL.
+They observe native PS-to-AS signed polls, exact initial token forwarding,
+stable pending URLs, verified Agent delivery, protected Resource use and
+single terminal consumption. The [report](reports/deferred-authorization.md)
+records the Go implementation; this profile has no Rust adapter yet.
+
+```sh
+go run ./cmd/build-adapters -role authorization.deferred -go-source /path/to/aauth-go -out build/deferred
+go run ./cmd/aauth-conformance -targets build/deferred/targets.json -report build/deferred-report.json -markdown build/deferred-report.md
+```
+
+Use a Go revision with the deferred APIs in [ADAPTERS.md](ADAPTERS.md). Supplying
+`-rust-source` for this profile reports the missing adapter. Absence is not a
+pass. Payment processing, billing caches, elapsed-time backoff, expiry,
+concurrent polling, process recovery and companion/delegated/mission
+continuations are outside these five scenarios. Native Go tests cover timing,
+concurrency and state-store failure separately. No real payment occurs.

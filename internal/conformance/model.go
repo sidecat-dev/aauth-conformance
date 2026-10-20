@@ -34,6 +34,7 @@ type RequestSpec struct {
 	Tamper        bool              `json:"tamper_signature"`
 }
 type Scenario struct {
+	Deferred   *DeferredSpec  `json:"deferred,omitempty"`
 	Version    int            `json:"version"`
 	ID         string         `json:"id"`
 	Title      string         `json:"title"`

@@ -4,6 +4,7 @@ import "fmt"
 
 const ResourceRole = "resource.agent-identity"
 const AgentRole = "agent.signing"
+const DeferredRole = "authorization.deferred"
 const FederatedRole = "authorization.federated"
 const PersonServerRole = "person-server.direct"
 
@@ -16,7 +17,7 @@ func targetRole(role string) string {
 func clauseRole(c Clause) string { return targetRole(c.Role) }
 func (s Suite) ForRole(role string) (Suite, error) {
 	role = targetRole(role)
-	if role != ResourceRole && role != AgentRole && role != PersonServerRole && role != FederatedRole {
+	if role != ResourceRole && role != AgentRole && role != PersonServerRole && role != FederatedRole && role != DeferredRole {
 		return Suite{}, fmt.Errorf("unsupported role %q", role)
 	}
 	selected := s

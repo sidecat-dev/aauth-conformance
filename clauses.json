@@ -317,6 +317,62 @@
       "section": "Federated Authorization Access: fixed read-only host policy and subject echo",
       "anchor": "fig-federated",
       "scope": "adapter-contract"
+    },
+    {
+      "id": "deferred.pending",
+      "role": "authorization.deferred",
+      "source": "core",
+      "section": "Deferred Responses: Pending Response and same-origin Location",
+      "anchor": "deferred-responses",
+      "scope": "protocol"
+    },
+    {
+      "id": "deferred.payment",
+      "role": "authorization.deferred",
+      "source": "core",
+      "section": "AS Response: payment continuation",
+      "anchor": "as-token-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "id": "deferred.proof",
+      "role": "authorization.deferred",
+      "source": "core",
+      "section": "HTTP Message Signatures Profile: PS-authenticated bodyless polls",
+      "anchor": "http-message-signatures-profile",
+      "scope": "protocol"
+    },
+    {
+      "id": "deferred.forwarding",
+      "role": "authorization.deferred",
+      "source": "core",
+      "section": "PS-to-AS Token Request: exact compact tokens",
+      "anchor": "ps-to-as-token-request",
+      "scope": "protocol"
+    },
+    {
+      "id": "deferred.delivery",
+      "role": "authorization.deferred",
+      "source": "core",
+      "section": "Auth Token Delivery: verified result and terminal errors",
+      "anchor": "auth-token-delivery",
+      "scope": "protocol"
+    },
+    {
+      "id": "deferred.gone",
+      "role": "authorization.deferred",
+      "source": "core",
+      "section": "Pending URL Security: one terminal response",
+      "anchor": "pending-url-security",
+      "scope": "protocol"
+    },
+    {
+      "id": "deferred.host",
+      "role": "authorization.deferred",
+      "source": "core",
+      "section": "Configured payment -> approval -> grant or refusal; host advances one poll",
+      "anchor": "ps-as-trust-establishment",
+      "scope": "adapter-contract"
     }
   ]
 }

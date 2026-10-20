@@ -8,19 +8,20 @@ import (
 )
 
 type Case struct {
-	Handoff         *FederatedHandoff   `json:"federation_handoff,omitempty"`
-	Exchanges       []PersonExchange    `json:"exchanges,omitempty"`
-	SigningInput    *AgentJob           `json:"signing_input,omitempty"`
-	ControlResponse *Response           `json:"control_response,omitempty"`
-	RequestBody     []byte              `json:"request_body_base64,omitempty"`
-	ID              string              `json:"id"`
-	Error           string              `json:"error,omitempty"`
-	Method          string              `json:"method,omitempty"`
-	URL             string              `json:"url,omitempty"`
-	Headers         map[string][]string `json:"request_headers,omitempty"`
-	SignatureBase   string              `json:"signature_base,omitempty"`
-	Response        *Response           `json:"response,omitempty"`
-	Results         []Result            `json:"assertions"`
+	DeferredHandoffs []FederatedHandoff  `json:"deferred_handoffs,omitempty"`
+	Handoff          *FederatedHandoff   `json:"federation_handoff,omitempty"`
+	Exchanges        []PersonExchange    `json:"exchanges,omitempty"`
+	SigningInput     *AgentJob           `json:"signing_input,omitempty"`
+	ControlResponse  *Response           `json:"control_response,omitempty"`
+	RequestBody      []byte              `json:"request_body_base64,omitempty"`
+	ID               string              `json:"id"`
+	Error            string              `json:"error,omitempty"`
+	Method           string              `json:"method,omitempty"`
+	URL              string              `json:"url,omitempty"`
+	Headers          map[string][]string `json:"request_headers,omitempty"`
+	SignatureBase    string              `json:"signature_base,omitempty"`
+	Response         *Response           `json:"response,omitempty"`
+	Results          []Result            `json:"assertions"`
 }
 type Run struct {
 	Target Target `json:"implementation"`
@@ -103,6 +104,9 @@ func (r Report) Success() bool {
 func (r Report) Markdown(out io.Writer) error {
 	var b strings.Builder
 	title := "Resource agent-identity"
+	if r.Role == DeferredRole {
+		title = "Deferred four-party authorization"
+	}
 	if r.Role == FederatedRole {
 		title = "Four-party authorization"
 	}

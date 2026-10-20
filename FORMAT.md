@@ -25,7 +25,7 @@ the referenced text and expectations even when clause IDs stay unchanged.
 
 A scenario has `version`, unique `id`, `title`,
 `role_under_test` (`resource.agent-identity`, `agent.signing`,
-`person-server.direct` or `authorization.federated`), `given` matching the fixture ID,
+`person-server.direct`, `authorization.federated` or `authorization.deferred`), `given` matching the fixture ID,
 `token`, `request` and nonempty `assertions`. See [valid](scenarios/02-valid.json).
 
 `token.iat_offset`/`exp_offset` are seconds relative to the fixed clock. JWT `jti`
@@ -195,3 +195,33 @@ PS proof observation, exact-token comparison, native and delivered responses,
 and any relay error. An absent handoff or relay error fails execution even if
 its clauses are unclaimed. Reported `access` assertions always grade native AS
 output; `token` assertions grade what the native PS actually delivers.
+
+## Deferred four-party profile
+
+`role_under_test: "authorization.deferred"` uses the same four-party fixture,
+omits `request`, `person` and `federated`, and supplies `deferred.outcome`:
+`payment`, `approval`, `denied`, `invalid-grant` or `foreign-location`.
+
+Stages are `access` (initial native AS response), `pending` (initial native PS
+response), `waiting` (Agent poll), `approval` (AS poll after payment), `result`
+(terminal AS poll), `token` (PS delivery), `protected` (Resource use), `gone`
+(repeated Agent poll) and `as-gone` (repeated authenticated PS poll). The runner
+also retains prerequisite Person/challenge and host-control exchanges. Only
+stages reached by the selected outcome can satisfy assertions.
+
+Boolean `deferred-pending` checks same-origin Location and the response shape:
+202 requires nonnegative integer Retry-After, no-store and a nonempty JSON
+status string; the payment profile requires 402 with WWW-Authenticate.
+`deferred-stable` additionally requires the previous pending URL. The loader
+limits pending checks to access/pending/approval, stable checks to
+waiting/approval, proof checks to access/approval/result, and exact initial
+forwarding to access; an absent proof observation is an error.
+`deferred-proof` independently verifies native PS POST or bodyless GET proof
+at the actual endpoint. `deferred-forwarded` checks exact initial Resource,
+presented and Agent token bytes. The existing `ps-jwt-*`, `ps-no-token`, status,
+JSON-member and Structured Field token assertions grade actual responses.
+
+`deferred_handoffs` retains each original/delivered request and response,
+independent proof observations and relay errors. A failed prerequisite or relay
+error fails execution independently of claim selection. These scenarios do not
+advance time or exercise persistence beyond the running native role instances.

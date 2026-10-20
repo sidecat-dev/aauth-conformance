@@ -50,6 +50,12 @@ type bootstrap struct {
 	Subject             string   `json:"subject"`
 }
 
+// Optional source file selected only for the deferred-role build. Older
+// implementation checkouts can still build the original role adapters.
+var configureDeferredAS func(*accessserver.Config)
+var configureDeferredPS func(*personserver.FederatedAuthorizationConfig)
+var deferredHostControl func(*personserver.Server) http.Handler
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -110,7 +116,10 @@ func run() error {
 	if config.Role == "person-server.direct" {
 		return runPersonServer(config, keys)
 	}
-	if config.Role == "authorization.federated" {
+	if config.Role == "authorization.federated" || config.Role == "authorization.deferred" {
+		if config.Role == "authorization.deferred" && configureDeferredAS == nil {
+			return fmt.Errorf("deferred adapter source was not selected")
+		}
 		return runFederatedServers(config, keys)
 	}
 	if config.Role == "agent.signing" {
@@ -184,7 +193,7 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 	clock := aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() })
 	var ids atomic.Uint64
 	nextID := func() string { return fmt.Sprintf("federated-%d", ids.Add(1)) }
-	access, err := accessserver.New(accessserver.Config{
+	accessConfig := accessserver.Config{
 		Issuer: config.AccessServer, SigningKey: asKey, KeyResolver: keys, Clock: clock, NewID: nextID,
 		TrustPersonServer: func(_ context.Context, issuer string) error {
 			if issuer != config.PersonServer {
@@ -204,7 +213,11 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			}
 			return accessserver.Decision{Scopes: append([]string(nil), request.Scopes...), Lifetime: time.Duration(config.AuthLifetime) * time.Second}, nil
 		},
-	})
+	}
+	if config.Role == "authorization.deferred" {
+		configureDeferredAS(&accessConfig)
+	}
+	access, err := accessserver.New(accessConfig)
 	if err != nil {
 		return err
 	}
@@ -220,7 +233,7 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 		}
 		return transport.RoundTrip(mapPhysicalRequest(signed, physical))
 	})}
-	people, err := personserver.NewFederatedAuthorization(personserver.FederatedAuthorizationConfig{
+	peopleConfig := personserver.FederatedAuthorizationConfig{
 		Issuer: config.PersonServer, SigningKey: psKey, KeyResolver: keys, Clock: clock, NewID: nextID,
 		Tokens: testutil.NewMissionStore(), HTTPClient: client,
 		AccessServerEndpoint: func(_ context.Context, issuer string) (string, error) {
@@ -233,7 +246,11 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			return personserver.Person{Subject: config.PersonSubject, Lifetime: time.Duration(config.PersonLifetime) * time.Second}, nil
 		},
 		Consent: func(context.Context, personserver.AuthorizationRequest) error { return nil },
-	})
+	}
+	if config.Role == "authorization.deferred" {
+		configureDeferredPS(&peopleConfig)
+	}
+	people, err := personserver.NewFederatedAuthorization(peopleConfig)
 	if err != nil {
 		return err
 	}
@@ -268,7 +285,15 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 		return err
 	}
 	defer listener.Close()
+	var control http.Handler
+	if config.Role == "authorization.deferred" {
+		control = deferredHostControl(people)
+	}
 	bridge := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if control != nil && r.URL.Path == "/__fixture/deferred" {
+			control.ServeHTTP(w, r)
+			return
+		}
 		r.URL.Scheme, r.URL.Host = "https", r.Host
 		handler := handlers["https://"+r.Host]
 		if handler == nil {
