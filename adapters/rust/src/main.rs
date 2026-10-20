@@ -1,4 +1,6 @@
 //! Test transport and fixed host configuration around unmodified Rust APIs.
+#[cfg(feature = "federation")]
+mod federation;
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAgentToken,
 };
@@ -18,6 +20,21 @@ use std::{
 
 #[derive(Deserialize)]
 struct Bootstrap {
+    #[cfg(feature = "federation")]
+    #[serde(default)]
+    access_server: String,
+    #[cfg(feature = "federation")]
+    #[serde(default)]
+    access_seed_hex: String,
+    #[cfg(feature = "federation")]
+    #[serde(default)]
+    access_kid: String,
+    #[cfg(feature = "federation")]
+    #[serde(default)]
+    resource_seed_hex: String,
+    #[cfg(feature = "federation")]
+    #[serde(default)]
+    federation_transport: String,
     #[serde(default)]
     role: String,
     #[serde(default)]
@@ -100,6 +117,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config: Bootstrap = serde_json::from_reader(std::io::stdin().lock())?;
     if config.version != 1 {
         return Err("bootstrap version must be 1".into());
+    }
+    if config.role == "authorization.federated" {
+        #[cfg(feature = "federation")]
+        return federation::run(config);
+        #[cfg(not(feature = "federation"))]
+        return Err("rebuild this launcher for authorization.federated".into());
     }
     if config.role == "person-server.direct" {
         return run_person_server(config);

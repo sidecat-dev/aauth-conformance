@@ -1,7 +1,8 @@
 # Launcher protocol, version 1
 
 A launcher supplies host configuration and transport around one implementation's
-native Resource, Agent or Person Server API. The optional bootstrap `role` defaults to
+native Resource, Agent or Person Server API, or a native PS/AS/Resource bundle.
+The optional bootstrap `role` defaults to
 `resource.agent-identity`; `agent.signing` selects the outbound signer contract
 below.
 
@@ -161,3 +162,60 @@ alongside Agent, Core, JOSE and Resource.
 The build helper also copies Go adapter tests so explicit Host preservation
 and its empty-Host fallback can be tested in the generated module. That Agent
 transport correction is separate from PS protocol coverage.
+
+## Four-party authorization role
+
+`role: "authorization.federated"` starts three native roles with distinct logical
+HTTPS identities and keys on one loopback listener. The Person Server bootstrap
+above gains:
+
+```json
+{
+  "access_server": "https://access.conformance.test",
+  "access_seed_hex": "<public fixture 32-byte Ed25519 seed>",
+  "access_kid": "as-1",
+  "resource_seed_hex": "<public fixture 32-byte Ed25519 seed>",
+  "federation_transport": "http://127.0.0.1:<relay-port>"
+}
+```
+
+Configure the native PS to bind the fixture person and consent to federation.
+Configure the native AS to trust that PS and authorize only requested permitted
+scopes, using the requested Auth lifetime; native issuance enforces parent
+limits. Configure the native Resource to require the fixture scope, name this
+AS in its challenges and trust its Auth tokens. Host subject and PS policies
+must use verified native principals.
+
+Announce the loopback Resource path `/whoami`. Route requests by actual received
+Host to the native PS, AS or Resource. Preserve method, target, headers and body
+and return native responses. Emit the common JSON subject echo only after native
+Resource authorization. A synchronous PS exchange must be able to reach the AS
+on this listener while the PS request is pending.
+
+The PS resolves the configured AS's logical `/token` endpoint. Its host transport
+sends the already signed request to `federation_transport`, changing only the
+physical connection destination. Preserve an explicit Host; use URI authority
+only when no Host is present. Preserve all signed headers and body bytes, including
+Content-Digest. Do not retry, redirect, repair or re-sign native PS output. Return
+the relay's actual status, headers and bounded response body to the native PS.
+This transport is deliberately loopback HTTP; it is not a production TLS client.
+
+Independent-PS scenarios use only the native Resource and AS endpoints in this
+bundle. Their Person tokens and AS request proofs come from the harness; the
+native PS is unused. No adapter changes or target-specific expectations select
+this driver, and its report contains no native PS issuance/delivery claims.
+
+The harness relay independently checks native output, then forwards to the AS
+or injects the scenario's declared fault. No scenario name or expectation is
+sent to the adapter. Fixed public trust snapshots may be constructed from the
+fixture keys, but incoming proof and credential verification, retained Person
+lineage, challenge/issuance and AS-grant verification belong to native code.
+
+Go uses `resource.NewFederatedAuthorization`,
+`personserver.NewFederatedAuthorization`, `accessserver.New`, the native handlers,
+and `testutil.NewMissionStore` for PS state. Rust uses
+`PsAuthorizationResource::new_federated`, `PersonServer::with_federation`,
+`AccessServer::new`, and `MemoryStore`; its host `Federation` adapter supplies
+endpoint resolution and transport. The build helper includes the Rust AS crate
+and enables the launcher's `federation` feature only for this role, leaving the
+other roles buildable against earlier native APIs.

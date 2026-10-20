@@ -25,7 +25,7 @@ func run() error {
 	goSource := flag.String("go-source", "", "aauth-go checkout (optional)")
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (optional)")
 	out := flag.String("out", "build", "build output directory")
-	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing or person-server.direct")
+	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing, person-server.direct or authorization.federated")
 	flag.Parse()
 	if *goSource == "" && *rustSource == "" {
 		return fmt.Errorf("supply -go-source and/or -rust-source")
@@ -102,17 +102,32 @@ func run() error {
 			if err = os.MkdirAll(filepath.Join(work, "src"), 0755); err != nil {
 				return err
 			}
-			if err = copyFile(filepath.Join(root, "adapters/rust/src/main.rs"), filepath.Join(work, "src/main.rs")); err != nil {
-				return err
+			rustFiles, listError := filepath.Glob(filepath.Join(root, "adapters/rust/src/*.rs"))
+			if listError != nil {
+				return listError
+			}
+			for _, sourceFile := range rustFiles {
+				if err = copyFile(sourceFile, filepath.Join(work, "src", filepath.Base(sourceFile))); err != nil {
+					return err
+				}
+			}
+			if len(rustFiles) == 0 {
+				return fmt.Errorf("Rust adapter source is missing")
 			}
 			manifest, err := os.ReadFile(filepath.Join(root, "adapters/rust/Cargo.toml"))
 			if err != nil {
 				return err
 			}
+			if *role == conformance.FederatedRole {
+				manifest = append(manifest, []byte("\n[dependencies.aauth-rust-access-server]\nversion = \"=0.1.0-alpha.1\"\n")...)
+			}
 			manifest = append(manifest, []byte("\n[patch.crates-io]\n")...)
 			names := []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose"}
 			if _, e := os.Stat(filepath.Join(source, "crates", "aauth-rust-person-server")); e == nil || *role == conformance.PersonServerRole {
 				names = append(names, "aauth-rust-person-server")
+			}
+			if *role == conformance.FederatedRole {
+				names = append(names, "aauth-rust-access-server")
 			}
 			for _, name := range names {
 				manifest = append(manifest, []byte(name+" = { path = "+strconv.Quote(filepath.ToSlash(filepath.Join(source, "crates", name)))+" }\n")...)
@@ -128,7 +143,11 @@ func run() error {
 			if err = copyFile(filepath.Join(source, "rust-toolchain.toml"), filepath.Join(work, "rust-toolchain.toml")); err != nil {
 				return err
 			}
-			if err = command(work, "cargo", "build", "--target-dir", filepath.Join(directory, "rust-target")); err != nil {
+			buildArgs := []string{"build", "--target-dir", filepath.Join(directory, "rust-target")}
+			if *role == conformance.FederatedRole {
+				buildArgs = append(buildArgs, "--features", "federation")
+			}
+			if err = command(work, "cargo", buildArgs...); err != nil {
 				return err
 			}
 			if err = copyFile(filepath.Join(directory, "rust-target/debug/aauth-conformance-rust-adapter"+suffix), binary); err != nil {

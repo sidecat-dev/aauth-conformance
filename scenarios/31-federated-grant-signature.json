@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "id": "federated-grant-signature",
+  "title": "PS refuses a grant not signed by the expected AS",
+  "role_under_test": "authorization.federated",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "federated": {
+    "mutation": "grant-signature"
+  },
+  "assertions": [
+    {
+      "id": "initial-status-0",
+      "stage": "initial",
+      "kind": "status",
+      "equals": 401,
+      "clause": "fed.person-required"
+    },
+    {
+      "id": "initial-sfv-token-1",
+      "stage": "initial",
+      "kind": "sfv-token",
+      "equals": "person-token",
+      "clause": "fed.person-required",
+      "header": "AAuth-Requirement",
+      "member": "requirement"
+    },
+    {
+      "id": "person-status-2",
+      "stage": "person",
+      "kind": "status",
+      "equals": 200,
+      "clause": "fed.person-token"
+    },
+    {
+      "id": "person-ps-jwt-3",
+      "stage": "person",
+      "kind": "ps-jwt",
+      "equals": true,
+      "clause": "fed.person-token"
+    },
+    {
+      "id": "challenge-status-4",
+      "stage": "challenge",
+      "kind": "status",
+      "equals": 401,
+      "clause": "fed.challenge"
+    },
+    {
+      "id": "challenge-sfv-token-5",
+      "stage": "challenge",
+      "kind": "sfv-token",
+      "equals": "auth-token",
+      "clause": "fed.challenge",
+      "header": "AAuth-Requirement",
+      "member": "requirement"
+    },
+    {
+      "id": "challenge-fed-challenge-6",
+      "stage": "challenge",
+      "kind": "fed-challenge",
+      "equals": true,
+      "clause": "fed.challenge"
+    },
+    {
+      "id": "handoff-fed-ps-proof-7",
+      "stage": "handoff",
+      "kind": "fed-ps-proof",
+      "equals": true,
+      "clause": "fed.ps-proof"
+    },
+    {
+      "id": "handoff-fed-forwarded-8",
+      "stage": "handoff",
+      "kind": "fed-forwarded",
+      "equals": true,
+      "clause": "fed.forwarding"
+    },
+    {
+      "id": "access-status-9",
+      "stage": "access",
+      "kind": "status",
+      "equals": 200,
+      "clause": "fed.auth-token"
+    },
+    {
+      "id": "access-ps-jwt-10",
+      "stage": "access",
+      "kind": "ps-jwt",
+      "equals": true,
+      "clause": "fed.auth-token"
+    },
+    {
+      "id": "token-ps-no-token-11",
+      "stage": "token",
+      "kind": "ps-no-token",
+      "equals": true,
+      "clause": "fed.delivery"
+    },
+    {
+      "id": "token-status-12",
+      "stage": "token",
+      "kind": "status",
+      "equals": 502,
+      "clause": "fed.delivery"
+    },
+    {
+      "id": "token-json-member-13",
+      "stage": "token",
+      "kind": "json-member",
+      "equals": "as_unreachable",
+      "clause": "fed.delivery",
+      "member": "error"
+    }
+  ]
+}

@@ -114,14 +114,14 @@ func (s Suite) validate() error {
 			return fmt.Errorf("invalid/duplicate clause %q", c.ID)
 		}
 		clauses[c.ID] = true
-		if clauseRole(c) != ResourceRole && clauseRole(c) != AgentRole && clauseRole(c) != PersonServerRole {
+		if clauseRole(c) != ResourceRole && clauseRole(c) != AgentRole && clauseRole(c) != PersonServerRole && clauseRole(c) != FederatedRole {
 			return fmt.Errorf("unknown clause role")
 		}
 		clauseRoles[c.ID] = clauseRole(c)
 	}
 	ids := map[string]bool{}
 	for _, scenario := range s.Scenarios {
-		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !slices.Contains([]string{ResourceRole, AgentRole, PersonServerRole}, scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
+		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !slices.Contains([]string{ResourceRole, AgentRole, PersonServerRole, FederatedRole}, scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
 			return fmt.Errorf("invalid scenario %q", scenario.ID)
 		}
 		ids[scenario.ID] = true
@@ -135,6 +135,13 @@ func (s Suite) validate() error {
 			if !slices.Contains([]string{"none", "tampered-proof", "tampered-body", "wrong-aud", "wrong-jkt", "wrong-sub", "wrong-jti", "wrong-ps", "expired-resource", "expired-presented", "denied-scope", "short-parent"}, scenario.Person.Mutation) {
 				return fmt.Errorf("unsupported Person Server mutation")
 			}
+		}
+		if scenario.Role == FederatedRole {
+			if err := validateFederatedScenario(f, scenario); err != nil {
+				return err
+			}
+		} else if scenario.Federated != nil {
+			return fmt.Errorf("federated inputs require federated role")
 		}
 		req := scenario.Request
 		if scenario.Role == PersonServerRole && (req.Method != "" || req.Path != "" || req.Proof != "" || req.CreatedOffset != 0 || req.Tamper || len(req.Covered) > 0 || len(req.Headers) > 0) {
@@ -166,10 +173,10 @@ func (s Suite) validate() error {
 		}
 		assertions := map[string]bool{}
 		for _, a := range scenario.Assertions {
-			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization"}, a.Kind) || !json.Valid(a.Equals) {
+			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded"}, a.Kind) || !json.Valid(a.Equals) {
 				return fmt.Errorf("invalid assertion %s/%s (clause %q)", scenario.ID, a.ID, a.Clause)
 			}
-			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") || strings.HasPrefix(a.Kind, "ps-") && scenario.Role != PersonServerRole {
+			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") || strings.HasPrefix(a.Kind, "ps-") && scenario.Role != PersonServerRole && scenario.Role != FederatedRole || strings.HasPrefix(a.Kind, "fed-") && scenario.Role != FederatedRole {
 				return fmt.Errorf("assertion kind does not match role")
 			}
 			if scenario.Role == PersonServerRole {
@@ -181,6 +188,18 @@ func (s Suite) validate() error {
 					json.Unmarshal(a.Equals, &b)
 					if _, ok := b.(bool); !ok {
 						return fmt.Errorf("PS JWT assertion requires boolean")
+					}
+				}
+			} else if scenario.Role == FederatedRole {
+				if !validFederatedAssertion(a) ||
+					scenario.Federated.HarnessPS && slices.Contains([]string{"person", "handoff", "token"}, a.Stage) {
+					return fmt.Errorf("invalid federation assertion stage/kind")
+				}
+				if strings.HasPrefix(a.Kind, "fed-") || strings.HasPrefix(a.Kind, "ps-") {
+					var b any
+					json.Unmarshal(a.Equals, &b)
+					if _, ok := b.(bool); !ok {
+						return fmt.Errorf("federation assertion requires boolean")
 					}
 				}
 			} else if a.Stage != "" {

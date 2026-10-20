@@ -5,6 +5,9 @@ edition = "2024"
 license = "MIT"
 publish = false
 
+[features]
+federation = []
+
 [dependencies]
 aauth-rust-jose = "=0.1.0-alpha.1"
 aauth-rust-agent = "=0.1.0-alpha.1"

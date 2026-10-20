@@ -16,6 +16,7 @@ import (
 	"time"
 
 	aauth "gitlab.com/sidecat-dev/aauth-go"
+	"gitlab.com/sidecat-dev/aauth-go/accessserver"
 	"gitlab.com/sidecat-dev/aauth-go/agent"
 	"gitlab.com/sidecat-dev/aauth-go/jose"
 	"gitlab.com/sidecat-dev/aauth-go/personserver"
@@ -25,23 +26,28 @@ import (
 )
 
 type bootstrap struct {
-	PersonServer    string   `json:"person_server"`
-	PersonSeed      string   `json:"person_seed_hex"`
-	PersonKid       string   `json:"person_kid"`
-	PersonSubject   string   `json:"person_subject"`
-	PersonLifetime  int64    `json:"person_lifetime"`
-	AuthLifetime    int64    `json:"auth_lifetime"`
-	PermittedScopes []string `json:"permitted_scopes"`
-	ResourceKid     string   `json:"resource_kid"`
-	ResourceJWK     jose.JWK `json:"resource_jwk"`
-	Version         int      `json:"version"`
-	Now             int64    `json:"now"`
-	Issuer          string   `json:"issuer"`
-	Resource        string   `json:"resource"`
-	APTransport     string   `json:"ap_transport"`
-	Role            string   `json:"role"`
-	AgentSeed       string   `json:"agent_seed_hex"`
-	Subject         string   `json:"subject"`
+	AccessServer        string   `json:"access_server"`
+	AccessSeed          string   `json:"access_seed_hex"`
+	AccessKid           string   `json:"access_kid"`
+	ResourceSeed        string   `json:"resource_seed_hex"`
+	FederationTransport string   `json:"federation_transport"`
+	PersonServer        string   `json:"person_server"`
+	PersonSeed          string   `json:"person_seed_hex"`
+	PersonKid           string   `json:"person_kid"`
+	PersonSubject       string   `json:"person_subject"`
+	PersonLifetime      int64    `json:"person_lifetime"`
+	AuthLifetime        int64    `json:"auth_lifetime"`
+	PermittedScopes     []string `json:"permitted_scopes"`
+	ResourceKid         string   `json:"resource_kid"`
+	ResourceJWK         jose.JWK `json:"resource_jwk"`
+	Version             int      `json:"version"`
+	Now                 int64    `json:"now"`
+	Issuer              string   `json:"issuer"`
+	Resource            string   `json:"resource"`
+	APTransport         string   `json:"ap_transport"`
+	Role                string   `json:"role"`
+	AgentSeed           string   `json:"agent_seed_hex"`
+	Subject             string   `json:"subject"`
 }
 
 func main() {
@@ -104,6 +110,9 @@ func run() error {
 	if config.Role == "person-server.direct" {
 		return runPersonServer(config, keys)
 	}
+	if config.Role == "authorization.federated" {
+		return runFederatedServers(config, keys)
+	}
 	if config.Role == "agent.signing" {
 		return runAgent(config, keys)
 	}
@@ -137,6 +146,140 @@ func run() error {
 		sut.Handler().ServeHTTP(w, r)
 	})
 	if err = json.NewEncoder(os.Stdout).Encode(map[string]any{"version": 1, "url": "http://" + listener.Addr().String() + origin.Path}); err != nil {
+		return err
+	}
+	return (&http.Server{Handler: bridge, ReadHeaderTimeout: 5 * time.Second}).Serve(listener)
+}
+
+// Three native roles share only the launcher's physical listener. Logical
+// identities, signing keys, policy callbacks and state ownership stay separate.
+func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) error {
+	newKey := func(seedHex, kid string) (jose.SigningKey, error) {
+		seed, err := hex.DecodeString(seedHex)
+		if err != nil || len(seed) != ed25519.SeedSize {
+			return jose.SigningKey{}, fmt.Errorf("role signing seed must be 32-byte hex")
+		}
+		return jose.NewEd25519SigningKey(kid, ed25519.NewKeyFromSeed(seed))
+	}
+	psKey, err := newKey(config.PersonSeed, config.PersonKid)
+	if err != nil {
+		return err
+	}
+	asKey, err := newKey(config.AccessSeed, config.AccessKid)
+	if err != nil {
+		return err
+	}
+	resourceKey, err := newKey(config.ResourceSeed, config.ResourceKid)
+	if err != nil {
+		return err
+	}
+	resourceURL, err := url.Parse(config.Resource)
+	if err != nil {
+		return err
+	}
+	resourceID := resourceURL.Scheme + "://" + resourceURL.Host
+	keys[signaturekey.StaticKeyReference{Issuer: resourceID, DiscoveryDocument: "aauth-resource.json", KeyID: config.ResourceKid}] = resourceKey.PublicJWK()
+	keys[signaturekey.StaticKeyReference{Issuer: config.PersonServer, DiscoveryDocument: "aauth-person.json", KeyID: config.PersonKid}] = psKey.PublicJWK()
+	keys[signaturekey.StaticKeyReference{Issuer: config.AccessServer, DiscoveryDocument: "aauth-access.json", KeyID: config.AccessKid}] = asKey.PublicJWK()
+	clock := aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() })
+	var ids atomic.Uint64
+	nextID := func() string { return fmt.Sprintf("federated-%d", ids.Add(1)) }
+	access, err := accessserver.New(accessserver.Config{
+		Issuer: config.AccessServer, SigningKey: asKey, KeyResolver: keys, Clock: clock, NewID: nextID,
+		TrustPersonServer: func(_ context.Context, issuer string) error {
+			if issuer != config.PersonServer {
+				return accessserver.ErrAccessDenied
+			}
+			return nil
+		},
+		Authorize: func(_ context.Context, request accessserver.AuthorizationRequest) (accessserver.Decision, error) {
+			for _, scope := range request.Scopes {
+				allowed := false
+				for _, permitted := range config.PermittedScopes {
+					allowed = allowed || scope == permitted
+				}
+				if !allowed {
+					return accessserver.Decision{}, accessserver.ErrAccessDenied
+				}
+			}
+			return accessserver.Decision{Scopes: append([]string(nil), request.Scopes...), Lifetime: time.Duration(config.AuthLifetime) * time.Second}, nil
+		},
+	})
+	if err != nil {
+		return err
+	}
+	physical, err := url.Parse(config.FederationTransport)
+	if err != nil || physical.Scheme != "http" || !net.ParseIP(physical.Hostname()).IsLoopback() {
+		return fmt.Errorf("federation transport must be loopback HTTP")
+	}
+	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true}
+	defer transport.CloseIdleConnections()
+	client := &http.Client{Timeout: 5 * time.Second, Transport: roundTripFunc(func(signed *http.Request) (*http.Response, error) {
+		if signed.URL.Scheme+"://"+signed.URL.Host != config.AccessServer {
+			return nil, fmt.Errorf("unexpected federation destination")
+		}
+		return transport.RoundTrip(mapPhysicalRequest(signed, physical))
+	})}
+	people, err := personserver.NewFederatedAuthorization(personserver.FederatedAuthorizationConfig{
+		Issuer: config.PersonServer, SigningKey: psKey, KeyResolver: keys, Clock: clock, NewID: nextID,
+		Tokens: testutil.NewMissionStore(), HTTPClient: client,
+		AccessServerEndpoint: func(_ context.Context, issuer string) (string, error) {
+			if issuer != config.AccessServer {
+				return "", fmt.Errorf("unconfigured Access Server")
+			}
+			return issuer + "/token", nil
+		},
+		BindPerson: func(_ context.Context, request personserver.PersonTokenRequest) (personserver.Person, error) {
+			return personserver.Person{Subject: config.PersonSubject, Lifetime: time.Duration(config.PersonLifetime) * time.Second}, nil
+		},
+		Consent: func(context.Context, personserver.AuthorizationRequest) error { return nil },
+	})
+	if err != nil {
+		return err
+	}
+	protected, err := resource.NewFederatedAuthorization(resource.FederatedAuthorizationConfig{
+		Issuer: resourceID, AccessServer: config.AccessServer, SigningKey: resourceKey, KeyResolver: keys,
+		Clock: clock, NewID: nextID, ScopeDescriptions: map[string]string{"read": "Read fixture identity"},
+		RequiredScopes: func(*http.Request) []string { return []string{"read"} },
+		ResolvePerson: func(_ context.Context, identity resource.PersonIdentity, _ resource.PersonContext) error {
+			if identity.Issuer != config.PersonServer || identity.Subject != config.PersonSubject {
+				return fmt.Errorf("unrecognized fixture person")
+			}
+			return nil
+		},
+		Protected: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			principal, ok := resource.AuthPrincipalFromContext(r.Context())
+			if !ok {
+				http.Error(w, "native Resource did not supply verified principal", 500)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"sub": principal.Subject})
+		}),
+	})
+	if err != nil {
+		return err
+	}
+	handlers := map[string]http.Handler{
+		config.PersonServer: people.Handler(), config.AccessServer: access.Handler(), resourceID: protected.Handler(),
+	}
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return err
+	}
+	defer listener.Close()
+	bridge := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Scheme, r.URL.Host = "https", r.Host
+		handler := handlers["https://"+r.Host]
+		if handler == nil {
+			http.NotFound(w, r)
+			return
+		}
+		handler.ServeHTTP(w, r)
+	})
+	if err := json.NewEncoder(os.Stdout).Encode(map[string]any{
+		"version": 1, "url": "http://" + listener.Addr().String() + resourceURL.Path,
+	}); err != nil {
 		return err
 	}
 	return (&http.Server{Handler: bridge, ReadHeaderTimeout: 5 * time.Second}).Serve(listener)

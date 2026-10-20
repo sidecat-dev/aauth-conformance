@@ -18,6 +18,7 @@ type Fixture struct {
 	APSeed    string         `json:"ap_seed_hex"`
 	AgentSeed string         `json:"agent_seed_hex"`
 	Person    *PersonFixture `json:"person_server,omitempty"`
+	Access    *AccessFixture `json:"access_server,omitempty"`
 }
 type TokenSpec struct {
 	IATOffset int64 `json:"iat_offset"`
@@ -33,15 +34,16 @@ type RequestSpec struct {
 	Tamper        bool              `json:"tamper_signature"`
 }
 type Scenario struct {
-	Version    int         `json:"version"`
-	ID         string      `json:"id"`
-	Title      string      `json:"title"`
-	Role       string      `json:"role_under_test"`
-	Given      string      `json:"given"`
-	Token      TokenSpec   `json:"token"`
-	Request    RequestSpec `json:"request"`
-	Person     *PersonSpec `json:"person,omitempty"`
-	Assertions []Assertion `json:"assertions"`
+	Version    int            `json:"version"`
+	ID         string         `json:"id"`
+	Title      string         `json:"title"`
+	Role       string         `json:"role_under_test"`
+	Given      string         `json:"given"`
+	Token      TokenSpec      `json:"token"`
+	Request    RequestSpec    `json:"request"`
+	Person     *PersonSpec    `json:"person,omitempty"`
+	Federated  *FederatedSpec `json:"federated,omitempty"`
+	Assertions []Assertion    `json:"assertions"`
 }
 type Assertion struct {
 	Stage  string          `json:"stage,omitempty"`
@@ -89,23 +91,28 @@ type Targets struct {
 	Implementations []Target `json:"implementations"`
 }
 type Bootstrap struct {
-	PersonServer    string         `json:"person_server,omitempty"`
-	PersonSeed      string         `json:"person_seed_hex,omitempty"`
-	PersonKid       string         `json:"person_kid,omitempty"`
-	PersonSubject   string         `json:"person_subject,omitempty"`
-	PersonLifetime  int64          `json:"person_lifetime,omitempty"`
-	AuthLifetime    int64          `json:"auth_lifetime,omitempty"`
-	PermittedScopes []string       `json:"permitted_scopes,omitempty"`
-	ResourceKid     string         `json:"resource_kid,omitempty"`
-	ResourceJWK     map[string]any `json:"resource_jwk,omitempty"`
-	Role            string         `json:"role,omitempty"`
-	AgentSeed       string         `json:"agent_seed_hex,omitempty"`
-	Subject         string         `json:"subject,omitempty"`
-	Version         int            `json:"version"`
-	Now             int64          `json:"now"`
-	Issuer          string         `json:"issuer"`
-	Resource        string         `json:"resource"`
-	APTransport     string         `json:"ap_transport"`
+	AccessServer        string         `json:"access_server,omitempty"`
+	AccessSeed          string         `json:"access_seed_hex,omitempty"`
+	AccessKid           string         `json:"access_kid,omitempty"`
+	ResourceSeed        string         `json:"resource_seed_hex,omitempty"`
+	FederationTransport string         `json:"federation_transport,omitempty"`
+	PersonServer        string         `json:"person_server,omitempty"`
+	PersonSeed          string         `json:"person_seed_hex,omitempty"`
+	PersonKid           string         `json:"person_kid,omitempty"`
+	PersonSubject       string         `json:"person_subject,omitempty"`
+	PersonLifetime      int64          `json:"person_lifetime,omitempty"`
+	AuthLifetime        int64          `json:"auth_lifetime,omitempty"`
+	PermittedScopes     []string       `json:"permitted_scopes,omitempty"`
+	ResourceKid         string         `json:"resource_kid,omitempty"`
+	ResourceJWK         map[string]any `json:"resource_jwk,omitempty"`
+	Role                string         `json:"role,omitempty"`
+	AgentSeed           string         `json:"agent_seed_hex,omitempty"`
+	Subject             string         `json:"subject,omitempty"`
+	Version             int            `json:"version"`
+	Now                 int64          `json:"now"`
+	Issuer              string         `json:"issuer"`
+	Resource            string         `json:"resource"`
+	APTransport         string         `json:"ap_transport"`
 }
 type Ready struct {
 	Version int    `json:"version"`

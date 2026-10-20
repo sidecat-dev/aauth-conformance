@@ -1,6 +1,6 @@
 # AAuth conformance scenarios
 
-Run the same wire scenarios against different AAuth implementations. Three roles
+Run the same wire scenarios against different AAuth implementations. Four roles
 are available:
 
 - **Resource in Agent-identity mode:** the harness plays the Agent and Agent
@@ -10,8 +10,11 @@ are available:
   and independently verifies the native PS-issued Auth token.
 - **Agent signing:** the harness plays the AP and receiving Resource. The SUT
   signs outbound requests; the harness independently verifies the received proofs.
+- **Four-party authorization:** the harness plays Agent and Person Server (PS)
+  against native Resource and Access Server (AS). Additional cases exercise a
+  native PS too, observing its signed handoff and grant verification.
 
-The harness uses no AAuth library to generate inputs or grade either role.
+The harness uses no AAuth library to generate inputs or grade these roles.
 
 Six scenarios—unsigned request, accepted identity, tampered signature, expired
 token, uncovered Signature-Key and future `created`—produce 17 assertions per
@@ -32,7 +35,8 @@ Install Go 1.25 or later. For the Rust launcher, install rustup and put
 Use implementation checkouts with the APIs in [ADAPTERS.md](ADAPTERS.md); tested
 commits appear in the example report. The current Rust launcher links the Person
 Server crate as well as Agent/Core/JOSE/Resource, so select a checkout containing
-all five crates. Historical reports identify their then-current launcher
+all five crates. Four-party authorization also needs the Access Server crate.
+Historical reports identify their then-current launcher
 and source revisions. The Rust alpha crates need not be published.
 
 From this checkout:
@@ -105,9 +109,10 @@ slices. The fixed seeds and fixed clock make these repeatable tests.
 **This slice uses loopback HTTP test transport.** Launchers reconstruct logical
 HTTPS identities from received Host/path. Fixed clocks, trusted AP documents and
 allow policies are test configuration. These results do not measure TLS,
-enrollment, discovery admission/caching, rotation, replay storage, body digests,
-delegation, or complete Person Server behavior. The separate PS slice below
-tests its stated endpoints only. Fixture private seeds are public test vectors.
+enrollment, discovery admission/caching, rotation, replay storage, delegation,
+or complete Person Server behavior. Body-integrity evidence comes only from the
+stated JSON exchanges in the PS and four-party slices below, not the bodyless
+Agent/Resource cases. Fixture private seeds are public test vectors.
 
 ## Person Server direct authorization
 
@@ -163,6 +168,62 @@ against the copied adapter module:
 
 ```sh
 go test -C build/person/aauth-go-adapter -count=1
+```
+
+## Four-party authorization
+
+```sh
+go run ./cmd/build-adapters -role authorization.federated -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/federated
+go run ./cmd/aauth-conformance -targets build/federated/targets.json -report build/federated-report.json -markdown build/federated-report.md
+```
+
+This slice has **28 scenarios and 336 assertions per implementation**. The
+[four-party report](reports/four-party-authorization.md) records Go `831d55f` and
+Rust `843be82`, using the same expected answers. Select those revisions or
+compatible successors; older Rust checkouts without native AS/federation APIs
+can still run the other roles.
+
+Ten independent-PS cases play Agent, AP and PS entirely in the harness, testing
+the native Resource and AS with the same fixture credentials and wire recipe.
+The harness issues a Person token, obtains a native Resource challenge, signs
+the AS POST itself, independently checks the resulting Auth token and presents
+it to the Resource. These cases never call native PS endpoints or count harness
+issuance/verification as native conformance.
+
+Eighteen additional cases start at the Resource's person-token challenge, obtain
+a native Person token, return for an AS-targeted Resource challenge, and redeem
+it at the native PS. The PS signs its own AS request using `jwks_uri`. The native AS
+issues an Auth token, the PS verifies and delivers it, and the Agent presents
+it to the Resource. The independent oracle verifies the tokens, exact forwarded
+compact credentials, PS proof, covered JSON type, and actual SHA-256 body digest.
+Separate short Person and Agent lifetimes exercise both expiration ceilings.
+
+A loopback relay in the native-PS cases retains the original PS request and native AS response before
+injecting deliberate faults. Cases corrupt the PS proof/body, re-sign conflicting
+Resource context or an expired presented token, and replace a native grant with
+an incorrectly signed or incorrectly bound grant. The JSON report retains both
+original and delivered bytes. These are adversarial inputs, not claims that the
+PS normally emits contradictory credentials. The AS must refuse the request
+faults; the PS must refuse unverifiable grants and relay terminal denial.
+
+The fixed host policies bind one directed subject, consent to federation and
+grant only `read`; the final subject echo and AS's chosen `403 access_denied`
+policy response are adapter contracts. Composite JWT assertions check the
+protocol bindings within that configured fixture, including its expected
+subject and scope. They are not general-purpose JWT validators. AS proof/body
+refusals are checked at the AS as 401 and at the PS for no released token; this
+slice does not prescribe the PS's classification of its own rejected proof.
+
+Both adapters host distinct logical PS, AS and Resource identities and keys.
+Fixed trusted-key snapshots and loopback HTTP are intentional test configuration.
+No TLS, discovery admission, AS deferred interaction/payment, Auth-token step-up,
+mission, R3, revocation or durable-store parity is claimed by this slice.
+
+The Rust four-party transport regression preserves explicit Host, proof headers,
+body bytes and non-success responses:
+
+```sh
+cargo test --manifest-path build/federated/aauth-rust-adapter/Cargo.toml --features federation --target-dir build/federated/rust-target
 ```
 
 ## Extend or contribute

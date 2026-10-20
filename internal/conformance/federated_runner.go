@@ -1,0 +1,316 @@
+package conformance
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"slices"
+	"strings"
+
+	"github.com/dunglas/httpsfv"
+)
+
+func runFederated(ctx context.Context, s Suite, targets Targets, options Options, ap string, report Report) Report {
+	f, p, a := s.Fixture, *s.Fixture.Person, *s.Fixture.Access
+	for _, target := range targets.Implementations {
+		run := Run{Target: target}
+		relay := &federationRelay{fixture: f, timeout: options.Timeout}
+		relayServer := httptest.NewServer(relay)
+		config := Bootstrap{
+			Version: 1, Role: FederatedRole, Now: f.Now, Issuer: f.Issuer,
+			Resource: f.Origin + f.Path, APTransport: ap,
+			PersonServer: p.Issuer, PersonSeed: p.Seed, PersonKid: p.Kid,
+			PersonSubject: p.Subject, PersonLifetime: p.Lifetime, AuthLifetime: p.AuthLifetime,
+			PermittedScopes: p.PermittedScopes, ResourceKid: p.ResourceKid,
+			ResourceJWK: publicJWK(p.ResourceSeed), ResourceSeed: p.ResourceSeed,
+			AccessServer: a.Issuer, AccessSeed: a.Seed, AccessKid: a.Kid,
+			FederationTransport: relayServer.URL,
+		}
+		ready, stop, startError := startAdapter(ctx, target, config, options)
+		if startError != nil {
+			run.Error = startError.Error()
+		}
+		for _, scenario := range s.Scenarios {
+			run.Cases = append(run.Cases, runFederatedCase(ctx, f, scenario, target, ready.URL, options, relay, startError))
+		}
+		if stop != nil {
+			stop()
+		}
+		relayServer.Close()
+		report.Runs = append(report.Runs, run)
+	}
+	report.Execution = "failed_or_incomplete"
+	if report.Success() {
+		report.Execution = "passed"
+	}
+	return report
+}
+
+func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target, physical string, options Options, relay *federationRelay, startError error) Case {
+	c := Case{ID: s.ID}
+	responses := map[string]Response{}
+	observations := map[string]PersonObservation{}
+	relay.reset(physical, s.Federated.Mutation, nil)
+	exchange := func(stage string, request *http.Request, base string) (Response, error) {
+		var body []byte
+		if request.Body != nil {
+			var err error
+			body, err = io.ReadAll(request.Body)
+			if err != nil {
+				return Response{}, err
+			}
+			request.Body = io.NopCloser(bytes.NewReader(body))
+		}
+		entry := PersonExchange{Stage: stage, Method: request.Method, URL: request.URL.String(),
+			Headers: request.Header.Clone(), Body: body, SignatureBase: base}
+		response, err := Exchange(ctx, request, physical, options.Timeout)
+		if err != nil {
+			entry.Error = err.Error()
+		} else {
+			entry.Response = &response
+			responses[stage] = response
+		}
+		c.Exchanges = append(c.Exchanges, entry)
+		return response, err
+	}
+	send := func(stage, method, url, token string, body []byte) (Response, error) {
+		request, base, err := signedFixtureRequest(f, f.AgentSeed, method, url, `sig=jwt;jwt="`+token+`"`, body)
+		if err != nil {
+			return Response{}, err
+		}
+		return exchange(stage, request, base)
+	}
+	execute := func() error {
+		if startError != nil {
+			return startError
+		}
+		agentExp := f.Now + s.Token.EXPOffset
+		agentToken, err := federationAgentToken(f, s.ID, f.Now+s.Token.IATOffset, agentExp)
+		if err != nil {
+			return err
+		}
+		if _, err := send("initial", "GET", f.Origin+f.Path, agentToken, nil); err != nil {
+			return err
+		}
+		var person string
+		var po PersonObservation
+		if s.Federated.HarnessPS {
+			person, err = mintJWT(f.Person.Seed, f.Person.Kid, "aa-person+jwt", map[string]any{
+				"iss": f.Person.Issuer, "dwk": "aauth-person.json", "aud": f.Origin,
+				"sub": f.Person.Subject, "jti": "harness-" + s.ID,
+				"cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)},
+				"iat": f.Now, "exp": min(f.Now+f.Person.Lifetime, agentExp),
+			})
+			if err != nil {
+				return err
+			}
+			po = observePersonJWT(f, *f.Person, person, "person", nil, agentExp)
+		} else {
+			personBody, _ := json.Marshal(map[string]string{"resource": f.Origin})
+			personResponse, err := send("person", "POST", f.Person.Issuer+"/person", agentToken, personBody)
+			if err != nil {
+				return err
+			}
+			person, err = responseToken(personResponse, "person_token")
+			if err != nil {
+				return err
+			}
+			po = checkResponseExpiry(personResponse, observePersonJWT(f, *f.Person, person, "person", nil, agentExp))
+			observations["person"] = po
+		}
+		if !po.Valid {
+			return fmt.Errorf("cannot advance from invalid Person token: %s", po.Error)
+		}
+		challengeResponse, err := send("challenge", "GET", f.Origin+f.Path, person, nil)
+		if err != nil {
+			return err
+		}
+		resource, err := challengedResourceToken(challengeResponse)
+		if err != nil {
+			return err
+		}
+		ro := observeFederatedResource(f, resource, po.Claims)
+		observations["challenge"] = ro
+		if !ro.Valid {
+			return fmt.Errorf("cannot redeem invalid Resource challenge: %s", ro.Error)
+		}
+		// A shorter Agent credential is used only after Person issuance, so its
+		// ceiling is decisive independently of the Person expiry.
+		if s.Federated.Mutation == "short-agent" {
+			agentExp = f.Now + 45
+			agentToken, err = federationAgentToken(f, s.ID+"-short", f.Now-10, agentExp)
+			if err != nil {
+				return err
+			}
+		}
+		if s.Federated.HarnessPS {
+			body, _ := json.Marshal(map[string]string{
+				"resource_token": resource, "presented_token": person, "agent_token": agentToken,
+			})
+			credential := fmt.Sprintf(`sig=jwks_uri;id=%q;dwk="aauth-person.json";kid=%q`, f.Person.Issuer, f.Person.Kid)
+			request, base, err := signedFixtureRequest(f, f.Person.Seed, "POST", f.Access.Issuer+"/token", credential, body)
+			if err != nil {
+				return err
+			}
+			if err := mutateASRequest(f, s.Federated.Mutation, request); err != nil {
+				return err
+			}
+			if s.Federated.Mutation != "none" && s.Federated.Mutation != "short-agent" {
+				base = "" // The original base does not describe the deliberately changed input.
+			}
+			response, err := exchange("access", request, base)
+			if err != nil || response.Status != 200 {
+				return err
+			}
+			compact, err := responseToken(response, "auth_token")
+			if err != nil {
+				return err
+			}
+			o := checkResponseExpiry(response, observeFederatedAuth(f, compact, po.Claims, agentExp))
+			observations["access"] = o
+			if s.Federated.Mutation == "none" || s.Federated.Mutation == "short-agent" {
+				if !o.Valid {
+					return fmt.Errorf("cannot use invalid AS Auth token: %s", o.Error)
+				}
+				_, err = send("protected", "GET", f.Origin+f.Path, compact, nil)
+			}
+			return err
+		}
+		relay.reset(physical, s.Federated.Mutation, map[string]string{
+			"resource_token": resource, "presented_token": person, "agent_token": agentToken,
+		})
+		tokenBody, _ := json.Marshal(map[string]string{"resource_token": resource, "presented_token": person})
+		tokenResponse, err := send("token", "POST", f.Person.Issuer+"/token", agentToken, tokenBody)
+		if err != nil {
+			return err
+		}
+		c.Handoff = relay.snapshot()
+		if c.Handoff == nil {
+			return fmt.Errorf("PS made no observable AS request")
+		}
+		if c.Handoff.Error != "" {
+			return fmt.Errorf("PS-to-AS exchange: %s", c.Handoff.Error)
+		}
+		if c.Handoff.NativeResponse == nil {
+			return fmt.Errorf("no native AS response")
+		}
+		responses["access"] = *c.Handoff.NativeResponse
+		if responses["access"].Status == 200 {
+			compact, err := responseToken(responses["access"], "auth_token")
+			if err != nil {
+				return err
+			}
+			observations["access"] = checkResponseExpiry(responses["access"], observeFederatedAuth(f, compact, po.Claims, agentExp))
+		}
+		if tokenResponse.Status == 200 {
+			compact, err := responseToken(tokenResponse, "auth_token")
+			if err != nil {
+				return err
+			}
+			o := checkResponseExpiry(tokenResponse, observeFederatedAuth(f, compact, po.Claims, agentExp))
+			observations["token"] = o
+			if s.Federated.Mutation == "none" || s.Federated.Mutation == "short-agent" {
+				if !o.Valid {
+					return fmt.Errorf("cannot use invalid delivered Auth token: %s", o.Error)
+				}
+				_, err = send("protected", "GET", f.Origin+f.Path, compact, nil)
+				return err
+			}
+		}
+		return nil
+	}
+	if err := execute(); err != nil {
+		c.Error = err.Error()
+	}
+	for i := range c.Exchanges {
+		if o, exists := observations[c.Exchanges[i].Stage]; exists {
+			c.Exchanges[i].JWT = &o
+		}
+	}
+	for _, assertion := range s.Assertions {
+		result := Result{Assertion: assertion.ID, Clause: assertion.Clause, Expected: assertion.Equals}
+		response, exists := responses[assertion.Stage]
+		switch {
+		case !slices.Contains(target.Claims, assertion.Clause):
+			result.State = "not_claimed"
+		case assertion.Stage == "handoff" && c.Handoff != nil:
+			result.State = "fail"
+			actual := c.Handoff.Forwarded
+			if assertion.Kind == "fed-ps-proof" {
+				actual = c.Handoff.Proof.ValidProof
+			}
+			var want bool
+			json.Unmarshal(assertion.Equals, &want)
+			result.Actual = actual
+			if actual == want {
+				result.State = "pass"
+			}
+		case exists:
+			if assertion.Kind == "fed-challenge" {
+				assertion.Kind = "ps-jwt"
+			}
+			result = checkPerson(assertion, response, observations[assertion.Stage])
+		default:
+			result.State, result.Detail = "error", c.Error
+			if result.Detail == "" {
+				result.Detail = "required stage was not exercised"
+			}
+		}
+		c.Results = append(c.Results, result)
+	}
+	return c
+}
+
+func federationAgentToken(f Fixture, id string, issued, expires int64) (string, error) {
+	return mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", map[string]any{
+		"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": f.Subject, "jti": id,
+		"iat": issued, "exp": expires, "ps": f.Person.Issuer,
+		"cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)},
+	})
+}
+
+func responseToken(response Response, name string) (string, error) {
+	var body map[string]json.RawMessage
+	if response.Status != 200 || json.Unmarshal(response.Body, &body) != nil {
+		return "", fmt.Errorf("expected %s response, got HTTP %d", name, response.Status)
+	}
+	var compact string
+	if json.Unmarshal(body[name], &compact) != nil || compact == "" {
+		return "", fmt.Errorf("missing %s", name)
+	}
+	return compact, nil
+}
+
+func checkResponseExpiry(response Response, o PersonObservation) PersonObservation {
+	var body map[string]json.RawMessage
+	var expires int64
+	iat, ok := o.Claims["iat"].(float64)
+	if json.Unmarshal(response.Body, &body) != nil || json.Unmarshal(body["expires_in"], &expires) != nil ||
+		!ok || o.Claims["exp"] != iat+float64(expires) {
+		o.Valid, o.Lifetime = false, false
+		o.Error = "expires_in disagrees with signed expiration"
+	}
+	return o
+}
+
+func challengedResourceToken(response Response) (string, error) {
+	dictionary, err := httpsfv.UnmarshalDictionary(response.Header.Values("AAuth-Requirement"))
+	if err != nil {
+		return "", err
+	}
+	value, _ := dictionary.Get("requirement")
+	item, ok := value.(httpsfv.Item)
+	if !ok || item.Value != httpsfv.Token("auth-token") || item.Params == nil {
+		return "", fmt.Errorf("missing auth-token requirement")
+	}
+	parameter, _ := item.Params.Get("resource-token")
+	token, ok := parameter.(string)
+	if !ok || strings.TrimSpace(token) == "" {
+		return "", fmt.Errorf("missing Resource token in challenge")
+	}
+	return token, nil
+}

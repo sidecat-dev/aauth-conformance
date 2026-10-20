@@ -161,6 +161,9 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 		return report, err
 	}
 	defer closeAP()
+	if role == FederatedRole {
+		return runFederated(ctx, s, targets, options, ap, report), nil
+	}
 	if role == PersonServerRole {
 		return runPersonServers(ctx, s, targets, options, ap, report), nil
 	}

@@ -245,6 +245,78 @@
       "anchor": "person-token-structure",
       "scope": "adapter-contract",
       "role": "person-server.direct"
+    },
+    {
+      "id": "fed.person-required",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "Person Token Required",
+      "anchor": "requirement-person-token",
+      "scope": "protocol"
+    },
+    {
+      "id": "fed.person-token",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "Person Token Structure / Verification (bounded fixture profile)",
+      "anchor": "person-token-structure",
+      "scope": "protocol"
+    },
+    {
+      "id": "fed.challenge",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "Resource Challenge Verification / Resource Token Structure",
+      "anchor": "resource-token-structure",
+      "scope": "protocol"
+    },
+    {
+      "id": "fed.ps-proof",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "PS-to-AS Token Request / HTTP Message Signatures Profile",
+      "anchor": "ps-to-as-token-request",
+      "scope": "protocol"
+    },
+    {
+      "id": "fed.forwarding",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "PS-to-AS Token Request: exact required compact tokens",
+      "anchor": "ps-to-as-token-request",
+      "scope": "protocol"
+    },
+    {
+      "id": "fed.as-binding",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "Resource Token Verification and PS-to-AS presented-token checks",
+      "anchor": "resource-token-verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "fed.auth-token",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "Auth Token Structure / Auth Token Delivery",
+      "anchor": "auth-tokens",
+      "scope": "protocol"
+    },
+    {
+      "id": "fed.delivery",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "Auth Token Delivery: refuse unverifiable AS grants, relay terminal errors",
+      "anchor": "auth-token-delivery",
+      "scope": "protocol"
+    },
+    {
+      "id": "fed.application",
+      "role": "authorization.federated",
+      "source": "core",
+      "section": "Federated Authorization Access: fixed read-only host policy and subject echo",
+      "anchor": "fig-federated",
+      "scope": "adapter-contract"
     }
   ]
 }

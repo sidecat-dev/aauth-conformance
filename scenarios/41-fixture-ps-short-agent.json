@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "id": "fixture-ps-short-agent",
+  "title": "Independent PS: cap AS grant by the shorter Agent credential",
+  "role_under_test": "authorization.federated",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "federated": {
+    "mutation": "short-agent",
+    "harness_ps": true
+  },
+  "assertions": [
+    {
+      "id": "initial-status-0",
+      "stage": "initial",
+      "kind": "status",
+      "equals": 401,
+      "clause": "fed.person-required"
+    },
+    {
+      "id": "initial-sfv-token-1",
+      "stage": "initial",
+      "kind": "sfv-token",
+      "equals": "person-token",
+      "clause": "fed.person-required",
+      "header": "AAuth-Requirement",
+      "member": "requirement"
+    },
+    {
+      "id": "challenge-status-4",
+      "stage": "challenge",
+      "kind": "status",
+      "equals": 401,
+      "clause": "fed.challenge"
+    },
+    {
+      "id": "challenge-sfv-token-5",
+      "stage": "challenge",
+      "kind": "sfv-token",
+      "equals": "auth-token",
+      "clause": "fed.challenge",
+      "header": "AAuth-Requirement",
+      "member": "requirement"
+    },
+    {
+      "id": "challenge-fed-challenge-6",
+      "stage": "challenge",
+      "kind": "fed-challenge",
+      "equals": true,
+      "clause": "fed.challenge"
+    },
+    {
+      "id": "access-status-9",
+      "stage": "access",
+      "kind": "status",
+      "equals": 200,
+      "clause": "fed.auth-token"
+    },
+    {
+      "id": "access-ps-jwt-10",
+      "stage": "access",
+      "kind": "ps-jwt",
+      "equals": true,
+      "clause": "fed.auth-token"
+    },
+    {
+      "id": "protected-status-13",
+      "stage": "protected",
+      "kind": "status",
+      "equals": 200,
+      "clause": "fed.application"
+    },
+    {
+      "id": "protected-json-member-14",
+      "stage": "protected",
+      "kind": "json-member",
+      "equals": "directed-person-1",
+      "clause": "fed.application",
+      "member": "sub"
+    }
+  ]
+}

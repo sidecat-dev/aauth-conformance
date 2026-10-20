@@ -21,5 +21,10 @@
     ],
     "resource_seed_hex": "0404040404040404040404040404040404040404040404040404040404040404",
     "resource_kid": "resource-1"
+  },
+  "access_server": {
+    "issuer": "https://access.conformance.test",
+    "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
+    "kid": "as-1"
   }
 }

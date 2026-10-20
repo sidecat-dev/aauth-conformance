@@ -24,7 +24,8 @@ the referenced text and expectations even when clause IDs stay unchanged.
 ## Requests and assertions
 
 A scenario has `version`, unique `id`, `title`,
-`role_under_test` (`resource.agent-identity`, `agent.signing` or `person-server.direct`), `given` matching the fixture ID,
+`role_under_test` (`resource.agent-identity`, `agent.signing`,
+`person-server.direct` or `authorization.federated`), `given` matching the fixture ID,
 `token`, `request` and nonempty `assertions`. See [valid](scenarios/02-valid.json).
 
 `token.iat_offset`/`exp_offset` are seconds relative to the fixed clock. JWT `jti`
@@ -142,3 +143,55 @@ passes the independent oracle. A failed prerequisite remains a case execution
 error even if an assertion for another stage is unclaimed. Missing required
 stages are errors. Protocol failures remain failures, never target-specific
 alternative expected answers.
+
+## Four-party authorization profile
+
+`fixture.access_server` adds a distinct HTTPS issuer, public test seed and kid;
+the Person Server fixture also supplies the native Resource's signing seed.
+`role_under_test: "authorization.federated"` uses `federated.mutation` and omits
+`request` and `person`. Role identities must differ. The loader rejects
+incompatible assertion stage/kind combinations.
+
+The runner performs the prescribed native exchange in stages:
+
+| Stage | Observed operation |
+| --- | --- |
+| `initial` | Agent-identity request to Resource; person-token challenge. |
+| `person` | PS issues the Person token used in the next request. |
+| `challenge` | Resource challenges that exact Person token for authorization at the AS. |
+| `handoff` | Native PS's signed AS POST, before any injected fault. |
+| `access` | Native AS response, before any injected fault. |
+| `token` | Native PS response to the Agent. |
+| `protected` | Resource consumes the delivered Auth token; positive cases only. |
+
+`federated.harness_ps: true` selects the independent PS driver. It issues the
+fixture Person token itself and signs the AS request with independent Ed25519
+code. Only `initial`, `challenge`, `access` and `protected` stages are permitted;
+native PS endpoints are never called. PS delivery faults (`grant-*`) and native
+PS assertions are rejected for this driver. The ten `fixture-ps-*` scenarios
+measure the native Resource and AS without depending on a native PS. The
+default driver uses the native PS and all stages above.
+
+`fed-challenge` checks the Resource JWT's signature, actual presented JTI,
+PS/person/key context, AS audience, scope and current expiry.
+`fed-ps-proof` verifies native PS `jwks_uri` identity, Ed25519 proof, required
+coverage, and digest of actual body bytes. `fed-forwarded` requires the three
+compact token parameters to equal those supplied to the PS exactly. These kinds
+require boolean expectations and their corresponding stage. The `ps-jwt*` and
+`ps-no-token` kinds work on Person, AS and delivered-token stages; generic HTTP
+assertions work on every response stage.
+
+Mutations are `none`, `short-agent`, `as-proof`, `as-body`, `as-resource-aud`,
+`as-resource-jti`, `as-resource-ps`, `as-resource-key`, `as-presented-expired`,
+`grant-signature`, `grant-iss`, `grant-aud`, `grant-key`, `grant-sub`,
+`grant-scope`, `grant-exp`, `grant-ps`, and `as-denial`. Request-context mutations
+are signed by the fixture Resource/PS keys and then re-signed as PS requests,
+so they isolate context checks from cryptographic corruption. Grant mutations
+preserve the native AS response separately, then alter and re-sign one claim
+(or deliberately sign with the wrong key).
+
+`federation_handoff` retains original and delivered request bytes, independent
+PS proof observation, exact-token comparison, native and delivered responses,
+and any relay error. An absent handoff or relay error fails execution even if
+its clauses are unclaimed. Reported `access` assertions always grade native AS
+output; `token` assertions grade what the native PS actually delivers.
