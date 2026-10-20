@@ -8,7 +8,7 @@ Execution: **passed**.
 
 Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. Loopback HTTP transport does not measure TLS, enrollment or discovery security.
 
-| Clause | Scope | aauth-go (`d914b4fd22e1c2b0740699debae10b364cda581d`) | aauth-rust (`0adca348341bffbad4d8e209efa84fa58465a76a`) |
+| Clause | Scope | aauth-go (`d914b4fd22e1c2b0740699debae10b364cda581d`) | aauth-rust (`4bdfc6ead03a753b3ac4e0677717424d3d3a6f95`) |
 | --- | --- | --- | --- |
 | [ps.person-endpoint](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-endpoint) | protocol | pass (10 pass, 0 fail, 0 error, 0 unexercised) | pass (10 pass, 0 fail, 0 error, 0 unexercised) |
 | [ps.person-structure](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-oauth-aauth-protocol.md#person-token-structure) | protocol | pass (20 pass, 0 fail, 0 error, 0 unexercised) | pass (20 pass, 0 fail, 0 error, 0 unexercised) |

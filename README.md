@@ -120,7 +120,7 @@ go run ./cmd/aauth-conformance -targets build/person/targets.json -report build/
 
 The slice currently has **12 scenarios and 109 assertions per implementation**.
 The [dual implementation report](reports/person-server-direct.md) records
-**218 passing assertions** against Go `d914b4f` and Rust `0adca34`. Add
+**218 passing assertions** against Go `d914b4f` and Rust `4bdfc6e`. Add
 `-rust-source /path/to/aauth-rust` to the build command to select both targets.
 The same scenario files and expected answers apply to both implementations.
 
