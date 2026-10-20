@@ -113,6 +113,13 @@ go vet ./...
 gofmt -l cmd internal adapters/go
 ```
 
+After building the Rust launcher for the Agent role, also run its transport
+regression (including rejection of a body unexpectedly added by the signer):
+
+```sh
+cargo test --manifest-path build/agent/aauth-rust-adapter/Cargo.toml --target-dir build/agent/rust-target
+```
+
 The race check needs a platform C compiler; the runner builds with
 `CGO_ENABLED=0`. CI tests and builds the runner on Linux x86_64/ARM64. Actual SUT runs require
 separately selected source checkouts and are distinct from runner unit tests.

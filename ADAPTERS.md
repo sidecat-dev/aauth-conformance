@@ -74,8 +74,10 @@ headers, configures the SUT Agent with the supplied token/key/clock, and invokes
 its native signer or Agent client. It sends that actual signed request to the
 physical transport address, preserving logical Host, path/query and all signed
 header values. It must not format proof headers, calculate a signature base,
-sign outside the SUT, or repair the SUT's signed output. Adapter input limits
-and loopback checks are transport configuration.
+sign outside the SUT, or repair the SUT's signed output. In this bodyless
+profile Rust explicitly rejects a nonempty post-signing body; it must never
+silently discard one. That rejection is a control execution error. Adapter input
+limits and loopback checks are transport configuration.
 
 Return HTTP 200 with `{"status":<receiving Resource HTTP status>}` after sending;
 return a non-200 response when construction/signing/transport fails. The harness

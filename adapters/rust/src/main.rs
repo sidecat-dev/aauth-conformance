@@ -150,6 +150,9 @@ struct AgentJob {
 }
 
 fn send_signed(base: &str, request: &Request<Vec<u8>>) -> Result<u16, Box<dyn std::error::Error>> {
+    if !request.body().is_empty() {
+        return Err("bodyless profile: SUT added a body after signing".into());
+    }
     let address: SocketAddr = base
         .strip_prefix("http://")
         .ok_or("expected HTTP loopback")?
@@ -231,4 +234,64 @@ fn run_agent(config: Bootstrap) -> Result<(), Box<dyn std::error::Error>> {
             .respond(tiny_http::Response::from_string(body.to_string()).with_status_code(status))?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{net::TcpListener, sync::mpsc, thread};
+
+    #[test]
+    fn nonempty_signed_output_cannot_become_a_successful_empty_request() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        listener.set_nonblocking(true).unwrap();
+        let (done, stopped) = mpsc::channel::<()>();
+        let peer = thread::spawn(move || loop {
+            match listener.accept() {
+                Ok((mut socket, _)) => {
+                    socket
+                        .set_read_timeout(Some(Duration::from_secs(1)))
+                        .unwrap();
+                    let mut received = Vec::new();
+                    let mut byte = [0u8; 1];
+                    while !received.ends_with(b"\r\n\r\n") {
+                        if socket.read(&mut byte).unwrap() == 0 {
+                            break;
+                        }
+                        received.push(byte[0]);
+                    }
+                    socket
+                        .write_all(
+                            b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+                        )
+                        .unwrap();
+                    return received;
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                    if stopped.try_recv() == Err(mpsc::TryRecvError::Disconnected) {
+                        return Vec::new();
+                    }
+                    thread::sleep(Duration::from_millis(1));
+                }
+                Err(error) => panic!("peer accept: {error}"),
+            }
+        });
+        let request = Request::builder()
+            .method("POST")
+            .uri("https://resource.conformance.test/operations/run")
+            .body(b"unexpected-signer-body".to_vec())
+            .unwrap();
+        let result = send_signed(&base, &request);
+        drop(done);
+        let received = peer.join().unwrap();
+        assert!(
+            result.is_err(),
+            "nonempty SUT output became a successful empty-body request: {received:?}"
+        );
+        assert!(
+            received.is_empty(),
+            "bodyless profile must reject before transport"
+        );
+    }
 }
