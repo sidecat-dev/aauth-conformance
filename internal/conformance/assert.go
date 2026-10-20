@@ -31,7 +31,7 @@ func Check(a Assertion, r Response) Result {
 			result.Detail = "missing JSON member"
 			return result
 		}
-	case "sfv-token", "sfv-strings":
+	case "sfv-token", "sfv-strings", "sfv-string-set":
 		dictionary, err := httpsfv.UnmarshalDictionary(r.Header.Values(a.Header))
 		if err != nil {
 			result.Detail = err.Error()
@@ -70,6 +70,26 @@ func Check(a Assertion, r Response) Result {
 				values = append(values, v)
 			}
 			actual = values
+			if a.Kind == "sfv-string-set" {
+				want, ok := expected.([]any)
+				if !ok {
+					result.Detail = "expected value is not a String list"
+					return result
+				}
+				gotSet, wantSet := map[string]bool{}, map[string]bool{}
+				for _, v := range values {
+					gotSet[v.(string)] = true
+				}
+				for _, v := range want {
+					text, ok := v.(string)
+					if !ok {
+						result.Detail = "expected item is not a String"
+						return result
+					}
+					wantSet[text] = true
+				}
+				actual, expected = gotSet, wantSet
+			}
 		}
 	case "problem-if-present":
 		media, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))

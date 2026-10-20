@@ -1,7 +1,10 @@
 # Resource agent-identity report
 
-Suite SHA-256: `4e3fe27f6a9b78dc7c38b40c8f468ab918ff473f5240e2df1da385441d438c18`  
+Suite SHA-256: `9ee0b94ec0ad92bf79b4ddeea4c743132a7b082ae5702fa03e6a96edf2c903f9`
+
 Verifier clock: `1800000000` Unix seconds
+
+Execution: **passed**.
 
 Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. Loopback HTTP transport does not measure TLS, enrollment or discovery security.
 

@@ -29,7 +29,8 @@ The launcher must:
    refusal status/headers/body unchanged. Success uses the common echo handler.
 
 Readiness defaults to ten seconds; each exchange to five. Only literal loopback
-IP HTTP readiness URLs are accepted. The runner stops its direct child and AP
+IP HTTP readiness URLs with the configured path and no query are accepted.
+Only the physical origin is substituted; signed path/query bytes are preserved. The runner stops its direct child and AP
 on completion, interrupt, timeout and startup failure. Grandchildren from arbitrary
 wrapper scripts are not managed; use a direct launcher process.
 
@@ -43,3 +44,6 @@ local source paths. It records source HEAD (`+dirty` for tracked changes), retai
 module/lock files in build output and copies the Rust pinned toolchain. It edits
 no SUT source or manifest. Outputs are test launchers, not production services
 or releases. TLS and general discovery tests need a separate slice and clauses.
+
+Child exit codes after the final exchange are not assessed. Remaining child
+processes are terminated; this slice reports startup and HTTP execution errors.

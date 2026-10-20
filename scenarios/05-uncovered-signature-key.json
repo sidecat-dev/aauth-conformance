@@ -44,7 +44,7 @@
     {
       "id": "required-coverage",
       "clause": "core.verification",
-      "kind": "sfv-strings",
+      "kind": "sfv-string-set",
       "equals": [
         "@method",
         "@authority",

@@ -44,7 +44,8 @@ Every assertion has unique scenario-local `id`, `clause`, `kind`, and `equals`:
 | --- | --- | --- |
 | `status` | — | HTTP status equals the integer. |
 | `sfv-token` | `header`, `member` | All header lines parse as a dictionary; member is an Item whose Token equals the string. A quoted string fails. Unknown members are ignored. |
-| `sfv-strings` | `header`, `member` | Member is an Inner List of Strings exactly matching the array; used for this profile's required coverage. |
+| `sfv-strings` | `header`, `member` | Member is an Inner List of Strings exactly matching the array; use when order is significant. |
+| `sfv-string-set` | `header`, `member` | Same String list type, comparing component membership without order/duplicates; used for required coverage. |
 | `json-member` | `member` | Object contains that top-level member with equal value/type. Absence differs from null. |
 | `problem-if-present` | — | On application/problem+json, require object type `urn:ietf:params:sig-error:` plus expected code, and any status must match HTTP. Other body representations yield `not_exercised`. |
 
@@ -65,5 +66,8 @@ A clause pass covers only its listed assertions. No section percentage is comput
 JSON reports retain base64 response bytes, headers, logical request headers/base
 and assertion expected/actual/detail values. Bodies are bounded to 64 KiB;
 redirects and timeouts are errors. Markdown shows the matrix and assertion evidence.
-Any assertion failure, transport error or adapter error makes the run unsuccessful;
+Any assertion failure, transport error or adapter startup error makes the run unsuccessful;
 so does an all-unclaimed or all-unexercised run.
+
+Execution errors are retained on the case independently of clause claims. They
+make overall execution fail even when that case's assertions are not claimed.

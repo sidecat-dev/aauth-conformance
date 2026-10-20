@@ -9,6 +9,7 @@ import (
 
 type Case struct {
 	ID            string              `json:"id"`
+	Error         string              `json:"error,omitempty"`
 	Method        string              `json:"method,omitempty"`
 	URL           string              `json:"url,omitempty"`
 	Headers       map[string][]string `json:"request_headers,omitempty"`
@@ -23,6 +24,7 @@ type Run struct {
 }
 type Report struct {
 	Version     int     `json:"version"`
+	Execution   string  `json:"execution"`
 	SuiteSHA256 string  `json:"suite_sha256"`
 	Clock       int64   `json:"verifier_unix_seconds"`
 	Catalog     Catalog `json:"catalog"`
@@ -79,6 +81,9 @@ func (r Report) Success() bool {
 			return false
 		}
 		for _, c := range run.Cases {
+			if c.Error != "" {
+				return false
+			}
 			for _, v := range c.Results {
 				if v.State == "fail" || v.State == "error" {
 					return false
@@ -91,7 +96,12 @@ func (r Report) Success() bool {
 }
 func (r Report) Markdown(out io.Writer) error {
 	var b strings.Builder
-	fmt.Fprintf(&b, "# Resource agent-identity report\n\nSuite SHA-256: `%s`  \nVerifier clock: `%d` Unix seconds\n\n", r.SuiteSHA256, r.Clock)
+	fmt.Fprintf(&b, "# Resource agent-identity report\n\nSuite SHA-256: `%s`\n\nVerifier clock: `%d` Unix seconds\n\n", r.SuiteSHA256, r.Clock)
+	state := "failed or incomplete"
+	if r.Success() {
+		state = "passed"
+	}
+	fmt.Fprintf(&b, "Execution: **%s**.\n\n", state)
 	b.WriteString("Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. Loopback HTTP transport does not measure TLS, enrollment or discovery security.\n\n| Clause | Scope")
 	for _, run := range r.Runs {
 		fmt.Fprintf(&b, " | %s (`%s`)", clean(run.Target.ID), clean(run.Target.Revision))
@@ -121,6 +131,9 @@ func (r Report) Markdown(out io.Writer) error {
 			fmt.Fprintf(&b, "Adapter error: %s\n\n", clean(run.Error))
 		}
 		for _, c := range run.Cases {
+			if c.Error != "" {
+				fmt.Fprintf(&b, "Exchange `%s` error: %s\n\n", clean(c.ID), clean(c.Error))
+			}
 			for _, a := range c.Results {
 				fmt.Fprintf(&b, "- `%s/%s` — `%s`: **%s**", clean(c.ID), clean(a.Assertion), clean(a.Clause), a.State)
 				if a.State == "fail" || a.State == "error" {

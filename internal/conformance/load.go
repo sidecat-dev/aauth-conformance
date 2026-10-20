@@ -133,7 +133,7 @@ func (s Suite) validate() error {
 		}
 		assertions := map[string]bool{}
 		for _, a := range scenario.Assertions {
-			if a.ID == "" || assertions[a.ID] || !clauses[a.Clause] || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "json-member", "problem-if-present"}, a.Kind) || !json.Valid(a.Equals) {
+			if a.ID == "" || assertions[a.ID] || !clauses[a.Clause] || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present"}, a.Kind) || !json.Valid(a.Equals) {
 				return fmt.Errorf("invalid assertion %s/%s (clause %q)", scenario.ID, a.ID, a.Clause)
 			}
 			assertions[a.ID] = true
@@ -150,12 +150,12 @@ func (s Suite) validate() error {
 					return fmt.Errorf("%s equals must be a string", a.Kind)
 				}
 			}
-			if a.Kind == "sfv-token" || a.Kind == "sfv-strings" {
+			if a.Kind == "sfv-token" || (a.Kind == "sfv-strings" || a.Kind == "sfv-string-set") {
 				if a.Header == "" || a.Member == "" {
 					return fmt.Errorf("SFV assertion needs header/member")
 				}
 			}
-			if a.Kind == "sfv-strings" {
+			if a.Kind == "sfv-strings" || a.Kind == "sfv-string-set" {
 				list, ok := value.([]any)
 				if !ok {
 					return fmt.Errorf("sfv-strings equals must be an array")

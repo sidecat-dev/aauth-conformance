@@ -26,6 +26,10 @@ func Exchange(ctx context.Context, logical *http.Request, transport string, time
 		return Response{}, err
 	}
 	req.Host = logical.URL.Host
+	physical.Path = logical.URL.Path
+	physical.RawPath = logical.URL.RawPath
+	physical.RawQuery = logical.URL.RawQuery
+	physical.ForceQuery = logical.URL.ForceQuery
 	req.URL = physical
 	client := &http.Client{Timeout: timeout, Transport: &http.Transport{Proxy: nil, DisableKeepAlives: true}, CheckRedirect: func(*http.Request, []*http.Request) error {
 		return fmt.Errorf("redirects are not conformance responses")
@@ -109,8 +113,9 @@ func startAdapter(ctx context.Context, t Target, config Bootstrap, options Optio
 	}
 	if err == nil {
 		u, e := url.Parse(value.URL)
-		if e != nil || value.Version != 1 || u.Scheme != "http" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || !net.ParseIP(u.Hostname()).IsLoopback() || u.Path == "" {
-			err = fmt.Errorf("adapter must advertise version 1 and a loopback HTTP URL")
+		target, targetError := url.Parse(config.Resource)
+		if e != nil || targetError != nil || value.Version != 1 || u.Scheme != "http" || u.User != nil || u.RawQuery != "" || u.ForceQuery || u.Fragment != "" || !net.ParseIP(u.Hostname()).IsLoopback() || u.EscapedPath() != target.EscapedPath() {
+			err = fmt.Errorf("adapter must advertise version 1 and a loopback HTTP URL matching the configured path, without query or fragment")
 		}
 	}
 	if err != nil {
@@ -171,6 +176,9 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 					}
 				}
 			}
+			if exchangeError != nil {
+				c.Error = exchangeError.Error()
+			}
 			for _, assertion := range scenario.Assertions {
 				result := Result{Assertion: assertion.ID, Clause: assertion.Clause, Expected: assertion.Equals}
 				switch {
@@ -190,6 +198,10 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 			stop()
 		}
 		report.Runs = append(report.Runs, run)
+	}
+	report.Execution = "failed_or_incomplete"
+	if report.Success() {
+		report.Execution = "passed"
 	}
 	return report, nil
 }

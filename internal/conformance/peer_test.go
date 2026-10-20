@@ -108,3 +108,17 @@ func TestJSONMemberRequiresPresenceEvenWhenExpectedNull(t *testing.T) {
 		t.Fatal("present null failed")
 	}
 }
+
+// The draft's required_input list does not prescribe a component order.
+func TestRequiredCoverageIsComparedAsASet(t *testing.T) {
+	a := Assertion{ID: "coverage", Clause: "core.verification", Kind: "sfv-string-set", Header: "Signature-Error", Member: "required_input", Equals: json.RawMessage(`["@method","@authority","@path","signature-key"]`)}
+	for _, tc := range []struct{ header, state string }{
+		{`error=invalid_input, required_input=("signature-key" "@path" "@authority" "@method")`, "pass"},
+		{`error=invalid_input, required_input=("signature-key" "@path" "@authority")`, "fail"},
+		{`error=invalid_input, required_input=(signature-key "@path" "@authority" "@method")`, "fail"},
+	} {
+		if got := Check(a, Response{Header: http.Header{"Signature-Error": []string{tc.header}}}); got.State != tc.state {
+			t.Fatalf("%s: %+v", tc.header, got)
+		}
+	}
+}

@@ -52,7 +52,7 @@ func TestRunnerPreservesRealHTTPFailureAndStartupErrors(t *testing.T) {
 			claims = append(claims, c.ID)
 		}
 	}
-	for _, mode := range []string{"respond", "silent", "missing"} {
+	for _, mode := range []string{"respond", "silent", "missing", "wrong-path", "empty-query"} {
 		t.Run(mode, func(t *testing.T) {
 			t.Setenv("AAUTH_TEST_ADAPTER", mode)
 			command := []string{os.Args[0], "-test.run=^TestAdapterProcess$"}
@@ -98,11 +98,64 @@ func TestAdapterProcess(t *testing.T) {
 		r.Body.Close()
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if mode == "drop-signed" {
+			if r.Header.Get("Signature-Key") != "" {
+				connection, _, _ := w.(http.Hijacker).Hijack()
+				connection.Close()
+				return
+			}
+			w.Header().Set("AAuth-Requirement", "requirement=agent-token")
+			w.WriteHeader(401)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"sub":"wrong"}`))
 	}))
-	json.NewEncoder(os.Stdout).Encode(Ready{Version: 1, URL: server.URL + "/whoami"})
+	path := "/whoami"
+	if mode == "wrong-path" {
+		path = "/different"
+	}
+	if mode == "empty-query" {
+		path += "?"
+	}
+	json.NewEncoder(os.Stdout).Encode(Ready{Version: 1, URL: server.URL + path})
 	select {}
+}
+
+// An unclaimed assertion must not hide an actual failed exchange.
+func TestUnclaimedCasesCannotHideTransportFailures(t *testing.T) {
+	t.Setenv("AAUTH_TEST_ADAPTER", "drop-signed")
+	suite, err := Load("../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	targets := Targets{Version: 1, Implementations: []Target{{ID: "partial", Revision: "test", Command: []string{os.Args[0], "-test.run=^TestAdapterProcess$"}, Claims: []string{"core.agent-token-required"}}}}
+	report, err := RunSuite(context.Background(), suite, targets, Options{StartupTimeout: time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Success() {
+		t.Fatal("transport failures hidden behind not_claimed")
+	}
+	b, _ := json.Marshal(report.Runs[0].Cases[1])
+	var record map[string]any
+	json.Unmarshal(b, &record)
+	if record["error"] == nil || record["error"] == "" {
+		t.Fatal("transport failure missing from case evidence")
+	}
+}
+
+func TestPhysicalAddressDoesNotReplaceSignedPathOrQuery(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.WriteString(w, r.Host+" "+r.RequestURI) }))
+	defer server.Close()
+	request, _ := http.NewRequest("GET", "https://resource.conformance.test/whoami%2Fpart?q=1", nil)
+	response, err := Exchange(context.Background(), request, server.URL+"/different?wrong=1", time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(response.Body) != "resource.conformance.test /whoami%2Fpart?q=1" {
+		t.Fatalf("sent %s", response.Body)
+	}
 }
 
 // Adding an implementation name must never change the token, proof or request.
