@@ -10,8 +10,8 @@ use aauth_rust_core::{
 };
 use aauth_rust_jose::{Jwk, SigningKey};
 use aauth_rust_person_server::{
-    AuthorizationRequest, Config as PersonConfig, Federation, FederationError, Grant, MemoryStore,
-    Person, PersonRequest, PersonServer, Policy, PolicyError,
+    AgentIdentity, AuthorizationRequest, Config as PersonConfig, Federation, FederationError,
+    Grant, MemoryStore, Person, PersonRequest, PersonServer, Policy, PolicyError, Store,
 };
 use aauth_rust_resource::{PsAuthorizationConfig, PsAuthorizationResource};
 use http::{Request, Response};
@@ -20,7 +20,7 @@ use std::{
     net::{SocketAddr, TcpStream},
     sync::{
         Arc,
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicI64, AtomicU64, Ordering},
     },
     time::Duration,
 };
@@ -29,13 +29,19 @@ type Failure = Box<dyn std::error::Error>;
 
 #[derive(Clone)]
 struct Keys {
-    ap: AgentProviderKeys,
+    ap: Vec<(String, AgentProviderKeys)>,
     roles: Vec<(String, String, TrustedIssuerKeys)>,
 }
 impl AgentKeyResolver for Keys {
     fn key(&self, issuer: &str, dwk: &str, kid: &str) -> Result<Jwk, TokenError> {
         if dwk == "aauth-agent.json" {
-            return self.ap.key(issuer, dwk, kid);
+            return self
+                .ap
+                .iter()
+                .find(|(id, _)| id == issuer)
+                .ok_or(TokenError::UntrustedIssuer)?
+                .1
+                .key(issuer, dwk, kid);
         }
         self.roles
             .iter()
@@ -132,7 +138,10 @@ fn ids(prefix: &'static str) -> impl Fn() -> String + Send + Sync {
 
 pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
     #[cfg(feature = "deferred")]
-    let deferred = config.role == "authorization.deferred";
+    let deferred = (config.role == "authorization.deferred"
+        || config.role == "authorization.subagent")
+        && !config.person_direct;
+    let subagent = config.role == "authorization.subagent";
     #[cfg(feature = "deferred")]
     let host_control = Arc::new(super::deferred::HostControl::default());
     let target: http::Uri = config.resource.parse()?;
@@ -143,12 +152,28 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
     let ps_key = signing_key(&config.person_seed_hex)?;
     let as_key = signing_key(&config.access_seed_hex)?;
     let resource_key = signing_key(&config.resource_seed_hex)?;
-    let keys = Keys {
-        ap: AgentProviderKeys::from_documents(
+    let mut agent_providers = vec![(
+        config.issuer.clone(),
+        AgentProviderKeys::from_documents(
             &config.issuer,
             &fetch(&config.ap_transport, "/.well-known/aauth-agent.json")?,
             &fetch(&config.ap_transport, "/.well-known/jwks.json")?,
         )?,
+    )];
+    // Each additional admitted AP has its own runner-owned fixture transport.
+    // Native parsing and token verification retain every trust decision.
+    for provider in &config.additional_agent_providers {
+        agent_providers.push((
+            provider.issuer.clone(),
+            AgentProviderKeys::from_documents(
+                &provider.issuer,
+                &fetch(&provider.transport, "/.well-known/aauth-agent.json")?,
+                &fetch(&provider.transport, "/.well-known/jwks.json")?,
+            )?,
+        ));
+    }
+    let keys = Keys {
+        ap: agent_providers,
         roles: vec![
             trusted(
                 &config.person_server,
@@ -172,23 +197,29 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
     };
     let mut ps_config = PersonConfig::new(&config.person_server, &config.person_kid, ps_key);
     ps_config.person_lifetime = config.person_lifetime;
-    let now = config.now;
+    let clock = Arc::new(AtomicI64::new(config.now));
+    let now = clock.clone();
+    let store = Arc::new(MemoryStore::default());
     let ps = PersonServer::new(
         ps_config,
         keys.clone(),
-        MemoryStore::default(),
+        store.clone(),
         ConsentPolicy(FixturePolicy {
             subject: config.person_subject.clone(),
             scopes: config.permitted_scopes.clone(),
             auth_lifetime: config.auth_lifetime,
         }),
-        move || now,
+        move || now.load(Ordering::SeqCst),
         ids("person"),
-    )?
-    .with_federation(Transport {
-        issuer: config.access_server.clone(),
-        physical: config.federation_transport,
-    });
+    )?;
+    let ps = if config.person_direct {
+        ps
+    } else {
+        ps.with_federation(Transport {
+            issuer: config.access_server.clone(),
+            physical: config.federation_transport,
+        })
+    };
     #[cfg(feature = "deferred")]
     let ps = if deferred {
         let mut pending = aauth_rust_person_server::DeferredConfig::new(
@@ -217,11 +248,12 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
             lifetime,
         })
     };
+    let now = clock.clone();
     let access = AccessServer::new(
         AccessConfig::new(&config.access_server, &config.access_kid, as_key),
         keys.clone(),
         authorize.clone(),
-        move || now,
+        move || now.load(Ordering::SeqCst),
         ids("access"),
     )?;
     #[cfg(feature = "deferred")]
@@ -290,6 +322,9 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
         #[cfg(feature = "deferred")]
         let host_control = host_control.clone();
         let (ps, access, resource) = (ps.clone(), access.clone(), resource.clone());
+        let (clock, store) = (clock.clone(), store.clone());
+        let person_issuer = config.person_server.clone();
+        let fixture_now = config.now;
         let (ps_host, as_host, resource_host) = (
             ps_authority.clone(),
             as_authority.clone(),
@@ -306,7 +341,42 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
                     .as_str();
                 let response = if host == ps_host.as_str() {
                     #[cfg(feature = "deferred")]
-                    if deferred && request.uri().path() == "/__fixture/deferred" {
+                    if subagent && request.uri().path() == "/__fixture/subagent" {
+                        let command: serde_json::Value = serde_json::from_slice(request.body())?;
+                        if command.get("revoke").and_then(|v| v.as_bool()) == Some(true) {
+                            store
+                                .revoke_binding(
+                                    &person_issuer,
+                                    &AgentIdentity {
+                                        issuer: command
+                                            .get("parent_issuer")
+                                            .and_then(|v| v.as_str())
+                                            .ok_or("parent issuer required")?
+                                            .into(),
+                                        subject: command
+                                            .get("parent_subject")
+                                            .and_then(|v| v.as_str())
+                                            .ok_or("parent subject required")?
+                                            .into(),
+                                    },
+                                )
+                                .map_err(|e| format!("native revoke: {e:?}"))?;
+                        }
+                        if let Some(offset) = command.get("now_offset").and_then(|v| v.as_i64()) {
+                            if !(0..=3600).contains(&offset) {
+                                return Err("fixture clock offset out of bounds".into());
+                            }
+                            clock.store(fixture_now + offset, Ordering::SeqCst);
+                        }
+                        host_control.handle(&request, |reference| {
+                            ps.advance_federation(
+                                reference,
+                                aauth_rust_person_server::FederationInput::Poll,
+                            )
+                            .map(|_| ())
+                            .map_err(|e| e.to_string())
+                        })
+                    } else if deferred && request.uri().path() == "/__fixture/deferred" {
                         host_control.handle(&request, |reference| {
                             ps.advance_federation(
                                 reference,
@@ -323,7 +393,10 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
                 } else if host == as_host.as_str() {
                     access.handle(&request)
                 } else if host == resource_host.as_str() && request.uri().path() == path.as_str() {
-                    match resource.authorize(&request, now, &next_id()).into_result() {
+                    match resource
+                        .authorize(&request, clock.load(Ordering::SeqCst), &next_id())
+                        .into_result()
+                    {
                         Ok((token, ())) => Response::builder()
                             .header("content-type", "application/json")
                             .body(serde_json::to_vec(

@@ -262,3 +262,65 @@ The Rust transport admits native AS `/token/pending/<reference>` paths only on
 the configured HTTPS AS origin, alongside its original `/token` endpoint. The
 relay preserves the native signed method, headers and body. The Agent polls
 only its PS URL; the fixture host explicitly advances PS-to-AS polling.
+
+## Parent-mediated sub-agent authorization
+
+`role: "authorization.subagent"` uses the same native PS/AS/Resource bundle and
+bootstrap as deferred authorization. Direct scenarios additionally set
+`person_direct: true`, which configures the native PS without federation; all
+other scenarios configure native federation. Rust builds with the `subagent` feature,
+which includes `deferred` and `federation`. Each scenario starts a fresh bundle
+so parent binding revocation, clock changes and consumed continuations cannot
+change another scenario's result. Native PS and AS endpoints consume optional
+`subagent_token`; their code verifies the relationship and issues child-bound
+credentials. The adapter does not parse, verify, mint or repair those credentials.
+
+The independent driver acts as the fixture AP, parent, child and (for direct
+three-party cases) Resource. Its parent key is the existing fixture Agent key;
+its child key is the public seed `06` repeated 32 times. AP fixture tokens have
+separate identities, keys and compact bytes. The wrong-provider scenario declares
+a second AP with its own valid issuer/subject and distinct signing key; the
+runner serves that AP on a separate bounded loopback fixture. Bootstrap
+`additional_agent_providers` supplies its logical issuer and physical `transport`.
+The adapter fetches its actual fixture metadata/JWKS and admits it through native
+`AgentProviderKeys`, leaving the same-provider relationship check as the
+decisive refusal. No private AP seed is passed in that trust declaration. The parent signs PS `/person`,
+`/token`, GET polls and DELETE cancellation. The child signs native Resource
+requests with the Person/Auth credential received from the PS. The runner
+independently verifies native Person/Auth signatures, child holder key, subject,
+audience, authorization and both Agent lifetimes; separate shorter-child and
+shorter-parent cases make each Agent lifetime decisive; delegation claims must stay
+absent from credentials seen by the Resource. Immediate direct cases use a
+fixture-signed Resource token, and therefore claim native PS issuance and
+independent credential verification only. Four-party cases obtain the actual
+native Resource challenge and exercise native Resource use after delivery.
+
+The relay separately captures native PS proofs, native AS responses and exact
+parent, child, Resource and presented-token compact bytes. It checks the POST
+body and GET poll proof independently. Native AS/PS success cannot be replaced
+by a host control response. Refusal assertions require a 4xx response with no
+credential; protocol-prescribed child token errors also check status and code.
+A child poll is tested before and after AS completion, followed by a successful
+parent poll and a second parent poll returning `410`. Cancellation requires
+successful 2xx with no credential and subsequent `410`; timeout requires
+`408 expired` followed by `410`; the protocol does not
+fix the DELETE success status.
+
+Rust's loopback host control `POST /__fixture/subagent` accepts the existing
+`stage`/`reference` policy inputs. It also accepts a bounded `now_offset` in
+seconds from the bootstrap clock and `revoke: true` with `parent_issuer` and
+`parent_subject`. The clock is shared by all native roles; revocation calls the
+retained native `Store::revoke_binding` on the parent principal. These controls
+exercise in-memory policy and state only. They do not claim AP token revocation,
+durable continuation recovery, real payment, consent UI, recursive delegation,
+missions, or production TLS/discovery.
+
+The Go build helper currently emits an explicit unavailable target for this
+complete role, with revision `not_measured`, no command and no claims. It reads
+and builds no Go source. The runner records every Go assertion as `not_claimed`
+without launching a process. Go already implements immediate parent mediation;
+this declaration describes the unimplemented/unqualified shared role adapter
+and deferred child integration. It does not establish a Go library failure or
+pass. Its existing immediate and deferred top-level roles remain available.
+A later Go cycle can enable the same scenarios and expectations after native
+adapter support is ready.

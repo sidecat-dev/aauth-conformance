@@ -161,6 +161,9 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 		return report, err
 	}
 	defer closeAP()
+	if role == SubagentRole {
+		return runSubagents(ctx, s, targets, options, ap, report), nil
+	}
 	if role == DeferredRole {
 		return runDeferred(ctx, s, targets, options, ap, report), nil
 	}

@@ -104,6 +104,9 @@ func (r Report) Success() bool {
 func (r Report) Markdown(out io.Writer) error {
 	var b strings.Builder
 	title := "Resource agent-identity"
+	if r.Role == SubagentRole {
+		title = "Parent-mediated sub-agent authorization"
+	}
 	if r.Role == DeferredRole {
 		title = "Deferred four-party authorization"
 	}
@@ -147,6 +150,9 @@ func (r Report) Markdown(out io.Writer) error {
 	b.WriteString("\n## Assertion evidence\n\n")
 	for _, run := range r.Runs {
 		fmt.Fprintf(&b, "### %s\n\n", clean(run.Target.ID))
+		if run.Target.Unavailable != "" {
+			fmt.Fprintf(&b, "Adapter unavailable: %s\n\n", clean(run.Target.Unavailable))
+		}
 		if run.Error != "" {
 			fmt.Fprintf(&b, "Adapter error: %s\n\n", clean(run.Error))
 		}

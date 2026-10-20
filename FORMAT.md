@@ -25,7 +25,8 @@ the referenced text and expectations even when clause IDs stay unchanged.
 
 A scenario has `version`, unique `id`, `title`,
 `role_under_test` (`resource.agent-identity`, `agent.signing`,
-`person-server.direct`, `authorization.federated` or `authorization.deferred`), `given` matching the fixture ID,
+`person-server.direct`, `authorization.federated`, `authorization.deferred` or
+`authorization.subagent`), `given` matching the fixture ID,
 `token`, `request` and nonempty `assertions`. See [valid](scenarios/02-valid.json).
 
 `token.iat_offset`/`exp_offset` are seconds relative to the fixed clock. JWT `jti`
@@ -225,3 +226,38 @@ JSON-member and Structured Field token assertions grade actual responses.
 independent proof observations and relay errors. A failed prerequisite or relay
 error fails execution independently of claim selection. These scenarios do not
 advance time or exercise persistence beyond the running native role instances.
+
+## Parent-mediated child slice
+
+`role_under_test: "authorization.subagent"` uses the existing Person/AS fixture
+and adds `subagent: {"outcome":"..."}`. Its request profile is prescribed by the
+driver; `request`, `person`, `federated` and `deferred` fields must be absent.
+Allowed outcomes are `direct`, `immediate`, `approval`, `payment`, `denied`,
+`cancel`, `expiry`, `revoked-pending`, `revoked-binding`, `wrong-parent`,
+`wrong-provider`, `wrong-key`, `depth`, `expired-child`, `child-direct`,
+`child-poll`, `short-child` and `short-parent`. Both implementations receive identical wire
+inputs and literal expectations when they claim this role.
+
+The `wrong-provider` outcome requires `subagent.foreign_provider` with a distinct
+HTTPS `issuer`, `kid` and public fixture `seed_hex`. The seed signs the fixture
+Agent input, and a separate runner-owned AP transport serves its actual metadata
+and public JWKS. Its child has a matching foreign-provider subject and the
+original parent_agent. No other outcome accepts this foreign fixture.
+`short-parent` supplies a 45-second parent and a 600-second child; the independent
+Person and Auth oracles apply the shorter parent ceiling.
+
+Each assertion names an exercised stage. `subagent-jwt` independently validates
+native child-bound Person/Auth credentials; `subagent-proof` checks observed
+native PS signatures; `subagent-forwarded` compares all four exact token
+compacts; `subagent-pending` checks same-origin pending response shape;
+`subagent-refused` requires 4xx with no credential; `subagent-no-token` requires
+no credential; and `subagent-cancelled` requires 2xx with no credential.
+These kinds require boolean `equals`. Ordinary `status` and `json-member`
+assertions remain available. The loader rejects kind/stage combinations for
+which the runner has no observation. Reports retain request/response bytes,
+independent JWT claims and separate PS/AS handoffs.
+
+An optional target `unavailable` string is permitted only for this role, with
+empty `command` and `claims`. It is a declaration of missing adapter support;
+all its assertions remain `not_claimed`, and an all-unavailable run cannot pass.
+No launcher is started and no native response is invented for such a target.

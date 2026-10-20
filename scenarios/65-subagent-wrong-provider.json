@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "id": "subagent-wrong-provider",
+  "title": "Parent-mediated sub-agent: independently trusted foreign provider",
+  "role_under_test": "authorization.subagent",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "subagent": {
+    "outcome": "wrong-provider",
+    "foreign_provider": {
+      "issuer": "https://foreign.conformance.test",
+      "kid": "foreign-ap-1",
+      "seed_hex": "0707070707070707070707070707070707070707070707070707070707070707"
+    }
+  },
+  "assertions": [
+    {
+      "id": "person-subagent-refused-0",
+      "stage": "person",
+      "kind": "subagent-refused",
+      "equals": true,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-subagent-no-token-1",
+      "stage": "person",
+      "kind": "subagent-no-token",
+      "equals": true,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-status-2",
+      "stage": "person",
+      "kind": "status",
+      "equals": 400,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-json-member-3",
+      "stage": "person",
+      "kind": "json-member",
+      "equals": "invalid_subagent_token",
+      "clause": "subagent.identity",
+      "member": "error"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "id": "subagent-expired-child",
+  "title": "Parent-mediated sub-agent: expired-child",
+  "role_under_test": "authorization.subagent",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "subagent": {
+    "outcome": "expired-child"
+  },
+  "assertions": [
+    {
+      "id": "person-subagent-refused-0",
+      "stage": "person",
+      "kind": "subagent-refused",
+      "equals": true,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-subagent-no-token-1",
+      "stage": "person",
+      "kind": "subagent-no-token",
+      "equals": true,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-status-2",
+      "stage": "person",
+      "kind": "status",
+      "equals": 400,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-json-member-3",
+      "stage": "person",
+      "kind": "json-member",
+      "equals": "expired_subagent_token",
+      "clause": "subagent.identity",
+      "member": "error"
+    }
+  ]
+}

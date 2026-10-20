@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "id": "subagent-direct",
+  "title": "Parent-mediated sub-agent: direct",
+  "role_under_test": "authorization.subagent",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "subagent": {
+    "outcome": "direct"
+  },
+  "assertions": [
+    {
+      "id": "person-status-0",
+      "stage": "person",
+      "kind": "status",
+      "equals": 200,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-subagent-jwt-1",
+      "stage": "person",
+      "kind": "subagent-jwt",
+      "equals": true,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "token-status-2",
+      "stage": "token",
+      "kind": "status",
+      "equals": 200,
+      "clause": "subagent.delivery"
+    },
+    {
+      "id": "token-subagent-jwt-3",
+      "stage": "token",
+      "kind": "subagent-jwt",
+      "equals": true,
+      "clause": "subagent.delivery"
+    }
+  ]
+}

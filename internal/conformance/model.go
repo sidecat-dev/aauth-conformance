@@ -34,6 +34,7 @@ type RequestSpec struct {
 	Tamper        bool              `json:"tamper_signature"`
 }
 type Scenario struct {
+	Subagent   *SubagentSpec  `json:"subagent,omitempty"`
 	Deferred   *DeferredSpec  `json:"deferred,omitempty"`
 	Version    int            `json:"version"`
 	ID         string         `json:"id"`
@@ -81,39 +82,46 @@ type Suite struct {
 	Digest    string
 }
 type Target struct {
-	ID       string   `json:"id"`
-	Revision string   `json:"revision"`
-	Command  []string `json:"command"`
-	Claims   []string `json:"claims"`
+	Unavailable string   `json:"unavailable,omitempty"`
+	ID          string   `json:"id"`
+	Revision    string   `json:"revision"`
+	Command     []string `json:"command"`
+	Claims      []string `json:"claims"`
 }
 type Targets struct {
 	Role            string   `json:"role,omitempty"`
 	Version         int      `json:"version"`
 	Implementations []Target `json:"implementations"`
 }
+type AgentProviderTrust struct {
+	Issuer    string `json:"issuer"`
+	Transport string `json:"transport"`
+}
 type Bootstrap struct {
-	AccessServer        string         `json:"access_server,omitempty"`
-	AccessSeed          string         `json:"access_seed_hex,omitempty"`
-	AccessKid           string         `json:"access_kid,omitempty"`
-	ResourceSeed        string         `json:"resource_seed_hex,omitempty"`
-	FederationTransport string         `json:"federation_transport,omitempty"`
-	PersonServer        string         `json:"person_server,omitempty"`
-	PersonSeed          string         `json:"person_seed_hex,omitempty"`
-	PersonKid           string         `json:"person_kid,omitempty"`
-	PersonSubject       string         `json:"person_subject,omitempty"`
-	PersonLifetime      int64          `json:"person_lifetime,omitempty"`
-	AuthLifetime        int64          `json:"auth_lifetime,omitempty"`
-	PermittedScopes     []string       `json:"permitted_scopes,omitempty"`
-	ResourceKid         string         `json:"resource_kid,omitempty"`
-	ResourceJWK         map[string]any `json:"resource_jwk,omitempty"`
-	Role                string         `json:"role,omitempty"`
-	AgentSeed           string         `json:"agent_seed_hex,omitempty"`
-	Subject             string         `json:"subject,omitempty"`
-	Version             int            `json:"version"`
-	Now                 int64          `json:"now"`
-	Issuer              string         `json:"issuer"`
-	Resource            string         `json:"resource"`
-	APTransport         string         `json:"ap_transport"`
+	AdditionalAgentProviders []AgentProviderTrust `json:"additional_agent_providers,omitempty"`
+	PersonDirect             bool                 `json:"person_direct,omitempty"`
+	AccessServer             string               `json:"access_server,omitempty"`
+	AccessSeed               string               `json:"access_seed_hex,omitempty"`
+	AccessKid                string               `json:"access_kid,omitempty"`
+	ResourceSeed             string               `json:"resource_seed_hex,omitempty"`
+	FederationTransport      string               `json:"federation_transport,omitempty"`
+	PersonServer             string               `json:"person_server,omitempty"`
+	PersonSeed               string               `json:"person_seed_hex,omitempty"`
+	PersonKid                string               `json:"person_kid,omitempty"`
+	PersonSubject            string               `json:"person_subject,omitempty"`
+	PersonLifetime           int64                `json:"person_lifetime,omitempty"`
+	AuthLifetime             int64                `json:"auth_lifetime,omitempty"`
+	PermittedScopes          []string             `json:"permitted_scopes,omitempty"`
+	ResourceKid              string               `json:"resource_kid,omitempty"`
+	ResourceJWK              map[string]any       `json:"resource_jwk,omitempty"`
+	Role                     string               `json:"role,omitempty"`
+	AgentSeed                string               `json:"agent_seed_hex,omitempty"`
+	Subject                  string               `json:"subject,omitempty"`
+	Version                  int                  `json:"version"`
+	Now                      int64                `json:"now"`
+	Issuer                   string               `json:"issuer"`
+	Resource                 string               `json:"resource"`
+	APTransport              string               `json:"ap_transport"`
 }
 type Ready struct {
 	Version int    `json:"version"`

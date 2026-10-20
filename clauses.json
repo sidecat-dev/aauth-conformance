@@ -373,6 +373,86 @@
       "section": "Configured payment -> approval -> grant or refusal; host advances one poll",
       "anchor": "ps-as-trust-establishment",
       "scope": "adapter-contract"
+    },
+    {
+      "id": "subagent.identity",
+      "source": "core",
+      "section": "Sub-Agent Identity",
+      "anchor": "sub-agents",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.depth",
+      "source": "core",
+      "section": "Single-Level Delegation",
+      "anchor": "sub-agents",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.mediation",
+      "source": "core",
+      "section": "Parent-Mediated Authorization",
+      "anchor": "sub-agents",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.forwarding",
+      "source": "core",
+      "section": "AS Token Endpoint and Sub-Agents",
+      "anchor": "as-token-endpoint",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.proof",
+      "source": "core",
+      "section": "PS signed forwarding and pending polling",
+      "anchor": "http-message-signatures-profile",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.pending",
+      "source": "core",
+      "section": "Deferred Authorization",
+      "anchor": "deferred-responses",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.delivery",
+      "source": "core",
+      "section": "Child-bound credential delivery",
+      "anchor": "sub-agents",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.revocation",
+      "source": "core",
+      "section": "Sub-Agent grant revocation",
+      "anchor": "sub-agents",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.finite",
+      "source": "core",
+      "section": "Terminal continuation consumption and cancellation",
+      "anchor": "pending-url-security",
+      "scope": "protocol",
+      "role": "authorization.subagent"
+    },
+    {
+      "id": "subagent.host",
+      "source": "core",
+      "section": "Fixture native Resource and host controls",
+      "anchor": "ps-as-trust-establishment",
+      "scope": "adapter-contract",
+      "role": "authorization.subagent"
     }
   ]
 }

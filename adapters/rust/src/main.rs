@@ -21,7 +21,17 @@ use std::{
 };
 
 #[derive(Deserialize)]
+struct AgentProviderTrust {
+    issuer: String,
+    transport: String,
+}
+
+#[derive(Deserialize)]
 struct Bootstrap {
+    #[serde(default)]
+    additional_agent_providers: Vec<AgentProviderTrust>,
+    #[serde(default)]
+    person_direct: bool,
     #[cfg(feature = "federation")]
     #[serde(default)]
     access_server: String,
@@ -119,6 +129,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config: Bootstrap = serde_json::from_reader(std::io::stdin().lock())?;
     if config.version != 1 {
         return Err("bootstrap version must be 1".into());
+    }
+    if config.role == "authorization.subagent" {
+        #[cfg(feature = "subagent")]
+        return federation::run(config);
+        #[cfg(not(feature = "subagent"))]
+        return Err("rebuild this launcher for authorization.subagent".into());
     }
     if config.role == "authorization.deferred" {
         #[cfg(feature = "deferred")]

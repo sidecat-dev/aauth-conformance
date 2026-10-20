@@ -25,12 +25,12 @@ func run() error {
 	goSource := flag.String("go-source", "", "aauth-go checkout (optional)")
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (optional)")
 	out := flag.String("out", "build", "build output directory")
-	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing, person-server.direct, authorization.federated or authorization.deferred")
+	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing, person-server.direct, authorization.federated, authorization.deferred or authorization.subagent")
 	flag.Parse()
 	if *goSource == "" && *rustSource == "" {
 		return fmt.Errorf("supply -go-source and/or -rust-source")
 	}
-	nativeFederation := *role == conformance.FederatedRole || *role == conformance.DeferredRole
+	nativeFederation := *role == conformance.FederatedRole || *role == conformance.DeferredRole || *role == conformance.SubagentRole
 	root, err := os.Getwd()
 	if err != nil {
 		return err
@@ -57,6 +57,12 @@ func run() error {
 	}
 	for _, item := range []struct{ id, source string }{{"aauth-go", *goSource}, {"aauth-rust", *rustSource}} {
 		if item.source == "" {
+			continue
+		}
+		if item.id == "aauth-go" && *role == conformance.SubagentRole {
+			reason := "authorization.subagent adapter unimplemented/unqualified; Go immediate parent mediation exists, AS-deferred child support is unqualified; no Go source was built or measured"
+			targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: "not_measured", Unavailable: reason, Command: []string{}, Claims: []string{}})
+			fmt.Println("Not claimed: " + reason)
 			continue
 		}
 		source, err := filepath.Abs(item.source)
@@ -152,6 +158,9 @@ func run() error {
 				feature := "federation"
 				if *role == conformance.DeferredRole {
 					feature = "deferred"
+				}
+				if *role == conformance.SubagentRole {
+					feature = "subagent"
 				}
 				buildArgs = append(buildArgs, "--features", feature)
 			}

@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "id": "subagent-immediate",
+  "title": "Parent-mediated sub-agent: immediate",
+  "role_under_test": "authorization.subagent",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "subagent": {
+    "outcome": "immediate"
+  },
+  "assertions": [
+    {
+      "id": "person-status-0",
+      "stage": "person",
+      "kind": "status",
+      "equals": 200,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-subagent-jwt-1",
+      "stage": "person",
+      "kind": "subagent-jwt",
+      "equals": true,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "access-subagent-proof-2",
+      "stage": "access",
+      "kind": "subagent-proof",
+      "equals": true,
+      "clause": "subagent.proof"
+    },
+    {
+      "id": "access-subagent-forwarded-3",
+      "stage": "access",
+      "kind": "subagent-forwarded",
+      "equals": true,
+      "clause": "subagent.forwarding"
+    },
+    {
+      "id": "token-status-4",
+      "stage": "token",
+      "kind": "status",
+      "equals": 200,
+      "clause": "subagent.delivery"
+    },
+    {
+      "id": "token-subagent-jwt-5",
+      "stage": "token",
+      "kind": "subagent-jwt",
+      "equals": true,
+      "clause": "subagent.delivery"
+    },
+    {
+      "id": "protected-status-6",
+      "stage": "protected",
+      "kind": "status",
+      "equals": 200,
+      "clause": "subagent.host"
+    },
+    {
+      "id": "protected-json-member-7",
+      "stage": "protected",
+      "kind": "json-member",
+      "equals": "directed-person-1",
+      "clause": "subagent.host",
+      "member": "sub"
+    },
+    {
+      "id": "parent-use-subagent-refused-8",
+      "stage": "parent-use",
+      "kind": "subagent-refused",
+      "equals": true,
+      "clause": "subagent.mediation"
+    }
+  ]
+}

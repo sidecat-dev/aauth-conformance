@@ -1,6 +1,6 @@
 # AAuth conformance scenarios
 
-Run the same wire scenarios against different AAuth implementations. Five roles
+Run the same wire scenarios against different AAuth implementations. Six roles
 are available:
 
 - **Resource in Agent-identity mode:** the harness plays the Agent and Agent
@@ -13,10 +13,12 @@ are available:
 - **Four-party authorization:** the harness plays Agent and Person Server (PS)
   against native Resource and Access Server (AS). Additional cases exercise a
   native PS too, observing its signed handoff and grant verification.
-
 - **Deferred four-party authorization:** the harness plays Agent and AP while
   native PS and AS retain payment/approval continuations. Host controls simulate
   settlement and approval; the runner grades signed requests and native responses.
+- **Parent-mediated sub-agent authorization:** the harness plays parent, child and
+  AP, checks child-bound native credentials and exact PS-to-AS forwarding, and
+  exercises parent-only polling, cancellation, expiry and binding revocation.
 
 The harness uses no AAuth library to generate inputs or grade these roles.
 
@@ -289,3 +291,21 @@ Clippy check against the same selected library checkout:
 cargo test --manifest-path build/deferred/aauth-rust-adapter/Cargo.toml --features deferred --target-dir build/deferred/rust-target
 cargo clippy --manifest-path build/deferred/aauth-rust-adapter/Cargo.toml --all-targets --features deferred --target-dir build/deferred/rust-target -- -D warnings
 ```
+
+The `authorization.subagent` role adds one-level parent-mediated direct and
+federated child authorization, bounded AS approval/payment, parent-only polling,
+child credential holder checks, independently trusted foreign-provider refusal,
+hostile relationship inputs, separate parent/child lifetime bounds, parent binding
+revocation, cancellation, expiry and terminal consumption. It uses separate
+scenarios and clauses; the original role inputs and expectations are retained.
+Build it with:
+
+```sh
+go run ./cmd/build-adapters -rust-source /path/to/aauth-rust \
+  -role authorization.subagent -out build/subagent
+```
+
+A supplied `-go-source`
+currently records explicit `not_claimed` support for this full role without
+reading or building that checkout. See [the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
+for the observed boundaries and named gaps.

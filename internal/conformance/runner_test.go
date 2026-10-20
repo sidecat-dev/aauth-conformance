@@ -93,6 +93,10 @@ func TestAdapterProcess(t *testing.T) {
 		io.Copy(io.Discard, r.Body)
 		r.Body.Close()
 	}
+	if mode == "subagent-trust" {
+		runSubagentBootstrapTestProcess(config)
+		return
+	}
 	if strings.HasPrefix(mode, "agent-") {
 		runAgentTestProcess(config, mode)
 		return

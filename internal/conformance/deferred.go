@@ -143,6 +143,9 @@ func (d *deferredRelay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for _, name := range []string{"resource_token", "agent_token", "presented_token"} {
 			h.Forwarded = h.Forwarded && values[name] != "" && values[name] == d.expected[name]
 		}
+		if child, required := d.expected["subagent_token"]; required {
+			h.Forwarded = h.Forwarded && values["subagent_token"] != "" && values["subagent_token"] == child
+		}
 	} else {
 		h.Proof = observePSPollProof(d.fixture, h.Sent, d.location)
 	}

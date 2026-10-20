@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "id": "subagent-cancel",
+  "title": "Parent-mediated sub-agent: cancel",
+  "role_under_test": "authorization.subagent",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "subagent": {
+    "outcome": "cancel"
+  },
+  "assertions": [
+    {
+      "id": "person-status-0",
+      "stage": "person",
+      "kind": "status",
+      "equals": 200,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-subagent-jwt-1",
+      "stage": "person",
+      "kind": "subagent-jwt",
+      "equals": true,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "access-subagent-proof-2",
+      "stage": "access",
+      "kind": "subagent-proof",
+      "equals": true,
+      "clause": "subagent.proof"
+    },
+    {
+      "id": "access-subagent-forwarded-3",
+      "stage": "access",
+      "kind": "subagent-forwarded",
+      "equals": true,
+      "clause": "subagent.forwarding"
+    },
+    {
+      "id": "access-status-4",
+      "stage": "access",
+      "kind": "status",
+      "equals": 202,
+      "clause": "subagent.pending"
+    },
+    {
+      "id": "access-subagent-pending-5",
+      "stage": "access",
+      "kind": "subagent-pending",
+      "equals": true,
+      "clause": "subagent.pending"
+    },
+    {
+      "id": "pending-status-6",
+      "stage": "pending",
+      "kind": "status",
+      "equals": 202,
+      "clause": "subagent.pending"
+    },
+    {
+      "id": "pending-subagent-pending-7",
+      "stage": "pending",
+      "kind": "subagent-pending",
+      "equals": true,
+      "clause": "subagent.pending"
+    },
+    {
+      "id": "pending-subagent-no-token-8",
+      "stage": "pending",
+      "kind": "subagent-no-token",
+      "equals": true,
+      "clause": "subagent.delivery"
+    },
+    {
+      "id": "child-poll-status-9",
+      "stage": "child-poll",
+      "kind": "status",
+      "equals": 403,
+      "clause": "subagent.mediation"
+    },
+    {
+      "id": "child-poll-subagent-no-token-10",
+      "stage": "child-poll",
+      "kind": "subagent-no-token",
+      "equals": true,
+      "clause": "subagent.mediation"
+    },
+    {
+      "id": "waiting-status-11",
+      "stage": "waiting",
+      "kind": "status",
+      "equals": 202,
+      "clause": "subagent.pending"
+    },
+    {
+      "id": "waiting-subagent-pending-12",
+      "stage": "waiting",
+      "kind": "subagent-pending",
+      "equals": true,
+      "clause": "subagent.pending"
+    },
+    {
+      "id": "cancel-status-13",
+      "stage": "cancel",
+      "kind": "subagent-cancelled",
+      "equals": true,
+      "clause": "subagent.finite"
+    },
+    {
+      "id": "cancel-subagent-no-token-14",
+      "stage": "cancel",
+      "kind": "subagent-no-token",
+      "equals": true,
+      "clause": "subagent.finite"
+    },
+    {
+      "id": "gone-status-15",
+      "stage": "gone",
+      "kind": "status",
+      "equals": 410,
+      "clause": "subagent.finite"
+    }
+  ]
+}

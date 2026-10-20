@@ -63,6 +63,7 @@ printf '#!/bin/sh\nexit 0\n' > "$adapter_target/debug/aauth-conformance-rust-ada
 		{conformance.ResourceRole, ""},
 		{conformance.FederatedRole, "federation"},
 		{conformance.DeferredRole, "deferred"},
+		{conformance.SubagentRole, "subagent"},
 	} {
 		t.Run(test.role, func(t *testing.T) {
 			out := t.TempDir()
@@ -117,5 +118,48 @@ func TestGoRoleSourcesCanReuseOutputDirectory(t *testing.T) {
 		if role != conformance.DeferredRole && !os.IsNotExist(err) {
 			t.Fatalf("%s retained deferred source: %v", role, err)
 		}
+	}
+}
+
+// Unqualified Go support must produce an honest manifest without even looking
+// inside the moving source checkout or calling the Go compiler.
+func TestGoSubagentBuildDeclaresUnavailableWithoutSourceAccess(t *testing.T) {
+	root, err := filepath.Abs("../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	working, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(root); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(working)
+	previousFlags, previousArgs := flag.CommandLine, os.Args
+	defer func() { flag.CommandLine, os.Args = previousFlags, previousArgs }()
+	out := t.TempDir()
+	flag.CommandLine = flag.NewFlagSet("build-adapters", flag.ContinueOnError)
+	os.Args = []string{"build-adapters", "-go-source", "/nonexistent-unmeasured-source", "-role", conformance.SubagentRole, "-out", out}
+	if err := run(); err != nil {
+		t.Fatal(err)
+	}
+	var targets conformance.Targets
+	if err := conformance.ReadJSON(filepath.Join(out, "targets.json"), &targets); err != nil {
+		t.Fatal(err)
+	}
+	if len(targets.Implementations) != 1 {
+		t.Fatal("missing explicit Go status")
+	}
+	target := targets.Implementations[0]
+	if target.Revision != "not_measured" || target.Unavailable == "" || len(target.Command) != 0 || len(target.Claims) != 0 {
+		t.Fatalf("unmeasured Go falsely qualified: %+v", target)
+	}
+	entries, err := os.ReadDir(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != "targets.json" {
+		t.Fatalf("unmeasured source created a build: %+v", entries)
 	}
 }
