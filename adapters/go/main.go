@@ -26,35 +26,46 @@ import (
 )
 
 type bootstrap struct {
-	AccessServer        string   `json:"access_server"`
-	AccessSeed          string   `json:"access_seed_hex"`
-	AccessKid           string   `json:"access_kid"`
-	ResourceSeed        string   `json:"resource_seed_hex"`
-	FederationTransport string   `json:"federation_transport"`
-	PersonServer        string   `json:"person_server"`
-	PersonSeed          string   `json:"person_seed_hex"`
-	PersonKid           string   `json:"person_kid"`
-	PersonSubject       string   `json:"person_subject"`
-	PersonLifetime      int64    `json:"person_lifetime"`
-	AuthLifetime        int64    `json:"auth_lifetime"`
-	PermittedScopes     []string `json:"permitted_scopes"`
-	ResourceKid         string   `json:"resource_kid"`
-	ResourceJWK         jose.JWK `json:"resource_jwk"`
-	Version             int      `json:"version"`
-	Now                 int64    `json:"now"`
-	Issuer              string   `json:"issuer"`
-	Resource            string   `json:"resource"`
-	APTransport         string   `json:"ap_transport"`
-	Role                string   `json:"role"`
-	AgentSeed           string   `json:"agent_seed_hex"`
-	Subject             string   `json:"subject"`
+	// AdditionalAgentProviders and PersonDirect are read by the sub-agent role.
+	AdditionalAgentProviders []agentProviderTrust `json:"additional_agent_providers"`
+	PersonDirect             bool                 `json:"person_direct"`
+	AccessServer             string               `json:"access_server"`
+	AccessSeed               string               `json:"access_seed_hex"`
+	AccessKid                string               `json:"access_kid"`
+	ResourceSeed             string               `json:"resource_seed_hex"`
+	FederationTransport      string               `json:"federation_transport"`
+	PersonServer             string               `json:"person_server"`
+	PersonSeed               string               `json:"person_seed_hex"`
+	PersonKid                string               `json:"person_kid"`
+	PersonSubject            string               `json:"person_subject"`
+	PersonLifetime           int64                `json:"person_lifetime"`
+	AuthLifetime             int64                `json:"auth_lifetime"`
+	PermittedScopes          []string             `json:"permitted_scopes"`
+	ResourceKid              string               `json:"resource_kid"`
+	ResourceJWK              jose.JWK             `json:"resource_jwk"`
+	Version                  int                  `json:"version"`
+	Now                      int64                `json:"now"`
+	Issuer                   string               `json:"issuer"`
+	Resource                 string               `json:"resource"`
+	APTransport              string               `json:"ap_transport"`
+	Role                     string               `json:"role"`
+	AgentSeed                string               `json:"agent_seed_hex"`
+	Subject                  string               `json:"subject"`
 }
 
-// Optional source file selected only for the deferred-role build. Older
-// implementation checkouts can still build the original role adapters.
+// agentProviderTrust declares an additional fixture Agent Provider by its
+// logical issuer and the runner-owned loopback transport serving its documents.
+type agentProviderTrust struct {
+	Issuer    string `json:"issuer"`
+	Transport string `json:"transport"`
+}
+
+// Optional source files selected only for the deferred- and sub-agent-role
+// builds. Older implementation checkouts can still build the original roles.
 var configureDeferredAS func(*accessserver.Config)
 var configureDeferredPS func(*personserver.FederatedAuthorizationConfig)
 var deferredHostControl func(*personserver.Server) http.Handler
+var runSubagentServers func(bootstrap, signaturekey.StaticKeyResolver) error
 
 func main() {
 	if err := run(); err != nil {
@@ -115,6 +126,12 @@ func run() error {
 	}
 	if config.Role == "person-server.direct" {
 		return runPersonServer(config, keys)
+	}
+	if config.Role == "authorization.subagent" {
+		if runSubagentServers == nil {
+			return fmt.Errorf("sub-agent adapter source was not selected")
+		}
+		return runSubagentServers(config, keys)
 	}
 	if config.Role == "authorization.federated" || config.Role == "authorization.deferred" {
 		if config.Role == "authorization.deferred" && configureDeferredAS == nil {

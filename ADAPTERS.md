@@ -322,12 +322,18 @@ exercise in-memory policy and state only. They do not claim AP token revocation,
 durable continuation recovery, real payment, consent UI, recursive delegation,
 missions, or production TLS/discovery.
 
-The Go build helper currently emits an explicit unavailable target for this
-complete role, with revision `not_measured`, no command and no claims. It reads
-and builds no Go source. The runner records every Go assertion as `not_claimed`
-without launching a process. Go already implements immediate parent mediation;
-this declaration describes the unimplemented/unqualified shared role adapter
-and deferred child integration. It does not establish a Go library failure or
-pass. Its existing immediate and deferred top-level roles remain available.
-A later Go cycle can enable the same scenarios and expectations after native
-adapter support is ready.
+The Go launcher compiles `adapters/go/subagent.go` only for this role. Direct
+scenarios run `personserver.NewPSAuthorization`; the others run
+`personserver.NewFederatedAuthorization` with `FederatedDeferredConfig` and an
+AS with `DeferredConfig`, each with a 30-second lifetime and in-memory
+`testutil` stores. Additional providers from `additional_agent_providers` are
+admitted from their fixture metadata and JWKS into the launcher's static key
+resolver; the native PS and AS decide whether their tokens qualify. Go's host
+control at `POST /__fixture/subagent` accepts the same members as Rust's:
+`revoke` calls the native `Server.RevokeAgentBinding` for the parent's
+`AgentBinding`, `now_offset` moves the clock shared by all three roles,
+`stage` selects the AS policy and a nonempty `reference` makes one
+`AdvanceFederation` call. These controls change policy, time and binding state
+only. They do not claim Agent-token revocation cascades, durable continuation
+recovery, real payment, consent UI, recursive delegation, missions, or
+production TLS/discovery.

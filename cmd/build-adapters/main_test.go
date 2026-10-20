@@ -104,62 +104,24 @@ func TestGoRoleSourcesCanReuseOutputDirectory(t *testing.T) {
 	if err := os.MkdirAll(source, 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(source, "deferred.go"), []byte("package main\n"), 0644); err != nil {
-		t.Fatal(err)
+	for _, name := range []string{"deferred.go", "subagent.go"} {
+		if err := os.WriteFile(filepath.Join(source, name), []byte("package main\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
 	}
-	for _, role := range []string{conformance.DeferredRole, conformance.ResourceRole, conformance.DeferredRole, conformance.FederatedRole, conformance.AgentRole, conformance.PersonServerRole} {
+	selected := map[string]string{conformance.DeferredRole: "deferred.go", conformance.SubagentRole: "subagent.go"}
+	for _, role := range []string{conformance.DeferredRole, conformance.SubagentRole, conformance.ResourceRole, conformance.DeferredRole, conformance.FederatedRole, conformance.SubagentRole, conformance.AgentRole, conformance.PersonServerRole} {
 		if err := selectGoRoleSource(root, work, role); err != nil {
 			t.Fatal(err)
 		}
-		_, err := os.Stat(filepath.Join(work, "deferred.go"))
-		if role == conformance.DeferredRole && err != nil {
-			t.Fatalf("deferred source missing: %v", err)
+		for _, name := range []string{"deferred.go", "subagent.go"} {
+			_, err := os.Stat(filepath.Join(work, name))
+			if selected[role] == name && err != nil {
+				t.Fatalf("%s source %s missing: %v", role, name, err)
+			}
+			if selected[role] != name && !os.IsNotExist(err) {
+				t.Fatalf("%s retained %s: %v", role, name, err)
+			}
 		}
-		if role != conformance.DeferredRole && !os.IsNotExist(err) {
-			t.Fatalf("%s retained deferred source: %v", role, err)
-		}
-	}
-}
-
-// Unqualified Go support must produce an honest manifest without even looking
-// inside the moving source checkout or calling the Go compiler.
-func TestGoSubagentBuildDeclaresUnavailableWithoutSourceAccess(t *testing.T) {
-	root, err := filepath.Abs("../..")
-	if err != nil {
-		t.Fatal(err)
-	}
-	working, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chdir(root); err != nil {
-		t.Fatal(err)
-	}
-	defer os.Chdir(working)
-	previousFlags, previousArgs := flag.CommandLine, os.Args
-	defer func() { flag.CommandLine, os.Args = previousFlags, previousArgs }()
-	out := t.TempDir()
-	flag.CommandLine = flag.NewFlagSet("build-adapters", flag.ContinueOnError)
-	os.Args = []string{"build-adapters", "-go-source", "/nonexistent-unmeasured-source", "-role", conformance.SubagentRole, "-out", out}
-	if err := run(); err != nil {
-		t.Fatal(err)
-	}
-	var targets conformance.Targets
-	if err := conformance.ReadJSON(filepath.Join(out, "targets.json"), &targets); err != nil {
-		t.Fatal(err)
-	}
-	if len(targets.Implementations) != 1 {
-		t.Fatal("missing explicit Go status")
-	}
-	target := targets.Implementations[0]
-	if target.Revision != "not_measured" || target.Unavailable == "" || len(target.Command) != 0 || len(target.Claims) != 0 {
-		t.Fatalf("unmeasured Go falsely qualified: %+v", target)
-	}
-	entries, err := os.ReadDir(out)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(entries) != 1 || entries[0].Name() != "targets.json" {
-		t.Fatalf("unmeasured source created a build: %+v", entries)
 	}
 }
