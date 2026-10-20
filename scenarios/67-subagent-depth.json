@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "subagent-depth",
-  "title": "Parent-mediated sub-agent: depth",
+  "title": "Top-level parent presents a grandchild token to the Person Server",
   "role_under_test": "authorization.subagent",
   "given": "agent-identity",
   "token": {
@@ -24,7 +24,22 @@
       "stage": "person",
       "kind": "subagent-no-token",
       "equals": true,
-      "clause": "subagent.identity"
+      "clause": "subagent.depth"
+    },
+    {
+      "id": "person-grandchild-status",
+      "stage": "person",
+      "kind": "status",
+      "equals": 400,
+      "clause": "subagent.depth"
+    },
+    {
+      "id": "person-grandchild-code",
+      "stage": "person",
+      "kind": "json-member",
+      "member": "error",
+      "equals": "invalid_subagent_token",
+      "clause": "subagent.depth"
     }
   ]
 }

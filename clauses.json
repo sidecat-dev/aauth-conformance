@@ -385,7 +385,7 @@
     {
       "id": "subagent.depth",
       "source": "core",
-      "section": "Single-Level Delegation",
+      "section": "Grandchild token refusal at the Person Server with a top-level parent signer",
       "anchor": "sub-agents",
       "scope": "protocol",
       "role": "authorization.subagent"

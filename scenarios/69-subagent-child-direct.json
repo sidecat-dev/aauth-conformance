@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "subagent-child-direct",
-  "title": "Parent-mediated sub-agent: child-direct",
+  "title": "A child signing its own Person Server request is refused",
   "role_under_test": "authorization.subagent",
   "given": "agent-identity",
   "token": {
@@ -17,7 +17,7 @@
       "stage": "person",
       "kind": "subagent-refused",
       "equals": true,
-      "clause": "subagent.depth"
+      "clause": "subagent.mediation"
     },
     {
       "id": "person-subagent-no-token-1",

@@ -246,6 +246,14 @@ original parent_agent. No other outcome accepts this foreign fixture.
 `short-parent` supplies a 45-second parent and a 600-second child; the independent
 Person and Auth oracles apply the shorter parent ceiling.
 
+The `depth` outcome is a top-level-parent-signed request carrying a grandchild
+Agent token. Its subject has two `+` segments, and its authoritative
+`parent_agent` names the child. It expects `400 invalid_subagent_token` and no
+credential; `subagent.depth` covers this grandchild parameter refusal only.
+`child-direct` separately checks refusal of a child-signed PS request under
+`subagent.mediation`. Both `revoked-binding` and `revoked-pending` pin HTTP `400`
+and JSON `error: revoked_presented_token`, alongside no-credential checks.
+
 Each assertion names an exercised stage. `subagent-jwt` independently validates
 native child-bound Person/Auth credentials; `subagent-proof` checks observed
 native PS signatures; `subagent-forwarded` compares all four exact token

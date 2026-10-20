@@ -299,7 +299,14 @@ The relay separately captures native PS proofs, native AS responses and exact
 parent, child, Resource and presented-token compact bytes. It checks the POST
 body and GET poll proof independently. Native AS/PS success cannot be replaced
 by a host control response. Refusal assertions require a 4xx response with no
-credential; protocol-prescribed child token errors also check status and code.
+credential; child token errors also check status and code. Both parent-binding
+revocation scenarios require HTTP `400` with `error: revoked_presented_token`
+and no credential. The `depth` scenario keeps the HTTP signer top-level and
+presents a grandchild token with two `+` naming segments and `parent_agent`
+pointing to the intervening child. Its `subagent.depth` row checks the
+grandchild parameter refusal (`400 invalid_subagent_token`). The separate
+`child-direct` scenario checks the child-signed endpoint guard under
+`subagent.mediation`. Neither row claims AP issuance rejection.
 A child poll is tested before and after AS completion, followed by a successful
 parent poll and a second parent poll returning `410`. Cancellation requires
 successful 2xx with no credential and subsequent `410`; timeout requires

@@ -39,6 +39,21 @@
       "kind": "subagent-no-token",
       "equals": true,
       "clause": "subagent.delivery"
+    },
+    {
+      "id": "pending-revocation-status",
+      "stage": "pending",
+      "kind": "status",
+      "equals": 400,
+      "clause": "subagent.revocation"
+    },
+    {
+      "id": "pending-revocation-code",
+      "stage": "pending",
+      "kind": "json-member",
+      "member": "error",
+      "equals": "revoked_presented_token",
+      "clause": "subagent.revocation"
     }
   ]
 }
