@@ -253,7 +253,8 @@ cargo test --manifest-path build/agent/aauth-rust-adapter/Cargo.toml --target-di
 ```
 
 The race check needs a platform C compiler; the runner builds with
-`CGO_ENABLED=0`. CI tests and builds the runner on Linux x86_64/ARM64. Actual SUT runs require
+`CGO_ENABLED=0`. CI runs native tests on Linux x86_64 and cross-compiles runner
+binaries for Linux x86_64/ARM64; it does not run native ARM64 tests. Actual SUT runs require
 separately selected source checkouts and are distinct from runner unit tests.
 The generic Structured Fields parser is also used by aauth-go; parser agreement
 alone is not independent RFC 9651 proof. See [third-party notices](THIRD-PARTY-NOTICES.md).
