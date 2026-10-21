@@ -66,8 +66,15 @@ func run() int {
 			}
 		}
 	}
-	fmt.Printf("%d scenarios × %d implementations; assertions %v\nReports: %s %s\n", len(report.Runs[0].Cases), len(report.Runs), counts, *reportPath, *markdownPath)
-	if !report.Success() {
+	passed := report.Success()
+	outcome := "failed or incomplete"
+	if passed {
+		outcome = "passed"
+	}
+	fmt.Printf("%s: %s; %d scenarios × %d implementations\nAssertions: %d passed, %d failed, %d errors, %d not exercised, %d not claimed\nReports: %s %s\n",
+		report.Role, outcome, len(report.Runs[0].Cases), len(report.Runs),
+		counts["pass"], counts["fail"], counts["error"], counts["not_exercised"], counts["not_claimed"], *reportPath, *markdownPath)
+	if !passed {
 		return 1
 	}
 	return 0
