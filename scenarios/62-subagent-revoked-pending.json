@@ -116,6 +116,21 @@
       "kind": "subagent-no-token",
       "equals": true,
       "clause": "subagent.revocation"
+    },
+    {
+      "id": "revoked-revocation-status",
+      "stage": "revoked",
+      "kind": "status",
+      "equals": 400,
+      "clause": "subagent.revocation"
+    },
+    {
+      "id": "revoked-revocation-code",
+      "stage": "revoked",
+      "kind": "json-member",
+      "member": "error",
+      "equals": "revoked_presented_token",
+      "clause": "subagent.revocation"
     }
   ]
 }

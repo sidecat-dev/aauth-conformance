@@ -59,12 +59,6 @@ func run() error {
 		if item.source == "" {
 			continue
 		}
-		if item.id == "aauth-go" && *role == conformance.SubagentRole {
-			reason := "authorization.subagent adapter unimplemented/unqualified; Go immediate parent mediation exists, AS-deferred child support is unqualified; no Go source was built or measured"
-			targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: "not_measured", Unavailable: reason, Command: []string{}, Claims: []string{}})
-			fmt.Println("Not claimed: " + reason)
-			continue
-		}
 		source, err := filepath.Abs(item.source)
 		if err != nil {
 			return err
@@ -202,12 +196,17 @@ func command(dir, name string, args ...string) error {
 // Remove role-specific sources when an output directory is reused for another
 // profile. Earlier implementation revisions need only the common launcher.
 func selectGoRoleSource(root, work, role string) error {
-	destination := filepath.Join(work, "deferred.go")
-	if role == conformance.DeferredRole {
-		return copyFile(filepath.Join(root, "adapters/go/deferred.go"), destination)
-	}
-	if err := os.Remove(destination); err != nil && !os.IsNotExist(err) {
-		return err
+	for source, selectedRole := range map[string]string{"deferred.go": conformance.DeferredRole, "subagent.go": conformance.SubagentRole} {
+		destination := filepath.Join(work, source)
+		if role == selectedRole {
+			if err := copyFile(filepath.Join(root, "adapters/go", source), destination); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := os.Remove(destination); err != nil && !os.IsNotExist(err) {
+			return err
+		}
 	}
 	return nil
 }

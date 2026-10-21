@@ -253,7 +253,8 @@ cargo test --manifest-path build/agent/aauth-rust-adapter/Cargo.toml --target-di
 ```
 
 The race check needs a platform C compiler; the runner builds with
-`CGO_ENABLED=0`. CI tests and builds the runner on Linux x86_64/ARM64. Actual SUT runs require
+`CGO_ENABLED=0`. CI runs native tests on Linux x86_64 and cross-compiles runner
+binaries for Linux x86_64/ARM64; it does not run native ARM64 tests. Actual SUT runs require
 separately selected source checkouts and are distinct from runner unit tests.
 The generic Structured Fields parser is also used by aauth-go; parser agreement
 alone is not independent RFC 9651 proof. See [third-party notices](THIRD-PARTY-NOTICES.md).
@@ -298,14 +299,19 @@ child credential holder checks, independently trusted foreign-provider refusal,
 hostile relationship inputs, separate parent/child lifetime bounds, parent binding
 revocation, cancellation, expiry and terminal consumption. It uses separate
 scenarios and clauses; the original role inputs and expectations are retained.
-Build it with:
+Build and run it with:
 
 ```sh
-go run ./cmd/build-adapters -rust-source /path/to/aauth-rust \
+go run ./cmd/build-adapters -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust \
   -role authorization.subagent -out build/subagent
+go run ./cmd/aauth-conformance -targets build/subagent/targets.json \
+  -report build/subagent-report.json -markdown build/subagent-report.md
 ```
 
-A supplied `-go-source`
-currently records explicit `not_claimed` support for this full role without
-reading or building that checkout. See [the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
+The slice has **18 scenarios and 191 assertions per implementation**. The
+[sub-agent report](reports/subagent-authorization.md) records both native
+implementations against the same expected answers. Select Go and Rust
+revisions that provide native sub-agent PS, AS and binding-revocation APIs;
+an older checkout fails to compile its launcher rather than passing. See
+[the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
 for the observed boundaries and named gaps.

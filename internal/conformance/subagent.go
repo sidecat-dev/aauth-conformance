@@ -232,9 +232,11 @@ func runSubagentCase(ctx context.Context, f Fixture, s Scenario, t Target, physi
 			childClaims["iat"] = f.Now - 120
 			childClaims["exp"] = f.Now - 1
 		case "depth":
-			childClaims["parent_agent"] = strings.Replace(f.Subject, "@", "+parent@", 1)
-			claims := map[string]any{"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": childClaims["parent_agent"], "parent_agent": f.Subject, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}, "jti": s.ID + "-nested-parent", "iat": f.Now - 10, "exp": parentExp}
-			parent, _ = mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", claims)
+			// Keep the signer top-level so this exercises the grandchild
+			// parameter refusal rather than the child-signed endpoint guard.
+			childClaims["parent_agent"] = strings.Replace(f.Subject, "@", "+child@", 1)
+			childClaims["sub"] = strings.Replace(f.Subject, "@", "+child+grandchild@", 1)
+			childClaims["cnf"] = map[string]any{"jwk": publicJWK(strings.Repeat("08", 32))}
 		}
 		child, err := mintJWT(childAPSeed, childAPKid, "aa-agent+jwt", childClaims)
 		if err != nil {
