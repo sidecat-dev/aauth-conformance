@@ -22,8 +22,8 @@ func main() {
 	}
 }
 func run() error {
-	goSource := flag.String("go-source", "", "aauth-go checkout (optional)")
-	rustSource := flag.String("rust-source", "", "aauth-rust checkout (optional)")
+	goSource := flag.String("go-source", "", "aauth-go checkout (required unless -rust-source is supplied)")
+	rustSource := flag.String("rust-source", "", "aauth-rust checkout (required unless -go-source is supplied)")
 	out := flag.String("out", "build", "build output directory")
 	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing, person-server.direct, authorization.federated, authorization.deferred or authorization.subagent")
 	flag.Parse()
