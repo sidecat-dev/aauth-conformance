@@ -112,9 +112,10 @@ nothing about body integrity. A host sending a body must arrange covered
 accepted again here: replay detection and storage are host duties outside these
 slices. The fixed seeds and fixed clock make these repeatable tests.
 
-**This slice uses loopback HTTP test transport.** Launchers reconstruct logical
+**All roles use loopback HTTP test transport.** Launchers reconstruct logical
 HTTPS identities from received Host/path. Fixed clocks, trusted AP documents and
-allow policies are test configuration. These results do not measure TLS,
+allow policies are test configuration. The default Resource and Agent results
+do not measure TLS,
 enrollment, discovery admission/caching, rotation, replay storage, delegation,
 or complete Person Server behavior. Body-integrity evidence comes only from the
 stated JSON exchanges in the PS and four-party slices below, not the bodyless
@@ -293,20 +294,50 @@ cargo test --manifest-path build/deferred/aauth-rust-adapter/Cargo.toml --featur
 cargo clippy --manifest-path build/deferred/aauth-rust-adapter/Cargo.toml --all-targets --features deferred --target-dir build/deferred/rust-target -- -D warnings
 ```
 
+## Parent-mediated sub-agent authorization
+
 The `authorization.subagent` role adds one-level parent-mediated direct and
 federated child authorization, bounded AS approval/payment, parent-only polling,
 child credential holder checks, independently trusted foreign-provider refusal,
 hostile relationship inputs, separate parent/child lifetime bounds, parent binding
 revocation, cancellation, expiry and terminal consumption. It uses separate
 scenarios and clauses; the original role inputs and expectations are retained.
-Build and run it with:
+To run this role against **Go only**, start in the harness repository root and
+replace `/path/to/aauth-go` with the absolute path to your Go checkout:
 
 ```sh
-go run ./cmd/build-adapters -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust \
+go run ./cmd/build-adapters -go-source /path/to/aauth-go \
   -role authorization.subagent -out build/subagent
 go run ./cmd/aauth-conformance -targets build/subagent/targets.json \
   -report build/subagent-report.json -markdown build/subagent-report.md
 ```
+
+Keep these commands together: `-out build/subagent` writes the manifest at
+`build/subagent/targets.json`. It does not change the runner's default
+`build/targets.json`. Pass the matching `-targets` path, and choose the report
+paths explicitly as above. The manifest selects the role and implementation;
+the runner uses that selection.
+
+To compare Go and Rust, add `-rust-source /path/to/aauth-rust` to the same build
+command. For Rust only, supply that flag and omit `-go-source`. At least one
+source flag is required. Rust builds also need the toolchain described in
+[Run against local checkouts](#run-against-local-checkouts).
+
+For scripts that need the runner's exact exit status, build and invoke its
+binary with the same paths:
+
+```sh
+go build -o build/aauth-conformance ./cmd/aauth-conformance
+build/aauth-conformance -targets build/subagent/targets.json \
+  -report build/subagent-report.json -markdown build/subagent-report.md
+```
+
+The binary exits **0** for a passing run, **1** for failed/incomplete execution,
+and **2** for invalid input or output errors. `go run` turns a nonzero program
+status into shell status 1 and prints the original status, so it cannot preserve
+that distinction for a calling script. For example, a missing manifest is
+binary exit 2; verify `-targets` if the error names `build/targets.json` after
+you built into `build/subagent`.
 
 The slice has **18 scenarios and 191 assertions per implementation**. The
 [sub-agent report](reports/subagent-authorization.md) records both native
