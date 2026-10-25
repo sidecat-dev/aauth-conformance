@@ -446,6 +446,40 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 	if err != nil {
 		return err
 	}
+	usagePath := resourceURL.Path + "-budget-usage"
+	usageProtected, err := resource.NewFederatedAuthorization(resource.FederatedAuthorizationConfig{
+		Issuer: resourceID, AccessServer: config.AccessServer, SigningKey: resourceKey, KeyResolver: keys,
+		Clock: clock, NewID: nextID, ScopeDescriptions: map[string]string{"read": "Read fixture identity"},
+		RequiredScopes: func(*http.Request) []string { return []string{"read"} },
+		ResolvePerson: func(_ context.Context, identity resource.PersonIdentity, _ resource.PersonContext) error {
+			if identity.Issuer != config.PersonServer || identity.Subject != config.PersonSubject {
+				return fmt.Errorf("unrecognized fixture person")
+			}
+			return nil
+		},
+		Protected: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			principal, ok := resource.AuthPrincipalFromContext(r.Context())
+			if !ok {
+				http.Error(w, "native Resource did not supply verified principal", 500)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"sub": principal.Subject})
+		}),
+		Budget: &resource.BudgetConfig{
+			Units:         []budgets.UnitDeclaration{creditsDeclaration, pointsDeclaration},
+			Metered:       func(r *http.Request) bool { return r.URL.Path == usagePath },
+			RetainLineage: func(context.Context, resource.BudgetLineage) error { return nil },
+			Cost:          func(context.Context, resource.BudgetCostRequest) (int64, error) { return 1000, nil },
+			Store:         testutil.NewBudgetStore(),
+			Challenge: func(context.Context, resource.BudgetChallengeRequest) (string, error) {
+				return "", fmt.Errorf("fixture does not reissue a Budget challenge")
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
 	handlers := map[string]http.Handler{
 		config.PersonServer: people.Handler(), config.AccessServer: access.Handler(), resourceID: protected.Handler(),
 	}
@@ -464,8 +498,12 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			return
 		}
 		r.URL.Scheme, r.URL.Host = "https", r.Host
-		if "https://"+r.Host == resourceID && r.URL.Path == reservePath {
-			reserveProtected.Handler().ServeHTTP(w, r)
+		if "https://"+r.Host == resourceID && (r.URL.Path == reservePath || r.URL.Path == usagePath || r.Method == http.MethodPost && r.URL.Path == "/usage") {
+			if r.URL.Path == reservePath {
+				reserveProtected.Handler().ServeHTTP(w, r)
+			} else {
+				usageProtected.Handler().ServeHTTP(w, r)
+			}
 			return
 		}
 		handler := handlers["https://"+r.Host]

@@ -100,6 +100,8 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		protectedURL += "-budget-omit"
 	case "header":
 		protectedURL += "-budget-reserve"
+	case "usage":
+		protectedURL += "-budget-usage"
 	}
 	execute := func() error {
 		if startError != nil {
@@ -254,6 +256,9 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				if s.Federated.Budget == "header" {
 					return presentBudgetHeader(sendHeaders, protectedURL, compact)
 				}
+				if s.Federated.Budget == "usage" {
+					return presentBudgetUsage(f, exchange, sendHeaders, protectedURL, compact)
+				}
 				_, err = send("protected", "GET", protectedURL, compact, nil)
 				return err
 			}
@@ -337,6 +342,40 @@ func checkFederatedBudget(a Assertion, observation PersonObservation) Result {
 		result.State = "pass"
 	}
 	return result
+}
+
+func presentBudgetUsage(
+	f Fixture,
+	exchange func(stage string, request *http.Request, base string) (Response, error),
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	protectedURL, compact string,
+) error {
+	if _, err := send("protected", "GET", protectedURL, compact, nil, nil); err != nil {
+		return err
+	}
+	credential := fmt.Sprintf(`sig=jwks_uri;id=%q;dwk="aauth-access.json";kid=%q`, f.Access.Issuer, f.Access.Kid)
+	post := func(stage, body string) error {
+		request, base, err := signedFixtureRequest(f, f.Access.Seed, "POST", f.Origin+"/usage", credential, []byte(body))
+		if err != nil {
+			return err
+		}
+		_, err = exchange(stage, request, base)
+		return err
+	}
+	known := fmt.Sprintf(`{"sub":%q,"ps":%q}`, f.Person.Subject, f.Person.Issuer)
+	if err := post("usage", known); err != nil {
+		return err
+	}
+	if err := post("usage-unknown", fmt.Sprintf(`{"sub":"unknown-person","ps":%q}`, f.Person.Issuer)); err != nil {
+		return err
+	}
+	if err := post("usage-no-ps", fmt.Sprintf(`{"sub":%q}`, f.Person.Subject)); err != nil {
+		return err
+	}
+	if err := post("usage-two-keys", fmt.Sprintf(`{"sub":%q,"tenant":"fixture","ps":%q}`, f.Person.Subject, f.Person.Issuer)); err != nil {
+		return err
+	}
+	return post("usage-jkts", `{"jkts":["AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"]}`)
 }
 
 func presentBudgetHeader(

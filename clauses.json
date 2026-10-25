@@ -365,6 +365,22 @@
       "scope": "protocol"
     },
     {
+      "id": "budget.usage",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "Usage Response",
+      "anchor": "usage-response",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.usage-request",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "Usage Request",
+      "anchor": "usage-request",
+      "scope": "protocol"
+    },
+    {
       "id": "budget.consumption",
       "role": "authorization.federated",
       "source": "budgets",

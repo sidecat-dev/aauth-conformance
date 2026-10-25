@@ -238,6 +238,17 @@ reservation as spent; this scenario grades the completed response, which does
 carry the trailer. `sfv-integer` compares one bare integer member of a
 dictionary header. `sfv-absent` requires that member to be missing. The
 `sfv-trailer-integer` and `sfv-trailer-absent` kinds read the trailer instead.
+`usage` charges 1000 on `{path}-budget-usage`, which has its own ledger. The
+harness then `POST`s `{origin}/usage` with an Access Server `jwks_uri` proof.
+The known subject is `directed-person-1` with `ps` `https://person.conformance.test`;
+`usage.all_time` is 1000, `Cache-Control` is `no-store`, and the response is
+unsigned. Subject `unknown-person` omits `usage` and still reports `credits`
+at decimals 0. An Access Server scope key without `ps` is HTTP 400
+`invalid_request`, as is a body with both `sub` and `tenant`. A `jkts` array
+containing only an unknown thumbprint returns `"jkts":{}` rather than a zero.
+`json-path` walks dot-separated object members. `null` means the member is
+absent. `header-equals` compares one header value; an empty string means the
+header is absent.
 
 ## Deferred four-party profile
 

@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "id": "budget-usage",
+  "title": "Signed usage reports one scope key and omits unknown thumbprints",
+  "role_under_test": "authorization.federated",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "federated": {
+    "mutation": "none",
+    "budget": "usage"
+  },
+  "assertions": [
+    {
+      "id": "protected-status",
+      "stage": "protected",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.usage"
+    },
+    {
+      "id": "protected-cost",
+      "stage": "protected",
+      "kind": "sfv-integer",
+      "equals": 1000,
+      "clause": "budget.usage",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "usage-status",
+      "stage": "usage",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.usage"
+    },
+    {
+      "id": "usage-audience",
+      "stage": "usage",
+      "kind": "json-member",
+      "equals": "https://access.conformance.test",
+      "clause": "budget.usage",
+      "member": "aud"
+    },
+    {
+      "id": "usage-unit",
+      "stage": "usage",
+      "kind": "json-member",
+      "equals": "credits",
+      "clause": "budget.usage",
+      "member": "unit"
+    },
+    {
+      "id": "usage-decimals",
+      "stage": "usage",
+      "kind": "json-member",
+      "equals": 0,
+      "clause": "budget.usage",
+      "member": "decimals"
+    },
+    {
+      "id": "usage-all-time",
+      "stage": "usage",
+      "kind": "json-path",
+      "equals": 1000,
+      "clause": "budget.usage",
+      "member": "usage.all_time"
+    },
+    {
+      "id": "usage-cache",
+      "stage": "usage",
+      "kind": "header-equals",
+      "equals": "no-store",
+      "clause": "budget.usage",
+      "header": "Cache-Control"
+    },
+    {
+      "id": "usage-unsigned",
+      "stage": "usage",
+      "kind": "header-equals",
+      "equals": "",
+      "clause": "budget.usage",
+      "header": "Signature"
+    },
+    {
+      "id": "unknown-status",
+      "stage": "usage-unknown",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.usage"
+    },
+    {
+      "id": "unknown-omits-usage",
+      "stage": "usage-unknown",
+      "kind": "json-path",
+      "equals": null,
+      "clause": "budget.usage",
+      "member": "usage"
+    },
+    {
+      "id": "unknown-unit",
+      "stage": "usage-unknown",
+      "kind": "json-member",
+      "equals": "credits",
+      "clause": "budget.usage",
+      "member": "unit"
+    },
+    {
+      "id": "no-ps-status",
+      "stage": "usage-no-ps",
+      "kind": "status",
+      "equals": 400,
+      "clause": "budget.usage-request"
+    },
+    {
+      "id": "no-ps-error",
+      "stage": "usage-no-ps",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "clause": "budget.usage-request",
+      "member": "error"
+    },
+    {
+      "id": "two-keys-status",
+      "stage": "usage-two-keys",
+      "kind": "status",
+      "equals": 400,
+      "clause": "budget.usage-request"
+    },
+    {
+      "id": "jkts-status",
+      "stage": "usage-jkts",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.usage"
+    },
+    {
+      "id": "jkts-omitted",
+      "stage": "usage-jkts",
+      "kind": "json-path",
+      "equals": {},
+      "clause": "budget.usage",
+      "member": "jkts"
+    }
+  ]
+}

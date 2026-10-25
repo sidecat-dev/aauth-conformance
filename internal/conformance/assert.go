@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime"
 	"reflect"
+	"strings"
 
 	"github.com/dunglas/httpsfv"
 )
@@ -148,6 +149,36 @@ func Check(a Assertion, r Response) Result {
 		}
 		_, present := dictionary.Get(a.Member)
 		actual = !present
+	case "json-path":
+		var body any
+		if err := json.Unmarshal(r.Body, &body); err != nil {
+			result.Detail = err.Error()
+			return result
+		}
+		cursor := body
+		present := true
+		for _, part := range strings.Split(a.Member, ".") {
+			object, ok := cursor.(map[string]any)
+			if !ok {
+				present = false
+				break
+			}
+			cursor, present = object[part]
+			if !present {
+				break
+			}
+		}
+		if !present {
+			if expected != nil {
+				result.Detail = "missing JSON path"
+				return result
+			}
+			actual = nil
+			break
+		}
+		actual = cursor
+	case "header-equals":
+		actual = r.Header.Get(a.Header)
 	case "problem-if-present":
 		media, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if media != "application/problem+json" {

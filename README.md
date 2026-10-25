@@ -184,12 +184,13 @@ go run ./cmd/build-adapters -role authorization.federated -go-source /path/to/aa
 go run ./cmd/aauth-conformance -targets build/federated/targets.json -report build/federated-report.json -markdown build/federated-report.md
 ```
 
-This slice has **32 scenarios and 381 assertions per implementation**. Scenarios
+This slice has **33 scenarios and 398 assertions per implementation**. Scenarios
 01–49 are the original four-party cases (28 scenarios, 336 assertions). Scenarios
 73 and 74 add the proactive Budget grant and the PS-to-AS omission. Scenario 75
 adds a same-scale consumption record and a different-unit step-up that omits it.
 Scenario 76 reserves a hold, settles part of it in a cost-only trailer, and
-completes an unsettled hold as that same trailer.
+completes an unsettled hold as that same trailer. Scenario 77 charges 1000 on
+a fresh ledger and reads it back from a signed Access Server usage query.
 The fixture amounts, paths, and assertion kinds are in `FORMAT.md`. The
 [four-party report](reports/four-party-authorization.md) records Go `831d55f` and
 Rust `843be82` for the original 28 scenarios. Select those revisions or
