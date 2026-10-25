@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "id": "budget-hard-cap",
+  "title": "Two grants for one person each cap their own spend",
+  "role_under_test": "authorization.federated",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "federated": {
+    "mutation": "none",
+    "budget": "cap"
+  },
+  "assertions": [
+    {
+      "id": "protected-status",
+      "stage": "protected",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.hard-cap"
+    },
+    {
+      "id": "protected-cost",
+      "stage": "protected",
+      "kind": "sfv-integer",
+      "equals": 1500000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "protected-remaining",
+      "stage": "protected",
+      "kind": "sfv-integer",
+      "equals": 500000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    },
+    {
+      "id": "second-token-status",
+      "stage": "second-token",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "second-token-budget",
+      "stage": "second-token",
+      "kind": "fed-budget",
+      "equals": {"amount": 2000000, "unit": "credits", "decimals": 0},
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "second-protected-status",
+      "stage": "second-protected",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.hard-cap"
+    },
+    {
+      "id": "second-protected-cost",
+      "stage": "second-protected",
+      "kind": "sfv-integer",
+      "equals": 1500000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "second-protected-remaining",
+      "stage": "second-protected",
+      "kind": "sfv-integer",
+      "equals": 500000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    },
+    {
+      "id": "refusal-status",
+      "stage": "refusal",
+      "kind": "status",
+      "equals": 401,
+      "clause": "budget.hard-cap"
+    },
+    {
+      "id": "refusal-remaining",
+      "stage": "refusal",
+      "kind": "sfv-integer",
+      "equals": 500000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    }
+  ]
+}

@@ -219,8 +219,8 @@ header its cost is 1000, so `remaining` is 1999000. `consume` sends
 headers are fixture policy, not protocol fields, and are not covered by the
 signature. The `challenge` stage for these modes is the authorization response
 (`200` and `resource_token`), not the reactive `401`. `fed-budget` compares the
-JWT `budget` object on `challenge`, `access`, `token`, `step-up`, or
-`step-up-other`; `null` requires the claim to be absent. `fed-consumed`
+JWT `budget` object on `challenge`, `access`, `token`, `step-up`,
+`step-up-other`, or `second-token`; `null` requires the claim to be absent. `fed-consumed`
 compares `budget_consumed` on `step-up` or `step-up-other`. An object
 `{"consumed":N}` also requires `jti` to equal the delivered auth token's `jti`.
 `null` requires the claim to be absent. `header` uses the same 5000000 request
@@ -248,7 +248,13 @@ at decimals 0. An Access Server scope key without `ps` is HTTP 400
 containing only an unknown thumbprint returns `"jkts":{}` rather than a zero.
 `json-path` walks dot-separated object members. `null` means the member is
 absent. `header-equals` compares one header value; an empty string means the
-header is absent.
+header is absent. `cap` uses the grant path and the 2000000 ceiling. It spends
+1500000 on the first auth token, then repeats authorization and the Person
+Server token exchange for a second auth token and spends 1500000 on that token
+too. A following 1000000 on the first token is refused. The first token's
+`remaining` stays 500000, and the second token's `remaining` is also 500000,
+so each grant is its own cap. The relay is reset before the second Person
+Server exchange because it records one Access Server request per case.
 
 ## Deferred four-party profile
 

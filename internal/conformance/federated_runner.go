@@ -94,7 +94,7 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 	resourceURL := f.Origin + f.Path
 	protectedURL := resourceURL
 	switch s.Federated.Budget {
-	case "grant", "consume":
+	case "grant", "consume", "cap":
 		protectedURL += "-budget-grant"
 	case "omit":
 		protectedURL += "-budget-omit"
@@ -259,6 +259,9 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				if s.Federated.Budget == "usage" {
 					return presentBudgetUsage(f, exchange, sendHeaders, protectedURL, compact)
 				}
+				if s.Federated.Budget == "cap" {
+					return presentBudgetCap(f, relay, physical, s.Federated.Mutation, sendHeaders, protectedURL, compact, person, agentToken, agentExp, observations)
+				}
 				_, err = send("protected", "GET", protectedURL, compact, nil)
 				return err
 			}
@@ -342,6 +345,56 @@ func checkFederatedBudget(a Assertion, observation PersonObservation) Result {
 		result.State = "pass"
 	}
 	return result
+}
+
+func presentBudgetCap(
+	f Fixture,
+	relay *federationRelay,
+	physical, mutation string,
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	protectedURL, compact, person, agentToken string,
+	agentExp int64,
+	observations map[string]PersonObservation,
+) error {
+	if _, err := send("protected", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost": "1500000",
+	}); err != nil {
+		return err
+	}
+	body, err := budgetAuthorizationBody("grant")
+	if err != nil {
+		return err
+	}
+	secondChallenge, err := send("second-challenge", "POST", f.Origin+"/authorize", person, body, nil)
+	if err != nil {
+		return err
+	}
+	resource, err := responseToken(secondChallenge, "resource_token")
+	if err != nil {
+		return err
+	}
+	relay.reset(physical, mutation, map[string]string{
+		"resource_token": resource, "presented_token": person, "agent_token": agentToken,
+	})
+	tokenBody, _ := json.Marshal(map[string]string{"resource_token": resource, "presented_token": person})
+	secondToken, err := send("second-token", "POST", f.Person.Issuer+"/token", agentToken, tokenBody, nil)
+	if err != nil {
+		return err
+	}
+	secondCompact, err := responseToken(secondToken, "auth_token")
+	if err != nil {
+		return err
+	}
+	observations["second-token"] = checkResponseExpiry(secondToken, observeFederatedAuth(f, secondCompact, observations["person"].Claims, agentExp))
+	if _, err := send("second-protected", "GET", protectedURL, secondCompact, nil, map[string]string{
+		"X-Fixture-Cost": "1500000",
+	}); err != nil {
+		return err
+	}
+	_, err = send("refusal", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost": "1000000",
+	})
+	return err
 }
 
 func presentBudgetUsage(
