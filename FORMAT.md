@@ -197,6 +197,23 @@ and any relay error. An absent handoff or relay error fails execution even if
 its clauses are unclaimed. Reported `access` assertions always grade native AS
 output; `token` assertions grade what the native PS actually delivers.
 
+`federated.budget` is omitted, `grant`, or `omit`. Omitted keeps the reactive
+person-token challenge on the fixture path and offers no Budget. `grant` and
+`omit` replace that challenge with one signed `POST {origin}/authorize`. The
+JSON body is `{"scope":"read","budget":{"amount":N,"unit":"credits","decimals":0}}`.
+`grant` uses amount 5000000. `omit` uses amount 9000000. The Resource offers
+that requested amount unchanged. Its metadata maximum for `credits` at decimals
+0 is 10000000. The Person Server ceiling for a 5000000 offer is 2000000, and
+the Access Server echoes that ceiling. A 9000000 offer is omitted from the
+PS-to-AS request, so the auth token has no `budget` claim. The protected call
+uses `{path}-budget-grant` or `{path}-budget-omit` on the same Resource issuer.
+Only the grant path is metered, at cost 1000, so a successful call reports
+`remaining` 1999000. The `challenge` stage for these modes is the authorization
+response (`200` and `resource_token`), not the reactive `401`. `fed-budget`
+compares the JWT `budget` object on `challenge`, `access`, or `token`; `null`
+requires the claim to be absent. `sfv-integer` compares one bare integer
+member of a dictionary header.
+
 ## Deferred four-party profile
 
 `role_under_test: "authorization.deferred"` uses the same four-party fixture,

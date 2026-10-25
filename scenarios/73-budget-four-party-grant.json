@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "id": "budget-four-party-grant",
+  "title": "Four-party Budget grant is narrowed and charged",
+  "role_under_test": "authorization.federated",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "federated": {
+    "mutation": "none",
+    "budget": "grant"
+  },
+  "assertions": [
+    {
+      "id": "challenge-status",
+      "stage": "challenge",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "challenge-budget",
+      "stage": "challenge",
+      "kind": "fed-budget",
+      "equals": {"amount": 5000000, "unit": "credits", "decimals": 0},
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "access-budget",
+      "stage": "access",
+      "kind": "fed-budget",
+      "equals": {"amount": 2000000, "unit": "credits", "decimals": 0},
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "token-status",
+      "stage": "token",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "token-jwt",
+      "stage": "token",
+      "kind": "ps-jwt",
+      "equals": true,
+      "clause": "fed.delivery"
+    },
+    {
+      "id": "token-budget",
+      "stage": "token",
+      "kind": "fed-budget",
+      "equals": {"amount": 2000000, "unit": "credits", "decimals": 0},
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "protected-status",
+      "stage": "protected",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.hard-cap"
+    },
+    {
+      "id": "protected-subject",
+      "stage": "protected",
+      "kind": "json-member",
+      "equals": "directed-person-1",
+      "clause": "fed.application",
+      "member": "sub"
+    },
+    {
+      "id": "protected-cost",
+      "stage": "protected",
+      "kind": "sfv-integer",
+      "equals": 1000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "protected-remaining",
+      "stage": "protected",
+      "kind": "sfv-integer",
+      "equals": 1999000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    }
+  ]
+}

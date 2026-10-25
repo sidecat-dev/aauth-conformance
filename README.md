@@ -184,11 +184,15 @@ go run ./cmd/build-adapters -role authorization.federated -go-source /path/to/aa
 go run ./cmd/aauth-conformance -targets build/federated/targets.json -report build/federated-report.json -markdown build/federated-report.md
 ```
 
-This slice has **28 scenarios and 336 assertions per implementation**. The
+This slice has **30 scenarios and 354 assertions per implementation**. Scenarios
+01–49 are the original four-party cases (28 scenarios, 336 assertions). Scenarios
+73 and 74 add the proactive Budget grant and the PS-to-AS omission. The fixture
+amounts, paths, and assertion kinds are in `FORMAT.md`. The
 [four-party report](reports/four-party-authorization.md) records Go `831d55f` and
-Rust `843be82`, using the same expected answers. Select those revisions or
+Rust `843be82` for the original 28 scenarios. Select those revisions or
 compatible successors; older Rust checkouts without native AS/federation APIs
-can still run the other roles.
+can still run the other roles. A checkout without the Budget authorization
+endpoint fails only scenarios 73 and 74.
 
 Ten independent-PS cases play Agent, AP and PS entirely in the harness, testing
 the native Resource and AS with the same fixture credentials and wire recipe.

@@ -180,7 +180,7 @@ func TestFederatedSuiteKeepsMissingAdapterAnExecutionError(t *testing.T) {
 		t.Fatal(err)
 	}
 	selected, err := s.ForRole("authorization.federated")
-	if err != nil || len(selected.Scenarios) != 28 {
+	if err != nil || len(selected.Scenarios) != 30 {
 		t.Fatalf("four-party scenarios: %d, %v", len(selected.Scenarios), err)
 	}
 	report, err := RunSuite(context.Background(), s, Targets{Version: 1, Role: "authorization.federated",
@@ -189,7 +189,7 @@ func TestFederatedSuiteKeepsMissingAdapterAnExecutionError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Success() || report.Runs[0].Error == "" || len(report.Runs[0].Cases) != 28 {
+	if report.Success() || report.Runs[0].Error == "" || len(report.Runs[0].Cases) != 30 {
 		t.Fatal("missing, unclaimed implementation was hidden")
 	}
 }

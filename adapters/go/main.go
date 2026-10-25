@@ -18,6 +18,7 @@ import (
 	aauth "gitlab.com/sidecat-dev/aauth-go"
 	"gitlab.com/sidecat-dev/aauth-go/accessserver"
 	"gitlab.com/sidecat-dev/aauth-go/agent"
+	"gitlab.com/sidecat-dev/aauth-go/budgets"
 	"gitlab.com/sidecat-dev/aauth-go/jose"
 	"gitlab.com/sidecat-dev/aauth-go/personserver"
 	"gitlab.com/sidecat-dev/aauth-go/resource"
@@ -228,8 +229,14 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 					return accessserver.Decision{}, accessserver.ErrAccessDenied
 				}
 			}
-			return accessserver.Decision{Scopes: append([]string(nil), request.Scopes...), Lifetime: time.Duration(config.AuthLifetime) * time.Second}, nil
+			decision := accessserver.Decision{Scopes: append([]string(nil), request.Scopes...), Lifetime: time.Duration(config.AuthLifetime) * time.Second}
+			if request.Budget != nil {
+				grant := *request.Budget
+				decision.Budget = &grant
+			}
+			return decision, nil
 		},
+		Budget: &accessserver.BudgetConfig{ResolveResourceUnits: fixtureBudgetUnits(resourceID)},
 	}
 	if config.Role == "authorization.deferred" {
 		configureDeferredAS(&accessConfig)
@@ -263,6 +270,22 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			return personserver.Person{Subject: config.PersonSubject, Lifetime: time.Duration(config.PersonLifetime) * time.Second}, nil
 		},
 		Consent: func(context.Context, personserver.AuthorizationRequest) error { return nil },
+		Budget: &personserver.FederatedBudgetConfig{
+			ResolveResourceUnits: fixtureBudgetUnits(resourceID),
+			Ceiling: func(_ context.Context, request personserver.AuthorizationRequest) (*budgets.Value, error) {
+				if request.Budget == nil {
+					return nil, nil
+				}
+				if request.Budget.Amount() > 5_000_000 {
+					return nil, nil
+				}
+				ceiling, err := fixtureCredits(2_000_000)
+				if err != nil {
+					return nil, err
+				}
+				return &ceiling, nil
+			},
+		},
 	}
 	if config.Role == "authorization.deferred" {
 		configureDeferredPS(&peopleConfig)
@@ -271,6 +294,15 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 	if err != nil {
 		return err
 	}
+	budgetUnit, err := budgets.NewUnit("credits", 0)
+	if err != nil {
+		return err
+	}
+	budgetDeclaration, err := budgets.NewBoundedUnitDeclaration(budgetUnit, 10_000_000, "")
+	if err != nil {
+		return err
+	}
+	grantPath := resourceURL.Path + "-budget-grant"
 	protected, err := resource.NewFederatedAuthorization(resource.FederatedAuthorizationConfig{
 		Issuer: resourceID, AccessServer: config.AccessServer, SigningKey: resourceKey, KeyResolver: keys,
 		Clock: clock, NewID: nextID, ScopeDescriptions: map[string]string{"read": "Read fixture identity"},
@@ -290,6 +322,16 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"sub": principal.Subject})
 		}),
+		Budget: &resource.BudgetConfig{
+			Units:         []budgets.UnitDeclaration{budgetDeclaration},
+			Metered:       func(r *http.Request) bool { return r.URL.Path == grantPath },
+			RetainLineage: func(context.Context, resource.BudgetLineage) error { return nil },
+			Cost:          func(context.Context, resource.BudgetCostRequest) (int64, error) { return 1000, nil },
+			Store:         testutil.NewBudgetStore(),
+			Challenge: func(context.Context, resource.BudgetChallengeRequest) (string, error) {
+				return "", fmt.Errorf("fixture does not reissue a Budget challenge")
+			},
+		},
 	})
 	if err != nil {
 		return err
@@ -325,6 +367,31 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 		return err
 	}
 	return (&http.Server{Handler: bridge, ReadHeaderTimeout: 5 * time.Second}).Serve(listener)
+}
+
+func fixtureCredits(amount int64) (budgets.Value, error) {
+	unit, err := budgets.NewUnit("credits", 0)
+	if err != nil {
+		return budgets.Value{}, err
+	}
+	return budgets.NewValue(amount, unit)
+}
+
+func fixtureBudgetUnits(resourceID string) func(context.Context, string) ([]budgets.UnitDeclaration, error) {
+	return func(_ context.Context, resource string) ([]budgets.UnitDeclaration, error) {
+		if resource != resourceID {
+			return nil, fmt.Errorf("unexpected Budget resource")
+		}
+		unit, err := budgets.NewUnit("credits", 0)
+		if err != nil {
+			return nil, err
+		}
+		declaration, err := budgets.NewBoundedUnitDeclaration(unit, 10_000_000, "")
+		if err != nil {
+			return nil, err
+		}
+		return []budgets.UnitDeclaration{declaration}, nil
+	}
 }
 
 type roundTripFunc func(*http.Request) (*http.Response, error)

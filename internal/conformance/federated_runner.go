@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -84,6 +85,11 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		}
 		return exchange(stage, request, base)
 	}
+	resourceURL := f.Origin + f.Path
+	protectedURL := resourceURL
+	if s.Federated.Budget != "" {
+		protectedURL += "-budget-" + s.Federated.Budget
+	}
 	execute := func() error {
 		if startError != nil {
 			return startError
@@ -93,7 +99,7 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		if err != nil {
 			return err
 		}
-		if _, err := send("initial", "GET", f.Origin+f.Path, agentToken, nil); err != nil {
+		if _, err := send("initial", "GET", resourceURL, agentToken, nil); err != nil {
 			return err
 		}
 		var person string
@@ -125,11 +131,25 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		if !po.Valid {
 			return fmt.Errorf("cannot advance from invalid Person token: %s", po.Error)
 		}
-		challengeResponse, err := send("challenge", "GET", f.Origin+f.Path, person, nil)
-		if err != nil {
-			return err
+		var challengeResponse Response
+		var resource string
+		if s.Federated.Budget != "" {
+			body, bodyErr := budgetAuthorizationBody(s.Federated.Budget)
+			if bodyErr != nil {
+				return bodyErr
+			}
+			challengeResponse, err = send("challenge", "POST", f.Origin+"/authorize", person, body)
+			if err != nil {
+				return err
+			}
+			resource, err = responseToken(challengeResponse, "resource_token")
+		} else {
+			challengeResponse, err = send("challenge", "GET", resourceURL, person, nil)
+			if err != nil {
+				return err
+			}
+			resource, err = challengedResourceToken(challengeResponse)
 		}
-		resource, err := challengedResourceToken(challengeResponse)
 		if err != nil {
 			return err
 		}
@@ -176,7 +196,7 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				if !o.Valid {
 					return fmt.Errorf("cannot use invalid AS Auth token: %s", o.Error)
 				}
-				_, err = send("protected", "GET", f.Origin+f.Path, compact, nil)
+				_, err = send("protected", "GET", protectedURL, compact, nil)
 			}
 			return err
 		}
@@ -217,7 +237,7 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				if !o.Valid {
 					return fmt.Errorf("cannot use invalid delivered Auth token: %s", o.Error)
 				}
-				_, err = send("protected", "GET", f.Origin+f.Path, compact, nil)
+				_, err = send("protected", "GET", protectedURL, compact, nil)
 				return err
 			}
 		}
@@ -250,6 +270,10 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				result.State = "pass"
 			}
 		case exists:
+			if assertion.Kind == "fed-budget" {
+				result = checkFederatedBudget(assertion, observations[assertion.Stage])
+				break
+			}
 			if assertion.Kind == "fed-challenge" {
 				assertion.Kind = "ps-jwt"
 			}
@@ -263,6 +287,46 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		c.Results = append(c.Results, result)
 	}
 	return c
+}
+
+func checkFederatedBudget(a Assertion, observation PersonObservation) Result {
+	result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "fail"}
+	var want any
+	if err := json.Unmarshal(a.Equals, &want); err != nil {
+		result.Detail = err.Error()
+		return result
+	}
+	raw, present := observation.Claims["budget"]
+	if want == nil {
+		result.Actual = raw
+		if !present {
+			result.Actual = nil
+			result.State = "pass"
+		} else {
+			result.Detail = "budget claim is present"
+		}
+		return result
+	}
+	if !present {
+		result.Detail = "missing budget claim"
+		return result
+	}
+	result.Actual = raw
+	if reflect.DeepEqual(raw, want) {
+		result.State = "pass"
+	}
+	return result
+}
+
+func budgetAuthorizationBody(mode string) ([]byte, error) {
+	amount := int64(5_000_000)
+	if mode == "omit" {
+		amount = 9_000_000
+	}
+	return json.Marshal(map[string]any{
+		"scope":  "read",
+		"budget": map[string]any{"amount": amount, "unit": "credits", "decimals": 0},
+	})
 }
 
 func federationAgentToken(f Fixture, id string, issued, expires int64) (string, error) {

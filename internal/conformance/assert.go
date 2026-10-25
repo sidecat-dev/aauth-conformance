@@ -31,7 +31,7 @@ func Check(a Assertion, r Response) Result {
 			result.Detail = "missing JSON member"
 			return result
 		}
-	case "sfv-token", "sfv-strings", "sfv-string-set":
+	case "sfv-token", "sfv-strings", "sfv-string-set", "sfv-integer":
 		dictionary, err := httpsfv.UnmarshalDictionary(r.Header.Values(a.Header))
 		if err != nil {
 			result.Detail = err.Error()
@@ -42,7 +42,19 @@ func Check(a Assertion, r Response) Result {
 			result.Detail = "missing dictionary member"
 			return result
 		}
-		if a.Kind == "sfv-token" {
+		if a.Kind == "sfv-integer" {
+			item, ok := member.(httpsfv.Item)
+			if !ok || item.Params != nil && len(item.Params.Names()) != 0 {
+				result.Detail = "member is not a bare Integer item"
+				return result
+			}
+			value, ok := item.Value.(int64)
+			if !ok {
+				result.Detail = "member is not an Integer"
+				return result
+			}
+			actual = float64(value)
+		} else if a.Kind == "sfv-token" {
 			item, ok := member.(httpsfv.Item)
 			if !ok {
 				result.Detail = "member is not an Item"
