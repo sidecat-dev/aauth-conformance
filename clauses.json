@@ -349,6 +349,22 @@
       "scope": "protocol"
     },
     {
+      "id": "budget.header",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "AAuth-Budget Response Header",
+      "anchor": "aauth-budget-header",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.trailer",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "Trailer Rules",
+      "anchor": "trailer-rules",
+      "scope": "protocol"
+    },
+    {
       "id": "budget.consumption",
       "role": "authorization.federated",
       "source": "budgets",

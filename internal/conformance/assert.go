@@ -103,6 +103,51 @@ func Check(a Assertion, r Response) Result {
 				actual, expected = gotSet, wantSet
 			}
 		}
+	case "sfv-trailer-integer":
+		if len(r.Trailer.Values(a.Header)) == 0 {
+			result.Detail = "missing trailer"
+			return result
+		}
+		dictionary, err := httpsfv.UnmarshalDictionary(r.Trailer.Values(a.Header))
+		if err != nil {
+			result.Detail = err.Error()
+			return result
+		}
+		member, ok := dictionary.Get(a.Member)
+		if !ok {
+			result.Detail = "missing dictionary member"
+			return result
+		}
+		item, ok := member.(httpsfv.Item)
+		if !ok || item.Params != nil && len(item.Params.Names()) != 0 {
+			result.Detail = "member is not a bare Integer item"
+			return result
+		}
+		value, ok := item.Value.(int64)
+		if !ok {
+			result.Detail = "member is not an Integer"
+			return result
+		}
+		actual = float64(value)
+	case "sfv-absent", "sfv-trailer-absent":
+		values := r.Header.Values(a.Header)
+		if a.Kind == "sfv-trailer-absent" {
+			values = nil
+			if r.Trailer != nil {
+				values = r.Trailer.Values(a.Header)
+			}
+		}
+		if len(values) == 0 {
+			actual = true
+			break
+		}
+		dictionary, err := httpsfv.UnmarshalDictionary(values)
+		if err != nil {
+			result.Detail = err.Error()
+			return result
+		}
+		_, present := dictionary.Get(a.Member)
+		actual = !present
 	case "problem-if-present":
 		media, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if media != "application/problem+json" {

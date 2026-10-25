@@ -98,6 +98,8 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		protectedURL += "-budget-grant"
 	case "omit":
 		protectedURL += "-budget-omit"
+	case "header":
+		protectedURL += "-budget-reserve"
 	}
 	execute := func() error {
 		if startError != nil {
@@ -249,6 +251,9 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				if s.Federated.Budget == "consume" {
 					return presentBudgetConsumption(f, sendHeaders, observations, protectedURL, compact)
 				}
+				if s.Federated.Budget == "header" {
+					return presentBudgetHeader(sendHeaders, protectedURL, compact)
+				}
 				_, err = send("protected", "GET", protectedURL, compact, nil)
 				return err
 			}
@@ -332,6 +337,28 @@ func checkFederatedBudget(a Assertion, observation PersonObservation) Result {
 		result.State = "pass"
 	}
 	return result
+}
+
+func presentBudgetHeader(
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	protectedURL, compact string,
+) error {
+	if _, err := send("reserved", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Hold":   "800000",
+		"X-Fixture-Settle": "400000",
+	}); err != nil {
+		return err
+	}
+	if _, err := send("abandoned", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Hold": "500000",
+	}); err != nil {
+		return err
+	}
+	_, err := send("following", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Hold":   "100000",
+		"X-Fixture-Settle": "100000",
+	})
+	return err
 }
 
 func presentBudgetConsumption(

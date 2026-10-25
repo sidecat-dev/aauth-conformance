@@ -223,8 +223,21 @@ JWT `budget` object on `challenge`, `access`, `token`, `step-up`, or
 `step-up-other`; `null` requires the claim to be absent. `fed-consumed`
 compares `budget_consumed` on `step-up` or `step-up-other`. An object
 `{"consumed":N}` also requires `jti` to equal the delivered auth token's `jti`.
-`null` requires the claim to be absent. `sfv-integer` compares one bare integer
-member of a dictionary header.
+`null` requires the claim to be absent. `header` uses the same 5000000 request
+and 2000000 ceiling as `grant`. Its protected calls use `{path}-budget-reserve`.
+`X-Fixture-Hold` is the reservation and `X-Fixture-Settle`, when present, is
+the cost committed after the body. Both are unsigned fixture headers. The
+`reserved` call holds 800000 and settles 400000, so the header is `remaining`
+1200000 and `reserved` 800000 with no `cost`, and the trailer is `cost` 400000
+only. The `abandoned` call holds 500000 and does not settle. A completed
+response still carries trailer `cost` 500000, because the Resource commits the
+hold before finishing the response. The `following` call holds 100000 and
+settles 100000; its header `remaining` 1000000 shows that the abandoned hold
+was already spent. A recipient that never receives a trailer treats the
+reservation as spent; this scenario grades the completed response, which does
+carry the trailer. `sfv-integer` compares one bare integer member of a
+dictionary header. `sfv-absent` requires that member to be missing. The
+`sfv-trailer-integer` and `sfv-trailer-absent` kinds read the trailer instead.
 
 ## Deferred four-party profile
 

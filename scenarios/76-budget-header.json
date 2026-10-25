@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "id": "budget-header",
+  "title": "A reserved Budget header omits cost and the trailer carries it",
+  "role_under_test": "authorization.federated",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "federated": {
+    "mutation": "none",
+    "budget": "header"
+  },
+  "assertions": [
+    {
+      "id": "token-budget",
+      "stage": "token",
+      "kind": "fed-budget",
+      "equals": {"amount": 2000000, "unit": "credits", "decimals": 0},
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "reserved-status",
+      "stage": "reserved",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.header"
+    },
+    {
+      "id": "reserved-remaining",
+      "stage": "reserved",
+      "kind": "sfv-integer",
+      "equals": 1200000,
+      "clause": "budget.header",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    },
+    {
+      "id": "reserved-hold",
+      "stage": "reserved",
+      "kind": "sfv-integer",
+      "equals": 800000,
+      "clause": "budget.header",
+      "header": "AAuth-Budget",
+      "member": "reserved"
+    },
+    {
+      "id": "reserved-no-cost",
+      "stage": "reserved",
+      "kind": "sfv-absent",
+      "equals": true,
+      "clause": "budget.header",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "reserved-trailer-cost",
+      "stage": "reserved",
+      "kind": "sfv-trailer-integer",
+      "equals": 400000,
+      "clause": "budget.trailer",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "reserved-trailer-no-remaining",
+      "stage": "reserved",
+      "kind": "sfv-trailer-absent",
+      "equals": true,
+      "clause": "budget.trailer",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    },
+    {
+      "id": "reserved-trailer-no-hold",
+      "stage": "reserved",
+      "kind": "sfv-trailer-absent",
+      "equals": true,
+      "clause": "budget.trailer",
+      "header": "AAuth-Budget",
+      "member": "reserved"
+    },
+    {
+      "id": "abandoned-status",
+      "stage": "abandoned",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.trailer"
+    },
+    {
+      "id": "abandoned-remaining",
+      "stage": "abandoned",
+      "kind": "sfv-integer",
+      "equals": 1100000,
+      "clause": "budget.header",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    },
+    {
+      "id": "abandoned-hold",
+      "stage": "abandoned",
+      "kind": "sfv-integer",
+      "equals": 500000,
+      "clause": "budget.header",
+      "header": "AAuth-Budget",
+      "member": "reserved"
+    },
+    {
+      "id": "abandoned-no-cost",
+      "stage": "abandoned",
+      "kind": "sfv-absent",
+      "equals": true,
+      "clause": "budget.header",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "abandoned-trailer-cost",
+      "stage": "abandoned",
+      "kind": "sfv-trailer-integer",
+      "equals": 500000,
+      "clause": "budget.trailer",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "following-remaining",
+      "stage": "following",
+      "kind": "sfv-integer",
+      "equals": 1000000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    },
+    {
+      "id": "following-hold",
+      "stage": "following",
+      "kind": "sfv-integer",
+      "equals": 100000,
+      "clause": "budget.header",
+      "header": "AAuth-Budget",
+      "member": "reserved"
+    }
+  ]
+}
