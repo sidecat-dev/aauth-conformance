@@ -349,6 +349,14 @@
       "scope": "protocol"
     },
     {
+      "id": "budget.consumption",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "The Consumption Record",
+      "anchor": "budget-consumed",
+      "scope": "protocol"
+    },
+    {
       "id": "deferred.pending",
       "role": "authorization.deferred",
       "source": "core",

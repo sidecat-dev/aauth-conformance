@@ -78,17 +78,26 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		c.Exchanges = append(c.Exchanges, entry)
 		return response, err
 	}
-	send := func(stage, method, url, token string, body []byte) (Response, error) {
+	sendHeaders := func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error) {
 		request, base, err := signedFixtureRequest(f, f.AgentSeed, method, url, `sig=jwt;jwt="`+token+`"`, body)
 		if err != nil {
 			return Response{}, err
 		}
+		for name, value := range headers {
+			request.Header.Set(name, value)
+		}
 		return exchange(stage, request, base)
+	}
+	send := func(stage, method, url, token string, body []byte) (Response, error) {
+		return sendHeaders(stage, method, url, token, body, nil)
 	}
 	resourceURL := f.Origin + f.Path
 	protectedURL := resourceURL
-	if s.Federated.Budget != "" {
-		protectedURL += "-budget-" + s.Federated.Budget
+	switch s.Federated.Budget {
+	case "grant", "consume":
+		protectedURL += "-budget-grant"
+	case "omit":
+		protectedURL += "-budget-omit"
 	}
 	execute := func() error {
 		if startError != nil {
@@ -237,6 +246,9 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				if !o.Valid {
 					return fmt.Errorf("cannot use invalid delivered Auth token: %s", o.Error)
 				}
+				if s.Federated.Budget == "consume" {
+					return presentBudgetConsumption(f, sendHeaders, observations, protectedURL, compact)
+				}
 				_, err = send("protected", "GET", protectedURL, compact, nil)
 				return err
 			}
@@ -272,6 +284,10 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		case exists:
 			if assertion.Kind == "fed-budget" {
 				result = checkFederatedBudget(assertion, observations[assertion.Stage])
+				break
+			}
+			if assertion.Kind == "fed-consumed" {
+				result = checkFederatedConsumed(assertion, observations[assertion.Stage], observations["token"])
 				break
 			}
 			if assertion.Kind == "fed-challenge" {
@@ -313,6 +329,76 @@ func checkFederatedBudget(a Assertion, observation PersonObservation) Result {
 	}
 	result.Actual = raw
 	if reflect.DeepEqual(raw, want) {
+		result.State = "pass"
+	}
+	return result
+}
+
+func presentBudgetConsumption(
+	f Fixture,
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	observations map[string]PersonObservation,
+	protectedURL, compact string,
+) error {
+	if _, err := send("protected", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost": "1500000",
+	}); err != nil {
+		return err
+	}
+	same, err := send("step-up", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost": "1000000",
+	})
+	if err != nil {
+		return err
+	}
+	if token, tokenErr := challengedResourceToken(same); tokenErr == nil {
+		observations["step-up"] = observeFederatedResource(f, token, observations["token"].Claims)
+	}
+	other, err := send("step-up-other", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost":  "1000000",
+		"X-Fixture-Offer": "points",
+	})
+	if err != nil {
+		return err
+	}
+	if token, tokenErr := challengedResourceToken(other); tokenErr == nil {
+		observations["step-up-other"] = observeFederatedResource(f, token, observations["token"].Claims)
+	}
+	return nil
+}
+
+func checkFederatedConsumed(a Assertion, observation, auth PersonObservation) Result {
+	result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "fail"}
+	var want any
+	if err := json.Unmarshal(a.Equals, &want); err != nil {
+		result.Detail = err.Error()
+		return result
+	}
+	raw, present := observation.Claims["budget_consumed"]
+	if want == nil {
+		result.Actual = raw
+		if !present {
+			result.Actual = nil
+			result.State = "pass"
+		} else {
+			result.Detail = "budget_consumed claim is present"
+		}
+		return result
+	}
+	if !present {
+		result.Detail = "missing budget_consumed claim"
+		return result
+	}
+	result.Actual = raw
+	expected, ok := want.(map[string]any)
+	got, gotOK := raw.(map[string]any)
+	consumed, consumedOK := expected["consumed"].(float64)
+	authJTI, jtiOK := auth.Claims["jti"].(string)
+	if !ok || !gotOK || !consumedOK || !jtiOK || len(expected) != 1 || len(got) != 2 {
+		result.Detail = "budget_consumed shape does not match"
+		return result
+	}
+	if got["jti"] == authJTI && got["consumed"] == consumed {
 		result.State = "pass"
 	}
 	return result

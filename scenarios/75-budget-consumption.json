@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "id": "budget-consumption",
+  "title": "A step-up Resource token reports consumption in the metered scale",
+  "role_under_test": "authorization.federated",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "federated": {
+    "mutation": "none",
+    "budget": "consume"
+  },
+  "assertions": [
+    {
+      "id": "challenge-budget",
+      "stage": "challenge",
+      "kind": "fed-budget",
+      "equals": {"amount": 5000000, "unit": "credits", "decimals": 0},
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "token-budget",
+      "stage": "token",
+      "kind": "fed-budget",
+      "equals": {"amount": 2000000, "unit": "credits", "decimals": 0},
+      "clause": "budget.four-party-grant"
+    },
+    {
+      "id": "protected-status",
+      "stage": "protected",
+      "kind": "status",
+      "equals": 200,
+      "clause": "budget.hard-cap"
+    },
+    {
+      "id": "protected-cost",
+      "stage": "protected",
+      "kind": "sfv-integer",
+      "equals": 1500000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "cost"
+    },
+    {
+      "id": "protected-remaining",
+      "stage": "protected",
+      "kind": "sfv-integer",
+      "equals": 500000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    },
+    {
+      "id": "step-up-status",
+      "stage": "step-up",
+      "kind": "status",
+      "equals": 401,
+      "clause": "budget.consumption"
+    },
+    {
+      "id": "step-up-budget",
+      "stage": "step-up",
+      "kind": "fed-budget",
+      "equals": {"amount": 5000000, "unit": "credits", "decimals": 0},
+      "clause": "budget.consumption"
+    },
+    {
+      "id": "step-up-consumed",
+      "stage": "step-up",
+      "kind": "fed-consumed",
+      "equals": {"consumed": 1500000},
+      "clause": "budget.consumption"
+    },
+    {
+      "id": "step-up-remaining",
+      "stage": "step-up",
+      "kind": "sfv-integer",
+      "equals": 500000,
+      "clause": "budget.hard-cap",
+      "header": "AAuth-Budget",
+      "member": "remaining"
+    },
+    {
+      "id": "other-status",
+      "stage": "step-up-other",
+      "kind": "status",
+      "equals": 401,
+      "clause": "budget.consumption"
+    },
+    {
+      "id": "other-budget",
+      "stage": "step-up-other",
+      "kind": "fed-budget",
+      "equals": {"amount": 5000000, "unit": "points", "decimals": 0},
+      "clause": "budget.consumption"
+    },
+    {
+      "id": "other-consumed",
+      "stage": "step-up-other",
+      "kind": "fed-consumed",
+      "equals": null,
+      "clause": "budget.consumption"
+    }
+  ]
+}

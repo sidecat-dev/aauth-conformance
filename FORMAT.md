@@ -201,17 +201,29 @@ output; `token` assertions grade what the native PS actually delivers.
 person-token challenge on the fixture path and offers no Budget. `grant` and
 `omit` replace that challenge with one signed `POST {origin}/authorize`. The
 JSON body is `{"scope":"read","budget":{"amount":N,"unit":"credits","decimals":0}}`.
-`grant` uses amount 5000000. `omit` uses amount 9000000. The Resource offers
-that requested amount unchanged. Its metadata maximum for `credits` at decimals
-0 is 10000000. The Person Server ceiling for a 5000000 offer is 2000000, and
-the Access Server echoes that ceiling. A 9000000 offer is omitted from the
-PS-to-AS request, so the auth token has no `budget` claim. The protected call
-uses `{path}-budget-grant` or `{path}-budget-omit` on the same Resource issuer.
-Only the grant path is metered, at cost 1000, so a successful call reports
-`remaining` 1999000. The `challenge` stage for these modes is the authorization
-response (`200` and `resource_token`), not the reactive `401`. `fed-budget`
-compares the JWT `budget` object on `challenge`, `access`, or `token`; `null`
-requires the claim to be absent. `sfv-integer` compares one bare integer
+`grant` and `consume` use amount 5000000. `omit` uses amount 9000000. The
+Resource offers that requested amount unchanged. Its metadata maximum for
+`credits` and for `points`, both at decimals 0, is 10000000. The Person Server
+ceiling for a 5000000 offer is 2000000, and the Access Server echoes that
+ceiling. A 9000000 offer is omitted from the PS-to-AS request, so the auth
+token has no `budget` claim. The protected call uses `{path}-budget-grant` for
+`grant` and `consume`, and `{path}-budget-omit` for `omit`, on the same
+Resource issuer. Only the grant path is metered. With no `X-Fixture-Cost`
+header its cost is 1000, so `remaining` is 1999000. `consume` sends
+`X-Fixture-Cost: 1500000` on `protected`, then `X-Fixture-Cost: 1000000` on
+`step-up`. That second call does not fit. The fresh Resource token offers
+5000000 credits and carries `budget_consumed` for the presented auth-token
+`jti`, with `consumed` 1500000. `step-up-other` repeats the refusal with
+`X-Fixture-Offer: points`. That offer is 5000000 points and omits
+`budget_consumed` because the unit differs from the metered grant. These two
+headers are fixture policy, not protocol fields, and are not covered by the
+signature. The `challenge` stage for these modes is the authorization response
+(`200` and `resource_token`), not the reactive `401`. `fed-budget` compares the
+JWT `budget` object on `challenge`, `access`, `token`, `step-up`, or
+`step-up-other`; `null` requires the claim to be absent. `fed-consumed`
+compares `budget_consumed` on `step-up` or `step-up-other`. An object
+`{"consumed":N}` also requires `jti` to equal the delivered auth token's `jti`.
+`null` requires the claim to be absent. `sfv-integer` compares one bare integer
 member of a dictionary header.
 
 ## Deferred four-party profile

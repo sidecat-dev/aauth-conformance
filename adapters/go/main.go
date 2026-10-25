@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -294,14 +296,24 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 	if err != nil {
 		return err
 	}
-	budgetUnit, err := budgets.NewUnit("credits", 0)
+	credits, err := budgets.NewUnit("credits", 0)
 	if err != nil {
 		return err
 	}
-	budgetDeclaration, err := budgets.NewBoundedUnitDeclaration(budgetUnit, 10_000_000, "")
+	points, err := budgets.NewUnit("points", 0)
 	if err != nil {
 		return err
 	}
+	creditsDeclaration, err := budgets.NewBoundedUnitDeclaration(credits, 10_000_000, "")
+	if err != nil {
+		return err
+	}
+	pointsDeclaration, err := budgets.NewBoundedUnitDeclaration(points, 10_000_000, "")
+	if err != nil {
+		return err
+	}
+	var fixtureOfferUnit atomic.Value
+	fixtureOfferUnit.Store("credits")
 	grantPath := resourceURL.Path + "-budget-grant"
 	protected, err := resource.NewFederatedAuthorization(resource.FederatedAuthorizationConfig{
 		Issuer: resourceID, AccessServer: config.AccessServer, SigningKey: resourceKey, KeyResolver: keys,
@@ -323,13 +335,58 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			json.NewEncoder(w).Encode(map[string]string{"sub": principal.Subject})
 		}),
 		Budget: &resource.BudgetConfig{
-			Units:         []budgets.UnitDeclaration{budgetDeclaration},
+			Units:         []budgets.UnitDeclaration{creditsDeclaration, pointsDeclaration},
 			Metered:       func(r *http.Request) bool { return r.URL.Path == grantPath },
 			RetainLineage: func(context.Context, resource.BudgetLineage) error { return nil },
-			Cost:          func(context.Context, resource.BudgetCostRequest) (int64, error) { return 1000, nil },
-			Store:         testutil.NewBudgetStore(),
-			Challenge: func(context.Context, resource.BudgetChallengeRequest) (string, error) {
-				return "", fmt.Errorf("fixture does not reissue a Budget challenge")
+			Cost: func(_ context.Context, request resource.BudgetCostRequest) (int64, error) {
+				unit := "credits"
+				if request.Request != nil && request.Request.Header.Get("X-Fixture-Offer") == "points" {
+					unit = "points"
+				}
+				fixtureOfferUnit.Store(unit)
+				raw := ""
+				if request.Request != nil {
+					raw = request.Request.Header.Get("X-Fixture-Cost")
+				}
+				if raw == "" {
+					return 1000, nil
+				}
+				cost, err := strconv.ParseInt(raw, 10, 64)
+				if err != nil || cost <= 0 {
+					return 0, fmt.Errorf("fixture Budget cost")
+				}
+				return cost, nil
+			},
+			Store: testutil.NewBudgetStore(),
+			Challenge: func(_ context.Context, challenge resource.BudgetChallengeRequest) (string, error) {
+				unit := credits
+				if name, _ := fixtureOfferUnit.Load().(string); name == "points" {
+					unit = points
+				}
+				offer, err := budgets.NewValue(5_000_000, unit)
+				if err != nil {
+					return "", err
+				}
+				var consumed *budgets.ConsumptionRecord
+				if unit.Equal(challenge.Grant.Unit()) {
+					record, err := budgets.ConsumptionForPresentedGrant(challenge.Token.JTI, challenge.Grant, challenge.Remaining)
+					if err != nil {
+						return "", err
+					}
+					consumed = &record
+				}
+				thumbprint, err := challenge.Principal.Confirmation.Thumbprint()
+				if err != nil {
+					return "", err
+				}
+				now := clock.Now()
+				return budgets.MintResourceToken(resourceKey, aauth.ResourceTokenClaims{
+					Issuer: resourceID, DWK: aauth.ResourceDiscoveryDocument, Audience: config.AccessServer,
+					PersonServer: challenge.Principal.PersonServer, Subject: challenge.Principal.Subject,
+					JTI: nextID(), PresentedJTI: challenge.Token.JTI, AgentJKT: thumbprint,
+					Scope: strings.Join(challenge.Principal.Scope, " "), Account: challenge.Principal.Account,
+					IssuedAt: now.Unix(), ExpiresAt: now.Add(5 * time.Minute).Unix(),
+				}, offer, consumed)
 			},
 		},
 	})
