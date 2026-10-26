@@ -123,10 +123,10 @@ func run() error {
 				return err
 			}
 			if nativeFederation {
-				manifest = append(manifest, []byte("\n[dependencies.aauth-rust-access-server]\nversion = \"=0.1.0-alpha.1\"\n")...)
+				manifest = append(manifest, []byte("\n[dependencies.aauth-rust-access-server]\nversion = \"=0.1.0-alpha.2\"\n")...)
 			}
 			manifest = append(manifest, []byte("\n[patch.crates-io]\n")...)
-			names := []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose"}
+			names := []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose", "aauth-rust-budgets"}
 			if _, e := os.Stat(filepath.Join(source, "crates", "aauth-rust-person-server")); e == nil || *role == conformance.PersonServerRole {
 				names = append(names, "aauth-rust-person-server")
 			}
@@ -147,7 +147,7 @@ func run() error {
 			if err = copyFile(filepath.Join(source, "rust-toolchain.toml"), filepath.Join(work, "rust-toolchain.toml")); err != nil {
 				return err
 			}
-			buildArgs := []string{"build", "--target-dir", filepath.Join(directory, "rust-target")}
+			buildArgs := []string{"build", "--target-dir", filepath.Join(root, "build", "rust-target-shared")}
 			if nativeFederation {
 				feature := "federation"
 				if *role == conformance.DeferredRole {
@@ -161,7 +161,7 @@ func run() error {
 			if err = command(work, "cargo", buildArgs...); err != nil {
 				return err
 			}
-			if err = copyFile(filepath.Join(directory, "rust-target/debug/aauth-conformance-rust-adapter"+suffix), binary); err != nil {
+			if err = copyFile(filepath.Join(root, "build", "rust-target-shared", "debug", "aauth-conformance-rust-adapter"+suffix), binary); err != nil {
 				return err
 			}
 		}
