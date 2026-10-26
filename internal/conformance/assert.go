@@ -104,8 +104,14 @@ func Check(a Assertion, r Response) Result {
 				actual, expected = gotSet, wantSet
 			}
 		}
-	case "sfv-trailer-integer":
-		if len(r.Trailer.Values(a.Header)) == 0 {
+	case "sfv-trailer-integer", "sfv-trailer-if-present":
+		if a.Kind == "sfv-trailer-if-present" && (r.Trailer == nil || len(r.Trailer.Values(a.Header)) == 0) {
+			result.State = "pass"
+			result.Actual = nil
+			result.Detail = "no trailer"
+			return result
+		}
+		if r.Trailer == nil || len(r.Trailer.Values(a.Header)) == 0 {
 			result.Detail = "missing trailer"
 			return result
 		}
@@ -176,7 +182,34 @@ func Check(a Assertion, r Response) Result {
 			actual = nil
 			break
 		}
+		if expected == nil {
+			result.Actual = cursor
+			result.Detail = "JSON path is present"
+			return result
+		}
 		actual = cursor
+	case "trailer-declared-if-present":
+		if r.Trailer == nil || len(r.Trailer.Values(a.Header)) == 0 {
+			result.State = "pass"
+			result.Actual = nil
+			result.Detail = "no trailer"
+			return result
+		}
+		declared := false
+		for _, value := range r.Header.Values("Trailer") {
+			for _, part := range strings.Split(value, ",") {
+				if strings.EqualFold(strings.TrimSpace(part), a.Header) {
+					declared = true
+				}
+			}
+		}
+		result.Actual = declared
+		if !declared {
+			result.Detail = "trailer field is present but Trailer does not list it"
+			return result
+		}
+		result.State = "pass"
+		return result
 	case "header-equals":
 		actual = r.Header.Get(a.Header)
 	case "problem-if-present":

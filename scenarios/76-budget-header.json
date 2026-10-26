@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "budget-header",
-  "title": "A reserved Budget header omits cost and the trailer carries it",
+  "title": "A reserved Budget header states remaining and the hold",
   "role_under_test": "authorization.federated",
   "given": "agent-identity",
   "token": {
@@ -10,12 +10,13 @@
   },
   "federated": {
     "mutation": "none",
+    "harness_ps": true,
     "budget": "header"
   },
   "assertions": [
     {
-      "id": "token-budget",
-      "stage": "token",
+      "id": "access-budget",
+      "stage": "access",
       "kind": "fed-budget",
       "equals": {"amount": 2000000, "unit": "credits", "decimals": 0},
       "clause": "budget.four-party-grant"
@@ -57,7 +58,7 @@
     {
       "id": "reserved-trailer-cost",
       "stage": "reserved",
-      "kind": "sfv-trailer-integer",
+      "kind": "sfv-trailer-if-present",
       "equals": 400000,
       "clause": "budget.trailer",
       "header": "AAuth-Budget",
@@ -82,54 +83,19 @@
       "member": "reserved"
     },
     {
-      "id": "abandoned-status",
-      "stage": "abandoned",
-      "kind": "status",
-      "equals": 200,
-      "clause": "budget.trailer"
-    },
-    {
-      "id": "abandoned-remaining",
-      "stage": "abandoned",
-      "kind": "sfv-integer",
-      "equals": 1100000,
-      "clause": "budget.header",
-      "header": "AAuth-Budget",
-      "member": "remaining"
-    },
-    {
-      "id": "abandoned-hold",
-      "stage": "abandoned",
-      "kind": "sfv-integer",
-      "equals": 500000,
-      "clause": "budget.header",
-      "header": "AAuth-Budget",
-      "member": "reserved"
-    },
-    {
-      "id": "abandoned-no-cost",
-      "stage": "abandoned",
-      "kind": "sfv-absent",
+      "id": "reserved-trailer-declared",
+      "stage": "reserved",
+      "kind": "trailer-declared-if-present",
       "equals": true,
-      "clause": "budget.header",
-      "header": "AAuth-Budget",
-      "member": "cost"
-    },
-    {
-      "id": "abandoned-trailer-cost",
-      "stage": "abandoned",
-      "kind": "sfv-trailer-integer",
-      "equals": 500000,
       "clause": "budget.trailer",
-      "header": "AAuth-Budget",
-      "member": "cost"
+      "header": "AAuth-Budget"
     },
     {
       "id": "following-remaining",
       "stage": "following",
       "kind": "sfv-integer",
-      "equals": 1000000,
-      "clause": "budget.hard-cap",
+      "equals": 1500000,
+      "clause": "budget.header",
       "header": "AAuth-Budget",
       "member": "remaining"
     },

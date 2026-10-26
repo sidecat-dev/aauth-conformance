@@ -184,16 +184,19 @@ go run ./cmd/build-adapters -role authorization.federated -go-source /path/to/aa
 go run ./cmd/aauth-conformance -targets build/federated/targets.json -report build/federated-report.json -markdown build/federated-report.md
 ```
 
-This slice has **34 scenarios and 408 assertions per implementation**. Scenarios
-01–49 are the original four-party cases (28 scenarios, 336 assertions). Scenarios
-73 and 74 add the proactive Budget grant and the PS-to-AS omission. Scenario 75
-adds a same-scale consumption record and a different-unit step-up that omits it.
-Scenario 76 reserves a hold, settles part of it in a cost-only trailer, and
-completes an unsettled hold as that same trailer. Scenario 77 charges 1000 on
-a fresh ledger and reads it back from a signed Access Server usage query.
-Scenario 78 spends 1500000 on each of two tokens for one person, then refuses
-a further 1000000 on the first token without lowering its remaining 500000.
-The fixture amounts, paths, and assertion kinds are in `FORMAT.md`. The
+This slice has **34 scenarios and 399 assertions per implementation**. Scenarios
+01–49 are the original four-party cases (28 scenarios, 336 assertions). Scenario
+73 is the native Budget grant: the Resource offers 5000000, the Person Server
+narrows it to 2000000, and the protected call costs 1000. Scenarios 74–78 use
+the harness Person Server. Scenario 74 omits the Budget parameter and requires
+the Access Server to issue no budget claim. Scenario 75 requires a same-scale
+consumption record and checks a different-unit record only when the Resource
+sends one. Scenario 76 reserves a hold and settles part of it; a cost-only
+trailer is graded when present. Scenario 77 charges 1000 and grades the usage
+query as a delta from a baseline read. Scenario 78 spends 1500000 on each of
+two auth tokens, then refuses a further 1000000 on the first token without
+lowering its remaining 500000. The fixture amounts, paths, and assertion kinds
+are in `FORMAT.md`. The
 [four-party report](reports/four-party-authorization.md) records Go `831d55f` and
 Rust `843be82` for the original 28 scenarios. Select those revisions or
 compatible successors; older Rust checkouts without native AS/federation APIs

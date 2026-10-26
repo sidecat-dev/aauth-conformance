@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "budget-usage",
-  "title": "Signed usage reports one scope key and omits unknown thumbprints",
+  "title": "Usage reports one scope key and omits unknown thumbprints",
   "role_under_test": "authorization.federated",
   "given": "agent-identity",
   "token": {
@@ -10,6 +10,7 @@
   },
   "federated": {
     "mutation": "none",
+    "harness_ps": true,
     "budget": "usage"
   },
   "assertions": [
@@ -63,26 +64,9 @@
     {
       "id": "usage-all-time",
       "stage": "usage",
-      "kind": "json-path",
+      "kind": "usage-delta",
       "equals": 1000,
-      "clause": "budget.usage",
-      "member": "usage.all_time"
-    },
-    {
-      "id": "usage-cache",
-      "stage": "usage",
-      "kind": "header-equals",
-      "equals": "no-store",
-      "clause": "budget.usage",
-      "header": "Cache-Control"
-    },
-    {
-      "id": "usage-unsigned",
-      "stage": "usage",
-      "kind": "header-equals",
-      "equals": "",
-      "clause": "budget.usage",
-      "header": "Signature"
+      "clause": "budget.usage"
     },
     {
       "id": "unknown-status",

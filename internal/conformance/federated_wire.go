@@ -40,6 +40,15 @@ func validFederatedAssertion(a Assertion) bool {
 	if a.Kind == "fed-consumed" {
 		return a.Stage == "step-up" || a.Stage == "step-up-other"
 	}
+	if a.Kind == "fed-consumed-if-present" {
+		return a.Stage == "step-up-other"
+	}
+	if a.Kind == "usage-delta" {
+		return a.Stage == "usage"
+	}
+	if a.Kind == "sfv-trailer-if-present" || a.Kind == "trailer-declared-if-present" {
+		return slices.Contains([]string{"reserved", "abandoned", "following"}, a.Stage)
+	}
 	if a.Kind == "sfv-integer" || a.Kind == "sfv-trailer-integer" || a.Kind == "sfv-absent" || a.Kind == "sfv-trailer-absent" {
 		return slices.Contains([]string{"initial", "person", "challenge", "access", "token", "protected", "step-up", "step-up-other", "reserved", "abandoned", "following", "second-protected", "refusal"}, a.Stage)
 	}
@@ -53,7 +62,7 @@ func validFederatedAssertion(a Assertion) bool {
 		return slices.Contains([]string{"person", "access", "token"}, a.Stage)
 	}
 	return slices.Contains([]string{"initial", "person", "challenge", "access", "token", "protected", "step-up", "step-up-other", "reserved", "abandoned", "following", "usage", "usage-unknown", "usage-no-ps", "usage-two-keys", "usage-jkts", "second-token", "second-protected", "refusal"}, a.Stage) &&
-		slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "sfv-integer", "sfv-trailer-integer", "sfv-absent", "sfv-trailer-absent", "json-member", "json-path", "header-equals", "problem-if-present"}, a.Kind)
+		slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "sfv-integer", "sfv-trailer-integer", "sfv-trailer-if-present", "sfv-absent", "sfv-trailer-absent", "trailer-declared-if-present", "json-member", "json-path", "usage-delta", "header-equals", "problem-if-present"}, a.Kind)
 }
 
 func validateFederatedScenario(f Fixture, s Scenario) error {

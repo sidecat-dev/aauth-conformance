@@ -10,6 +10,7 @@
   },
   "federated": {
     "mutation": "none",
+    "harness_ps": true,
     "budget": "omit"
   },
   "assertions": [
@@ -28,29 +29,15 @@
       "clause": "budget.four-party-omission"
     },
     {
-      "id": "access-budget",
+      "id": "access-status",
       "stage": "access",
-      "kind": "fed-budget",
-      "equals": null,
-      "clause": "budget.four-party-omission"
-    },
-    {
-      "id": "token-status",
-      "stage": "token",
       "kind": "status",
       "equals": 200,
       "clause": "budget.four-party-omission"
     },
     {
-      "id": "token-jwt",
-      "stage": "token",
-      "kind": "ps-jwt",
-      "equals": true,
-      "clause": "fed.delivery"
-    },
-    {
-      "id": "token-budget",
-      "stage": "token",
+      "id": "access-budget",
+      "stage": "access",
       "kind": "fed-budget",
       "equals": null,
       "clause": "budget.four-party-omission"

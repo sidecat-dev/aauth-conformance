@@ -334,7 +334,7 @@ where
     if post && route == "/usage" {
         return Ok(BudgetReply::Ready(usage_resource.usage(&request, now)));
     }
-    if route == format!("{path}-budget-grant") || route == format!("{path}-budget-omit") {
+    if route == format!("{path}-budget-grant") {
         return meter_grant(grant, request, now, jti);
     }
     if route == format!("{path}-budget-reserve") {
@@ -686,6 +686,23 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
                     // Each scenario starts here. The ceiling still binds grants
                     // inside the scenario; it does not carry into the next one.
                     ps.clear_outstanding_budgets();
+                    match resource
+                        .authorize(&request, clock.load(Ordering::SeqCst), &next_id())
+                        .into_result()
+                    {
+                        Ok((token, ())) => Response::builder()
+                            .header("content-type", "application/json")
+                            .body(serde_json::to_vec(
+                                &serde_json::json!({"sub":token.claims().sub}),
+                            )?)?,
+                        Err(response) => *response,
+                    }
+                } else if host == resource_host.as_str()
+                    && request.uri().path() == format!("{path}-budget-omit")
+                {
+                    // Not metered. An auth token issued without a budget claim
+                    // still returns the subject. This is inside a scenario, so
+                    // the Person Server ceiling is left as it stands.
                     match resource
                         .authorize(&request, clock.load(Ordering::SeqCst), &next_id())
                         .into_result()

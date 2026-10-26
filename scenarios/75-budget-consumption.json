@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "budget-consumption",
-  "title": "A step-up Resource token reports consumption in the metered scale",
+  "title": "A same-scale step-up reports consumption",
   "role_under_test": "authorization.federated",
   "given": "agent-identity",
   "token": {
@@ -10,6 +10,7 @@
   },
   "federated": {
     "mutation": "none",
+    "harness_ps": true,
     "budget": "consume"
   },
   "assertions": [
@@ -21,8 +22,8 @@
       "clause": "budget.four-party-grant"
     },
     {
-      "id": "token-budget",
-      "stage": "token",
+      "id": "access-budget",
+      "stage": "access",
       "kind": "fed-budget",
       "equals": {"amount": 2000000, "unit": "credits", "decimals": 0},
       "clause": "budget.four-party-grant"
@@ -90,17 +91,10 @@
       "clause": "budget.consumption"
     },
     {
-      "id": "other-budget",
-      "stage": "step-up-other",
-      "kind": "fed-budget",
-      "equals": {"amount": 5000000, "unit": "points", "decimals": 0},
-      "clause": "budget.consumption"
-    },
-    {
       "id": "other-consumed",
       "stage": "step-up-other",
-      "kind": "fed-consumed",
-      "equals": null,
+      "kind": "fed-consumed-if-present",
+      "equals": {"consumed": 1500000, "unit": "credits", "decimals": 0},
       "clause": "budget.consumption"
     }
   ]

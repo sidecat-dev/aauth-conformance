@@ -109,6 +109,42 @@ func TestJSONMemberRequiresPresenceEvenWhenExpectedNull(t *testing.T) {
 	}
 }
 
+// json-path null means the member is absent. A present null is a value.
+func TestJSONPathNullRequiresAbsence(t *testing.T) {
+	a := Assertion{ID: "usage", Clause: "budget.usage", Kind: "json-path", Member: "usage", Equals: json.RawMessage(`null`)}
+	if Check(a, Response{Body: []byte(`{"unit":"credits"}`)}).State != "pass" {
+		t.Fatal("absent path failed")
+	}
+	if Check(a, Response{Body: []byte(`{"usage":null}`)}).State != "fail" {
+		t.Fatal("present null passed")
+	}
+}
+
+// A trailer is optional. Once sent, its cost and Trailer declaration are graded.
+func TestTrailerCostIsOptionalUntilPresent(t *testing.T) {
+	cost := Assertion{ID: "cost", Clause: "budget.trailer", Kind: "sfv-trailer-if-present", Header: "AAuth-Budget", Member: "cost", Equals: json.RawMessage(`400000`)}
+	if Check(cost, Response{}).State != "pass" {
+		t.Fatal("missing trailer failed")
+	}
+	if Check(cost, Response{Trailer: http.Header{"AAuth-Budget": {"cost=1"}}}).State != "fail" {
+		t.Fatal("wrong trailer cost passed")
+	}
+	if Check(cost, Response{Trailer: http.Header{"AAuth-Budget": {"cost=400000"}}}).State != "pass" {
+		t.Fatal("matching trailer cost failed")
+	}
+	declared := Assertion{ID: "declared", Clause: "budget.trailer", Kind: "trailer-declared-if-present", Header: "AAuth-Budget", Equals: json.RawMessage(`true`)}
+	if Check(declared, Response{}).State != "pass" {
+		t.Fatal("missing trailer declaration failed")
+	}
+	if Check(declared, Response{Trailer: http.Header{"AAuth-Budget": {"cost=400000"}}}).State != "fail" {
+		t.Fatal("undeclared trailer passed")
+	}
+	listed := Response{Header: http.Header{"Trailer": {"AAuth-Budget"}}, Trailer: http.Header{"AAuth-Budget": {"cost=400000"}}}
+	if Check(declared, listed).State != "pass" {
+		t.Fatal("declared trailer failed")
+	}
+}
+
 // The draft's required_input list does not prescribe a component order.
 func TestRequiredCoverageIsComparedAsASet(t *testing.T) {
 	a := Assertion{ID: "coverage", Clause: "core.verification", Kind: "sfv-string-set", Header: "Signature-Error", Member: "required_input", Equals: json.RawMessage(`["@method","@authority","@path","signature-key"]`)}

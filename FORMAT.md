@@ -167,11 +167,15 @@ The runner performs the prescribed native exchange in stages:
 
 `federated.harness_ps: true` selects the independent PS driver. It issues the
 fixture Person token itself and signs the AS request with independent Ed25519
-code. Only `initial`, `challenge`, `access` and `protected` stages are permitted;
-native PS endpoints are never called. PS delivery faults (`grant-*`) and native
-PS assertions are rejected for this driver. The ten `fixture-ps-*` scenarios
-measure the native Resource and AS without depending on a native PS. The
-default driver uses the native PS and all stages above.
+code. Native PS endpoints are never called. PS delivery faults (`grant-*`) and
+assertions on `person`, `handoff`, or `token` are rejected. The ten
+`fixture-ps-*` scenarios use only `initial`, `challenge`, `access`, and
+`protected`. Budget scenarios 74–78 use the same driver and may also assert
+`step-up`, `step-up-other`, `reserved`, `following`, `usage`, `usage-unknown`,
+`usage-no-ps`, `usage-two-keys`, `usage-jkts`, `second-token`,
+`second-protected`, and `refusal`. The runner records `usage-baseline` and
+`second-challenge` for later stages and does not grade them. The default
+driver uses the native PS and the stages in the table above.
 
 `fed-challenge` checks the Resource JWT's signature, actual presented JTI,
 PS/person/key context, AS audience, scope and current expiry.
@@ -197,64 +201,91 @@ and any relay error. An absent handoff or relay error fails execution even if
 its clauses are unclaimed. Reported `access` assertions always grade native AS
 output; `token` assertions grade what the native PS actually delivers.
 
-`federated.budget` is omitted, `grant`, or `omit`. Omitted keeps the reactive
-person-token challenge on the fixture path and offers no Budget. `grant` and
-`omit` replace that challenge with one signed `POST {origin}/authorize`. The
-JSON body is `{"scope":"read","budget":{"amount":N,"unit":"credits","decimals":0}}`.
-`grant` and `consume` use amount 5000000. `omit` uses amount 9000000. The
-Resource offers that requested amount unchanged. Its metadata maximum for
-`credits` and for `points`, both at decimals 0, is 10000000. The Person Server
-ceiling for a 5000000 offer is 2000000, and the Access Server echoes that
-ceiling. A 9000000 offer is omitted from the PS-to-AS request, so the auth
-token has no `budget` claim. The protected call uses `{path}-budget-grant` for
-`grant` and `consume`, and `{path}-budget-omit` for `omit`, on the same
-Resource issuer. Only the grant path is metered. With no `X-Fixture-Cost`
-header its cost is 1000, so `remaining` is 1999000. `consume` sends
-`X-Fixture-Cost: 1500000` on `protected`, then `X-Fixture-Cost: 1000000` on
-`step-up`. That second call does not fit. The fresh Resource token offers
-5000000 credits and carries `budget_consumed` for the presented auth-token
-`jti`, with `consumed` 1500000. `step-up-other` repeats the refusal with
-`X-Fixture-Offer: points`. That offer is 5000000 points and omits
-`budget_consumed` because the unit differs from the metered grant. These two
-headers are fixture policy, not protocol fields, and are not covered by the
-signature. The `challenge` stage for these modes is the authorization response
-(`200` and `resource_token`), not the reactive `401`. `fed-budget` compares the
-JWT `budget` object on `challenge`, `access`, `token`, `step-up`,
-`step-up-other`, or `second-token`; `null` requires the claim to be absent. `fed-consumed`
-compares `budget_consumed` on `step-up` or `step-up-other`. An object
-`{"consumed":N}` also requires `jti` to equal the delivered auth token's `jti`.
-`null` requires the claim to be absent. `header` uses the same 5000000 request
-and 2000000 ceiling as `grant`. Its protected calls use `{path}-budget-reserve`.
-`X-Fixture-Hold` is the reservation and `X-Fixture-Settle`, when present, is
-the cost committed after the body. Both are unsigned fixture headers. The
-`reserved` call holds 800000 and settles 400000, so the header is `remaining`
-1200000 and `reserved` 800000 with no `cost`, and the trailer is `cost` 400000
-only. The `abandoned` call holds 500000 and does not settle. A completed
-response still carries trailer `cost` 500000, because the Resource commits the
-hold before finishing the response. The `following` call holds 100000 and
-settles 100000; its header `remaining` 1000000 shows that the abandoned hold
-was already spent. A recipient that never receives a trailer treats the
-reservation as spent; this scenario grades the completed response, which does
-carry the trailer. `sfv-integer` compares one bare integer member of a
-dictionary header. `sfv-absent` requires that member to be missing. The
-`sfv-trailer-integer` and `sfv-trailer-absent` kinds read the trailer instead.
-`usage` charges 1000 on `{path}-budget-usage`, which has its own ledger. The
-harness then `POST`s `{origin}/usage` with an Access Server `jwks_uri` proof.
-The known subject is `directed-person-1` with `ps` `https://person.conformance.test`;
-`usage.all_time` is 1000, `Cache-Control` is `no-store`, and the response is
-unsigned. Subject `unknown-person` omits `usage` and still reports `credits`
-at decimals 0. An Access Server scope key without `ps` is HTTP 400
+`federated.budget` is omitted, `grant`, `omit`, `consume`, `header`, `usage`,
+or `cap`. Omitted keeps the reactive person-token challenge on the fixture path
+and offers no Budget. The other modes replace that challenge with one signed
+`POST {origin}/authorize`. The JSON body is
+`{"scope":"read","budget":{"amount":N,"unit":"credits","decimals":0}}`.
+`grant`, `consume`, `header`, `usage`, and `cap` request 5000000. `omit`
+requests 9000000. The Resource offers that requested amount unchanged. Its
+metadata maximum for `credits` and for `points`, both at decimals 0, is
+10000000. The `challenge` stage for these modes is the authorization response
+(`200` and `resource_token`), not the reactive `401`.
+
+`grant` is the native four-party Budget case. The native Person Server narrows
+a 5000000 offer to 2000000 and the Access Server echoes that amount. The
+protected call uses `{path}-budget-grant`. With no `X-Fixture-Cost` header its
+cost is 1000, so `remaining` is 1999000. Header `cost` is optional in the
+draft; this fixture knows the cost before it writes the header, and the
+scenario grades that header.
+
+`omit`, `consume`, `header`, `usage`, and `cap` set `harness_ps`. The harness
+signs the PS-to-AS request. For `omit` that request has no `budget` member, and
+the auth token must omit the `budget` claim. The protected call uses
+`{path}-budget-omit`, which is not metered, and returns the subject. For
+`consume`, `header`, `usage`, and `cap` the harness request carries
+`{"amount":2000000,"unit":"credits","decimals":0}`. That figure is one
+per-token allocation. Both current Access Servers echo it. The draft permits a
+lower amount; this fixture grades the echo.
+
+`consume` uses `{path}-budget-grant`. It sends `X-Fixture-Cost: 1500000` on
+`protected`, then `X-Fixture-Cost: 1000000` on `step-up`. That second call does
+not fit and does not draw the grant down, so `remaining` stays 500000. The
+fresh Resource token offers 5000000 credits. `fed-consumed` on `step-up`
+requires `budget_consumed`: `jti` equals the presented auth token's `jti`,
+`consumed` is 1500000, and the claim has those two members. `step-up-other`
+repeats the refusal with `X-Fixture-Offer: points`. Those headers are unsigned
+fixture policy. `fed-consumed-if-present` passes when `budget_consumed` is
+absent. When the claim is present, `consumed` must be 1500000, the claim must
+have exactly two members, and that Resource token's `budget` must be `credits`
+at decimals 0. A record stated in another scale fails.
+
+`header` uses `{path}-budget-reserve`. `X-Fixture-Hold` is the reservation and
+`X-Fixture-Settle`, when present, is the cost committed after the body. Both
+are unsigned fixture headers. The `reserved` call holds 800000 and settles
+400000, so the header is `remaining` 1200000 and `reserved` 800000 with no
+`cost`. `sfv-trailer-if-present` passes when the `AAuth-Budget` trailer field
+is absent. When the field is present, `cost` must be 400000.
+`sfv-trailer-absent` still requires `remaining` and `reserved` to be missing
+from a trailer that is present, and passes when no trailer is sent.
+`trailer-declared-if-present` passes when no trailer field is sent. When a
+field is sent, the `Trailer` header must list `AAuth-Budget`. The `following`
+call holds 100000 and settles 100000. Header `remaining` is net of that new
+hold: 2000000 - 400000 - 100000 = 1500000, and `reserved` is 100000. There is
+no abandoned request.
+
+`usage` charges 1000 on `{path}-budget-usage`. Before that charge the harness
+`POST`s `{origin}/usage` as `usage-baseline`, signed as the Access Server
+(`jwks_uri`, access seed, `kid` `as-1`). It repeats the query as `usage` after
+the charge. The known subject is `directed-person-1` with `ps`
+`https://person.conformance.test`. The ledger key is `(ps, sub, aud)`.
+`all_time` is cumulative for that key, including earlier scenarios in the same
+process. `usage-delta` subtracts the baseline `all_time` from the later one.
+An omitted `usage` object on the baseline counts as 0. The later object must
+contain `all_time`, and the difference must be 1000. The response is graded
+for `aud` `https://access.conformance.test`, unit `credits`, and decimals 0.
+Subject `unknown-person` returns 200, omits `usage`, and still reports
+`credits` at decimals 0. An Access Server scope key without `ps` is HTTP 400
 `invalid_request`, as is a body with both `sub` and `tenant`. A `jkts` array
 containing only an unknown thumbprint returns `"jkts":{}` rather than a zero.
-`json-path` walks dot-separated object members. `null` means the member is
-absent. `header-equals` compares one header value; an empty string means the
-header is absent. `cap` uses the grant path and the 2000000 ceiling. It spends
-1500000 on the first auth token, then repeats authorization and the Person
-Server token exchange for a second auth token and spends 1500000 on that token
-too. A following 1000000 on the first token is refused. The first token's
-`remaining` stays 500000, and the second token's `remaining` is also 500000,
-so each grant is its own cap. The relay is reset before the second Person
-Server exchange because it records one Access Server request per case.
+
+`cap` uses `{path}-budget-grant` and the harness allocation. It spends 1500000
+on the first auth token (`remaining` 500000), then repeats authorization. The
+second auth token is another harness Access Server POST with the same 2000000
+allocation. It spends 1500000 on that token. A following 1000000 on the first
+token is refused and leaves that token's `remaining` at 500000. Each auth
+token is its own cap.
+
+`fed-budget` compares the JWT `budget` object on `challenge`, `access`,
+`token`, `step-up`, `step-up-other`, or `second-token`. `null` requires the
+claim to be absent. `fed-consumed` compares `budget_consumed` on `step-up` or
+`step-up-other`. An object `{"consumed":N}` also requires `jti` to equal the
+presented auth token's `jti` and exactly two members. `sfv-integer` compares
+one bare integer member of a dictionary header. `sfv-absent` requires that
+member to be missing. `json-path` walks dot-separated object members. `null`
+means the path is absent; a present value, including JSON null, fails.
+`header-equals` compares one header value; an empty string means the header
+is absent.
 
 ## Deferred four-party profile
 

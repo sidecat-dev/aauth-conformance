@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "budget-hard-cap",
-  "title": "Two grants for one person each cap their own spend",
+  "title": "Two auth tokens each cap their own spend",
   "role_under_test": "authorization.federated",
   "given": "agent-identity",
   "token": {
@@ -10,6 +10,7 @@
   },
   "federated": {
     "mutation": "none",
+    "harness_ps": true,
     "budget": "cap"
   },
   "assertions": [
