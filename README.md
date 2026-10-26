@@ -184,7 +184,7 @@ go run ./cmd/build-adapters -role authorization.federated -go-source /path/to/aa
 go run ./cmd/aauth-conformance -targets build/federated/targets.json -report build/federated-report.json -markdown build/federated-report.md
 ```
 
-This slice has **34 scenarios and 399 assertions per implementation**. Scenarios
+This slice has **34 scenarios and 398 assertions per implementation**. Scenarios
 01–49 are the original four-party cases (28 scenarios, 336 assertions). Scenario
 73 is the native Budget grant: the Resource offers 5000000, the Person Server
 narrows it to 2000000, and the protected call costs 1000. Scenarios 74–78 use

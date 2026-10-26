@@ -83,14 +83,6 @@
       "member": "reserved"
     },
     {
-      "id": "reserved-trailer-declared",
-      "stage": "reserved",
-      "kind": "trailer-declared-if-present",
-      "equals": true,
-      "clause": "budget.trailer",
-      "header": "AAuth-Budget"
-    },
-    {
       "id": "following-remaining",
       "stage": "following",
       "kind": "sfv-integer",

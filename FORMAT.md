@@ -247,9 +247,10 @@ are unsigned fixture headers. The `reserved` call holds 800000 and settles
 `cost`. `sfv-trailer-if-present` passes when the `AAuth-Budget` trailer field
 is absent. When the field is present, `cost` must be 400000.
 `sfv-trailer-absent` still requires `remaining` and `reserved` to be missing
-from a trailer that is present, and passes when no trailer is sent.
-`trailer-declared-if-present` passes when no trailer field is sent. When a
-field is sent, the `Trailer` header must list `AAuth-Budget`. The `following`
+from a trailer that is present, and passes when no trailer is sent. The
+harness reads trailers with the Go HTTP client. That client removes the
+`Trailer` header after parsing and exposes only declared trailer fields, so a
+scenario does not grade the `Trailer` header itself. The `following`
 call holds 100000 and settles 100000. Header `remaining` is net of that new
 hold: 2000000 - 400000 - 100000 = 1500000, and `reserved` is 100000. There is
 no abandoned request.

@@ -120,7 +120,7 @@ func TestJSONPathNullRequiresAbsence(t *testing.T) {
 	}
 }
 
-// A trailer is optional. Once sent, its cost and Trailer declaration are graded.
+// A trailer is optional. Once the client exposes the field, its cost is graded.
 func TestTrailerCostIsOptionalUntilPresent(t *testing.T) {
 	cost := Assertion{ID: "cost", Clause: "budget.trailer", Kind: "sfv-trailer-if-present", Header: "AAuth-Budget", Member: "cost", Equals: json.RawMessage(`400000`)}
 	if Check(cost, Response{}).State != "pass" {
@@ -131,17 +131,6 @@ func TestTrailerCostIsOptionalUntilPresent(t *testing.T) {
 	}
 	if Check(cost, Response{Trailer: http.Header{"AAuth-Budget": {"cost=400000"}}}).State != "pass" {
 		t.Fatal("matching trailer cost failed")
-	}
-	declared := Assertion{ID: "declared", Clause: "budget.trailer", Kind: "trailer-declared-if-present", Header: "AAuth-Budget", Equals: json.RawMessage(`true`)}
-	if Check(declared, Response{}).State != "pass" {
-		t.Fatal("missing trailer declaration failed")
-	}
-	if Check(declared, Response{Trailer: http.Header{"AAuth-Budget": {"cost=400000"}}}).State != "fail" {
-		t.Fatal("undeclared trailer passed")
-	}
-	listed := Response{Header: http.Header{"Trailer": {"AAuth-Budget"}}, Trailer: http.Header{"AAuth-Budget": {"cost=400000"}}}
-	if Check(declared, listed).State != "pass" {
-		t.Fatal("declared trailer failed")
 	}
 }
 

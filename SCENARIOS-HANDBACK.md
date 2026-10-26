@@ -1,6 +1,6 @@
 # Budget scenario hand-back
 
-Scenarios 73–78 grade draft-hardt-aauth-budgets at 70d67375. Scenarios 01–72 are unchanged. The role is still `authorization.federated`, version 1, with no new role. The federated slice is 34 scenarios and 399 assertions. It was 408.
+Scenarios 73–78 grade draft-hardt-aauth-budgets at 70d67375. Scenarios 01–72 are unchanged. The role is still `authorization.federated`, version 1, with no new role. The federated slice is 34 scenarios and 398 assertions. It was 408.
 
 The harness Person Server signs the Access Server request for scenarios 74–78. Scenario 73 is the one native Person Server grant. `gofmt` was run on the edited Go files. `rustfmt` is not installed here; `adapters/rust/src/federation.rs` was checked against the surrounding indent. `go test`, `go build`, and `cargo` were not run.
 
@@ -32,11 +32,11 @@ The Go adapter switches the offer to points and omits the record. The Rust libra
 
 Attaching `budget_consumed` on a refusal is a SHOULD. The same-scale assertion is where the MUST shape is graded: the record's `jti`, its `consumed` value, and the same unit and decimals as the `budget` claim in that Resource token.
 
-### 76 — reserved header (11 assertions)
+### 76 — reserved header (10 assertions)
 
 `harness_ps` is set. The Access Server echo on `access` is 2000000 credits. The reserved call holds 800000 and settles 400000. The header is remaining 1200000, reserved 800000, and no cost.
 
-The cost-only trailer is graded when a trailer field is present: `cost` 400000, and `remaining` and `reserved` absent. When no trailer field is sent, those checks pass. If a trailer field is sent, the `Trailer` header must list `AAuth-Budget`. Both current adapters send the trailer, so they are still graded on its contents.
+The cost-only trailer is graded when a trailer field is present: `cost` 400000, and `remaining` and `reserved` absent. When no trailer field is sent, those checks pass. Both current adapters send the trailer, so they are still graded on its contents. The `Trailer` header itself is not graded. The harness uses the Go HTTP client, which removes that header after parsing and puts only the declared trailer fields on the trailer map. A droplet run of scenarios 01–78 failed `reserved-trailer-declared` on both libraries for that reason, and the assertion was removed.
 
 The following call holds 100000 and settles 100000. Header remaining is net of the new hold: 2000000 - 400000 - 100000 = 1500000, and reserved is 100000. A recipient that never saw the trailer can recover its cost as 1200000 + 800000 - 1500000 - 100000 = 400000, because the later remaining reflects the commit, the release, and the new hold.
 
@@ -56,7 +56,7 @@ The usage response is graded for audience `https://access.conformance.test`, uni
 
 - Scenario 74 dropped `token-status`, `token-jwt`, and `token-budget`. The harness Person Server has no `token` stage. `access-status` 200 was added. `access-budget` null stayed.
 - Scenario 75 dropped `token-budget` (replaced by `access-budget`), `other-budget` (a required points offer), and the old `other-consumed` that required the record to be absent.
-- Scenario 76 dropped the five `abandoned` assertions: status 200, remaining 1100000, reserved 500000, cost absent, and trailer cost 500000. The required trailer cost became `sfv-trailer-if-present`. `trailer-declared-if-present` was added. Following remaining changed from 1000000 to 1500000 because the abandoned hold is no longer spent. `token-budget` moved to `access-budget`.
+- Scenario 76 dropped the five `abandoned` assertions: status 200, remaining 1100000, reserved 500000, cost absent, and trailer cost 500000. The required trailer cost became `sfv-trailer-if-present`. Following remaining changed from 1000000 to 1500000 because the abandoned hold is no longer spent. `token-budget` moved to `access-budget`. `reserved-trailer-declared` was added and then removed: the Go client does not retain the `Trailer` header, so the check failed on both libraries after they had declared it.
 - Scenario 77 dropped `usage-cache` (`Cache-Control: no-store`) and `usage-unsigned` (no `Signature` header). `usage-all-time` changed from an absolute `json-path` of 1000 to `usage-delta` of 1000.
 - Scenario 78 dropped no assertion. The second token is issued by the harness.
 
@@ -64,7 +64,7 @@ The usage response is graded for audience `https://access.conformance.test`, uni
 
 Signing a usage response is RECOMMENDED. An absent `Signature` passes, and this harness does not check that a present signature covers `@status`, content-type, content-digest, and `@authority` / `@path`. `Cache-Control: no-store` is required on the 202 pending response, not on the usage query.
 
-A streamed response SHOULD send `reserved` in the header and `cost` in the trailer. A resource that cannot send trailers sends `reserved` alone and passes. When a trailer is sent, it must be cost only, and `Trailer` must list `AAuth-Budget`. A recipient must not treat the trailer as necessary.
+A streamed response SHOULD send `reserved` in the header and `cost` in the trailer. A resource that cannot send trailers sends `reserved` alone and passes. When a trailer is sent, the visible field must be cost only. The draft also says the `Trailer` header must list `AAuth-Budget`. The Go client enforces that by exposing only declared trailer fields, then deletes the header, so the harness cannot grade the header name separately. A recipient must not treat the trailer as necessary.
 
 Whether a call that fails draws down, and whether an unsettled hold is committed in full, is the resource's metering policy. The old abandoned stage committed the whole hold. That is fixture policy, so the stage is gone.
 
