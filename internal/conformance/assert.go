@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"mime"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -105,17 +106,18 @@ func Check(a Assertion, r Response) Result {
 			}
 		}
 	case "sfv-trailer-integer", "sfv-trailer-if-present":
-		if a.Kind == "sfv-trailer-if-present" && (r.Trailer == nil || len(r.Trailer.Values(a.Header)) == 0) {
+		trailer := fieldValues(r.Trailer, a.Header)
+		if a.Kind == "sfv-trailer-if-present" && len(trailer) == 0 {
 			result.State = "pass"
 			result.Actual = nil
 			result.Detail = "no trailer"
 			return result
 		}
-		if r.Trailer == nil || len(r.Trailer.Values(a.Header)) == 0 {
+		if len(trailer) == 0 {
 			result.Detail = "missing trailer"
 			return result
 		}
-		dictionary, err := httpsfv.UnmarshalDictionary(r.Trailer.Values(a.Header))
+		dictionary, err := httpsfv.UnmarshalDictionary(trailer)
 		if err != nil {
 			result.Detail = err.Error()
 			return result
@@ -139,10 +141,7 @@ func Check(a Assertion, r Response) Result {
 	case "sfv-absent", "sfv-trailer-absent":
 		values := r.Header.Values(a.Header)
 		if a.Kind == "sfv-trailer-absent" {
-			values = nil
-			if r.Trailer != nil {
-				values = r.Trailer.Values(a.Header)
-			}
+			values = fieldValues(r.Trailer, a.Header)
 		}
 		if len(values) == 0 {
 			actual = true
@@ -217,4 +216,22 @@ func Check(a Assertion, r Response) Result {
 		result.State = "pass"
 	}
 	return result
+}
+
+// fieldValues returns one field's lines. Header.Values reads only the
+// canonical MIME key, so a trailer map that still uses the wire spelling
+// is visible here too.
+func fieldValues(h http.Header, name string) []string {
+	if h == nil {
+		return nil
+	}
+	if values := h.Values(name); len(values) != 0 {
+		return values
+	}
+	for key, values := range h {
+		if strings.EqualFold(key, name) {
+			return values
+		}
+	}
+	return nil
 }

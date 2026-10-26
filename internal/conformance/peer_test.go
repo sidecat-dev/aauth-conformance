@@ -120,7 +120,8 @@ func TestJSONPathNullRequiresAbsence(t *testing.T) {
 	}
 }
 
-// A trailer is optional. Once the client exposes the field, its cost is graded.
+// A trailer is optional. The map keeps the wire spelling, which is not the
+// canonical MIME key, and a present cost is still graded.
 func TestTrailerCostIsOptionalUntilPresent(t *testing.T) {
 	cost := Assertion{ID: "cost", Clause: "budget.trailer", Kind: "sfv-trailer-if-present", Header: "AAuth-Budget", Member: "cost", Equals: json.RawMessage(`400000`)}
 	if Check(cost, Response{}).State != "pass" {
