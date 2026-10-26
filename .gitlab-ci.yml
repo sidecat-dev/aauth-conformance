@@ -1,0 +1,33 @@
+stages: [verify]
+
+linux-amd64-tests-cross-builds:
+  stage: verify
+  image: golang:1.25
+  tags: [sprint-gen6]
+  script:
+    - test "$(go env GOHOSTARCH)" = amd64
+    - echo "Native tests run on linux/amd64; linux/arm64 is cross-compiled only."
+    - test -z "$(gofmt -l cmd internal adapters/go)"
+    - git diff --check
+    - go vet ./...
+    - go test ./... -count=1
+    - go test -race ./... -count=1
+    - mkdir -p build
+    - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o build/aauth-conformance-linux-amd64 ./cmd/aauth-conformance
+    - CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o build/aauth-conformance-linux-arm64 ./cmd/aauth-conformance
+    - cp "$(go env GOROOT)/LICENSE" build/GO-LICENSE
+  artifacts:
+    name: "aauth-conformance-linux-amd64-arm64-${CI_COMMIT_SHORT_SHA}"
+    paths:
+      - build/aauth-conformance-*
+      - build/GO-LICENSE
+      - LICENSE
+      - THIRD-PARTY-NOTICES.md
+      - README.md
+      - FORMAT.md
+      - ADAPTERS.md
+      - fixture.json
+      - clauses.json
+      - scenarios/
+      - reports/
+    expire_in: 14 days

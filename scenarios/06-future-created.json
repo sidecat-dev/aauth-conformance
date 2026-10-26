@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "id": "future-created",
+  "title": "Future created",
+  "role_under_test": "resource.agent-identity",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300
+  },
+  "request": {
+    "method": "GET",
+    "path": "/whoami",
+    "proof": "jwt",
+    "created_offset": 61,
+    "covered": [
+      "@method",
+      "@authority",
+      "@path",
+      "signature-key"
+    ],
+    "tamper_signature": false
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "core.verification",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "key.clock-skew",
+      "kind": "sfv-token",
+      "equals": "clock_skew",
+      "header": "Signature-Error",
+      "member": "error"
+    },
+    {
+      "id": "problem-type",
+      "clause": "key.response-body",
+      "kind": "problem-if-present",
+      "equals": "clock_skew"
+    }
+  ]
+}

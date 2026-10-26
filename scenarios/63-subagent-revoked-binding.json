@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "id": "subagent-revoked-binding",
+  "title": "Parent-mediated sub-agent: revoked-binding",
+  "role_under_test": "authorization.subagent",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "subagent": {
+    "outcome": "revoked-binding"
+  },
+  "assertions": [
+    {
+      "id": "person-status-0",
+      "stage": "person",
+      "kind": "status",
+      "equals": 200,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "person-subagent-jwt-1",
+      "stage": "person",
+      "kind": "subagent-jwt",
+      "equals": true,
+      "clause": "subagent.identity"
+    },
+    {
+      "id": "pending-subagent-refused-2",
+      "stage": "pending",
+      "kind": "subagent-refused",
+      "equals": true,
+      "clause": "subagent.revocation"
+    },
+    {
+      "id": "pending-subagent-no-token-3",
+      "stage": "pending",
+      "kind": "subagent-no-token",
+      "equals": true,
+      "clause": "subagent.delivery"
+    },
+    {
+      "id": "pending-revocation-status",
+      "stage": "pending",
+      "kind": "status",
+      "equals": 400,
+      "clause": "subagent.revocation"
+    },
+    {
+      "id": "pending-revocation-code",
+      "stage": "pending",
+      "kind": "json-member",
+      "member": "error",
+      "equals": "revoked_presented_token",
+      "clause": "subagent.revocation"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "id": "subagent-depth",
+  "title": "Top-level parent presents a grandchild token to the Person Server",
+  "role_under_test": "authorization.subagent",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 600
+  },
+  "subagent": {
+    "outcome": "depth"
+  },
+  "assertions": [
+    {
+      "id": "person-subagent-refused-0",
+      "stage": "person",
+      "kind": "subagent-refused",
+      "equals": true,
+      "clause": "subagent.depth"
+    },
+    {
+      "id": "person-subagent-no-token-1",
+      "stage": "person",
+      "kind": "subagent-no-token",
+      "equals": true,
+      "clause": "subagent.depth"
+    },
+    {
+      "id": "person-grandchild-status",
+      "stage": "person",
+      "kind": "status",
+      "equals": 400,
+      "clause": "subagent.depth"
+    },
+    {
+      "id": "person-grandchild-code",
+      "stage": "person",
+      "kind": "json-member",
+      "member": "error",
+      "equals": "invalid_subagent_token",
+      "clause": "subagent.depth"
+    }
+  ]
+}

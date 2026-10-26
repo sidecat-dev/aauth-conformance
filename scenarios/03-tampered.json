@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "id": "tampered",
+  "title": "Tampered",
+  "role_under_test": "resource.agent-identity",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300
+  },
+  "request": {
+    "method": "GET",
+    "path": "/whoami",
+    "proof": "jwt",
+    "created_offset": 0,
+    "covered": [
+      "@method",
+      "@authority",
+      "@path",
+      "signature-key"
+    ],
+    "tamper_signature": true
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "core.verification",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "key.invalid-signature",
+      "kind": "sfv-token",
+      "equals": "invalid_signature",
+      "header": "Signature-Error",
+      "member": "error"
+    },
+    {
+      "id": "problem-type",
+      "clause": "key.response-body",
+      "kind": "problem-if-present",
+      "equals": "invalid_signature"
+    }
+  ]
+}

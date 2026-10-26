@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "id": "agent-get",
+  "title": "agent get",
+  "role_under_test": "agent.signing",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300
+  },
+  "request": {
+    "method": "GET",
+    "path": "/whoami",
+    "proof": "sut",
+    "headers": {}
+  },
+  "assertions": [
+    {
+      "id": "input",
+      "clause": "agent.input-profile",
+      "kind": "wire-preserved",
+      "equals": true
+    },
+    {
+      "id": "proof",
+      "clause": "core.agent-signing",
+      "kind": "wire-proof",
+      "equals": true
+    },
+    {
+      "id": "coverage",
+      "clause": "core.agent-coverage",
+      "kind": "wire-covers",
+      "equals": [
+        "@method",
+        "@authority",
+        "@path",
+        "signature-key"
+      ]
+    },
+    {
+      "id": "created",
+      "clause": "core.agent-created",
+      "kind": "wire-created",
+      "equals": 1800000000
+    },
+    {
+      "id": "agent-token",
+      "clause": "core.agent-presentation",
+      "kind": "wire-token",
+      "equals": true
+    }
+  ]
+}
