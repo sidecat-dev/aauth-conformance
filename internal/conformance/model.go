@@ -128,9 +128,10 @@ type Ready struct {
 	URL     string `json:"url"`
 }
 type Response struct {
-	Status int         `json:"status"`
-	Header http.Header `json:"headers"`
-	Body   []byte      `json:"body_base64"`
+	Status  int         `json:"status"`
+	Header  http.Header `json:"headers"`
+	Trailer http.Header `json:"trailers,omitempty"`
+	Body    []byte      `json:"body_base64"`
 }
 type Result struct {
 	Assertion string          `json:"assertion"`

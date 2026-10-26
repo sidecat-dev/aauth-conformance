@@ -12,6 +12,12 @@
       "commit": "69f5ba2647be848feed043fb6d8b0790e43cd0b6",
       "sha256": "b2b43db67a1aa5249d1166589834d44f81e97ea2e6375a07b475115efa196b7d",
       "url": "https://github.com/dickhardt/signature-key/blob/69f5ba2647be848feed043fb6d8b0790e43cd0b6/draft-hardt-httpbis-signature-key.md"
+    },
+    {
+      "id": "budgets",
+      "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
+      "sha256": "f00d34c91576476cdb30b7aa1aa13a0bc9fc1d99fc43b4f0389ccb3e8bf2e150",
+      "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-budgets.md"
     }
   ],
   "clauses": [
@@ -317,6 +323,70 @@
       "section": "Federated Authorization Access: fixed read-only host policy and subject echo",
       "anchor": "fig-federated",
       "scope": "adapter-contract"
+    },
+    {
+      "id": "budget.four-party-grant",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "PS-to-AS Token Request Extensions and Auth Token Extensions",
+      "anchor": "as-token-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.four-party-omission",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "Omission of the PS-to-AS budget parameter is not a grant",
+      "anchor": "as-token-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.hard-cap",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "The Budget Is a Hard Cap",
+      "anchor": "overshoot",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.header",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "AAuth-Budget Response Header",
+      "anchor": "aauth-budget-header",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.trailer",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "Trailer Rules",
+      "anchor": "trailer-rules",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.usage",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "Usage Response",
+      "anchor": "usage-response",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.usage-request",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "Usage Request",
+      "anchor": "usage-request",
+      "scope": "protocol"
+    },
+    {
+      "id": "budget.consumption",
+      "role": "authorization.federated",
+      "source": "budgets",
+      "section": "The Consumption Record",
+      "anchor": "budget-consumed",
+      "scope": "protocol"
     },
     {
       "id": "deferred.pending",

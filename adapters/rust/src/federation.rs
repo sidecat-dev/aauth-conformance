@@ -5,6 +5,7 @@ use aauth_rust_access_server::{
     AccessServer, AuthorizationRequest as AccessRequest, Config as AccessConfig, Decision,
     PolicyError as AccessPolicyError,
 };
+use aauth_rust_budgets::{IssuerPolicy, UnitDeclaration};
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAuthToken,
 };
@@ -13,7 +14,7 @@ use aauth_rust_person_server::{
     AgentIdentity, AuthorizationRequest, Config as PersonConfig, Federation, FederationError,
     Grant, MemoryStore, Person, PersonRequest, PersonServer, Policy, PolicyError, Store,
 };
-use aauth_rust_resource::{PsAuthorizationConfig, PsAuthorizationResource};
+use aauth_rust_resource::{AuthDecision, PsAuthorizationConfig, PsAuthorizationResource};
 use http::{Request, Response};
 use std::{
     io::{Read, Write},
@@ -134,6 +135,235 @@ fn trusted(
 fn ids(prefix: &'static str) -> impl Fn() -> String + Send + Sync {
     let counter = AtomicU64::new(0);
     move || format!("{prefix}-{}", counter.fetch_add(1, Ordering::Relaxed) + 1)
+}
+
+fn declared_unit(name: &str) -> Result<UnitDeclaration, Failure> {
+    Ok(UnitDeclaration::with_max(name, 0, 10_000_000, "")?)
+}
+
+fn declared_units(primary: &str) -> Result<Vec<UnitDeclaration>, Failure> {
+    let secondary = if primary == "credits" {
+        "points"
+    } else {
+        "credits"
+    };
+    Ok(vec![declared_unit(primary)?, declared_unit(secondary)?])
+}
+
+fn open_budget_resource(
+    issuer: String,
+    kid: String,
+    signing_key: SigningKey,
+    scopes: Vec<String>,
+    access_server: &str,
+    keys: Keys,
+    subject: String,
+    person_server: String,
+    units: Vec<UnitDeclaration>,
+    usage: &str,
+    bound: i64,
+    endpoint: bool,
+) -> Result<
+    PsAuthorizationResource<
+        Keys,
+        impl Fn(&VerifiedAuthToken, &Request<Vec<u8>>) -> bool + Send + Sync + use<>,
+    >,
+    Failure,
+> {
+    let mut resource = PsAuthorizationResource::new_federated(
+        PsAuthorizationConfig {
+            issuer: issuer.clone(),
+            signed_origin: issuer,
+            kid,
+            signing_key,
+            scopes,
+        },
+        access_server,
+        keys,
+        move |token: &VerifiedAuthToken, _: &Request<Vec<u8>>| {
+            token.claims().sub == subject && token.claims().ps == person_server
+        },
+    )?;
+    if endpoint {
+        resource = resource.with_authorization_endpoint();
+    }
+    Ok(resource.with_budgets(units, usage, bound, 5_000_000)?)
+}
+
+enum BudgetReply {
+    Ready(Response<Vec<u8>>),
+    Settled {
+        body: Vec<u8>,
+        header: String,
+        trailer: String,
+    },
+    Unknown,
+}
+
+fn fixture_text<'a>(request: &'a Request<Vec<u8>>, name: &str) -> Option<&'a str> {
+    request.headers().get(name)?.to_str().ok()
+}
+
+fn fixture_amount(request: &Request<Vec<u8>>, name: &str) -> Option<i64> {
+    fixture_text(request, name)?.parse().ok()
+}
+
+fn bound_cost(request: Request<Vec<u8>>, cost: i64) -> Result<Request<Vec<u8>>, Failure> {
+    let (mut parts, body) = request.into_parts();
+    parts
+        .headers
+        .insert("aauth-max-cost", cost.to_string().parse()?);
+    Ok(Request::from_parts(parts, body))
+}
+
+fn subject_body(token: &VerifiedAuthToken) -> Result<Vec<u8>, Failure> {
+    Ok(serde_json::to_vec(
+        &serde_json::json!({"sub": token.claims().sub}),
+    )?)
+}
+
+fn subject_response(
+    token: &VerifiedAuthToken,
+    budget: Option<&str>,
+) -> Result<Response<Vec<u8>>, Failure> {
+    let mut response = Response::builder()
+        .header("content-type", "application/json")
+        .body(subject_body(token)?)?;
+    if let Some(budget) = budget {
+        response
+            .headers_mut()
+            .insert("aauth-budget", budget.parse()?);
+    }
+    Ok(response)
+}
+
+fn granted_reply(decision: AuthDecision<()>) -> Result<BudgetReply, Failure> {
+    match decision {
+        AuthDecision::Granted(value) => {
+            let budget = value.budget_header().map(str::to_owned);
+            let (token, ()) = value.into_parts();
+            Ok(BudgetReply::Ready(subject_response(
+                &token,
+                budget.as_deref(),
+            )?))
+        }
+        other => Ok(BudgetReply::Ready(other.into_response())),
+    }
+}
+
+fn meter_grant<P>(
+    grant: &PsAuthorizationResource<Keys, P>,
+    request: Request<Vec<u8>>,
+    now: i64,
+    jti: &str,
+) -> Result<BudgetReply, Failure>
+where
+    P: Fn(&VerifiedAuthToken, &Request<Vec<u8>>) -> bool,
+{
+    let switched = fixture_text(&request, "x-fixture-offer") == Some("points");
+    if switched {
+        grant.replace_budget_units(declared_units("points")?)?;
+    }
+    let decision: Result<AuthDecision<()>, Failure> = (|| {
+        let cost = fixture_amount(&request, "x-fixture-cost").unwrap_or(1_000);
+        let request = bound_cost(request, cost)?;
+        Ok(grant.authorize(&request, now, jti))
+    })();
+    if switched {
+        grant.replace_budget_units(declared_units("credits")?)?;
+    }
+    granted_reply(decision?)
+}
+
+fn meter_reserve<P>(
+    resource: &PsAuthorizationResource<Keys, P>,
+    request: Request<Vec<u8>>,
+    now: i64,
+    jti: &str,
+) -> Result<BudgetReply, Failure>
+where
+    P: Fn(&VerifiedAuthToken, &Request<Vec<u8>>) -> bool,
+{
+    let request = if let Some(hold) = fixture_amount(&request, "x-fixture-hold") {
+        bound_cost(request, hold)?
+    } else {
+        request
+    };
+    match resource.authorize_reserved(&request, now, jti) {
+        AuthDecision::Held(held) => {
+            let preview = resource
+                .budget_stream_header(held.reservation())
+                .map_err(|error| format!("budget header: {error:?}"))?;
+            let settle =
+                fixture_amount(&request, "x-fixture-settle").unwrap_or(held.admitted_maximum());
+            resource
+                .budget_commit(held.reservation(), settle, now)
+                .map_err(|error| format!("budget commit: {error:?}"))?;
+            let (_, _, field) = resource
+                .budget_trailer(&preview, settle)
+                .map_err(|error| format!("budget trailer: {error:?}"))?;
+            Ok(BudgetReply::Settled {
+                body: subject_body(held.token())?,
+                header: preview,
+                trailer: field,
+            })
+        }
+        other => granted_reply(other),
+    }
+}
+
+fn budget_request<P>(
+    request: Request<Vec<u8>>,
+    path: &str,
+    now: i64,
+    jti: &str,
+    grant: &PsAuthorizationResource<Keys, P>,
+    reserve: &PsAuthorizationResource<Keys, P>,
+    usage_resource: &PsAuthorizationResource<Keys, P>,
+) -> Result<BudgetReply, Failure>
+where
+    P: Fn(&VerifiedAuthToken, &Request<Vec<u8>>) -> bool,
+{
+    let route = request.uri().path().to_owned();
+    let post = request.method() == http::Method::POST;
+    if post && route == "/authorize" {
+        return Ok(BudgetReply::Ready(
+            grant.authorize_endpoint(&request, now, jti).into_response(),
+        ));
+    }
+    if post && route == "/usage" {
+        return Ok(BudgetReply::Ready(usage_resource.usage(&request, now)));
+    }
+    if route == format!("{path}-budget-grant") {
+        return meter_grant(grant, request, now, jti);
+    }
+    if route == format!("{path}-budget-reserve") {
+        return meter_reserve(reserve, request, now, jti);
+    }
+    if route == format!("{path}-budget-usage") {
+        return granted_reply(usage_resource.authorize(&request, now, jti));
+    }
+    Ok(BudgetReply::Unknown)
+}
+
+fn write_settled(
+    mut writer: impl Write,
+    body: &[u8],
+    header: &str,
+    trailer: &str,
+) -> Result<(), Failure> {
+    if header.contains(['\r', '\n']) || trailer.contains(['\r', '\n']) {
+        return Err("budget field contains a line break".into());
+    }
+    write!(
+        writer,
+        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAAuth-Budget: {header}\r\nTrailer: AAuth-Budget\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n{len:x}\r\n",
+        len = body.len()
+    )?;
+    writer.write_all(body)?;
+    write!(writer, "\r\n0\r\nAAuth-Budget: {trailer}\r\n\r\n")?;
+    writer.flush()?;
+    Ok(())
 }
 
 pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
@@ -271,6 +501,16 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
     } else {
         access
     };
+    let ps = ps.with_budgets(
+        IssuerPolicy::capped(2_000_000, vec![declared_unit("credits")?]).omit_above(5_000_000),
+    )?;
+    let access = access.with_budgets(IssuerPolicy::echo())?;
+    let budget_issuer = resource_issuer.clone();
+    let budget_kid = config.resource_kid.clone();
+    let budget_scopes = config.permitted_scopes.clone();
+    let budget_subject = config.person_subject.clone();
+    let budget_person = config.person_server.clone();
+    let budget_keys = keys.clone();
     let subject = config.person_subject;
     let person_server = config.person_server.clone();
     let resource = PsAuthorizationResource::new_federated(
@@ -287,9 +527,57 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
             token.claims().sub == subject && token.claims().ps == person_server
         },
     )?;
+    let usage_endpoint = format!("{budget_issuer}/usage");
+    let access_server = config.access_server.clone();
+    let credits = declared_units("credits")?;
+    let grant = open_budget_resource(
+        budget_issuer.clone(),
+        budget_kid.clone(),
+        signing_key(&config.resource_seed_hex)?,
+        budget_scopes.clone(),
+        &access_server,
+        budget_keys.clone(),
+        budget_subject.clone(),
+        budget_person.clone(),
+        credits.clone(),
+        &usage_endpoint,
+        1_500_000,
+        true,
+    )?;
+    let reserve_meter = open_budget_resource(
+        budget_issuer.clone(),
+        budget_kid.clone(),
+        signing_key(&config.resource_seed_hex)?,
+        budget_scopes.clone(),
+        &access_server,
+        budget_keys.clone(),
+        budget_subject.clone(),
+        budget_person.clone(),
+        credits.clone(),
+        &usage_endpoint,
+        2_000_000,
+        false,
+    )?;
+    let usage_meter = open_budget_resource(
+        budget_issuer,
+        budget_kid,
+        signing_key(&config.resource_seed_hex)?,
+        budget_scopes,
+        &access_server,
+        budget_keys,
+        budget_subject,
+        budget_person,
+        credits,
+        &usage_endpoint,
+        1_000,
+        false,
+    )?;
     let ps = Arc::new(ps);
     let access = Arc::new(access);
     let resource = Arc::new(resource);
+    let grant = Arc::new(grant);
+    let reserve_meter = Arc::new(reserve_meter);
+    let usage_meter = Arc::new(usage_meter);
     let resource_path = Arc::new(target.path().to_owned());
     let ps_authority = Arc::new(
         config
@@ -322,6 +610,8 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
         #[cfg(feature = "deferred")]
         let host_control = host_control.clone();
         let (ps, access, resource) = (ps.clone(), access.clone(), resource.clone());
+        let (grant, reserve_meter, usage_meter) =
+            (grant.clone(), reserve_meter.clone(), usage_meter.clone());
         let (clock, store) = (clock.clone(), store.clone());
         let person_issuer = config.person_server.clone();
         let fixture_now = config.now;
@@ -393,6 +683,9 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
                 } else if host == as_host.as_str() {
                     access.handle(&request)
                 } else if host == resource_host.as_str() && request.uri().path() == path.as_str() {
+                    // Each scenario starts here. The ceiling still binds grants
+                    // inside the scenario; it does not carry into the next one.
+                    ps.clear_outstanding_budgets();
                     match resource
                         .authorize(&request, clock.load(Ordering::SeqCst), &next_id())
                         .into_result()
@@ -403,6 +696,44 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
                                 &serde_json::json!({"sub":token.claims().sub}),
                             )?)?,
                         Err(response) => *response,
+                    }
+                } else if host == resource_host.as_str()
+                    && request.uri().path() == format!("{path}-budget-omit")
+                {
+                    // Not metered. An auth token issued without a budget claim
+                    // still returns the subject. This is inside a scenario, so
+                    // the Person Server ceiling is left as it stands.
+                    match resource
+                        .authorize(&request, clock.load(Ordering::SeqCst), &next_id())
+                        .into_result()
+                    {
+                        Ok((token, ())) => Response::builder()
+                            .header("content-type", "application/json")
+                            .body(serde_json::to_vec(
+                                &serde_json::json!({"sub":token.claims().sub}),
+                            )?)?,
+                        Err(response) => *response,
+                    }
+                } else if host == resource_host.as_str() {
+                    match budget_request(
+                        request,
+                        &path,
+                        clock.load(Ordering::SeqCst),
+                        &next_id(),
+                        &grant,
+                        &reserve_meter,
+                        &usage_meter,
+                    )? {
+                        BudgetReply::Ready(response) => response,
+                        BudgetReply::Settled {
+                            body,
+                            header,
+                            trailer,
+                        } => {
+                            write_settled(incoming.into_writer(), &body, &header, &trailer)?;
+                            return Ok(());
+                        }
+                        BudgetReply::Unknown => Response::builder().status(404).body(Vec::new())?,
                     }
                 } else {
                     Response::builder().status(404).body(Vec::new())?

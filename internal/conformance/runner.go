@@ -47,7 +47,7 @@ func Exchange(ctx context.Context, logical *http.Request, transport string, time
 	if len(body) > 65536 {
 		return Response{}, fmt.Errorf("response exceeds 64 KiB")
 	}
-	return Response{Status: response.StatusCode, Header: response.Header.Clone(), Body: body}, nil
+	return Response{Status: response.StatusCode, Header: response.Header.Clone(), Trailer: response.Trailer.Clone(), Body: body}, nil
 }
 func startAP(f Fixture) (string, func(), error) {
 	key := publicJWK(f.APSeed)

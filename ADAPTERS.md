@@ -220,6 +220,18 @@ endpoint resolution and transport. The build helper includes the Rust AS crate
 and enables the launcher's `federation` feature only for this role, leaving the
 other roles buildable against earlier native APIs.
 
+Budget scenarios use the same listener. `POST /authorize` is the Resource
+authorization endpoint and `POST /usage` is the usage query. Protected paths
+are `{path}-budget-grant` (metered), `{path}-budget-omit` (not metered; an
+auth token with no budget claim still returns the subject),
+`{path}-budget-reserve` (a header reservation and an optional cost-only
+trailer), and `{path}-budget-usage` (metered on the usage ledger). The unsigned
+fixture headers are `X-Fixture-Cost`, `X-Fixture-Offer`, `X-Fixture-Hold`, and
+`X-Fixture-Settle`. Declared units are `credits` and `points`, both decimals 0,
+with metadata maximum 10000000. When the harness Person Server allocates, it
+sends `budget.amount` 2000000 in `credits`. The adapter does not read
+`budget_units` or `usage_endpoint` metadata; those two paths are fixed.
+
 ## Deferred four-party authorization
 
 `role: "authorization.deferred"` uses the four-party fixture and native role
