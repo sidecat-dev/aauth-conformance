@@ -527,3 +527,50 @@ records the person's allow, without a reason, on the held act (Go
 `{"advance":true}` polls the supervisor once (`AdvanceSupervision`,
 `advance_supervision`); `{"deliver":true}` delivers queued events
 (`DeliverSupervisionEvents`, `deliver_supervision`).
+
+## Community aauth-go launcher
+
+`build-adapters -community-source DIR` compiles `adapters/community-go`
+against a checkout of the community module `github.com/aauth-dev/aauth-go`
+(tested at v0.3.0, commit `5aff16d`); the target id is `aauth-go-community`.
+Every source file in that directory is compiled, and each role file registers
+its launcher; a role with no registration is refused at startup. The launcher
+uses only the module's exported API, with the fixture's fixed clock wherever
+the API takes one.
+
+- `resource.agent-identity`: `ResourceGuard` at `AccessAgent`, with a
+  `StaticResolver` holding the fixture AP's published JWKS.
+- `agent.signing`: `AttachSignatureKey` and `SignRequest` on the control
+  job's request. `SignRequest` takes `created` from the wall clock and has no
+  clock input, so `core.agent-created` is not claimed for this target.
+- `person-server.direct`: `personserver.New` at `/person` and `/token`, with
+  `MemoryStore`, a `Decider` that binds the agent to the fixture person and
+  refuses scopes outside the fixture policy (host code `access_denied`), and
+  static resolvers for the AP, the fixture Resource and the PS's own key. The
+  module derives directed subjects itself, so the configured-subject adapter
+  contract (`ps.host-person-profile`) is not claimed.
+- `authorization.federated`: the module's `personserver.Server` (federating
+  through `accessserver.NewClient`), `accessserver.Server` and a Resource,
+  routed by received Host. The Resource is composed from the exported
+  functions `ResourceGuard` itself calls (`ParseSignatureKey`,
+  `VerifyAndExtract*`, `IssueResourceToken`, the challenge helpers and
+  `WriteSignatureFailure`), because the guard issues resource tokens at the
+  wall clock while `IssueResourceToken` takes the fixture clock. The AS's own
+  metadata request is answered in process by the native AS; signed token
+  requests go through `federation_transport`. The module's server signer
+  also takes `created` from the wall clock, so under the fixture clock the
+  native AS refuses the native PS's request as stale; scenarios that use the
+  native PS cannot complete for this target. The independent-PS scenarios
+  are unaffected. The module has no Budgets, so the budget clauses are not
+  claimed.
+- `mission.person-server` and `mission.resource`: the module's mission,
+  permission and audit endpoints with an approval policy that approves as
+  proposed and sets `expires_at` from the `expires_in` control; approval is
+  immediate, so `approve` is refused and `install` changes nothing.
+
+Declared unavailable for this target (`cmd/build-adapters/community.go`): the
+Events, R3 and Supervision roles (the module does not implement those
+drafts) and `authorization.subagent`, whose host control advances PS-to-AS
+polling once per reference; the module's PS polls its AS on each Agent poll.
+`authorization.deferred` is not run for this target for the same reason, and
+because the module's AS never answers 402 itself.
