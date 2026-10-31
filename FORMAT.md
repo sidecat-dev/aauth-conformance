@@ -627,6 +627,7 @@ The launcher answers 200 with a normalized result (`accepted`, and per kind
 or 501 `{"not_offered":"..."}` when the library has no public function for
 the case. `unoffered` lists result members the library cannot produce.
 `vector-result` compares the result member named by `member` with `equals`;
+`vector-result-not` passes unless that member holds `equals`;
 a not-offered kind or member is `not_exercised`, never a pass. The case's
 result object is kept as the report's case `evidence`.
 
@@ -641,6 +642,8 @@ Expectations come from the drafts, not from the vectors. Where they differ:
 | a changed body with the original Content-Digest refused | `out-of-slice`, recorded | no pinned MUST checks the digest against the body |
 | a JWT without `iat` refused; a person token carrying `scope` refused | `out-of-slice`, recorded | lines 2307 and 898 bind the issuer; no verification step names the refusal |
 | thumbprint of a JWK without `alg` | `out-of-slice`, recorded | every AAuth key carries `alg` (line 2170) |
+| resource, auth and person tokens whose `aud` is a one-element array verify | `out-of-slice`, recorded | the drafts define `aud` as one URL (lines 742, 850, 867) and verify per RFC 7519 (line 2313), whose `aud` may be an array; the array form is not settled |
+| `sig1=hwk;..., sig=jwt;jwt="...";cache` yields the token | no `unsupported_scheme` (`vector-result-not`) | the vector's JWT carries `cache` without `jti`, which signature-key line 538 forbids, so acceptance is not fixed; the unselected `hwk` member still must not cause a refusal (line 157) |
 | agent-identifier `name`, `discriminator`, `domain` | not graded | parsed fields are an API choice; validity is graded |
 | metadata documents round-trip through Go types | accepted | the verifier-side check (line 1981) and REQUIRED members |
 

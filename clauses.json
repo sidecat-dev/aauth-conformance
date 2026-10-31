@@ -1658,7 +1658,7 @@
       "role": "vectors.library",
       "id": "vector.sigkey.select",
       "source": "core",
-      "section": "Verification (Server) step 4, line 2247 (the server MUST perform the steps, line 2242), with signature-key lines 138-148 and 157: select the Dictionary member for the verified label and read its scheme; a member the verifier did not select MUST NOT cause a refusal",
+      "section": "Verification (Server) step 4, line 2247 (the server MUST perform the steps, line 2242), with signature-key lines 138-148 and 157: select the Dictionary member for the verified label and read its scheme; a member the verifier did not select MUST NOT cause a refusal (graded as no unsupported_scheme when the selected member's JWT is itself not acceptable)",
       "anchor": "verification",
       "scope": "protocol"
     },
@@ -1693,6 +1693,14 @@
       "section": "Signature Algorithms line 2166 (every party MUST support Ed25519) and Common JWT Verification lines 2311-2318: an Ed25519 token whose typ, dwk, key, exp and iss check out verifies",
       "anchor": "signature-algorithms",
       "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.aud-array",
+      "source": "core",
+      "section": "Not graded: these tokens carry aud as a one-element JSON array. The drafts define aud as one URL (lines 742, 850, 867) and verify per RFC 7519 (line 2313), whose aud may be an array, without settling whether the array form must be accepted",
+      "anchor": "common-verification",
+      "scope": "out-of-slice"
     },
     {
       "role": "vectors.library",

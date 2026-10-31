@@ -100,6 +100,14 @@ func TestVectorRequestAndGrading(t *testing.T) {
 	if got := vectorGrade(a, VectorOutcome{Values: map[string]any{"accepted": false, "code": "invalid_signature"}}); got.State != "pass" {
 		t.Fatalf("matching code graded %s", got.State)
 	}
+	not := Assertion{ID: "n", Clause: "c", Kind: "vector-result-not", Member: "code", Equals: json.RawMessage(`"unsupported_scheme"`)}
+	for values, want := range map[string]string{`{"accepted":false,"code":"unsupported_scheme"}`: "fail", `{"accepted":false,"code":"invalid_jwt"}`: "pass", `{"accepted":true}`: "pass"} {
+		var parsed map[string]any
+		json.Unmarshal([]byte(values), &parsed)
+		if got := vectorGrade(not, VectorOutcome{Values: parsed}); got.State != want {
+			t.Fatalf("%s graded %s, want %s", values, got.State, want)
+		}
+	}
 	if _, err := vectorDecodeOutcome(Response{Status: 501, Body: []byte(`{}`)}); err == nil {
 		t.Fatal("501 without a reason accepted")
 	}

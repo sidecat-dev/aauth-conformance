@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "vector.signature-key.03",
-  "title": "Community vector signature-key #3: sig1=hwk;kty=\"OKP\", sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5In0.e30.c2ln\";...",
+  "title": "Community vector signature-key #3: sig1=hwk;kty=\"OKP\", sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5In0.e30.c2ln\";... (the vector's JWT carries cache but no jti (signature-key line 538), so acceptance is not fixed; graded: the unselected hwk member causes no unsupported_scheme)",
   "role_under_test": "vectors.library",
   "given": "agent-identity",
   "input": {
@@ -21,18 +21,11 @@
   },
   "assertions": [
     {
-      "id": "selected",
+      "id": "unselected-ignored",
       "clause": "vector.sigkey.select",
-      "kind": "vector-result",
-      "member": "accepted",
-      "equals": true
-    },
-    {
-      "id": "jwt",
-      "clause": "vector.sigkey.select",
-      "kind": "vector-result",
-      "member": "jwt",
-      "equals": "eyJhbGciOiJFZDI1NTE5In0.e30.c2ln"
+      "kind": "vector-result-not",
+      "member": "code",
+      "equals": "unsupported_scheme"
     }
   ]
 }

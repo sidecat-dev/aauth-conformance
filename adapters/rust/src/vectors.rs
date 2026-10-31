@@ -200,11 +200,15 @@ fn requirement(input: &Input) -> Result<Value, Failure> {
             let response = response.body(framing.body.as_bytes().to_vec())?;
             match PendingResponse::parse(&framing.endpoint, &response) {
                 Ok(pending) => Ok(match pending.requirement {
-                    Pending::Interaction { url, code } => json!({"accepted": true, "requirement": "interaction", "url": url, "interaction_code": code}),
+                    Pending::Interaction { url, code } => {
+                        json!({"accepted": true, "requirement": "interaction", "url": url, "interaction_code": code})
+                    }
                     Pending::Approval => json!({"accepted": true, "requirement": "approval"}),
                     other => json!({"accepted": true, "requirement": format!("{other:?}")}),
                 }),
-                Err(error) => Ok(json!({"accepted": false, "requirement": value, "error": format!("{error:?}")})),
+                Err(error) => Ok(
+                    json!({"accepted": false, "requirement": value, "error": format!("{error:?}")}),
+                ),
             }
         }
         Err(error) => Ok(refused(error)),
@@ -280,10 +284,18 @@ fn jwt(input: &Input) -> Value {
         }
     };
     let verified = match input.typ.as_str() {
-        "aa-agent+jwt" => AgentToken::parse(&input.token).and_then(|t| t.verify(&keys, input.now).map(|_| ())),
-        "aa-person+jwt" => PersonToken::parse(&input.token).and_then(|t| t.verify(&keys, input.now).map(|_| ())),
-        "aa-resource+jwt" => ResourceToken::parse(&input.token).and_then(|t| t.verify(&keys, input.now).map(|_| ())),
-        "aa-auth+jwt" => AuthToken::parse(&input.token).and_then(|t| t.verify(&keys, input.now).map(|_| ())),
+        "aa-agent+jwt" => {
+            AgentToken::parse(&input.token).and_then(|t| t.verify(&keys, input.now).map(|_| ()))
+        }
+        "aa-person+jwt" => {
+            PersonToken::parse(&input.token).and_then(|t| t.verify(&keys, input.now).map(|_| ()))
+        }
+        "aa-resource+jwt" => {
+            ResourceToken::parse(&input.token).and_then(|t| t.verify(&keys, input.now).map(|_| ()))
+        }
+        "aa-auth+jwt" => {
+            AuthToken::parse(&input.token).and_then(|t| t.verify(&keys, input.now).map(|_| ()))
+        }
         other => return json!({"accepted": false, "error": format!("no verifier for typ {other}")}),
     };
     match verified {
@@ -300,7 +312,9 @@ fn http_signature(input: &Input) -> Result<Value, Failure> {
     let request = build_request(&input.request)?;
     let key: Jwk = match serde_json::from_value(input.key.clone()) {
         Ok(key) => key,
-        Err(error) => return Ok(json!({"accepted": false, "stage": "key", "error": error.to_string()})),
+        Err(error) => {
+            return Ok(json!({"accepted": false, "stage": "key", "error": error.to_string()}));
+        }
     };
     let prepared = match PreparedRequest::prepare_with_schemes(
         &request,

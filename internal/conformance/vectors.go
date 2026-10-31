@@ -40,7 +40,7 @@ type VectorSource struct {
 }
 
 func init() {
-	RegisterRole(VectorsRole, ExtensionRole{Kinds: []string{"vector-result"}, Validate: validateVectorScenario, Run: runVectors})
+	RegisterRole(VectorsRole, ExtensionRole{Kinds: []string{"vector-result", "vector-result-not"}, Validate: validateVectorScenario, Run: runVectors})
 }
 
 func validateVectorScenario(f Fixture, s Scenario) error {
@@ -59,8 +59,8 @@ func validateVectorScenario(f Fixture, s Scenario) error {
 		return fmt.Errorf("%s: %w", s.ID, err)
 	}
 	for _, a := range s.Assertions {
-		if a.Kind != "vector-result" {
-			return fmt.Errorf("%s/%s: vector scenarios grade only vector-result", s.ID, a.ID)
+		if a.Kind != "vector-result" && a.Kind != "vector-result-not" {
+			return fmt.Errorf("%s/%s: vector scenarios grade only vector-result and vector-result-not", s.ID, a.ID)
 		}
 		if a.Member == "" || a.Stage != "" || a.Header != "" {
 			return fmt.Errorf("%s/%s: vector-result needs a result member and no stage or header", s.ID, a.ID)
@@ -400,6 +400,18 @@ func vectorGrade(a Assertion, outcome VectorOutcome) Result {
 		return result
 	}
 	actual, present := outcome.Values[a.Member]
+	if a.Kind == "vector-result-not" {
+		// The member must not hold this value; an absent member satisfies it.
+		result.Actual = actual
+		result.State = "pass"
+		var excluded any
+		json.Unmarshal(a.Equals, &excluded)
+		if present && jsonEqual(actual, excluded) {
+			result.State = "fail"
+			result.Detail = a.Member + " holds the excluded value"
+		}
+		return result
+	}
 	if !present {
 		result.State = "fail"
 		result.Detail = "result has no " + a.Member

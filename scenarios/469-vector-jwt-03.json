@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "vector.jwt.03",
-  "title": "Community vector jwt #3: resource token (exact compact bytes (minting) are not graded)",
+  "title": "Community vector jwt #3: resource token (recorded, not graded: aud is a one-element array; the drafts define aud as one URL and verify per RFC 7519 without settling the array form)",
   "role_under_test": "vectors.library",
   "given": "agent-identity",
   "input": {
@@ -46,7 +46,7 @@
   "assertions": [
     {
       "id": "verified",
-      "clause": "vector.jwt.ed25519",
+      "clause": "vector.jwt.aud-array",
       "kind": "vector-result",
       "member": "accepted",
       "equals": true
