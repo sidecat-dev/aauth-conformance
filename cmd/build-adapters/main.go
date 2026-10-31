@@ -25,12 +25,13 @@ func main() {
 func run() error {
 	goSource := flag.String("go-source", "", "aauth-go checkout (required unless -rust-source is supplied)")
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (required unless -go-source is supplied)")
+	communitySource := flag.String("community-source", "", "github.com/aauth-dev/aauth-go checkout, built with adapters/community-go")
 	out := flag.String("out", "build", "build output directory")
 	role := flag.String("role", conformance.ResourceRole, strings.Join(conformance.Roles(), ", "))
 	recommended := flag.Bool("claim-recommended", false, "also claim the role's SHOULD-level (recommended) clauses")
 	flag.Parse()
-	if *goSource == "" && *rustSource == "" {
-		return fmt.Errorf("supply -go-source and/or -rust-source")
+	if *goSource == "" && *rustSource == "" && *communitySource == "" {
+		return fmt.Errorf("supply -go-source, -rust-source and/or -community-source")
 	}
 	root, err := os.Getwd()
 	if err != nil {
@@ -59,7 +60,7 @@ func run() error {
 	if runtime.GOOS == "windows" {
 		suffix = ".exe"
 	}
-	for _, item := range []struct{ id, source string }{{"aauth-go", *goSource}, {"aauth-rust", *rustSource}} {
+	for _, item := range []struct{ id, source string }{{"aauth-go", *goSource}, {"aauth-rust", *rustSource}, {"aauth-go-community", *communitySource}} {
 		if item.source == "" {
 			continue
 		}
@@ -89,7 +90,11 @@ func run() error {
 			return err
 		}
 		binary := filepath.Join(directory, item.id+"-launcher"+suffix)
-		if item.id == "aauth-go" {
+		if item.id == "aauth-go-community" {
+			if err = buildCommunity(root, work, source, binary); err != nil {
+				return err
+			}
+		} else if item.id == "aauth-go" {
 			if err = selectGoRoleSource(root, work, *role); err != nil {
 				return err
 			}
@@ -280,4 +285,27 @@ func rustWorkspaceVersion(source string) string {
 		}
 	}
 	return ""
+}
+
+// buildCommunity compiles adapters/community-go against the selected checkout
+// of the community module. Every source file is included: role files register
+// themselves, and the launcher refuses a role none registered.
+func buildCommunity(root, work, source, binary string) error {
+	files, err := filepath.Glob(filepath.Join(root, "adapters/community-go/*.go"))
+	if err != nil {
+		return err
+	}
+	files = append(files, filepath.Join(root, "adapters/community-go/go.mod"))
+	for _, file := range files {
+		if err := copyFile(file, filepath.Join(work, filepath.Base(file))); err != nil {
+			return err
+		}
+	}
+	if err := command(work, "go", "mod", "edit", "-replace=github.com/aauth-dev/aauth-go="+source); err != nil {
+		return err
+	}
+	if err := command(work, "go", "mod", "tidy"); err != nil {
+		return err
+	}
+	return command(work, "go", "build", "-buildvcs=false", "-o", binary, ".")
 }
