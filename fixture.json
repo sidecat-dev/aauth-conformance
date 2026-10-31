@@ -61,6 +61,11 @@
         "seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
         "kid": "other-1"
       }
+    },
+    "missions": {
+      "other_agent_seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
+      "other_agent_subject": "aauth:other@ap.conformance.test",
+      "description": "# Reconcile invoices\n\nReconcile the March invoices and report the totals."
     }
   }
 }

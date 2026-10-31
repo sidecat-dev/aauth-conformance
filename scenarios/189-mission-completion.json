@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "id": "mission-completion",
+  "title": "Missions: Completion terminates the mission at every PS endpoint",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "completion"
+  },
+  "assertions": [
+    {
+      "id": "action-status-class-0",
+      "stage": "action",
+      "kind": "status-class",
+      "equals": "2xx",
+      "clause": "mission.host-policy"
+    },
+    {
+      "id": "after-update-status-1",
+      "stage": "after-update",
+      "kind": "status",
+      "equals": 403,
+      "clause": "mission.status-error"
+    },
+    {
+      "id": "after-update-json-member-2",
+      "stage": "after-update",
+      "kind": "json-member",
+      "equals": "mission_terminated",
+      "clause": "mission.terminated-rejected",
+      "member": "error"
+    },
+    {
+      "id": "after-update-json-member-3",
+      "stage": "after-update",
+      "kind": "json-member",
+      "equals": "terminated",
+      "clause": "mission.status-error",
+      "member": "mission_status"
+    },
+    {
+      "id": "after-completion-status-4",
+      "stage": "after-completion",
+      "kind": "status",
+      "equals": 403,
+      "clause": "mission.no-reactivation"
+    },
+    {
+      "id": "after-completion-json-member-5",
+      "stage": "after-completion",
+      "kind": "json-member",
+      "equals": "mission_terminated",
+      "clause": "mission.no-reactivation",
+      "member": "error"
+    },
+    {
+      "id": "after-person-status-6",
+      "stage": "after-person",
+      "kind": "status",
+      "equals": 403,
+      "clause": "mission.person-token-verify"
+    },
+    {
+      "id": "after-person-json-member-7",
+      "stage": "after-person",
+      "kind": "json-member",
+      "equals": "mission_terminated",
+      "clause": "mission.status-error",
+      "member": "error"
+    },
+    {
+      "id": "after-person-json-member-8",
+      "stage": "after-person",
+      "kind": "json-member",
+      "equals": "terminated",
+      "clause": "mission.status-error",
+      "member": "mission_status"
+    },
+    {
+      "id": "after-person-mission-no-token-9",
+      "stage": "after-person",
+      "kind": "mission-no-token",
+      "equals": true,
+      "clause": "mission.person-token-verify"
+    }
+  ]
+}

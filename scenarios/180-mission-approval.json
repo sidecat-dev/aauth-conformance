@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "id": "mission-approval",
+  "title": "Missions: Mission approval: identifier, encoding and blob",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "approval"
+  },
+  "assertions": [
+    {
+      "id": "metadata-mission-endpoint-url-0",
+      "stage": "metadata",
+      "kind": "mission-endpoint-url",
+      "equals": true,
+      "clause": "mission.endpoint-url"
+    },
+    {
+      "id": "approval-mission-s256-1",
+      "stage": "approval",
+      "kind": "mission-s256",
+      "equals": true,
+      "clause": "mission.approval-s256"
+    },
+    {
+      "id": "approval-mission-encoded-2",
+      "stage": "approval",
+      "kind": "mission-encoded",
+      "equals": true,
+      "clause": "mission.approval-encoding"
+    },
+    {
+      "id": "approval-mission-blob-3",
+      "stage": "approval",
+      "kind": "mission-blob",
+      "equals": true,
+      "clause": "mission.blob-members"
+    },
+    {
+      "id": "read-mission-served-4",
+      "stage": "read",
+      "kind": "mission-served",
+      "equals": true,
+      "clause": "mission.blob-served"
+    }
+  ]
+}

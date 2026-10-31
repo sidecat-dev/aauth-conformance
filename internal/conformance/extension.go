@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 	"sort"
+	"strings"
 )
 
 // GenericKinds are assertion kinds every extension role may use against an
@@ -203,4 +204,9 @@ func jsonEqual(a, b any) bool {
 	x, _ := json.Marshal(a)
 	y, _ := json.Marshal(b)
 	return string(x) == string(y)
+}
+
+// validSeed reports whether seed is a 32-byte Ed25519 seed in lowercase hex.
+func validSeed(seed string) bool {
+	return len(seed) == 64 && strings.Trim(seed, "0123456789abcdef") == ""
 }

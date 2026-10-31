@@ -448,3 +448,41 @@ listener and both servers' R3 fetches to `r3_transport`. The AS policy grants
 requested permitted scopes and the document's `grantable` operations; the PS
 consents. aauth-rust's Access Server issues no R3 Auth tokens, so the build
 helper declares the Rust target unavailable for this role.
+## Mission roles
+
+`mission.person-server` uses the Person Server bootstrap fields above. The
+launcher serves the native Person Server, announces the fixture Resource path
+for the readiness check (only its physical origin is used) and adds the
+loopback host control `POST /__fixture/mission`. Its members are host inputs
+only: `now_offset` (seconds, shared clock), `expires_in` (the approval policy's
+mission lifetime), `approve` (a pending proposal's `Location`, approved as the
+person) and `install` (`{"s256","agent"}`: record an approved mission for
+issuance). The fixture person approves proposals as proposed, accepts updates
+and completions, grants permissions and grants the `read` scope.
+
+Go configures `personserver.NewPSAuthorization` with `MissionConfig` (an
+immediate `Approve` that copies the proposal and sets `ExpiresAt` from
+`expires_in`, `AcceptUpdate`, `ConfirmPersonAcceptedCompletion`),
+`PermissionConfig`, `AuditConfig` and `testutil.NewMissionStore`. Its approval
+is immediate and retains the mission for issuance itself, so `approve` is
+refused and `install` changes nothing.
+
+Rust configures `PersonServer::new(...).with_missions().with_governance(...)`
+over `MemoryStore`. A proposal is always deferred; `approve` signs the native
+approval POST as the Person Server (`jwks_uri`, covered digest and type) with
+`aauth_rust_signature_key::sign_request` and passes it to `handle`. Because
+`with_missions` retains the approved document in the mission audit and does
+not install an issuance record, `install` reads that document with
+`Store::read_mission_audit` and installs it with
+`MemoryStore::install_approved_mission` for the fixture person, as the crate
+leaves to the host. The native approval takes no expiry, so `expires_in` is
+reported as not offered. The launcher never terminates a mission itself.
+
+`mission.resource` runs the four-party bundle (Go `runFederatedServers`,
+Rust `federation::run`); its federation transport refuses every request
+because the slice stops at the Resource's challenge. Rust's Resource refuses
+mission-bound person tokens unless the host opts in, so this role calls the
+native `with_mission_context`. Go's federated Resource documents that it needs
+no configuration for a mission-bound person token; nothing is added.
+Rust builds both roles with the `mission` feature, which includes
+`federation`, and adds the Access Server and Signature-Key crates.

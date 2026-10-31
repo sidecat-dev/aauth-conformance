@@ -97,10 +97,6 @@ func eventsFixture(f Fixture) (EventsFixture, error) {
 	return e, nil
 }
 
-func validSeed(seed string) bool {
-	return len(seed) == 64 && strings.Trim(seed, "0123456789abcdef") == ""
-}
-
 // eventsStages checks that every assertion names a stage the role observes
 // and that each kind is graded only where the runner has its observation.
 func eventsStages(s Scenario, stages []string, own map[string]string) error {
