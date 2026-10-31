@@ -19,6 +19,10 @@ func init() {
 		conformance.R3FederatedIssuerRole:       "the module implements no R3 (its roadmap lists it as planned)",
 		conformance.SupervisionServerRole:       "the module implements no AAuth Supervision",
 		conformance.SupervisionPersonServerRole: "the module implements no AAuth Supervision",
+		// The profile's host control advances PS-to-AS polling once per
+		// reference; the module's PS polls its AS on each Agent poll and has
+		// no such entry point, and its AS never answers 402 itself.
+		conformance.SubagentRole: "the module's PS polls the Access Server on each Agent poll and offers no host-advanced poll, which this profile's deferred child outcomes require",
 	} {
 		if unavailableRoles[role] == nil {
 			unavailableRoles[role] = map[string]string{}
@@ -32,6 +36,10 @@ func init() {
 	// SignRequest takes created from the wall clock and has no clock input,
 	// so the fixed-clock equality cannot be observed for this signer.
 	communityUnoffered(conformance.AgentRole, "core.agent-created")
+	// The module derives each directed subject itself (personserver
+	// DirectedSubject, an HMAC over resource and person); a host cannot bind
+	// the fixture's configured subject, which this adapter contract names.
+	communityUnoffered(conformance.PersonServerRole, "ps.host-person-profile")
 }
 
 func communityUnoffered(role string, clauses ...string) {
