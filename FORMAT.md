@@ -410,26 +410,32 @@ no `decision`).
 
 The native Person Server is under test with supervision routing every Agent
 to the harness supervisor. The harness is that supervisor, the Agent and its
-Agent Provider. `input.act` is `person_token` or `auth_token` (after a person
-token the supervisor allows); `input.decision` is how the harness supervisor
-answers that act: `allow` (signed; `allow_exp_offset` sets its `exp`),
+Agent Provider. `input.act` is `person_token`, or `auth_token` or
+`mission_proposal` (each after a person token the supervisor allows);
+`input.decision` is how the harness supervisor answers that act: `allow`
+(signed; `allow_exp_offset` sets its `exp`; a proposal is allowed as
+proposed, with its description), `allow-no-description` (proposals only),
 `deny`, `ask`, `defer` (202 with a pending URL; a poll then gets a signed
 allow), `server-error`, `wrong-sdi`, `bad-signature` (another key under the
 supervisor's id), `foreign-signer` (the foreign supervisor's valid signature)
 or `unsigned`. Every other supervision request is allowed. `second_act`
 requests a second person token.
 
-The stages are `person`, `token`, `poll` (the Agent's poll of the Person
+The stages are `person`, `token`, `mission`, `poll` (the Agent's poll of the Person
 Server's pending URL after `ask`, `server-error` or `defer`), `person-again`
 and `deliver`. Host controls answer for the person (`ask`, `server-error`),
 advance a deferred decision once (`defer`) and finally deliver queued events.
 `ps-credential` requires a Person Server token in the stage response that
 verifies under the fixture key; `ps-credential-exp` also requires its `exp`
-no later than the allow's. At stage `deliver`, kinds grade what the
+no later than the allow's. `ps-mission` requires an approved mission whose
+`s256` is the digest of its `mission` bytes and whose description is the one
+allowed. At stage `deliver`, kinds grade what the
 supervisor received, chosen by `member` `selector` or `selector/path`, where
-a selector is `connect`, `decision`, `poll`, `event:<name>` or
-`report:<action>`, with `#n` for the nth: `ss-request-proof` (the Person
+a selector is `connect`, `decision`, `proposal`, `poll`, `event:<name>`,
+`report:<action>` or `mission:<action>`, with `#n` for the nth:
+`ss-request-proof` (the Person
 Server's `jwks_uri` signature, coverage and digest), `ss-request-has` (member
 present and nonempty), `ss-request-equals`, `ss-request-token` (an exact
-forwarded token) and `ss-sdi-distinct` (the first two decision requests
-carry different `sdi`).
+forwarded token), `ss-sdi-distinct` (the first two decision requests carry
+different `sdi`) and `ss-mission-match` (a report's `s256` and `mission` are
+those the Agent received, and the digest matches).
