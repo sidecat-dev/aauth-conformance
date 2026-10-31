@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sync"
 	"time"
 
@@ -95,7 +96,7 @@ func (x *r3Exchanger) send(stage string, request *http.Request, base string) (Re
 		request.Body = io.NopCloser(bytes.NewReader(body))
 	}
 	entry := PersonExchange{Stage: stage, Method: request.Method, URL: request.URL.String(), Headers: request.Header.Clone(), Body: body, SignatureBase: base}
-	response, err := Exchange(x.ctx, request, x.physical, x.timeout)
+	response, err := r3Exchange(x.ctx, request, x.physical, x.timeout)
 	if err != nil {
 		entry.Error = err.Error()
 	} else {
@@ -104,6 +105,39 @@ func (x *r3Exchanger) send(stage string, request *http.Request, base string) (Re
 	}
 	x.c.Exchanges = append(x.c.Exchanges, entry)
 	return response, err
+}
+
+// r3Exchange sends one logical request to the physical launcher as Exchange
+// does, but as an ordinary persistent HTTP/1.1 request: it sends no
+// Connection: close, and closes the idle connection afterwards.
+func r3Exchange(ctx context.Context, logical *http.Request, transport string, timeout time.Duration) (Response, error) {
+	request := logical.Clone(ctx)
+	physical, err := url.Parse(transport)
+	if err != nil {
+		return Response{}, err
+	}
+	request.Host = logical.URL.Host
+	physical.Path, physical.RawPath = logical.URL.Path, logical.URL.RawPath
+	physical.RawQuery, physical.ForceQuery = logical.URL.RawQuery, logical.URL.ForceQuery
+	request.URL = physical
+	connections := &http.Transport{Proxy: nil}
+	defer connections.CloseIdleConnections()
+	client := &http.Client{Timeout: timeout, Transport: connections, CheckRedirect: func(*http.Request, []*http.Request) error {
+		return fmt.Errorf("redirects are not conformance responses")
+	}}
+	response, err := client.Do(request)
+	if err != nil {
+		return Response{}, err
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(io.LimitReader(response.Body, 65537))
+	if err != nil {
+		return Response{}, err
+	}
+	if len(body) > 65536 {
+		return Response{}, fmt.Errorf("response exceeds 64 KiB")
+	}
+	return Response{Status: response.StatusCode, Header: response.Header.Clone(), Trailer: response.Trailer.Clone(), Body: body}, nil
 }
 
 // r3ResourceEvidence is retained in the report next to the exchanges.
@@ -337,6 +371,12 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 					return CompareResult(a, nil, "no execution count")
 				}
 				return CompareResult(a, *evidence.Executions, "")
+			case "r3-single-use":
+				// Single use is exercised only once the approved call has run.
+				if evidence.Executions == nil || *evidence.Executions == 0 {
+					return Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_exercised", Detail: "the approved call never ran, so a second execution was not possible"}
+				}
+				return CompareResult(a, *evidence.Executions == 1, fmt.Sprintf("%v executions", *evidence.Executions))
 			}
 			return CompareResult(a, nil, "unknown R3 assertion kind")
 		}))

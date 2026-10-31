@@ -397,8 +397,11 @@ keys name a defined vocabulary, MCP is advertised), `r3-resource-token`
 each requested one), `r3-per-call-challenge` (401 or 202 `requirement=auth-token`
 whose Resource token names a proposal, the AS and the class Auth token's
 `jti`), `r3-proposal` (exactly the invoked operation and its `record`
-parameter) and `r3-executions` (a count). All but `r3-executions` take boolean
-`equals`. Generic kinds grade any stage's response.
+parameter), `r3-executions` (a count) and `r3-single-use` (one execution after
+the repeat; `not_exercised` when the approved call never ran). All but
+`r3-executions` take boolean `equals`. Generic kinds grade any stage's
+response. R3 exchanges are ordinary persistent HTTP/1.1 requests: unlike the
+other roles' transport they send no `Connection: close`.
 
 `role_under_test: "r3.issuer"` puts a native three-party PS under test. The
 harness is Agent and AP (the PS issues the Person token natively), and the

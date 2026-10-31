@@ -62,8 +62,8 @@
       "id": "executed-once",
       "stage": "executions",
       "clause": "r3.resource.per-call-single-use",
-      "kind": "r3-executions",
-      "equals": 1
+      "kind": "r3-single-use",
+      "equals": true
     }
   ]
 }

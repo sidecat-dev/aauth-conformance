@@ -18,9 +18,9 @@ use aauth_rust_r3::{
     standard_registry,
 };
 use aauth_rust_resource::{
-    AuthDecision, PsAuthorizationConfig, PsAuthorizationResource, R3CallDescription,
-    R3CallResult, R3CallStore, R3CallToken, R3Claim, R3Config, R3DocumentRecord, R3DocumentStore,
-    R3HostError, R3PerCallConfig, R3ProposalRecord, R3StoreError, R3Vocabulary,
+    AuthDecision, PsAuthorizationConfig, PsAuthorizationResource, R3CallDescription, R3CallResult,
+    R3CallStore, R3CallToken, R3Claim, R3Config, R3DocumentRecord, R3DocumentStore, R3HostError,
+    R3PerCallConfig, R3ProposalRecord, R3StoreError, R3Vocabulary,
 };
 use http::{Request, Response};
 use serde::Deserialize;
@@ -297,18 +297,23 @@ fn per_call_config() -> R3PerCallConfig {
     let host = |e: aauth_rust_r3::Error| R3HostError::new(e.to_string());
     R3PerCallConfig {
         present: Box::new(move |request: &Request<Vec<u8>>, _: &Operation| {
-            let presented = PresentedParameter::inline(&record_parameter(request)?).map_err(host)?;
+            let presented =
+                PresentedParameter::inline(&record_parameter(request)?).map_err(host)?;
             Ok(BTreeMap::from([("record".to_owned(), presented)]))
         }),
         describe: Box::new(
-            move |_: &Operation, presented: &BTreeMap<String, PresentedParameter>, _: Option<&str>| {
+            move |_: &Operation,
+                  presented: &BTreeMap<String, PresentedParameter>,
+                  _: Option<&str>| {
                 let record = presented
                     .get("record")
                     .and_then(PresentedParameter::inline_json)
                     .ok_or_else(|| R3HostError::new("record parameter is required"))?;
-                let parameters =
-                    Parameters::new([("record".to_owned(), Parameter::inline(&record).map_err(host)?)])
-                        .map_err(host)?;
+                let parameters = Parameters::new([(
+                    "record".to_owned(),
+                    Parameter::inline(&record).map_err(host)?,
+                )])
+                .map_err(host)?;
                 let shown = String::from_utf8_lossy(&record).into_owned();
                 let display = ProposalDisplay::new(
                     &Display::new(
@@ -376,10 +381,30 @@ fn run_resource(config: &Bootstrap, x: Extension) -> Result<(), Failure> {
     let keys = R3Keys {
         ap: agent_provider(config)?,
         roles: vec![
-            trusted(&resource_issuer, "aauth-resource.json", &x.resource_kid, &own)?,
-            trusted(&x.person_server, "aauth-person.json", &x.person_kid, &x.person_jwk)?,
-            trusted(&x.access_server, "aauth-access.json", &x.access_kid, &x.access_jwk)?,
-            trusted(&x.other_server, "aauth-access.json", &x.other_kid, &x.other_jwk)?,
+            trusted(
+                &resource_issuer,
+                "aauth-resource.json",
+                &x.resource_kid,
+                &own,
+            )?,
+            trusted(
+                &x.person_server,
+                "aauth-person.json",
+                &x.person_kid,
+                &x.person_jwk,
+            )?,
+            trusted(
+                &x.access_server,
+                "aauth-access.json",
+                &x.access_kid,
+                &x.access_jwk,
+            )?,
+            trusted(
+                &x.other_server,
+                "aauth-access.json",
+                &x.other_kid,
+                &x.other_jwk,
+            )?,
         ],
     };
     let tools: Vec<serde_json::Value> = x
@@ -401,9 +426,8 @@ fn run_resource(config: &Bootstrap, x: Extension) -> Result<(), Failure> {
             .collect(),
     };
     let person_server = x.person_server.clone();
-    let policy = move |token: &VerifiedAuthToken, _: &Request<Vec<u8>>| {
-        token.claims().ps == person_server
-    };
+    let policy =
+        move |token: &VerifiedAuthToken, _: &Request<Vec<u8>>| token.claims().ps == person_server;
     let resource = if x.topology == "three-party" {
         PsAuthorizationResource::new(resource_config, keys, policy)?
     } else {
@@ -536,7 +560,8 @@ impl FetchTransport for RelayFetch {
         if Instant::now() >= deadline {
             return Err(io::ErrorKind::TimedOut.into());
         }
-        let destination = origin(&request.uri().to_string()).map_err(|e| io::Error::other(e.to_string()))?;
+        let destination =
+            origin(&request.uri().to_string()).map_err(|e| io::Error::other(e.to_string()))?;
         if destination != self.origin {
             return Err(io::Error::new(
                 io::ErrorKind::PermissionDenied,
@@ -679,7 +704,12 @@ fn run_issuer(config: &Bootstrap, x: Extension) -> Result<(), Failure> {
                     return Err(PolicyError::Denied);
                 }
                 let mut chosen = Vec::new();
-                for operation in request.document.operation_set().operations().map_err(unavailable)? {
+                for operation in request
+                    .document
+                    .operation_set()
+                    .operations()
+                    .map_err(unavailable)?
+                {
                     let value: serde_json::Value =
                         serde_json::from_slice(&operation.json().map_err(unavailable)?)
                             .map_err(unavailable)?;

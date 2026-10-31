@@ -58,7 +58,7 @@ var r3IssuerDocuments = []string{"exact", "altered", "missing"}
 
 func init() {
 	RegisterRole(R3ResourceRole, ExtensionRole{
-		Kinds:    []string{"r3-resource-token", "r3-no-resource-token", "r3-document-digest", "r3-no-document", "r3-document-fields", "r3-document-covers", "r3-vocabularies", "r3-per-call-challenge", "r3-proposal", "r3-executions"},
+		Kinds:    []string{"r3-resource-token", "r3-no-resource-token", "r3-document-digest", "r3-no-document", "r3-document-fields", "r3-document-covers", "r3-vocabularies", "r3-per-call-challenge", "r3-proposal", "r3-executions", "r3-single-use"},
 		Validate: validateR3ResourceScenario,
 		Run:      runR3Resources,
 	})
@@ -178,16 +178,18 @@ func validateR3ResourceScenario(f Fixture, s Scenario) error {
 		if !slices.Contains(stages, a.Stage) {
 			return fmt.Errorf("%s/%s: stage %q is not produced by this input", s.ID, a.ID, a.Stage)
 		}
-		if a.Kind == "r3-executions" {
+		if a.Kind == "r3-executions" || a.Kind == "r3-single-use" {
 			var value any
 			json.Unmarshal(a.Equals, &value)
-			if _, ok := value.(float64); !ok || a.Stage != "executions" {
-				return fmt.Errorf("%s/%s: r3-executions is a count graded on the executions stage", s.ID, a.ID)
+			_, count := value.(float64)
+			_, flag := value.(bool)
+			if a.Stage != "executions" || a.Kind == "r3-executions" && !count || a.Kind == "r3-single-use" && !flag {
+				return fmt.Errorf("%s/%s: %s is graded on the executions stage (a count, or a boolean for single use)", s.ID, a.ID, a.Kind)
 			}
 			continue
 		}
 		if a.Stage == "executions" {
-			return fmt.Errorf("%s/%s: the executions stage carries only r3-executions", s.ID, a.ID)
+			return fmt.Errorf("%s/%s: the executions stage carries only r3-executions and r3-single-use", s.ID, a.ID)
 		}
 		if strings.HasPrefix(a.Kind, "r3-") {
 			if err := requireBoolean(a); err != nil {
