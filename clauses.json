@@ -1799,6 +1799,14 @@
       "scope": "protocol"
     },
     {
+      "id": "sigkey.v.jwt-es256",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Signature Algorithms, lines 2166 and 2175: SHOULD support ES256, RECOMMENDED for hardware-backed keys; an Agent token whose cnf.jwk is ES256 (recommended, claimed only with -claim-recommended)",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
       "id": "sigkey.v.jwt-exp",
       "role": "sigkey.verifier",
       "source": "key",
@@ -1861,6 +1869,14 @@
       "section": "JWT Confirmation Key (jwt), line 536: the jwt parameter is REQUIRED and carries the assertion unchanged; Integrity line 1289; protocol Signature Parameters line 2234 (created is the current time)",
       "anchor": "jwt-confirmation-key-jwt",
       "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.jwt-es256",
+      "role": "sigkey.signer",
+      "source": "core",
+      "section": "Signature Algorithms, line 2166: SHOULD support ES256; a jwt member confirming an ES256 key (recommended)",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
     },
     {
       "id": "sigkey.s.jwks-uri",

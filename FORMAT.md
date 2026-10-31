@@ -615,8 +615,8 @@ public test keys.
 ### `sigkey.verifier`
 
 `input` names `scheme` (`hwk`, `jwt`, `jwks_uri`, `jwks`, `self-jwt`,
-`jkt-jwt` or `x-unregistered`), `alg` (only `hwk` varies it; `ML-DSA-44`
-needs `jwks: pq-only`), `mutation` and an optional `jwks` key set (`mixed`
+`jkt-jwt` or `x-unregistered`), `alg` (`hwk` varies it, `jwt` may confirm
+an `ES256` key, and `ML-DSA-44` needs `jwks: pq-only`), `mutation` and an optional `jwks` key set (`mixed`
 or `pq-only`, for the Agent Provider under `jwt` or the signer under
 `jwks_uri`). The harness serves the Agent Provider, signer and direct JWKS
 documents on loopback, one origin each, and signs one request to the
@@ -634,7 +634,8 @@ defined feedback.
 ### `sigkey.signer`
 
 `input` names `scheme` (`hwk`, `jwt`, `jwks_uri`, `jwks`, `self-jwt` or
-`jkt-jwt`), `alg` (only `hwk` varies it), `method` and `body`. The harness
+`jkt-jwt`), `alg` (`hwk` varies it and `jwt` may confirm an `ES256` key),
+`method` and `body`. The harness
 posts a control job with the fixture key, the target and the credential the
 signer presents (the jwt, self-jwt and jkt-jwt assertions are minted by the
 harness), receives the signed request and verifies it independently.

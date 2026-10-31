@@ -129,8 +129,8 @@ func validateSigkeyVerifier(f Fixture, s Scenario) error {
 	if !slices.Contains(sigkeySchemes, in.Scheme) || !slices.Contains(sigkeyAlgs, in.Alg) || !known || schemes != nil && !slices.Contains(schemes, in.Scheme) {
 		return fmt.Errorf("%s: unsupported sigkey scheme, algorithm or mutation", s.ID)
 	}
-	if in.Alg != "Ed25519" && in.Scheme != "hwk" && !(in.Alg == "ML-DSA-44" && in.JWKS == "pq-only") {
-		return fmt.Errorf("%s: only hwk varies the algorithm; ML-DSA-44 needs a pq-only key set", s.ID)
+	if in.Alg != "Ed25519" && in.Scheme != "hwk" && !(in.Alg == "ES256" && in.Scheme == "jwt" && in.Mutation == "none") && !(in.Alg == "ML-DSA-44" && in.JWKS == "pq-only") {
+		return fmt.Errorf("%s: hwk varies the algorithm, jwt may confirm an ES256 key, and ML-DSA-44 needs a pq-only key set", s.ID)
 	}
 	if in.JWKS != "" && (!slices.Contains([]string{"mixed", "pq-only"}, in.JWKS) || in.Scheme != "jwt" && in.Scheme != "jwks_uri") {
 		return fmt.Errorf("%s: mixed or pq-only key sets apply to the jwt Agent Provider or the jwks_uri signer", s.ID)
@@ -160,8 +160,8 @@ func validateSigkeySigner(f Fixture, s Scenario) error {
 	if !slices.Contains(sigkeySignerSchemes, in.Scheme) || !slices.Contains(sigkeyAlgs[:5], in.Alg) || !slices.Contains([]string{"GET", "POST"}, in.Method) || in.Body && in.Method != "POST" {
 		return fmt.Errorf("%s: unsupported signer scheme, algorithm or method", s.ID)
 	}
-	if in.Alg != "Ed25519" && in.Scheme != "hwk" {
-		return fmt.Errorf("%s: only hwk varies the signer algorithm", s.ID)
+	if in.Alg != "Ed25519" && in.Scheme != "hwk" && !(in.Alg == "ES256" && in.Scheme == "jwt") {
+		return fmt.Errorf("%s: hwk varies the signer algorithm and jwt may confirm an ES256 key", s.ID)
 	}
 	for _, a := range s.Assertions {
 		var value any

@@ -167,7 +167,11 @@ func sigkeyCredential(f Fixture, k SigkeyFixture, in sigkeyVerifierInput, id str
 	case "jwt":
 		header := map[string]any{"alg": "Ed25519", "typ": "aa-agent+jwt", "kid": f.Kid}
 		issuer := sigkeyEd25519(f.APSeed)
-		confirmation, httpKey := agent.public, agent
+		httpKey, err := sigkeyAlgKey(k, in.Alg, f.AgentSeed)
+		if err != nil {
+			return "", nil, agent, err
+		}
+		confirmation := httpKey.public
 		claims := map[string]any{"iss": f.Issuer, "sub": f.Subject, "dwk": "aauth-agent.json", "jti": id, "iat": f.Now - 10, "exp": f.Now + 300}
 		switch in.Mutation {
 		case "alg-eddsa":
