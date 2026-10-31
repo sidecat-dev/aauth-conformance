@@ -363,6 +363,7 @@ func runEventsProvider(ctx context.Context, s Suite, targets Targets, o Options,
 			if eid == "" && len(in.Deliveries) > 0 {
 				return stages, exchanges, own, fmt.Errorf("native subscribe token carries no eid to deliver to")
 			}
+			sent := []*requestRecord{}
 			for i, d := range in.Deliveries {
 				stage := fmt.Sprintf("delivery-%d", i+1)
 				delivery, err := eventsDelivery(f, e, d, eid, s.ID+"-"+stage, stage)
@@ -371,6 +372,25 @@ func runEventsProvider(ctx context.Context, s Suite, targets Targets, o Options,
 				}
 				if err := eventsExchange(ctx, delivery, ready, o, stages, &exchanges); err != nil {
 					return stages, exchanges, own, err
+				}
+				sent = append(sent, delivery)
+			}
+			if in.Pending {
+				control, err := controlRequest("pending", f.Issuer+"/__fixture/pending", map[string]string{})
+				if err != nil {
+					return stages, exchanges, own, err
+				}
+				if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
+					return stages, exchanges, own, err
+				}
+				unchanged, detail, err := observePending(stages, sent)
+				if err != nil {
+					return stages, exchanges, own, err
+				}
+				for _, a := range s.Assertions {
+					if a.Kind == "events-pending" {
+						own[a.ID] = CompareResult(a, unchanged, detail)
+					}
 				}
 			}
 			return stages, exchanges, own, nil
@@ -485,4 +505,50 @@ func runEventsAgent(ctx context.Context, s Suite, targets Targets, o Options, ap
 			}
 			return stages, exchanges, own, nil
 		})
+}
+
+// observePending compares the native AP's retained deliveries for the Agent
+// with what the harness sent: every delivery answered 202 appears once with
+// its exact token and body bytes, and no refused delivery appears.
+func observePending(stages map[string]*Response, sent []*requestRecord) (bool, string, error) {
+	response := stages["pending"]
+	if response.Status != http.StatusOK {
+		return false, "", fmt.Errorf("pending control returned %d: %s", response.Status, strings.TrimSpace(string(response.Body)))
+	}
+	var pending struct {
+		Events []struct {
+			EventToken string `json:"event_token"`
+			Body       string `json:"body"`
+		} `json:"events"`
+	}
+	if err := json.Unmarshal(response.Body, &pending); err != nil {
+		return false, "", err
+	}
+	retained := map[string]string{}
+	for _, event := range pending.Events {
+		if _, repeated := retained[event.EventToken]; repeated {
+			return false, "a delivery is pending twice", nil
+		}
+		retained[event.EventToken] = event.Body
+	}
+	accepted := 0
+	for _, delivery := range sent {
+		value := delivery.request.Header.Get("Signature-Key")
+		token := strings.TrimSuffix(strings.TrimPrefix(value, `sig=self-jwt;jwt="`), `"`)
+		body, present := retained[token]
+		if stages[delivery.stage].Status != http.StatusAccepted {
+			if present {
+				return false, delivery.stage + " was refused but is pending for the Agent", nil
+			}
+			continue
+		}
+		accepted++
+		if !present || body != string(delivery.body) {
+			return false, delivery.stage + " is not pending with its exact token and body", nil
+		}
+	}
+	if accepted != len(retained) {
+		return false, "pending holds deliveries the harness did not send", nil
+	}
+	return true, "", nil
 }

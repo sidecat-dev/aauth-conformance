@@ -48,6 +48,7 @@ type eventsDeliveryInput struct {
 type eventsProviderInput struct {
 	MaxUses    int64                 `json:"max_uses"`
 	Deliveries []eventsDeliveryInput `json:"deliveries"`
+	Pending    bool                  `json:"pending,omitempty"`
 }
 type eventsDeliveryRoleInput struct {
 	MaxUses int64  `json:"max_uses"`
@@ -67,7 +68,7 @@ var (
 
 func init() {
 	RegisterRole(EventsSubscriptionRole, ExtensionRole{Validate: validateEventsSubscription, Run: runEventsSubscription})
-	RegisterRole(EventsProviderRole, ExtensionRole{Kinds: []string{"events-subscribe-token"}, Validate: validateEventsProvider, Run: runEventsProvider})
+	RegisterRole(EventsProviderRole, ExtensionRole{Kinds: []string{"events-subscribe-token", "events-pending"}, Validate: validateEventsProvider, Run: runEventsProvider})
 	RegisterRole(EventsAgentRole, ExtensionRole{Kinds: []string{"events-accepted"}, Validate: validateEventsAgent, Run: runEventsAgent})
 	RegisterRole(EventsDeliveryRole, ExtensionRole{Kinds: []string{"events-delivery"}, Validate: validateEventsDelivery, Run: runEventsDelivery})
 }
@@ -163,7 +164,10 @@ func validateEventsProvider(f Fixture, s Scenario) error {
 		}
 		stages = append(stages, fmt.Sprintf("delivery-%d", i+1))
 	}
-	return eventsStages(s, stages, map[string]string{"events-subscribe-token": "subscribe"})
+	if in.Pending {
+		stages = append(stages, "pending")
+	}
+	return eventsStages(s, stages, map[string]string{"events-subscribe-token": "subscribe", "events-pending": "pending"})
 }
 
 func validateEventsAgent(f Fixture, s Scenario) error {

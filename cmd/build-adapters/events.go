@@ -10,9 +10,10 @@ func init() {
 		rustRoleFeatures[role] = "events"
 		rustRoleCrates[role] = []string{"aauth-rust-agent-provider"}
 	}
-	// agentprovider.EventInboxStore assigns the subscription's Resource and
-	// Agent comparisons and the use count to the host store.
-	unofferedClaims[conformance.EventsProviderRole] = map[string][]string{"aauth-go": {"events.ap.resource-match", "events.ap.audience", "events.ap.max-uses", "events.ap.remaining-uses"}}
+	// agentprovider.EventInboxStore and EventInboxReader assign the
+	// subscription's Resource and Agent comparisons, the use count and the
+	// retained delivery bytes to the host store.
+	unofferedClaims[conformance.EventsProviderRole] = map[string][]string{"aauth-go": {"events.ap.resource-match", "events.ap.audience", "events.ap.max-uses", "events.ap.remaining-uses", "events.ap.unchanged"}}
 	// resource.ProtectedSubscriptionStore consumes a ticket when it commits.
 	unofferedClaims[conformance.EventsSubscriptionRole] = map[string][]string{"aauth-go": {"events.sub.ticket-single-use"}}
 }

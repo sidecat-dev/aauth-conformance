@@ -11,7 +11,8 @@
         "mutation": "body-mismatch",
         "body": true
       }
-    ]
+    ],
+    "pending": true
   },
   "assertions": [
     {
@@ -36,6 +37,13 @@
       "clause": "events.ap.problem-type",
       "kind": "problem-if-present",
       "equals": "invalid_jwt"
+    },
+    {
+      "stage": "pending",
+      "id": "pending-unchanged",
+      "clause": "events.ap.unchanged",
+      "kind": "events-pending",
+      "equals": true
     }
   ]
 }

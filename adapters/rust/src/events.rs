@@ -293,6 +293,26 @@ fn run_provider(config: Bootstrap, extension: Extension) -> Result<(), Failure> 
                     Err(error) => reply(422, serde_json::json!({"error": error.to_string()})),
                 }
             }
+            // The AP-to-Agent read path the host transport uses.
+            ("POST", "/__fixture/pending") => {
+                use aauth_rust_agent_provider::events::EventStore;
+                let pending = inbox.store().pending(&extension.agent).map_err(|e| e.to_string());
+                let listed = pending.and_then(|events| {
+                    events
+                        .into_iter()
+                        .map(|event| {
+                            Ok(serde_json::json!({
+                                "event_token": event.event_token,
+                                "body": String::from_utf8(event.body).map_err(|e| e.to_string())?,
+                            }))
+                        })
+                        .collect::<Result<Vec<_>, String>>()
+                });
+                match listed {
+                    Ok(events) => reply(200, serde_json::json!({"events": events})),
+                    Err(error) => reply(422, serde_json::json!({"error": error})),
+                }
+            }
             _ if path == endpoint.path() => inbox.receive(&request, now).into_response(),
             _ => reply(404, serde_json::json!({"error":"no such fixture path"})),
         };

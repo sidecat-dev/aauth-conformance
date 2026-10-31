@@ -19,7 +19,8 @@
         "mutation": "none",
         "body": false
       }
-    ]
+    ],
+    "pending": true
   },
   "assertions": [
     {
@@ -65,6 +66,13 @@
       "clause": "events.ap.max-uses",
       "kind": "status",
       "equals": 404
+    },
+    {
+      "stage": "pending",
+      "id": "pending-unchanged",
+      "clause": "events.ap.unchanged",
+      "kind": "events-pending",
+      "equals": true
     }
   ]
 }

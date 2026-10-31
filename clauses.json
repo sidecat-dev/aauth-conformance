@@ -913,6 +913,14 @@
       "anchor": "event-delivery",
       "scope": "adapter-contract",
       "role": "events.delivery"
+    },
+    {
+      "id": "events.ap.unchanged",
+      "source": "events",
+      "section": "Event Delivery: AP to Agent, line 456: the AP MUST deliver the body bytes to the Agent unchanged, with the event token; graded on the native retained record the host transport reads",
+      "anchor": "ap-to-agent",
+      "scope": "protocol",
+      "role": "events.agent-provider"
     }
   ]
 }

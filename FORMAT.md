@@ -373,7 +373,7 @@ assertion names a `stage`.
 | Role | `input` | Stages |
 | --- | --- | --- |
 | `events.subscription` | `mutation` (`none`, `expired`, `wrong-aud`, `wrong-typ`, `wrong-dwk`, `empty-eid`, `cnf-mismatch`, `bad-signature`); optional `ticket` (`bound`, `other-key`, `reused`) | `registration`; `ticket` and, for `reused`, `first` |
-| `events.agent-provider` | `max_uses` (0 is unlimited) and up to 8 `deliveries`, each `mutation` and `body` | `metadata`, `subscribe`, `delivery-N` |
+| `events.agent-provider` | `max_uses` (0 is unlimited), up to 8 `deliveries`, each `mutation` and `body`, and optional `pending` | `metadata`, `subscribe`, `delivery-N`, `pending` |
 | `events.agent` | `mutation` and `body` | `event` |
 | `events.delivery` | `max_uses` and `fires`, a list of booleans (with or without a body) | `registration`, `fire-N`, `delivery-N` |
 
@@ -395,7 +395,9 @@ verifies the native subscribe token under the fixture AP key with `typ`
 `aa-subscribe+jwt` and checks `iss`, `dwk`, `sub`, `aud`, `cnf`, nonempty `eid`
 and `jti`, `iat` before an unexpired `exp`, and `max_uses` exactly as
 requested. `events-accepted` (stage `event`, boolean) is the native Agent's
-acceptance as the launcher reports it. `events-delivery` (stage `delivery-N`,
+acceptance as the launcher reports it. `events-pending` (stage `pending`, boolean) requires the
+native AP's retained deliveries for the Agent to hold each `202` delivery once
+with its exact token and body, and no refused one. `events-delivery` (stage `delivery-N`,
 boolean, `member` naming the property) grades a captured delivery with
 independent code: `self-jwt` (an `aa-event+jwt` under the Resource key with
 `iss`, `dwk`, the subscribed Agent as `aud`, `jti`, `iat` and an unexpired

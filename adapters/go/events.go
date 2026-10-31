@@ -421,21 +421,46 @@ func runEventsProvider(config bootstrap, _ signaturekey.StaticKeyResolver) error
 		}
 		eventsReply(w, http.StatusOK, map[string]string{"token": issued.Compact})
 	})
+	// The AP-to-Agent read path the host transport uses (native PendingEvents).
+	mux.HandleFunc("POST /__fixture/pending", func(w http.ResponseWriter, r *http.Request) {
+		pending, err := server.PendingEvents(r.Context(), extension.Agent)
+		if err != nil {
+			eventsReply(w, http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
+			return
+		}
+		list := []map[string]string{}
+		for _, delivery := range pending {
+			list = append(list, map[string]string{"event_token": delivery.Token, "body": string(delivery.Payload)})
+		}
+		eventsReply(w, http.StatusOK, map[string]any{"events": list})
+	})
 	return eventsServe(endpoint.EscapedPath(), mux)
 }
 
-// eventsInboxStore follows agentprovider.EventInboxStore, which assigns the
-// subscription lookup's Resource and Agent comparisons and the use count to
-// the host store. Those duties are therefore not graded for aauth-go.
+// eventsInboxStore follows agentprovider.EventInboxStore and
+// EventInboxReader, which assign the subscription's Resource and Agent
+// comparisons, the use count and the retained bytes to the host store. Those
+// duties are therefore not graded for aauth-go.
 type eventsInboxStore struct {
 	mu            sync.Mutex
 	subscriptions map[string]agentprovider.EventSubscription
 	accepted      map[events.DeliveryFingerprint]agentprovider.EventAcceptance
 	uses          map[string]int64
+	pending       map[string][]agentprovider.EventDelivery
 }
 
 func newEventsInboxStore() *eventsInboxStore {
-	return &eventsInboxStore{subscriptions: map[string]agentprovider.EventSubscription{}, accepted: map[events.DeliveryFingerprint]agentprovider.EventAcceptance{}, uses: map[string]int64{}}
+	return &eventsInboxStore{subscriptions: map[string]agentprovider.EventSubscription{}, accepted: map[events.DeliveryFingerprint]agentprovider.EventAcceptance{}, uses: map[string]int64{}, pending: map[string][]agentprovider.EventDelivery{}}
+}
+
+func (store *eventsInboxStore) PendingEvents(_ context.Context, agent string) ([]agentprovider.EventDelivery, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	return append([]agentprovider.EventDelivery(nil), store.pending[agent]...), nil
+}
+
+func (store *eventsInboxStore) AcknowledgeEvent(context.Context, string, events.DeliveryFingerprint) error {
+	return nil
 }
 
 func (store *eventsInboxStore) CommitSubscription(_ context.Context, record agentprovider.EventSubscription) error {
@@ -473,6 +498,8 @@ func (store *eventsInboxStore) AcceptEvent(_ context.Context, delivery agentprov
 		accepted.RemainingUses = subscription.MaxUses - store.uses[delivery.EventID]
 	}
 	store.accepted[delivery.Fingerprint] = accepted
+	delivery.Payload = append([]byte(nil), delivery.Payload...)
+	store.pending[delivery.Agent] = append(store.pending[delivery.Agent], delivery)
 	return accepted, nil
 }
 

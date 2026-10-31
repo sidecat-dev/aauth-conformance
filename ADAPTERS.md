@@ -392,7 +392,11 @@ aauth-go leaves some Events duties to host stores by its API contract. Its
 `agentprovider.EventInboxStore` compares a delivery's Resource and Agent with
 the subscription and counts uses, so `events.ap.resource-match`,
 `events.ap.audience`, `events.ap.max-uses` and `events.ap.remaining-uses` are
-not claimed for aauth-go: a launcher store would decide them.
+not claimed for aauth-go: a launcher store would decide them. Its
+`EventInboxReader` holds the retained bytes the AP hands to the Agent, so
+`events.ap.unchanged` is not claimed either; `POST /__fixture/pending` calls
+native `PendingEvents` (Rust: `EventStore::pending` on the library's
+`MemoryEventStore`) and answers `{"events":[{"event_token","body"}]}`.
 `resource.ProtectedSubscriptionStore` consumes a ticket on commit, so
 `events.sub.ticket-single-use` is not claimed for aauth-go. The Go launcher's
 stores follow those contracts so the native handlers can run; the protected
