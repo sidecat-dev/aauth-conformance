@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "id": "events-delivery-native-resource",
+  "title": "Native Resource delivers one event with a body and one without",
+  "role_under_test": "events.delivery",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 0,
+    "fires": [
+      true,
+      false
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "registration",
+      "id": "registered",
+      "clause": "events.delivery.registered",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "fire-1",
+      "id": "fired-1",
+      "clause": "events.delivery.fired",
+      "kind": "json-member",
+      "equals": 202,
+      "member": "status"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "self-jwt-1",
+      "clause": "events.delivery.self-jwt",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "self-jwt"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "eid-1",
+      "clause": "events.delivery.eid",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "eid"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "cnf-absent-1",
+      "clause": "events.delivery.cnf-absent",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "cnf-absent"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "body-s256-1",
+      "clause": "events.delivery.body-s256",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "body-s256"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "coverage-1",
+      "clause": "events.delivery.coverage",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "coverage"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "proof-1",
+      "clause": "events.delivery.proof",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "proof"
+    },
+    {
+      "stage": "fire-2",
+      "id": "fired-2",
+      "clause": "events.delivery.fired",
+      "kind": "json-member",
+      "equals": 202,
+      "member": "status"
+    },
+    {
+      "stage": "delivery-2",
+      "id": "self-jwt-2",
+      "clause": "events.delivery.self-jwt",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "self-jwt"
+    },
+    {
+      "stage": "delivery-2",
+      "id": "eid-2",
+      "clause": "events.delivery.eid",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "eid"
+    },
+    {
+      "stage": "delivery-2",
+      "id": "cnf-absent-2",
+      "clause": "events.delivery.cnf-absent",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "cnf-absent"
+    },
+    {
+      "stage": "delivery-2",
+      "id": "body-s256-2",
+      "clause": "events.delivery.body-s256",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "body-s256"
+    },
+    {
+      "stage": "delivery-2",
+      "id": "coverage-2",
+      "clause": "events.delivery.coverage",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "coverage"
+    },
+    {
+      "stage": "delivery-2",
+      "id": "proof-2",
+      "clause": "events.delivery.proof",
+      "kind": "events-delivery",
+      "equals": true,
+      "member": "proof"
+    }
+  ]
+}

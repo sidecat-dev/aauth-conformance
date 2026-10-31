@@ -849,6 +849,70 @@
       "anchor": "response-body",
       "scope": "protocol",
       "role": "events.agent-provider"
+    },
+    {
+      "id": "events.delivery.self-jwt",
+      "source": "events",
+      "section": "Event Delivery > Request, lines 396-410, and Event Token > Structure, lines 349-373: the delivery presents an aa-event+jwt under self-jwt, signed by the Resource key (iss, dwk aauth-resource.json, aud, jti, iat, exp)",
+      "anchor": "event-delivery",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.eid",
+      "source": "events",
+      "section": "Event Token > Structure, eid, line 364: eid MUST match the subscribe token's eid",
+      "anchor": "event-token",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.cnf-absent",
+      "source": "events",
+      "section": "Event Token > Structure, line 373: the event token MUST NOT contain cnf",
+      "anchor": "event-token",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.body-s256",
+      "source": "events",
+      "section": "Event Token > Structure, body_s256, line 371: REQUIRED when the delivery carries a body, absent when it carries none",
+      "anchor": "event-token",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.coverage",
+      "source": "events",
+      "section": "Event Delivery > Request, line 418: the signature covers the base components and, with a body, MUST also cover content-digest and content-type",
+      "anchor": "request",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.proof",
+      "source": "key",
+      "section": "Self-Issued JWT (self-jwt), line 615 and step 9, line 659: the same key verifies the JWT and the HTTP signature",
+      "anchor": "self-issued-jwt-self-jwt",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.registered",
+      "source": "events",
+      "section": "Public Subscriptions: the harness registration that the delivery uses (2xx; status is host choice)",
+      "anchor": "public-subscriptions",
+      "scope": "adapter-contract",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.fired",
+      "source": "events",
+      "section": "Event Delivery: host control asks the native Resource to deliver one event and reports the AP status",
+      "anchor": "event-delivery",
+      "scope": "adapter-contract",
+      "role": "events.delivery"
     }
   ]
 }

@@ -16,6 +16,7 @@ const (
 	EventsSubscriptionRole = "events.subscription"
 	EventsProviderRole     = "events.agent-provider"
 	EventsAgentRole        = "events.agent"
+	EventsDeliveryRole     = "events.delivery"
 )
 
 // EventsIdentity is one fixture server identity with a public test seed.
@@ -48,6 +49,10 @@ type eventsProviderInput struct {
 	MaxUses    int64                 `json:"max_uses"`
 	Deliveries []eventsDeliveryInput `json:"deliveries"`
 }
+type eventsDeliveryRoleInput struct {
+	MaxUses int64  `json:"max_uses"`
+	Fires   []bool `json:"fires"`
+}
 type eventsAgentInput struct {
 	Mutation string `json:"mutation"`
 	Body     bool   `json:"body"`
@@ -64,6 +69,7 @@ func init() {
 	RegisterRole(EventsSubscriptionRole, ExtensionRole{Validate: validateEventsSubscription, Run: runEventsSubscription})
 	RegisterRole(EventsProviderRole, ExtensionRole{Kinds: []string{"events-subscribe-token"}, Validate: validateEventsProvider, Run: runEventsProvider})
 	RegisterRole(EventsAgentRole, ExtensionRole{Kinds: []string{"events-accepted"}, Validate: validateEventsAgent, Run: runEventsAgent})
+	RegisterRole(EventsDeliveryRole, ExtensionRole{Kinds: []string{"events-delivery"}, Validate: validateEventsDelivery, Run: runEventsDelivery})
 }
 
 func eventsFixture(f Fixture) (EventsFixture, error) {
@@ -182,6 +188,40 @@ func validateEventsAgent(f Fixture, s Scenario) error {
 	return eventsStages(s, []string{"event"}, map[string]string{"events-accepted": "event"})
 }
 
+func validateEventsDelivery(f Fixture, s Scenario) error {
+	if _, err := eventsFixture(f); err != nil {
+		return err
+	}
+	var in eventsDeliveryRoleInput
+	if err := DecodeInput(s, &in); err != nil {
+		return err
+	}
+	if in.MaxUses < 0 || in.MaxUses > 8 || len(in.Fires) == 0 || len(in.Fires) > 8 {
+		return fmt.Errorf("%s: one to eight fires and max_uses up to 8", s.ID)
+	}
+	stages := []string{"registration"}
+	for i := range in.Fires {
+		stages = append(stages, fmt.Sprintf("fire-%d", i+1), fmt.Sprintf("delivery-%d", i+1))
+	}
+	for _, a := range s.Assertions {
+		if a.Kind == "events-delivery" && !slices.Contains(eventsDeliveryProperties, a.Member) {
+			return fmt.Errorf("%s/%s: events-delivery member must be one of %v", s.ID, a.ID, eventsDeliveryProperties)
+		}
+		var b any
+		json.Unmarshal(a.Equals, &b)
+		if _, isBool := b.(bool); a.Kind == "events-delivery" && !isBool {
+			return fmt.Errorf("%s/%s: events-delivery needs a boolean", s.ID, a.ID)
+		}
+		if a.Kind == "events-delivery" && !strings.HasPrefix(a.Stage, "delivery-") {
+			return fmt.Errorf("%s/%s: events-delivery grades a delivery stage", s.ID, a.ID)
+		}
+		if a.Kind != "events-delivery" && strings.HasPrefix(a.Stage, "delivery-") {
+			return fmt.Errorf("%s/%s: a captured delivery is graded only by events-delivery", s.ID, a.ID)
+		}
+	}
+	return eventsStages(s, stages, map[string]string{})
+}
+
 // eventsLauncher is the bootstrap extension every Events launcher reads.
 type eventsLauncher struct {
 	Resource             *EventsIdentity      `json:"resource,omitempty"`
@@ -193,6 +233,7 @@ type eventsLauncher struct {
 	TrustedResources     []AgentProviderTrust `json:"trusted_resources,omitempty"`
 	PersonServers        []AgentProviderTrust `json:"trusted_person_servers,omitempty"`
 	SubscriptionResource string               `json:"subscription_resource,omitempty"`
+	AgentProviders       []AgentProviderTrust `json:"agent_providers,omitempty"`
 	Agent                string               `json:"agent"`
 	AgentToken           string               `json:"agent_token,omitempty"`
 }

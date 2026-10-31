@@ -360,3 +360,48 @@ An optional target `unavailable` string is permitted only for this role, with
 empty `command` and `claims`. It is a declaration of missing adapter support;
 all its assertions remain `not_claimed`, and an all-unavailable run cannot pass.
 No launcher is started and no native response is invented for such a target.
+
+## Events profiles
+
+Four extension roles grade draft-hardt-aauth-events at `70d6737` (catalog
+source `events`). `fixture.extensions.events` supplies the event Resource and a
+second Resource (HTTPS issuer, public test seed, kid), the subscription and
+ticket paths, the AP's `event_endpoint`, a second Agent identifier and an
+unrelated public test key. Scenarios carry their inputs in `input`; every
+assertion names a `stage`.
+
+| Role | `input` | Stages |
+| --- | --- | --- |
+| `events.subscription` | `mutation` (`none`, `expired`, `wrong-aud`, `wrong-typ`, `wrong-dwk`, `empty-eid`, `cnf-mismatch`, `bad-signature`); optional `ticket` (`bound`, `other-key`, `reused`) | `registration`; `ticket` and, for `reused`, `first` |
+| `events.agent-provider` | `max_uses` (0 is unlimited) and up to 8 `deliveries`, each `mutation` and `body` | `metadata`, `subscribe`, `delivery-N` |
+| `events.agent` | `mutation` and `body` | `event` |
+| `events.delivery` | `max_uses` and `fires`, a list of booleans (with or without a body) | `registration`, `fire-N`, `delivery-N` |
+
+The harness plays the Agent and AP for registration: it mints the subscribe
+token under the fixture AP key and signs the POST with covered `content-type`
+and `content-digest`. A ticket case first sends a fixture person token to the
+launcher's ticket control. For the AP it plays the Resource: it reads the
+native subscribe token's `eid`, mints event tokens under the Resource key and
+signs each delivery under `self-jwt`. Delivery mutations change one property:
+the body digest, `cnf`, expiry, `typ`, coverage, the proof key, `kid`, `eid`,
+the issuing Resource, `aud` or the token signature. For the Agent it mints the
+event token and hands token and body to the launcher's event control. For a native Resource's delivery it registers a
+subscription, asks the launcher to fire each event, and captures the signed
+delivery at its own loopback AP, which publishes `event_endpoint` and answers
+`202`.
+
+Two kinds are added. `events-subscribe-token` (stage `subscribe`, boolean)
+verifies the native subscribe token under the fixture AP key with `typ`
+`aa-subscribe+jwt` and checks `iss`, `dwk`, `sub`, `aud`, `cnf`, nonempty `eid`
+and `jti`, `iat` before an unexpired `exp`, and `max_uses` exactly as
+requested. `events-accepted` (stage `event`, boolean) is the native Agent's
+acceptance as the launcher reports it. `events-delivery` (stage `delivery-N`,
+boolean, `member` naming the property) grades a captured delivery with
+independent code: `self-jwt` (an `aa-event+jwt` under the Resource key with
+`iss`, `dwk`, the subscribed Agent as `aud`, `jti`, `iat` and an unexpired
+`exp`), `eid` (equal to the subscribe token's), `cnf-absent`, `body-s256`
+(present and equal with a body, absent without), `coverage` (base components,
+plus `content-digest` matching the body and `content-type` with a body) and
+`proof` (the HTTP signature verifies with the same key). Generic kinds grade the responses,
+including `status-class` and `sfv-token-present` where the draft fixes no
+status or code.

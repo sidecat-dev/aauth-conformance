@@ -10,9 +10,13 @@ use aauth_rust_core::{
     TrustedIssuerKeys,
 };
 use aauth_rust_jose::{Jwk, SigningKey};
-use aauth_rust_resource::events::{EventsConfig, EventsResource, MemorySubscriptionStore};
+use aauth_rust_resource::events::{
+    EventPayload, EventsConfig, EventsResource, MemorySubscriptionStore,
+};
 use serde::Deserialize;
 use std::io::{Read, Write};
+use std::net::{SocketAddr, TcpStream};
+use std::time::Duration;
 
 type Failure = Box<dyn std::error::Error>;
 
@@ -49,13 +53,15 @@ struct Extension {
     trusted_person_servers: Vec<Trust>,
     #[serde(default)]
     subscription_resource: String,
+    #[serde(default)]
+    agent_providers: Vec<Trust>,
     agent: String,
 }
 
 pub fn run(config: Bootstrap) -> Result<(), Failure> {
     let extension: Extension = serde_json::from_value(config.extension.clone())?;
     match config.role.as_str() {
-        "events.subscription" => run_subscription(config, extension),
+        "events.subscription" | "events.delivery" => run_subscription(config, extension),
         "events.agent-provider" => run_provider(config, extension),
         "events.agent" => run_agent(config, extension),
         other => Err(format!("unknown Events role {other}").into()),
@@ -179,6 +185,35 @@ fn run_subscription(config: Bootstrap, extension: Extension) -> Result<(), Failu
                 Ok(ticket) => reply(200, serde_json::json!({"url": ticket.url})),
                 Err(error) => reply(422, serde_json::json!({"error": error.to_string()})),
             }
+        } else if path == "/__fixture/fire" {
+            // Event Delivery: the native Resource prepares and signs one event;
+            // the host fetches the AP metadata and sends the request unchanged.
+            #[derive(Deserialize)]
+            struct Fire {
+                agent_provider: String,
+                eid: String,
+                body: bool,
+            }
+            let outcome = control::<Fire>(&request).and_then(|job| {
+                let payload = job.body.then_some(EventPayload {
+                    content_type: "application/json",
+                    body: br#"{"event_type":"slot.available"}"#,
+                });
+                let event =
+                    resource.prepare_event(&job.agent_provider, &job.eid, payload, now + 300, now)?;
+                let provider = extension
+                    .agent_providers
+                    .iter()
+                    .find(|provider| provider.issuer == job.agent_provider)
+                    .ok_or("no fixture transport for this Agent Provider")?;
+                let metadata = fetch(&provider.transport, "/.well-known/aauth-agent.json")?;
+                let delivery = resource.delivery_request(&event, &metadata, now)?;
+                send(&provider.transport, &delivery)
+            });
+            match outcome {
+                Ok(status) => reply(200, serde_json::json!({"status": status})),
+                Err(error) => reply(422, serde_json::json!({"error": error.to_string()})),
+            }
         } else if path.starts_with(&extension.ticket_path) {
             resource
                 .register_with_ticket(&request, now, |_| Ok(Vec::new()))
@@ -297,4 +332,42 @@ fn run_agent(config: Bootstrap, extension: Extension) -> Result<(), Failure> {
         respond(incoming, response)?;
     }
     Ok(())
+}
+
+// Sends an already signed request to a loopback fixture, changing only the
+// physical destination. Host, headers and body bytes are written unchanged.
+fn send(base: &str, request: &http::Request<Vec<u8>>) -> Result<u16, Failure> {
+    let address: SocketAddr = base
+        .strip_prefix("http://")
+        .ok_or("expected HTTP loopback")?
+        .parse()?;
+    if !address.ip().is_loopback() {
+        return Err("loopback transport required".into());
+    }
+    let mut socket = TcpStream::connect_timeout(&address, Duration::from_secs(5))?;
+    socket.set_read_timeout(Some(Duration::from_secs(5)))?;
+    socket.set_write_timeout(Some(Duration::from_secs(5)))?;
+    let path = request.uri().path_and_query().ok_or("missing path")?;
+    let host = request.uri().authority().ok_or("missing authority")?;
+    write!(
+        socket,
+        "{} {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\nContent-Length: {}\r\n",
+        request.method(),
+        path,
+        host,
+        request.body().len()
+    )?;
+    for (name, value) in request.headers() {
+        write!(socket, "{}: {}\r\n", name, value.to_str()?)?;
+    }
+    write!(socket, "\r\n")?;
+    socket.write_all(request.body())?;
+    let mut bytes = Vec::new();
+    socket.take(65537).read_to_end(&mut bytes)?;
+    let mut headers = [httparse::EMPTY_HEADER; 32];
+    let mut response = httparse::Response::new(&mut headers);
+    if !response.parse(&bytes)?.is_complete() {
+        return Err("incomplete response".into());
+    }
+    response.code.ok_or("missing response status".into())
 }

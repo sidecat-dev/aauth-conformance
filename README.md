@@ -359,3 +359,20 @@ revisions that provide native sub-agent PS, AS and binding-revocation APIs;
 an older checkout fails to compile its launcher rather than passing. See
 [the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
 for the observed boundaries and named gaps.
+
+## Events
+
+Four roles grade draft-hardt-aauth-events: the Resource registering subscribe
+tokens (public and ticket-protected), the Resource delivering events, the Agent
+Provider's event endpoint and metadata, and the Agent's event-token check.
+
+```sh
+go run ./cmd/build-adapters -role events.agent-provider -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/events-ap
+go run ./cmd/aauth-conformance -targets build/events-ap/targets.json -report build/events-ap-report.json -markdown build/events-ap-report.md
+```
+
+Use `events.subscription`, `events.delivery` or `events.agent` the same way.
+The slice has 40 scenarios. Clauses an implementation's API leaves to host stores are not
+claimed for it (see [ADAPTERS.md](ADAPTERS.md#events-roles)); they report as
+not claimed, never as passes. AsyncAPI documents, egress admission and the
+AP-to-Agent transport are outside these roles.

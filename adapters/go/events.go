@@ -35,6 +35,7 @@ func init() {
 	extensionLaunchers["events.subscription"] = runEventsSubscription
 	extensionLaunchers["events.agent-provider"] = runEventsProvider
 	extensionLaunchers["events.agent"] = runEventsAgent
+	extensionLaunchers["events.delivery"] = runEventsSubscription
 }
 
 type eventsIdentity struct {
@@ -53,6 +54,7 @@ type eventsExtension struct {
 	TrustedResources     []agentProviderTrust `json:"trusted_resources"`
 	PersonServers        []agentProviderTrust `json:"trusted_person_servers"`
 	SubscriptionResource string               `json:"subscription_resource"`
+	AgentProviders       []agentProviderTrust `json:"agent_providers"`
 	Agent                string               `json:"agent"`
 	AgentToken           string               `json:"agent_token"`
 }
@@ -172,6 +174,36 @@ func runEventsSubscription(config bootstrap, keys signaturekey.StaticKeyResolver
 		return err
 	}
 	issuer := extension.Resource.Issuer
+	// Delivery reaches the fixture AP over loopback: the client changes only the
+	// physical destination of an admitted logical HTTPS URL, after signing.
+	physical := map[string]*url.URL{}
+	for _, provider := range extension.AgentProviders {
+		logical, lerr := url.Parse(provider.Issuer)
+		transport, terr := url.Parse(provider.Transport)
+		if lerr != nil || terr != nil {
+			return fmt.Errorf("invalid fixture Agent Provider %q", provider.Issuer)
+		}
+		physical[logical.Host] = transport
+	}
+	admit := func(_ context.Context, endpoint string) error {
+		u, err := url.Parse(endpoint)
+		if err != nil || u.Scheme != "https" || physical[u.Host] == nil {
+			return errors.New("egress outside the fixture Agent Providers")
+		}
+		return nil
+	}
+	loopback := &http.Transport{Proxy: nil, DisableKeepAlives: true}
+	client := &http.Client{Timeout: 5 * time.Second, Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		target := physical[request.URL.Host]
+		if target == nil {
+			return nil, errors.New("no fixture transport for " + request.URL.Host)
+		}
+		return loopback.RoundTrip(mapPhysicalRequest(request, target))
+	})}
+	resolver, err := resource.NewHTTPEventEndpointResolver(resource.HTTPEventEndpointResolverConfig{Client: client, Admit: admit})
+	if err != nil {
+		return err
+	}
 	allow := func(context.Context, resource.PublicSubscriptionRequest) (resource.PublicSubscriptionDecision, error) {
 		return resource.PublicSubscriptionDecision{}, nil
 	}
@@ -187,11 +219,9 @@ func runEventsSubscription(config bootstrap, keys signaturekey.StaticKeyResolver
 				return resource.PublicSubscriptionDecision{}, nil
 			},
 		},
-		ResolveEventEndpoint: resource.EventEndpointResolverFunc(func(context.Context, string) (string, error) {
-			return "", errors.New("event delivery is outside the subscription role")
-		}),
-		AdmitEventEndpoint: func(context.Context, string) error { return errors.New("no egress in the subscription role") },
-		HTTPClient:         &http.Client{Timeout: 5 * time.Second},
+		ResolveEventEndpoint: resolver,
+		AdmitEventEndpoint:   admit,
+		HTTPClient:           client,
 	})
 	if err != nil {
 		return err
@@ -222,6 +252,37 @@ func runEventsSubscription(config bootstrap, keys signaturekey.StaticKeyResolver
 			return
 		}
 		eventsReply(w, http.StatusOK, map[string]string{"url": issued.URL})
+	})
+	// Event Delivery: the host asks the native Resource to prepare and deliver
+	// one event on a registered subscription and reports the AP's status.
+	mux.HandleFunc("POST /__fixture/fire", func(w http.ResponseWriter, r *http.Request) {
+		var job struct {
+			AgentProvider string `json:"agent_provider"`
+			EventID       string `json:"eid"`
+			Body          bool   `json:"body"`
+		}
+		if !eventsControl(w, r, &job) {
+			return
+		}
+		input := resource.EventInput{AgentProvider: job.AgentProvider, EventID: job.EventID, Lifetime: 5 * time.Minute}
+		if job.Body {
+			input.ContentType, input.Payload = "application/json", []byte(`{"event_type":"slot.available"}`)
+		}
+		prepared, err := service.PrepareEvent(r.Context(), input)
+		if err != nil {
+			eventsReply(w, http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
+			return
+		}
+		if _, err := service.DeliverEvent(r.Context(), prepared); err != nil {
+			var failure *resource.EventDeliveryError
+			if errors.As(err, &failure) {
+				eventsReply(w, http.StatusOK, map[string]any{"status": failure.StatusCode, "error": err.Error()})
+				return
+			}
+			eventsReply(w, http.StatusUnprocessableEntity, map[string]string{"error": err.Error()})
+			return
+		}
+		eventsReply(w, http.StatusOK, map[string]int{"status": http.StatusAccepted})
 	})
 	return eventsServe(extension.SubscriptionPath, mux)
 }
