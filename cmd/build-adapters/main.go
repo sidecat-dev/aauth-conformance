@@ -27,6 +27,7 @@ func run() error {
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (required unless -go-source is supplied)")
 	out := flag.String("out", "build", "build output directory")
 	role := flag.String("role", conformance.ResourceRole, strings.Join(conformance.Roles(), ", "))
+	recommended := flag.Bool("claim-recommended", false, "also claim the role's SHOULD-level (recommended) clauses")
 	flag.Parse()
 	if *goSource == "" && *rustSource == "" {
 		return fmt.Errorf("supply -go-source and/or -rust-source")
@@ -50,6 +51,9 @@ func run() error {
 		return err
 	}
 	claims := conformance.Claims(suite, *role)
+	if *recommended {
+		claims = append(claims, conformance.RecommendedClaims(suite, *role)...)
+	}
 	targets := conformance.Targets{Version: 1, Role: *role}
 	suffix := ""
 	if runtime.GOOS == "windows" {

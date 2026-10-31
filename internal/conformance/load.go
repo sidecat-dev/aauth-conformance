@@ -110,7 +110,7 @@ func (s Suite) validate() error {
 	clauses := map[string]bool{}
 	clauseRoles := map[string]string{}
 	for _, c := range s.Catalog.Clauses {
-		if c.ID == "" || clauses[c.ID] || !sources[c.Source] || c.Section == "" || c.Anchor == "" || !slices.Contains([]string{"protocol", "adapter-contract", "out-of-slice"}, c.Scope) {
+		if c.ID == "" || clauses[c.ID] || !sources[c.Source] || c.Section == "" || c.Anchor == "" || !slices.Contains([]string{"protocol", "adapter-contract", "recommended", "out-of-slice"}, c.Scope) {
 			return fmt.Errorf("invalid/duplicate clause %q", c.ID)
 		}
 		clauses[c.ID] = true

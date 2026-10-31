@@ -16,7 +16,7 @@ and expectations, including formatting; it does not identify the runner executab
 
 The catalog has `version: 1`, `sources` and `clauses`. Sources record full commit,
 SHA-256 and permanent URL. Each clause has `id`, `source`, `section`, URL `anchor`
-and `scope`: `protocol`, `adapter-contract` or `out-of-slice`. Optional `role`
+and `scope`: `protocol`, `adapter-contract`, `recommended` or `out-of-slice`. Optional `role`
 defaults to `resource.agent-identity`; Agent clauses use `agent.signing`. These reference
 source headings rather than replace normative text. Re-pinning requires reviewing
 the referenced text and expectations even when clause IDs stay unchanged.
@@ -88,7 +88,7 @@ covers all files, so adding another role changes it. Each entry has
 unique `id`, `revision`, executable `command` array and explicit `claims` of known
 clause IDs. Commands execute directly without a shell; relative commands resolve
 from the runner's working directory. The helper declares the selected role's
-non-out-of-slice clauses; edit the manifest to narrow claims. Reports retain declared provenance.
+protocol and adapter-contract clauses; `-claim-recommended` adds the SHOULD-level `recommended` clauses, which are otherwise reported `not_claimed`. Edit the manifest to narrow claims. Reports retain declared provenance.
 
 Unclaimed assertions are `not_claimed`. Claimed assertions are `pass`, `fail`,
 `error` (transport/startup) or `not_exercised` (conditional representation absent).

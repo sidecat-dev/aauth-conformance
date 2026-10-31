@@ -42,7 +42,19 @@ func (s Suite) ForRole(role string) (Suite, error) {
 func Claims(s Suite, role string) []string {
 	result := []string{}
 	for _, c := range s.Catalog.Clauses {
-		if clauseRole(c) == targetRole(role) && c.Scope != "out-of-slice" {
+		if clauseRole(c) == targetRole(role) && c.Scope != "out-of-slice" && c.Scope != "recommended" {
+			result = append(result, c.ID)
+		}
+	}
+	return result
+}
+
+// RecommendedClaims lists a role's SHOULD-level clauses. They are graded only
+// when a target claims them explicitly; failing one is not nonconformance.
+func RecommendedClaims(s Suite, role string) []string {
+	result := []string{}
+	for _, c := range s.Catalog.Clauses {
+		if clauseRole(c) == targetRole(role) && c.Scope == "recommended" {
 			result = append(result, c.ID)
 		}
 	}
