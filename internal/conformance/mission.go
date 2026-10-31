@@ -508,16 +508,6 @@ func (d *missionDriver) personToken(r Response, at int64) (string, map[string]an
 	return compact, claims, nil
 }
 
-func audienceNames(aud any, want string) bool {
-	switch value := aud.(type) {
-	case string:
-		return value == want
-	case []any:
-		return len(value) == 1 && value[0] == want
-	}
-	return false
-}
-
 func noCredentialMember(r Response) bool {
 	var body map[string]json.RawMessage
 	if json.Unmarshal(r.Body, &body) != nil {

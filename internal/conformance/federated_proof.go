@@ -28,7 +28,7 @@ func observeFederatedAuth(f Fixture, compact string, parent map[string]any, agen
 	o.Signature = true
 	jti, _ := c["jti"].(string)
 	o.Identity = c["iss"] == f.Access.Issuer && c["dwk"] == "aauth-access.json" &&
-		c["aud"] == f.Origin && c["ps"] == f.Person.Issuer && jti != ""
+		audienceNames(c["aud"], f.Origin) && c["ps"] == f.Person.Issuer && jti != ""
 	o.Subject = c["sub"] == parent["sub"] && c["sub"] == f.Person.Subject
 	if cnf, ok := c["cnf"].(map[string]any); ok {
 		o.Key = bytes.Equal(confirmationPublicKey(cnf["jwk"]), seedKey(f.AgentSeed).Public().(ed25519.PublicKey))
@@ -45,7 +45,9 @@ func observeFederatedAuth(f Fixture, compact string, parent map[string]any, agen
 			o.Identity = false
 		}
 	}
-	o.Valid = o.Signature && o.Identity && o.Subject && o.Key && o.Lifetime && o.Scope
+	// The composite grades the protocol's subject lineage; the configured
+	// fixture subject is the host's choice, graded only as ps-jwt-subject.
+	o.Valid = o.Signature && o.Identity && c["sub"] == parent["sub"] && parent["sub"] != nil && o.Key && o.Lifetime && o.Scope
 	if !o.Valid {
 		o.Error = "AS grant violates the fixture's delivery bindings"
 	}
@@ -62,7 +64,7 @@ func observeFederatedResource(f Fixture, compact string, parent map[string]any) 
 	o.Signature = true
 	jti, _ := c["jti"].(string)
 	o.Identity = c["iss"] == f.Origin && c["dwk"] == "aauth-resource.json" &&
-		c["aud"] == f.Access.Issuer && c["ps"] == f.Person.Issuer &&
+		audienceNames(c["aud"], f.Access.Issuer) && c["ps"] == f.Person.Issuer &&
 		c["presented_jti"] == parent["jti"] && parent["jti"] != nil && jti != ""
 	o.Subject = c["sub"] == parent["sub"] && c["sub"] == f.Person.Subject
 	o.Key = c["agent_jkt"] == thumbprint(f.AgentSeed)
@@ -76,7 +78,9 @@ func observeFederatedResource(f Fixture, compact string, parent map[string]any) 
 			o.Identity = false
 		}
 	}
-	o.Valid = o.Signature && o.Identity && o.Subject && o.Key && o.Lifetime && o.Scope
+	// The composite grades the protocol's subject lineage; the configured
+	// fixture subject is the host's choice, graded only as ps-jwt-subject.
+	o.Valid = o.Signature && o.Identity && c["sub"] == parent["sub"] && parent["sub"] != nil && o.Key && o.Lifetime && o.Scope
 	if !o.Valid {
 		o.Error = "Resource challenge violates the fixture's presented-token bindings"
 	}

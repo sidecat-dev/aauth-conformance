@@ -194,7 +194,7 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 	}
 	o.Signature = true
 	jti, ok := c["jti"].(string)
-	o.Identity = c["iss"] == p.Issuer && c["dwk"] == "aauth-person.json" && c["aud"] == f.Origin && ok && jti != ""
+	o.Identity = c["iss"] == p.Issuer && c["dwk"] == "aauth-person.json" && audienceNames(c["aud"], f.Origin) && ok && jti != ""
 	sub, subOK := c["sub"].(string)
 	o.Identity = o.Identity && subOK && sub != ""
 	o.Subject = c["sub"] == p.Subject
@@ -234,7 +234,9 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 			o.Identity = false
 		}
 	}
-	o.Valid = o.Signature && o.Identity && o.Subject && o.Key && o.Lifetime && o.Scope && (kind == "auth" || o.NoAuthorization)
+	// The configured subject is the host's binding, graded only by
+	// ps-jwt-subject; it does not decide protocol validity.
+	o.Valid = o.Signature && o.Identity && o.Key && o.Lifetime && o.Scope && (kind == "auth" || o.NoAuthorization)
 	if !o.Valid {
 		o.Error = "JWT violates this suite's identity/key/authorization/lifetime profile"
 	}
@@ -309,4 +311,16 @@ func checkPerson(a Assertion, r Response, o PersonObservation) Result {
 		result.Detail = ""
 	}
 	return result
+}
+
+// audienceNames reports whether a JWT aud names exactly want: a string, or
+// the single-member array RFC 7519 section 4.1.3 also permits.
+func audienceNames(aud any, want string) bool {
+	switch value := aud.(type) {
+	case string:
+		return value == want
+	case []any:
+		return len(value) == 1 && value[0] == want
+	}
+	return false
 }

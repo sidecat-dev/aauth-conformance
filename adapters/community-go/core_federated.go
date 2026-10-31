@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -154,25 +155,16 @@ func coreFederatedBundle(config bootstrap, c coreFederatedConfig) (http.Handler,
 	if err != nil {
 		return nil, err
 	}
-	guard, err := aauth.NewResourceGuard(aauth.ResourceGuardConfig{
-		Resource: resourceID, Key: resourceKey, KeyID: c.ResourceKid, Audience: c.AccessServer,
-		Verify:        aauth.TokenVerifyOptions{Resolver: servers, Signature: aauth.RequestVerifyOptions{Now: clock}},
-		AgentResolver: agents,
-		TrustIssuer:   aauth.TrustIssuers(c.PersonServer),
-	})
+	authority, err := aauth.AuthorityOf(resourceID)
 	if err != nil {
 		return nil, err
 	}
-	scope := strings.Join(c.PermittedScopes, " ")
-	resource := guard.Require(aauth.Access{Level: aauth.AccessAuth, Scope: scope}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		caller, ok := aauth.CallerFromContext(r.Context())
-		if !ok {
-			http.Error(w, "missing verified caller", 500)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"sub": caller.Subject})
-	}))
+	resource := coreFederatedResource(coreResourceOptions{
+		resource: resourceID, access: c.AccessServer, scope: strings.Join(c.PermittedScopes, " "),
+		key: resourceKey, kid: c.ResourceKid, clock: clock,
+		agents: agents, people: aauth.StaticResolver{c.PersonServer: psJWKS}, grants: aauth.StaticResolver{c.AccessServer: asJWKS},
+		signature: aauth.RequestVerifyOptions{Now: clock, Authority: authority},
+	})
 	routes := map[string]http.Handler{
 		strings.ToLower(coreHost(c.PersonServer)): people,
 		strings.ToLower(asURL.Host):               access,
@@ -201,4 +193,79 @@ func coreHost(identifier string) string {
 		return ""
 	}
 	return u.Host
+}
+
+// coreResourceOptions configures the four-party Resource.
+type coreResourceOptions struct {
+	resource, access, scope, kid string
+	key                          crypto.Signer
+	clock                        func() time.Time
+	agents, people, grants       aauth.KeyResolver
+	signature                    aauth.RequestVerifyOptions
+}
+
+// coreFederatedResource is the module's ResourceGuard flow for one route
+// requiring an auth token from the Resource's Access Server, composed from
+// the same exported functions the guard calls (ParseSignatureKey,
+// VerifyAndExtract*, IssueResourceToken, the Challenge helpers and
+// WriteSignatureFailure). The guard itself issues resource tokens at the
+// wall clock; IssueResourceToken takes the fixture clock. Person tokens are
+// accepted only from the fixture PS and auth tokens only from the Access
+// Server, as the guard's TrustIssuer and Audience settings do.
+func coreFederatedResource(o coreResourceOptions) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, err := aauth.ParseSignatureKey(r)
+		if errors.Is(err, aauth.ErrMissingSigKey) {
+			aauth.ChallengeAgentToken(w)
+			return
+		}
+		if err != nil {
+			aauth.WriteSignatureFailure(w, err)
+			return
+		}
+		typ, err := aauth.TokenType(token)
+		if err != nil {
+			aauth.WriteSignatureFailure(w, err)
+			return
+		}
+		ctx := r.Context()
+		switch typ {
+		case aauth.TypAgent:
+			if _, err := aauth.VerifyAndExtractAgent(ctx, r, aauth.VerifyAgentTokenOptions{Resolver: o.agents, RequireProviderClaims: true, Signature: o.signature}); err != nil {
+				aauth.WriteSignatureFailure(w, err)
+				return
+			}
+			aauth.ChallengePersonToken(w)
+		case aauth.TypPerson:
+			person, err := aauth.VerifyAndExtractPerson(ctx, r, o.resource, aauth.TokenVerifyOptions{Resolver: o.people, Signature: o.signature})
+			if err != nil {
+				aauth.WriteSignatureFailure(w, err)
+				return
+			}
+			o.challenge(w, person, o.scope)
+		case aauth.TypAuth:
+			auth, err := aauth.VerifyAndExtractAuth(ctx, r, o.resource, aauth.AuthTokenVerifyOptions{TokenVerifyOptions: aauth.TokenVerifyOptions{Resolver: o.grants, Signature: o.signature}})
+			if err != nil {
+				aauth.WriteSignatureFailure(w, err)
+				return
+			}
+			if !slices.Contains(strings.Fields(auth.Scope), o.scope) {
+				o.challenge(w, auth, o.scope)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"sub": auth.Subject})
+		default:
+			aauth.WriteSignatureFailure(w, fmt.Errorf("%w: %s is not an agent, person or auth token", aauth.ErrWrongTokenType, typ))
+		}
+	})
+}
+
+func (o coreResourceOptions) challenge(w http.ResponseWriter, presented aauth.PresentedToken, scope string) {
+	rt, err := aauth.IssueResourceToken(aauth.ResourceTokenParams{Resource: o.resource, Audience: o.access, Scope: scope, Now: o.clock()}, presented, o.key, o.kid)
+	if err != nil {
+		http.Error(w, "resource token issuance failed", 500)
+		return
+	}
+	aauth.ChallengeAuthToken(w, rt)
 }
