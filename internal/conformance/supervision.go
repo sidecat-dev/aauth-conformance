@@ -59,7 +59,7 @@ func init() {
 		Run:      runSupervisionServers,
 	})
 	RegisterRole(SupervisionPersonServerRole, ExtensionRole{
-		Kinds:    []string{"ps-credential", "ps-credential-exp", "ss-request-proof", "ss-request-has", "ss-request-equals", "ss-request-token", "ss-sdi-distinct"},
+		Kinds:    []string{"ps-credential", "ps-credential-exp", "ps-mission", "ss-request-proof", "ss-request-has", "ss-request-equals", "ss-request-token", "ss-sdi-distinct", "ss-mission-match"},
 		Validate: validateSupervisionPSScenario,
 		Run:      runSupervisionPersonServers,
 	})

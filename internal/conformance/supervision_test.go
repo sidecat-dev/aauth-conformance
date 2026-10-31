@@ -31,7 +31,7 @@ func TestSupervisionScenariosLoadAndRefuseMalformedInput(t *testing.T) {
 	for _, scenario := range suite.Scenarios {
 		counts[scenario.Role]++
 	}
-	if counts[SupervisionServerRole] != 14 || counts[SupervisionPersonServerRole] != 10 {
+	if counts[SupervisionServerRole] != 14 || counts[SupervisionPersonServerRole] != 12 {
 		t.Fatalf("supervision scenarios: %v", counts)
 	}
 	find := func(id string) Scenario {

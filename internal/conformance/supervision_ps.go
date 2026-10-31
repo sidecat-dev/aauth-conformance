@@ -20,8 +20,8 @@ import (
 )
 
 // SupervisionPSInput is one Person Server scenario. Act is the act graded:
-// person_token, or auth_token after a person token the harness SS allows.
-// Decision is how the harness SS answers that act's supervision request.
+// person_token, or auth_token or mission_proposal after a person token the
+// harness SS allows. Decision is how the harness SS answers that act.
 type SupervisionPSInput struct {
 	Act       string `json:"act"`
 	Decision  string `json:"decision"`
@@ -29,7 +29,11 @@ type SupervisionPSInput struct {
 	SecondAct bool   `json:"second_act,omitempty"`
 }
 
-var supervisionPSDecisions = []string{"allow", "deny", "ask", "defer", "server-error", "wrong-sdi", "bad-signature", "foreign-signer", "unsigned"}
+var supervisionPSDecisions = []string{"allow", "deny", "ask", "defer", "server-error", "wrong-sdi", "bad-signature", "foreign-signer", "unsigned", "allow-no-description"}
+
+// supervisionPSProposal is the mission the Agent proposes; the harness SS
+// allows it as proposed.
+const supervisionPSProposal = "# Fixture mission\n\nRead the fixture resource."
 
 func validateSupervisionPSScenario(f Fixture, s Scenario) error {
 	if _, err := supervisionFixture(f); err != nil {
@@ -39,12 +43,15 @@ func validateSupervisionPSScenario(f Fixture, s Scenario) error {
 	if err := DecodeInput(s, &input); err != nil {
 		return err
 	}
-	if !slices.Contains([]string{"person_token", "auth_token"}, input.Act) || !slices.Contains(supervisionPSDecisions, input.Decision) || input.AllowExp < 0 || input.AllowExp > 3600 || input.AllowExp != 0 && input.Decision != "allow" {
+	if !slices.Contains([]string{"person_token", "auth_token", "mission_proposal"}, input.Act) || !slices.Contains(supervisionPSDecisions, input.Decision) || input.AllowExp < 0 || input.AllowExp > 3600 || input.AllowExp != 0 && (input.Decision != "allow" || input.Act == "mission_proposal") || (input.Decision == "allow-no-description") != (input.Act == "mission_proposal" && input.Decision != "allow") {
 		return fmt.Errorf("%s: unsupported act, decision or allow_exp_offset", s.ID)
 	}
 	stages := []string{"person", "deliver"}
-	if input.Act == "auth_token" {
+	switch input.Act {
+	case "auth_token":
 		stages = append(stages, "token")
+	case "mission_proposal":
+		stages = append(stages, "mission")
 	}
 	if slices.Contains([]string{"ask", "server-error", "defer"}, input.Decision) {
 		stages = append(stages, "poll")
@@ -54,12 +61,12 @@ func validateSupervisionPSScenario(f Fixture, s Scenario) error {
 	}
 	for _, a := range s.Assertions {
 		switch a.Kind {
-		case "ss-request-proof", "ss-request-has", "ss-request-equals", "ss-request-token", "ss-sdi-distinct":
+		case "ss-request-proof", "ss-request-has", "ss-request-equals", "ss-request-token", "ss-sdi-distinct", "ss-mission-match":
 			if a.Stage != "deliver" {
 				return fmt.Errorf("%s/%s: supervisor-side observations are graded at stage deliver", s.ID, a.ID)
 			}
 			selector, path, _ := strings.Cut(a.Member, "/")
-			if !validSSSelector(selector) || (a.Kind != "ss-request-proof" && a.Kind != "ss-sdi-distinct") == (path == "") {
+			if !validSSSelector(selector) || (a.Kind != "ss-request-proof" && a.Kind != "ss-sdi-distinct" && a.Kind != "ss-mission-match") == (path == "") {
 				return fmt.Errorf("%s/%s: member is selector or selector/member", s.ID, a.ID)
 			}
 			if a.Kind == "ss-request-token" && !slices.Contains([]string{"agent_token", "resource_token", "presented_token"}, path) {
@@ -84,7 +91,7 @@ func validateSupervisionPSScenario(f Fixture, s Scenario) error {
 
 func validSSSelector(selector string) bool {
 	name, _, _ := strings.Cut(selector, "#")
-	return slices.Contains([]string{"connect", "decision", "poll"}, name) || strings.HasPrefix(name, "event:") && len(name) > 6 || strings.HasPrefix(name, "report:") && len(name) > 7
+	return slices.Contains([]string{"connect", "decision", "proposal", "poll"}, name) || strings.HasPrefix(name, "event:") && len(name) > 6 || strings.HasPrefix(name, "report:") && len(name) > 7 || strings.HasPrefix(name, "mission:") && len(name) > 8
 }
 
 // SSRequest is one request the native PS made of the harness SS.
@@ -171,9 +178,11 @@ func (h *harnessSupervisor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			answer("report:"+action, 201, http.Header{}, nil)
 			return
 		}
-		h.decide(captured, body, answer)
-	case r.Method == "POST" && (path == "/decision" || path == "/mission"):
-		h.decide(captured, body, answer)
+		h.decide("mission:"+action, captured, body, answer)
+	case r.Method == "POST" && path == "/mission":
+		h.decide("proposal", captured, body, answer)
+	case r.Method == "POST" && path == "/decision":
+		h.decide("decision", captured, body, answer)
 	case r.Method == "GET" && strings.HasPrefix(path, "/pending/"):
 		sdi, held := h.pending[path]
 		if !held {
@@ -191,12 +200,12 @@ func (h *harnessSupervisor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // decide answers one supervision request. The graded act is the first
 // supervision request for a person_token act, and the second (after the
-// allowed person token) for an auth_token act.
-func (h *harnessSupervisor) decide(captured Captured, body []byte, answer func(string, int, http.Header, []byte)) {
+// allowed person token) for an auth_token or mission_proposal act.
+func (h *harnessSupervisor) decide(kind string, captured Captured, body []byte, answer func(string, int, http.Header, []byte)) {
 	object, _ := jsonObject(body)
 	sdi, _ := object["sdi"].(string)
 	h.acts++
-	graded := h.acts == 1 && h.input.Act == "person_token" || h.acts == 2 && h.input.Act == "auth_token"
+	graded := h.acts == 1 && h.input.Act == "person_token" || h.acts == 2 && h.input.Act != "person_token"
 	mode := "allow"
 	if graded {
 		mode = h.input.Decision
@@ -205,6 +214,9 @@ func (h *harnessSupervisor) decide(captured Captured, body []byte, answer func(s
 	decision := map[string]any{"sdi": sdi, "decision": "allow"}
 	if graded && h.input.AllowExp > 0 {
 		decision["exp"] = h.fixture.Now + h.input.AllowExp
+	}
+	if kind == "proposal" && mode != "allow-no-description" {
+		decision["description"] = object["description"]
 	}
 	jsonHeader := http.Header{"Content-Type": {"application/json"}}
 	switch mode {
@@ -216,16 +228,16 @@ func (h *harnessSupervisor) decide(captured Captured, body []byte, answer func(s
 		path := fmt.Sprintf("/pending/%s-%d", "fixture", h.acts)
 		h.pending[path] = sdi
 		payload, _ := json.Marshal(map[string]any{"sdi": sdi, "status": "pending"})
-		answer("decision", 202, http.Header{"Content-Type": {"application/json"}, "Location": {s.Issuer + path}, "Retry-After": {"0"}, "Cache-Control": {"no-store"}}, payload)
+		answer(kind, 202, http.Header{"Content-Type": {"application/json"}, "Location": {s.Issuer + path}, "Retry-After": {"0"}, "Cache-Control": {"no-store"}}, payload)
 		return
 	case "server-error":
-		answer("decision", 500, jsonHeader, []byte(`{"error":"server_error"}`))
+		answer(kind, 500, jsonHeader, []byte(`{"error":"server_error"}`))
 		return
 	case "wrong-sdi":
 		decision["sdi"] = "d-not-the-request"
 	case "unsigned":
 		payload, _ := json.Marshal(decision)
-		answer("decision", 200, jsonHeader, payload)
+		answer(kind, 200, jsonHeader, payload)
 		return
 	}
 	seed, issuer, kid := s.Seed, s.Issuer, s.Kid
@@ -236,7 +248,7 @@ func (h *harnessSupervisor) decide(captured Captured, body []byte, answer func(s
 		seed, issuer, kid = s.Foreign.Seed, s.Foreign.Issuer, s.Foreign.Kid
 	}
 	status, header, payload := h.signedDecision(captured, decision, seed, issuer, kid, false)
-	answer("decision", status, header, payload)
+	answer(kind, status, header, payload)
 }
 
 // signedDecision serializes and signs a decision as RFC 9421 response
@@ -393,6 +405,15 @@ func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture,
 	personBody, _ := json.Marshal(map[string]any{"resource": f.Origin})
 	actStage := "person"
 	person := send("person", "POST", p.Issuer+"/person", personBody)
+	if input.Act == "mission_proposal" && executionError == "" {
+		if person.Response.Status != http.StatusOK {
+			executionError = fmt.Sprintf("person: prerequisite person token answered %d", person.Response.Status)
+		} else {
+			body, _ := json.Marshal(map[string]any{"description": supervisionPSProposal})
+			send("mission", "POST", p.Issuer+"/mission", body)
+			actStage = "mission"
+		}
+	}
 	if input.Act == "auth_token" && executionError == "" {
 		token, err := responseToken(*person.Response, "person_token")
 		var claims map[string]any
@@ -451,7 +472,7 @@ func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture,
 			response = exchange.Response
 		}
 		result := Grade(a, target.Claims, executionError, response, func(a Assertion) Result {
-			return checkSupervisionPS(a, f, input, exchange, tokenName, tokenType, observed, presented)
+			return checkSupervisionPS(a, f, input, exchange, stages["mission"], tokenName, tokenType, observed, presented)
 		})
 		c.Results = append(c.Results, result)
 	}
@@ -477,7 +498,7 @@ func selectSSRequest(observed []SSRequest, selector string) (SSRequest, bool) {
 	return SSRequest{}, false
 }
 
-func checkSupervisionPS(a Assertion, f Fixture, input SupervisionPSInput, exchange *SupervisionPSExchange, tokenName, tokenType string, observed []SSRequest, presented map[string]string) Result {
+func checkSupervisionPS(a Assertion, f Fixture, input SupervisionPSInput, exchange, mission *SupervisionPSExchange, tokenName, tokenType string, observed []SSRequest, presented map[string]string) Result {
 	p := *f.Person
 	switch a.Kind {
 	case "ps-credential", "ps-credential-exp":
@@ -505,6 +526,23 @@ func checkSupervisionPS(a Assertion, f Fixture, input SupervisionPSInput, exchan
 		}
 		exp, _ := claims["exp"].(float64)
 		return CompareResult(a, exp > float64(f.Now) && exp <= float64(f.Now+input.AllowExp), fmt.Sprintf("credential exp %v, allow exp %d", claims["exp"], f.Now+input.AllowExp))
+	case "ps-mission":
+		if exchange == nil || exchange.Response == nil {
+			return Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "error", Detail: "stage was not reached"}
+		}
+		object, _ := jsonObject(exchange.Response.Body)
+		_, description, ok := approvedMission(object)
+		return CompareResult(a, ok && description == supervisionPSProposal, "no mission whose s256 is the digest of its blob and whose description is the allowed one")
+	case "ss-mission-match":
+		report, found := selectSSRequest(observed, a.Member)
+		agentView := map[string]any{}
+		if mission != nil && mission.Response != nil {
+			agentView, _ = jsonObject(mission.Response.Body)
+		}
+		reported, _ := jsonObject(report.Request.Body)
+		_, _, ok := approvedMission(reported)
+		same := found && ok && reported["s256"] == agentView["s256"] && reported["mission"] == agentView["mission"]
+		return CompareResult(a, same, "the report's s256 and mission are not those returned to the Agent")
 	case "ss-sdi-distinct":
 		first, ok := selectSSRequest(observed, "decision#1")
 		second, okSecond := selectSSRequest(observed, "decision#2")
@@ -553,4 +591,23 @@ func checkSupervisionPS(a Assertion, f Fixture, input SupervisionPSInput, exchan
 		return CompareResult(a, present && want != "" && cursor == want, "forwarded token differs from what the Agent presented")
 	}
 	return Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "fail", Detail: "unknown supervision assertion"}
+}
+
+// approvedMission checks an s256 and base64url mission pair: the s256 is the
+// digest of the decoded bytes, which are a JSON blob with a description.
+func approvedMission(object map[string]any) (string, string, bool) {
+	s256, _ := object["s256"].(string)
+	encoded, _ := object["mission"].(string)
+	blob, err := base64.RawURLEncoding.Strict().DecodeString(encoded)
+	if err != nil || s256 == "" {
+		return "", "", false
+	}
+	digest := sha256.Sum256(blob)
+	var decoded struct {
+		Description string `json:"description"`
+	}
+	if base64.RawURLEncoding.EncodeToString(digest[:]) != s256 || json.Unmarshal(blob, &decoded) != nil {
+		return "", "", false
+	}
+	return s256, decoded.Description, true
 }

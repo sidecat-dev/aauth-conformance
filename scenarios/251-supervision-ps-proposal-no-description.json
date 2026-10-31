@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "id": "supervision.ps-proposal-no-description",
+  "title": "An allow of a proposal without a description approves no mission",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "mission_proposal",
+    "decision": "allow-no-description"
+  },
+  "assertions": [
+    {
+      "id": "no-mission",
+      "clause": "supervision.ps.proposal-description",
+      "kind": "ps-mission",
+      "equals": false,
+      "stage": "mission"
+    },
+    {
+      "id": "to-person",
+      "clause": "supervision.ps.unavailable",
+      "kind": "status",
+      "equals": 202,
+      "stage": "mission"
+    },
+    {
+      "id": "consulted",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "proposal/sdi"
+    }
+  ]
+}

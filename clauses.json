@@ -622,7 +622,7 @@
       "role": "supervision.server",
       "id": "supervision.ss.signed-coverage",
       "source": "supervision",
-      "section": "Signed Decisions, line 340: the response signature MUST cover @status, content-type and content-digest (signed by the issuer's jwks_uri key, lines 320-321)",
+      "section": "Signed Decisions, line 340: the response signature MUST cover @status, content-type and content-digest (signed under the issuer's jwks_uri key, line 320)",
       "anchor": "signed-decisions",
       "scope": "protocol"
     },
@@ -670,7 +670,7 @@
       "role": "supervision.person-server",
       "id": "supervision.ps.core-keying",
       "source": "core",
-      "section": "AAuth Protocol Keying Material, line 2187: a PS making a signed request in its own right MUST use the jwks_uri scheme with id its issuer and dwk aauth-person.json (Supervision PS Authentication, line 186)",
+      "section": "AAuth Protocol Keying Material, line 2187: a PS making a signed request in its own right MUST use the jwks_uri scheme with id its issuer and dwk aauth-person.json (Supervision PS Authentication, line 181)",
       "anchor": "keying-material",
       "scope": "protocol"
     },
@@ -718,7 +718,7 @@
       "role": "supervision.person-server",
       "id": "supervision.ps.act-members",
       "source": "supervision",
-      "section": "Person Token lines 480-481 (resource, the agent token presented) and Auth Token line 504 (resource_token and presented_token as the agent sent them), REQUIRED",
+      "section": "Proposal line 394 (agent_token), Person Token lines 480-481 (resource, the agent token presented) and Auth Token line 504 (resource_token and presented_token as the agent sent them), REQUIRED",
       "anchor": "decision-endpoint",
       "scope": "protocol"
     },
@@ -760,6 +760,30 @@
       "source": "supervision",
       "section": "Decision Resolved, line 578: a PS MUST NOT require the person to give a reason",
       "anchor": "event-decision-resolved",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.mission-action",
+      "source": "supervision",
+      "section": "Mission Endpoint, line 360: action is REQUIRED on every request to a mission's URL, reports included",
+      "anchor": "mission-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.proposal-description",
+      "source": "supervision",
+      "section": "Proposal, line 415: an allow of a proposal carries the approved description (REQUIRED); the PS builds the mission from it and does not approve one without it",
+      "anchor": "ss-mission-proposal",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.approved-report",
+      "source": "core",
+      "section": "AAuth Protocol Mission Identifier, line 1437: the PS MUST compute s256 over the exact blob bytes and return those bytes as mission; the approved report carries s256 and mission as returned to the agent (Supervision line 444)",
+      "anchor": "mission-identifier",
       "scope": "protocol"
     },
     {

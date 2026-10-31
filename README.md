@@ -359,3 +359,23 @@ revisions that provide native sub-agent PS, AS and binding-revocation APIs;
 an older checkout fails to compile its launcher rather than passing. See
 [the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
 for the observed boundaries and named gaps.
+
+## Supervision
+
+`supervision.server` grades a native supervision server with the harness as
+its Person Server; `supervision.person-server` grades a native Person Server
+that consults the harness as its supervision server. Both cite
+draft-hardt-aauth-supervision at the pin and use the same files for Go and
+Rust:
+
+```sh
+go run ./cmd/build-adapters -role supervision.server -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/supervision-server
+go run ./cmd/aauth-conformance -targets build/supervision-server/targets.json -report build/supervision-server-report.json -markdown build/supervision-server-report.md
+```
+
+Use `-role supervision.person-server` the same way. A few clauses state
+normative behavior the draft gives without a BCP 14 keyword (what a Person
+Server does with allow, deny and ask, when the supervisor is unavailable, and
+how it polls a deferred decision); their section text says so. Host
+rate-limiting is a host choice: an implementation that exports no
+rate_limited answer is recorded `not_exercised` with the reason, not passed.

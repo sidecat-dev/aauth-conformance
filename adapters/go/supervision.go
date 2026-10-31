@@ -242,6 +242,13 @@ func runSupervisedPersonServer(config bootstrap, keys signaturekey.StaticKeyReso
 		Authorize: func(context.Context, personserver.AuthorizationRequest) (personserver.AuthorizationDecision, error) {
 			return personserver.AuthorizationDecision{}, notCalled
 		},
+		// Missions are enabled so a supervised Agent can propose one; the
+		// supervisor approves it, never this policy.
+		Missions: &personserver.MissionConfig{
+			Approve: func(context.Context, personserver.MissionApprovalRequest) (personserver.MissionDecision, error) {
+				return personserver.MissionDecision{}, notCalled
+			},
+		},
 		Supervision: &personserver.SupervisionConfig{
 			Route: func(context.Context, personserver.SupervisedAgent) (personserver.Supervisor, bool, error) {
 				return supervisor, true, nil

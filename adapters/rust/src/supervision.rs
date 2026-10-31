@@ -431,6 +431,9 @@ pub(crate) fn run_person_server(config: Bootstrap) -> Result<(), Failure> {
         move || now,
         move || format!("fixture-{}", sequence.fetch_add(1, Ordering::Relaxed) + 1),
     )?
+    // Missions are enabled so a supervised Agent can propose one; the
+    // supervisor approves it, never the host policy.
+    .with_missions()
     .with_supervision(SupervisionConfig::new(host, MemoryContinuations::new(10_000)))?;
     let listener = listen("/person")?;
     let mut held: Option<String> = None;

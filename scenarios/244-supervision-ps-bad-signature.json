@@ -15,6 +15,21 @@
       "kind": "ps-credential",
       "equals": false,
       "stage": "person"
+    },
+    {
+      "id": "to-person",
+      "clause": "supervision.ps.unavailable",
+      "kind": "status",
+      "equals": 202,
+      "stage": "person"
+    },
+    {
+      "id": "consulted",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision/sdi"
     }
   ]
 }
