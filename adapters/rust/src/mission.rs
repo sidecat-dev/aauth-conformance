@@ -207,8 +207,8 @@ fn run_mission_server(config: Bootstrap) -> Result<(), Failure> {
                 Ok(serde_json::Value::Object(reply))
             })();
             let (status, body) = match outcome {
-                Ok(body) => (200, body),
-                Err(error) => (409, serde_json::json!({"error":error.to_string()})),
+                Ok(body) => (200u16, body),
+                Err(error) => (409u16, serde_json::json!({"error":error.to_string()})),
             };
             http::Response::builder()
                 .status(status)

@@ -359,3 +359,24 @@ revisions that provide native sub-agent PS, AS and binding-revocation APIs;
 an older checkout fails to compile its launcher rather than passing. See
 [the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
 for the observed boundaries and named gaps.
+
+## Missions
+
+Fourteen scenarios (180-193) grade the Mission section of the protocol draft
+against a native Person Server (`mission.person-server`) and the Resource of
+the four-party bundle (`mission.resource`): approval and the mission
+identifier, the mission endpoint's errors, owner-scoped refusals, completion
+and expiry as terminations at every Person Server endpoint, and
+`mission_s256` in person and Resource tokens. Each assertion names its pinned
+line.
+
+```sh
+go run ./cmd/build-adapters -role mission.person-server -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/mission
+go run ./cmd/aauth-conformance -targets build/mission/targets.json -report build/mission-report.json -markdown build/mission-report.md
+```
+
+Host controls carry the person's decisions and the clock; see
+[the adapter contract](ADAPTERS.md#mission-roles). Not graded: interaction
+endpoint mission errors, clarification during review, the mission control
+plane (a companion draft), timing equivalence, and four-party mission
+federation at the Access Server.

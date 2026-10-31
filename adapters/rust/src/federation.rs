@@ -529,6 +529,12 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
             token.claims().sub == subject && token.claims().ps == person_server
         },
     )?;
+    // The mission Resource slice turns on the crate's opt-in mission context.
+    let resource = if config.role == "mission.resource" {
+        resource.with_mission_context()
+    } else {
+        resource
+    };
     let usage_endpoint = format!("{budget_issuer}/usage");
     let access_server = config.access_server.clone();
     let credits = declared_units("credits")?;

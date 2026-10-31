@@ -360,3 +360,50 @@ An optional target `unavailable` string is permitted only for this role, with
 empty `command` and `claims`. It is a declaration of missing adapter support;
 all its assertions remain `not_claimed`, and an all-unavailable run cannot pass.
 No launcher is started and no native response is invented for such a target.
+
+## Mission profiles
+
+`role_under_test: "mission.person-server"` runs a native Person Server with
+its mission endpoint, permission and audit. `"mission.resource"` runs the
+native four-party bundle and reads only the Resource's challenge. Scenarios
+carry `input: {"flow": "..."}`; the expiry flow adds `expires_in` (1-50
+seconds). Agent tokens are prescribed by the driver, so `token` is omitted.
+`fixture.extensions.missions` names a second Agent (`other_agent_seed_hex`,
+`other_agent_subject`, issued by the fixture AP) and the proposal
+`description`. Each scenario starts a fresh native bundle.
+
+The driver reads `mission_endpoint`, `person_token_endpoint`,
+`auth_token_endpoint`, `permission_endpoint` and `audit_endpoint` from the
+Person Server metadata, proposes a mission naming the fixture Resource and
+accepts either a `200` approval or a `202` with a same-origin `Location`. For
+`202` it asks the host to approve, then polls as the Agent. It then asks the
+host to record the approval for issuance. Flows and the stages they observe:
+
+| Flow | Stages after `approval` |
+| --- | --- |
+| `approval` | `metadata`, `proposal`, `read` (owner GET of `{mission_endpoint}/{s256}`) |
+| `person-token` | `person` (POST person token naming the mission) |
+| `unknown-mission`, `malformed-mission`, `other-agent` | `unknown`, `malformed`, `other` |
+| `action-missing`, `action-unknown` | `action` |
+| `not-owned` | `not-owned` (second Agent, owner's mission), `unknown` (second Agent, absent mission) |
+| `update` | `action`, `person` |
+| `completion` | `action`, `after-update`, `after-completion`, `after-person` |
+| `completion-token` | `person`, `before-token`, `action`, `after-token` |
+| `expiry` | `person`, then the clock moves past `expires_at`: `after-person`, `after-update` |
+| `governance` | `before-permission`, `before-audit`, `action` (completion), `after-permission`, `after-audit` |
+| `resource-copy` (Resource role) | `challenge` |
+
+Role kinds, all boolean: `mission-endpoint-url` (https, no query or fragment),
+`mission-s256` (SHA-256 of the decoded bytes, unpadded base64url),
+`mission-encoded` (unpadded base64url), `mission-blob` (`agent` equals the
+fixture Agent, RFC 3339 `approved_at`, nonempty `description`),
+`mission-served` (bytes served later equal the approval; `not_exercised` when
+the PS does not expose the mission), `mission-person-token` (verified person
+token for the Resource, bound to the Agent key, carrying the approved
+`mission_s256`), `mission-person-exp` (`exp` no later than `expires_at`;
+`not_exercised` without one), `mission-no-token`, `mission-equivalent`
+(same status, body bytes and header names apart from `Date`) and
+`mission-resource-copy` (the challenge's Resource token verifies under the
+fixture Resource key and carries the presented `mission_s256`). Generic kinds
+grade the stage's response. When the approved blob has no `expires_at`, the
+expiry flow's later stages are `not_exercised` with the reason recorded.

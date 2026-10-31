@@ -196,8 +196,10 @@ type missionDriver struct {
 	timeout  time.Duration
 	c        *Case
 	clock    int64
-	// responses holds the native response observed at each stage.
+	// responses holds the native response observed at each stage, and at
+	// the host clock in force when it was observed.
 	responses map[string]Response
+	at        map[string]int64
 	approval  missionApproval
 	endpoints map[string]string
 	skipped   string
@@ -225,6 +227,7 @@ func (d *missionDriver) exchange(stage string, request *http.Request, base strin
 		entry.Response = &response
 		if stage != "control" {
 			d.responses[stage] = response
+			d.at[stage] = d.clock
 		}
 	}
 	d.c.Exchanges = append(d.c.Exchanges, entry)
@@ -413,7 +416,7 @@ func (d *missionDriver) completionToken(owner, missionURL string, completion map
 	if err != nil {
 		return err
 	}
-	presented, claims, err := d.personToken(response)
+	presented, claims, err := d.personToken(response, d.clock)
 	if err != nil {
 		return fmt.Errorf("cannot build a Resource token without a mission-bound person token: %w", err)
 	}
@@ -490,8 +493,9 @@ func (d *missionDriver) steps(owner string, steps []missionStep) error {
 	return nil
 }
 
-// personToken independently verifies a native person-token response.
-func (d *missionDriver) personToken(r Response) (string, map[string]any, error) {
+// personToken independently verifies a native person-token response
+// observed when the host clock read at.
+func (d *missionDriver) personToken(r Response, at int64) (string, map[string]any, error) {
 	compact, err := responseToken(r, "person_token")
 	if err != nil {
 		return "", nil, err
@@ -510,7 +514,7 @@ func (d *missionDriver) personToken(r Response) (string, map[string]any, error) 
 		return "", nil, fmt.Errorf("person token aud does not name the Resource")
 	case jwk == nil || jwk["x"] != publicJWK(d.f.AgentSeed)["x"]:
 		return "", nil, fmt.Errorf("person token is not bound to the requesting Agent's key")
-	case int64(exp) <= d.clock:
+	case int64(exp) <= at:
 		return "", nil, fmt.Errorf("person token is already expired")
 	}
 	return compact, claims, nil
@@ -562,7 +566,7 @@ func (d *missionDriver) check(a Assertion) Result {
 		}
 		return CompareResult(a, *body.Mission == d.approval.Encoded, "mission bytes served later differ from the approval")
 	case "mission-person-token":
-		_, claims, err := d.personToken(r)
+		_, claims, err := d.personToken(r, d.at[a.Stage])
 		if err != nil {
 			return CompareResult(a, false, err.Error())
 		}
@@ -572,7 +576,7 @@ func (d *missionDriver) check(a Assertion) Result {
 		if !ok {
 			return Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_exercised", Detail: "the approved mission carries no expires_at"}
 		}
-		_, claims, err := d.personToken(r)
+		_, claims, err := d.personToken(r, d.at[a.Stage])
 		if err != nil {
 			return CompareResult(a, false, err.Error())
 		}
@@ -665,7 +669,7 @@ func runMissionCases(ctx context.Context, s Suite, targets Targets, options Opti
 			c := Case{ID: scenario.ID}
 			var in MissionInput
 			DecodeInput(scenario, &in)
-			d := &missionDriver{ctx: ctx, f: s.Fixture, p: *s.Fixture.Person, mf: mf, s: scenario, in: in, timeout: options.Timeout, c: &c, clock: s.Fixture.Now, responses: map[string]Response{}}
+			d := &missionDriver{ctx: ctx, f: s.Fixture, p: *s.Fixture.Person, mf: mf, s: scenario, in: in, timeout: options.Timeout, c: &c, clock: s.Fixture.Now, responses: map[string]Response{}, at: map[string]int64{}}
 			config := missionBootstrap(s.Fixture, scenario.Role, ap)
 			cleanup := prepare(&config)
 			ready, stop, err := startAdapter(ctx, target, config, options)
