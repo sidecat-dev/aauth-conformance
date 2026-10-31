@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "supervision.ss-mission-action",
-  "title": "A request to a mission's URL without a recognized action is invalid_request",
+  "title": "A request to a mission's URL without a recognized action, or a report without id, is invalid_request",
   "role_under_test": "supervision.server",
   "given": "agent-identity",
   "input": {
@@ -29,6 +29,19 @@
           "agent": "$agent",
           "agent_token": "$agent_token",
           "description": "# Fixture mission\n\nRead the fixture resource."
+        }
+      },
+      {
+        "stage": "approved-no-id",
+        "endpoint": "mission/$s256",
+        "body": {
+          "action": "approved",
+          "sdi": "d-proposal-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "s256": "$s256",
+          "mission": "$mission"
         }
       },
       {
@@ -102,6 +115,21 @@
       "kind": "json-member",
       "equals": "invalid_request",
       "stage": "unrecognized",
+      "member": "error"
+    },
+    {
+      "id": "report-no-id-status",
+      "clause": "supervision.ss.event-id",
+      "kind": "status",
+      "equals": 400,
+      "stage": "approved-no-id"
+    },
+    {
+      "id": "report-no-id-error",
+      "clause": "supervision.ss.event-id",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "approved-no-id",
       "member": "error"
     }
   ]
