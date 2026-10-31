@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "id": "vector.metadata.02",
+  "title": "Community vector metadata #2: aauth-person.json (the vector's round trip through Go types is not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/metadata.json",
+      "sha256": "edae9c211152116749351724efd54a83f4e21b82108b2781f8940366414f6c83",
+      "index": 1
+    },
+    "kind": "metadata",
+    "case": {
+      "document": "aauth-person.json",
+      "json": {
+        "issuer": "https://ps.example",
+        "name": "Example Person Server",
+        "description": "**Example Person Server** — manage which agents act for you and review what they do.",
+        "logo_uri": "https://ps.example/logo.png",
+        "logo_dark_uri": "https://ps.example/logo-dark.png",
+        "documentation_uri": "https://ps.example/docs",
+        "tos_uri": "https://ps.example/tos",
+        "policy_uri": "https://ps.example/privacy",
+        "auth_token_endpoint": "https://ps.example/token",
+        "person_token_endpoint": "https://ps.example/person",
+        "mission_endpoint": "https://ps.example/mission",
+        "permission_endpoint": "https://ps.example/permission",
+        "audit_endpoint": "https://ps.example/audit",
+        "interaction_endpoint": "https://ps.example/interaction",
+        "mission_control_endpoint": "https://ps.example/mission-control",
+        "revocation_endpoint": "https://ps.example/revoke",
+        "scopes_supported": [
+          "openid",
+          "profile",
+          "email",
+          "tenant"
+        ],
+        "claims_supported": [
+          "sub",
+          "email",
+          "name",
+          "tenant"
+        ],
+        "accept_signature_algs": [
+          "Ed25519",
+          "ES256"
+        ],
+        "jwks_uri": "https://ps.example/.well-known/jwks.json"
+      }
+    }
+  },
+  "assertions": [
+    {
+      "id": "accepted",
+      "clause": "vector.metadata",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

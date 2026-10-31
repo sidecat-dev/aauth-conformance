@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "id": "vector.signature-key.03",
+  "title": "Community vector signature-key #3: sig1=hwk;kty=\"OKP\", sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5In0.e30.c2ln\";...",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/signature-key.json",
+      "sha256": "ab8aea985d7d3a10595aa774192f76db6998f26abc2a1acc4cb2de0cbd3375e8",
+      "index": 2
+    },
+    "kind": "signature-key",
+    "case": {
+      "header": "sig1=hwk;kty=\"OKP\", sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5In0.e30.c2ln\";cache",
+      "scheme": "jwt",
+      "params": {
+        "jwt": "eyJhbGciOiJFZDI1NTE5In0.e30.c2ln"
+      }
+    }
+  },
+  "assertions": [
+    {
+      "id": "selected",
+      "clause": "vector.sigkey.select",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    },
+    {
+      "id": "jwt",
+      "clause": "vector.sigkey.select",
+      "kind": "vector-result",
+      "member": "jwt",
+      "equals": "eyJhbGciOiJFZDI1NTE5In0.e30.c2ln"
+    }
+  ]
+}

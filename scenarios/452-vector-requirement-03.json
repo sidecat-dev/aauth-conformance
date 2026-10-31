@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "id": "vector.requirement.03",
+  "title": "Community vector requirement #3: requirement=approval (canonical serialization is not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/requirement.json",
+      "sha256": "3409442f2f0c66bdc75a5433ff331b1d0cc7bd31d62c96c52b4df9563a25671b",
+      "index": 2
+    },
+    "kind": "requirement",
+    "case": {
+      "header": "requirement=approval",
+      "parsed": {
+        "Requirement": "approval"
+      },
+      "canonical": true
+    }
+  },
+  "assertions": [
+    {
+      "id": "requirement",
+      "clause": "vector.requirement",
+      "kind": "vector-result",
+      "member": "requirement",
+      "equals": "approval"
+    }
+  ]
+}

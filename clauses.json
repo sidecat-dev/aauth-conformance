@@ -1565,6 +1565,230 @@
       "section": "Deferred Decisions, line 286: after a 202 the PS polls the pending URL with a signed GET under the identity that made the request and sends no body (stated without a BCP 14 keyword)",
       "anchor": "deferred-decisions",
       "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.agent-identifier",
+      "source": "core",
+      "section": "Agent Identifiers, lines 488-490 and 504: aauth:local@domain; local of A-Za-z0-9 - _ + . , nonempty, at most 255; domain a server-identifier host without scheme; a top-level local MUST NOT contain +; a sub-agent local is parent local, +, nonempty discriminator; no case folding",
+      "anchor": "agent-identifiers",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.server-identifier",
+      "source": "core",
+      "section": "Server Identifiers, lines 1948-1954: https, scheme and host only (no port, path, query, fragment or userinfo), no trailing slash, lowercase, A-labels",
+      "anchor": "server-identifiers",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwk-thumbprint",
+      "source": "core",
+      "section": "Resource Token Structure line 746 and Resource Token Verification line 766: agent_jkt is the RFC 7638 thumbprint of the agent's key; the verifier MUST match it (Ed25519 key, members other than kty/crv/x not hashed)",
+      "anchor": "resource-token-structure",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwk-thumbprint.es256",
+      "source": "core",
+      "section": "Signature Algorithms line 2166 (SHOULD support ES256): RFC 7638 thumbprint of a P-256 agent key, needed only where ES256 agent keys are supported",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwk-thumbprint.no-alg",
+      "source": "core",
+      "section": "Not graded: protocol line 2169 requires every AAuth key to carry alg, so the drafts fix no thumbprint duty for this alg-less JWK; the vector's RFC 7638 value is recorded only",
+      "anchor": "signature-algorithms",
+      "scope": "out-of-slice"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.metadata",
+      "source": "core",
+      "section": "Metadata Documents line 1981 (MUST verify issuer is present and matches the fetch URL) with the REQUIRED members of lines 1987-1988 and the per-role tables: a conforming example document is accepted",
+      "anchor": "metadata-documents",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.signature-error",
+      "source": "key",
+      "section": "Signature-Error Header Structure lines 945-951: a Dictionary whose error member is a Token (REQUIRED); recipients MUST ignore unknown members",
+      "anchor": "header-structure",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.signature-error.required-input",
+      "source": "key",
+      "section": "invalid_input line 1028: required_input (RECOMMENDED) is an Inner List of String naming the required components",
+      "anchor": "invalid_input",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.requirement",
+      "source": "core",
+      "section": "AAuth-Requirement Header Structure lines 2332-2336: a Dictionary that MUST contain requirement, a Token; requirement data are parameters on it; recipients MUST ignore unknown parameters",
+      "anchor": "aauth-requirement-header-structure",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.requirement.auth-token",
+      "source": "core",
+      "section": "Auth Token Required line 637: the header MUST include resource-token, and the agent MUST extract it",
+      "anchor": "requirement-auth-token",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.requirement.interaction",
+      "source": "core",
+      "section": "Interaction Required lines 2372-2375: the header MUST include url and code Strings; the agent directs the user to url with code (line 1001)",
+      "anchor": "interaction-required",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.sigkey.select",
+      "source": "core",
+      "section": "Verification (Server) step 4, line 2247 (the server MUST perform the steps, line 2242), with signature-key lines 138-148 and 157: select the Dictionary member for the verified label and read its scheme; a member the verifier did not select MUST NOT cause a refusal",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.sigkey.unsupported-scheme",
+      "source": "core",
+      "section": "Verification (Server) step 4, line 2247, Keying Material line 2179 and signature-key line 155: a selected scheme the AAuth profile does not use, or an unregistered one, MUST be refused with unsupported_scheme",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.sigkey.missing-member",
+      "source": "key",
+      "section": "Signature-Key HTTP Request Header line 179 and Label Consistency line 187: with the header present and no member for the verified label, verification MUST fail. Code settled as invalid_signature: line 1018 assigns missing Signature-Key material to invalid_signature, and protocol step 1 (line 2244) maps missing headers there; invalid_key (line 1046, protocol step 5 line 2248) is for a key that is present but cannot be parsed, and here no member exists",
+      "anchor": "label-consistency",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.sigkey.malformed-member",
+      "source": "core",
+      "section": "Verification (Server), line 2242 (any failure MUST be a 401 with Signature-Error) and signature-key line 148 (the scheme is a Token) and the jwt scheme's REQUIRED jwt String: a member whose scheme is not a Token, or a jwt member without jwt, is refused; the code is not settled (step 5, line 2248, favours invalid_key; line 1018's malformed favours invalid_signature)",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.ed25519",
+      "source": "core",
+      "section": "Signature Algorithms line 2166 (every party MUST support Ed25519) and Common JWT Verification lines 2311-2318: an Ed25519 token whose typ, dwk, key, exp and iss check out verifies",
+      "anchor": "signature-algorithms",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.es256",
+      "source": "core",
+      "section": "Signature Algorithms line 2166: parties SHOULD support ES256",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.prohibited-alg",
+      "source": "core",
+      "section": "Common JWT Claims line 2298 (implementations MUST NOT accept none, the polymorphic EdDSA identifier or a symmetric algorithm) and Signature Algorithms lines 2171-2172",
+      "anchor": "common-claims",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.key-alg-absent",
+      "source": "core",
+      "section": "Signature Algorithms line 2170 (a verifier MUST reject a key whose alg is absent) and signature-key Algorithm Determination line 203; the cnf.jwk is such a key",
+      "anchor": "signature-algorithms",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.key-alg-mismatch",
+      "source": "core",
+      "section": "Signature Algorithms line 2173 (a verifier MUST reject a key whose kty or crv disagrees with its alg) and signature-key line 229",
+      "anchor": "signature-algorithms",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.iss-identifier",
+      "source": "core",
+      "section": "Common JWT Verification step 4, line 2318: verify iss is a valid server identifier (lowercase, line 1953)",
+      "anchor": "common-verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.iat-absent",
+      "source": "core",
+      "section": "Not graded: Common JWT Claims line 2307 makes iat REQUIRED but 'not a validity check', and no verification step refuses a token without it",
+      "anchor": "common-claims",
+      "scope": "out-of-slice"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.jwt.person-scope",
+      "source": "core",
+      "section": "Not graded: Person Token Structure line 898 says a person token MUST NOT contain scope, binding the issuer; Person Token Verification (lines 913-918) names no refusal for it",
+      "anchor": "person-token-structure",
+      "scope": "out-of-slice"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.http-sig.verify",
+      "source": "core",
+      "section": "Verification (Server) step 7, line 2250, with Ed25519 support at line 2166: a signature over the received components verifies; a changed path or Signature-Key is invalid_signature",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.http-sig.window",
+      "source": "core",
+      "section": "Verification (Server) step 3, line 2246: created within the window (60 seconds by default, or the advertised signature_window) verifies; older is invalid_signature; further ahead is clock_skew",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.http-sig.coverage",
+      "source": "core",
+      "section": "Covered Components lines 2204-2215 and Verification (Server) step 2, line 2245: a body to a PS or AS endpoint MUST cover content-digest and content-type, and every component the server requires; otherwise invalid_input",
+      "anchor": "covered-components",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.http-sig.es256",
+      "source": "core",
+      "section": "Signature Algorithms line 2166: SHOULD support ES256; an ES256 request key verifies",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.library",
+      "id": "vector.http-sig.body-digest",
+      "source": "core",
+      "section": "Not graded: the drafts require content-digest coverage (line 2211) but no pinned MUST requires checking the Content-Digest value against the body bytes, so the vector's refusal of a changed body is recorded only",
+      "anchor": "covered-components",
+      "scope": "out-of-slice"
     }
   ]
 }

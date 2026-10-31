@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "id": "vector.http-signature.02",
+  "title": "Community vector http-signature #2: POST with body covers content-digest",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/http-signature.json",
+      "sha256": "d37870542ce41136e80e2e170483ebfa31e6ab6f1a5ae56f7aa960b43173b691",
+      "index": 1
+    },
+    "kind": "http-signature",
+    "case": {
+      "name": "POST with body covers content-digest",
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "alg": "Ed25519",
+        "use": "sig",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+      },
+      "request": {
+        "method": "POST",
+        "url": "https://ps.example/token",
+        "headers": {
+          "Content-Type": "application/json",
+          "Signature-Key": "sig=jwt; jwt=\"eyJhbGciOiJFZDI1NTE5In0.e30.c2ln\""
+        },
+        "body": "{\"resource_token\":\"x\"}"
+      },
+      "signed": {
+        "Content-Digest": "sha-256=:ybC6GsvdO/cjY2Rd5x9Ud8/pb3tqRjxfwwUqf9W21uA=:",
+        "Signature": "sig=:oPHeGWaHZ27TbxAFMUwoSUlbOVav6NoZP3RLAvOMpXmhNmamenWRYrSNV1wXfgAIMsyS6Pw2fN+loiRH1RXpBA==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-digest\" \"content-type\");created=1791275958"
+      },
+      "expect": "valid"
+    }
+  },
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "vector.http-sig.verify",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

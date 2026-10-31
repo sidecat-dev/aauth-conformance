@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "id": "vector.jwt.14",
+  "title": "Community vector jwt #14: person token carrying scope is rejected (recorded, not graded: the drafts name no verifier refusal)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/jwt.json",
+      "sha256": "5778abc224a1774f45d228d37039c293db51989a7ab7981cf755be47a446cfe0",
+      "index": 13
+    },
+    "kind": "jwt",
+    "case": {
+      "name": "person token carrying scope is rejected",
+      "typ": "aa-person+jwt",
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "alg": "Ed25519",
+        "use": "sig",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+      },
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "audience": "https://resource.example",
+      "token": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoia1ByS19xbXhWV2FZVkE5d3dCRjZJdW8zdlZ6ejdUeEhDVHdYQnlnclM0ayIsInR5cCI6ImFhLXBlcnNvbitqd3QifQ.eyJhdWQiOlsiaHR0cHM6Ly9yZXNvdXJjZS5leGFtcGxlIl0sImNuZiI6eyJqd2siOnsiYWxnIjoiRWQyNTUxOSIsImNydiI6IkVkMjU1MTkiLCJraWQiOiJrUHJLX3FteFZXYVlWQTl3d0JGNkl1bzN2Vnp6N1R4SENUd1hCeWdyUzRrIiwia3R5IjoiT0tQIiwidXNlIjoic2lnIiwieCI6IjExcVlBWUt4Q3JmVlNfN1R5V1FIT2c3aGN2UGFwaU1scndJYWFQY0hVUm8ifX0sImR3ayI6ImFhdXRoLXBlcnNvbi5qc29uIiwiZXhwIjoxNzMwMjIxMjAwLCJpYXQiOjE3MzAyMTc2MDAsImlzcyI6Imh0dHBzOi8vcHMuZXhhbXBsZSIsImp0aSI6InB0LXNjb3BlIiwibWlzc2lvbl9zMjU2IjoiZEJqZnRKZVo0Q1ZQLW1COTJLMjd1aGJVSlUxcDFyX3dXMWdGV0ZPRWpYayIsInNjb3BlIjoiZGF0YS5yZWFkIiwic3ViIjoiOGYxNGU0NWZjZWVhMTY3YTVhMzZkZWRkNGJlYTI1NDMifQ.vBWzEdpfXrDkN7gPatqG7IwHT1P8fWZZx3G4u8fSLFw4wwX8VzxaG_uz2cDxJeXa9t3FPC7w--0pY0j8O0LXAQ",
+      "reject": "a person token MUST NOT contain scope or account (draft -11 §7.1.2)"
+    }
+  },
+  "assertions": [
+    {
+      "id": "refused",
+      "clause": "vector.jwt.person-scope",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": false
+    }
+  ]
+}

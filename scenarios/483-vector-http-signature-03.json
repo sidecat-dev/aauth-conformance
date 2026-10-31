@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "id": "vector.http-signature.03",
+  "title": "Community vector http-signature #3: POST with body, ES256 key (ES256 is a SHOULD)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/http-signature.json",
+      "sha256": "d37870542ce41136e80e2e170483ebfa31e6ab6f1a5ae56f7aa960b43173b691",
+      "index": 2
+    },
+    "kind": "http-signature",
+    "case": {
+      "name": "POST with body, ES256 key",
+      "signing_key": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+        "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+        "kid": "oKIywvGUpTVTyxMQ3bwIIeQUudfr_CkLMjCE19ECD-U",
+        "alg": "ES256",
+        "use": "sig",
+        "d": "jpsQnnGQmL-YBIffH1136cspYG6-0iY7X1fCE9-E9LI"
+      },
+      "request": {
+        "method": "POST",
+        "url": "https://ps.example/token",
+        "headers": {
+          "Content-Type": "application/json",
+          "Signature-Key": "sig=jwt; jwt=\"eyJhbGciOiJFZDI1NTE5In0.e30.c2ln\""
+        },
+        "body": "{\"resource_token\":\"x\"}"
+      },
+      "signed": {
+        "Content-Digest": "sha-256=:ybC6GsvdO/cjY2Rd5x9Ud8/pb3tqRjxfwwUqf9W21uA=:",
+        "Signature": "sig=:zT1hQ931yZEeZTR2FBlPMAlwacOZOtEOolQ7/cmN4iTTnYKtnVKTFJq+fDL1ENDq2NGGD1sOc+CyIUMj08Lqwg==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\" \"content-digest\" \"content-type\");created=1791275958"
+      },
+      "expect": "valid"
+    }
+  },
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "vector.http-sig.es256",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

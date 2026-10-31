@@ -13,6 +13,7 @@ events = []
 r3 = []
 mission = ["federation"]
 supervision = []
+vectors = []
 
 [dependencies]
 aauth-rust-jose = "=0.1.0-alpha.2"

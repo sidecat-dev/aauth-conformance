@@ -11,6 +11,8 @@ mod r3;
 mod mission;
 #[cfg(feature = "supervision")]
 mod supervision;
+#[cfg(feature = "vectors")]
+mod vectors;
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAgentToken,
 };
@@ -191,6 +193,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         #[cfg(not(feature = "supervision"))]
         return Err("rebuild this launcher for the supervision roles".into());
+    }
+    if config.role == "vectors.library" {
+        #[cfg(feature = "vectors")]
+        return vectors::run(config);
+        #[cfg(not(feature = "vectors"))]
+        return Err("rebuild this launcher for vectors.library".into());
     }
     if !config.role.is_empty() && config.role != "resource.agent-identity" {
         return Err(format!("rebuild this launcher for {}", config.role).into());

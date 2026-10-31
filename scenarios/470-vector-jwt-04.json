@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "id": "vector.jwt.04",
+  "title": "Community vector jwt #4: auth token (exact compact bytes (minting) are not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/jwt.json",
+      "sha256": "5778abc224a1774f45d228d37039c293db51989a7ab7981cf755be47a446cfe0",
+      "index": 3
+    },
+    "kind": "jwt",
+    "case": {
+      "name": "auth token",
+      "typ": "aa-auth+jwt",
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "alg": "Ed25519",
+        "use": "sig",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+      },
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "claims": {
+        "dwk": "aauth-person.json",
+        "ps": "https://ps.example",
+        "scope": "data.read",
+        "mission_s256": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+        "cnf": {
+          "jwk": {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+            "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+            "alg": "Ed25519",
+            "use": "sig"
+          }
+        },
+        "iss": "https://ps.example",
+        "sub": "8f14e45fceea167a5a36dedd4bea2543",
+        "aud": [
+          "https://resource.example"
+        ],
+        "exp": 4102446600,
+        "iat": 4102443000,
+        "jti": "auth-token-1"
+      },
+      "audience": "https://resource.example",
+      "token": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoia1ByS19xbXhWV2FZVkE5d3dCRjZJdW8zdlZ6ejdUeEhDVHdYQnlnclM0ayIsInR5cCI6ImFhLWF1dGgrand0In0.eyJkd2siOiJhYXV0aC1wZXJzb24uanNvbiIsInBzIjoiaHR0cHM6Ly9wcy5leGFtcGxlIiwic2NvcGUiOiJkYXRhLnJlYWQiLCJtaXNzaW9uX3MyNTYiOiJkQmpmdEplWjRDVlAtbUI5MksyN3VoYlVKVTFwMXJfd1cxZ0ZXRk9FalhrIiwiY25mIjp7Imp3ayI6eyJrdHkiOiJPS1AiLCJjcnYiOiJFZDI1NTE5IiwieCI6IjExcVlBWUt4Q3JmVlNfN1R5V1FIT2c3aGN2UGFwaU1scndJYWFQY0hVUm8iLCJraWQiOiJrUHJLX3FteFZXYVlWQTl3d0JGNkl1bzN2Vnp6N1R4SENUd1hCeWdyUzRrIiwiYWxnIjoiRWQyNTUxOSIsInVzZSI6InNpZyJ9fSwiaXNzIjoiaHR0cHM6Ly9wcy5leGFtcGxlIiwic3ViIjoiOGYxNGU0NWZjZWVhMTY3YTVhMzZkZWRkNGJlYTI1NDMiLCJhdWQiOlsiaHR0cHM6Ly9yZXNvdXJjZS5leGFtcGxlIl0sImV4cCI6NDEwMjQ0NjYwMCwiaWF0Ijo0MTAyNDQzMDAwLCJqdGkiOiJhdXRoLXRva2VuLTEifQ.XiG4-rWI3-p5SzDn-kwEPoItsd3xJCaPqhGpKHxJy0YbprMXUC2wJ-uB4cBfncgchg34DPZsJrCkJJN26im7AQ"
+    }
+  },
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "vector.jwt.ed25519",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

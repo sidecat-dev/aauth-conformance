@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "vector.signature-key.06",
+  "title": "Community vector signature-key #6: sig=x-unregistered",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/signature-key.json",
+      "sha256": "ab8aea985d7d3a10595aa774192f76db6998f26abc2a1acc4cb2de0cbd3375e8",
+      "index": 5
+    },
+    "kind": "signature-key",
+    "case": {
+      "header": "sig=x-unregistered",
+      "scheme": "x-unregistered",
+      "params": {},
+      "error": "unsupported_scheme"
+    }
+  },
+  "assertions": [
+    {
+      "id": "code",
+      "clause": "vector.sigkey.unsupported-scheme",
+      "kind": "vector-result",
+      "member": "code",
+      "equals": "unsupported_scheme"
+    }
+  ]
+}

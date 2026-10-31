@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "id": "vector.signature-error.07",
+  "title": "Community vector signature-error #7: error=issuer_mismatch (canonical serialization is not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/signature-error.json",
+      "sha256": "0811df1a5db06152411071a7f26ebff5286bec336339d033183f4ce9c6681334",
+      "index": 6
+    },
+    "kind": "signature-error",
+    "case": {
+      "header": "error=issuer_mismatch",
+      "code": "issuer_mismatch",
+      "canonical": true
+    }
+  },
+  "assertions": [
+    {
+      "id": "code",
+      "clause": "vector.signature-error",
+      "kind": "vector-result",
+      "member": "code",
+      "equals": "issuer_mismatch"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "id": "vector.jwt.07",
+  "title": "Community vector jwt #7: agent token (ES256) (ES256 is a SHOULD)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/jwt.json",
+      "sha256": "5778abc224a1774f45d228d37039c293db51989a7ab7981cf755be47a446cfe0",
+      "index": 6
+    },
+    "kind": "jwt",
+    "case": {
+      "name": "agent token (ES256)",
+      "typ": "aa-agent+jwt",
+      "signing_key": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+        "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+        "kid": "oKIywvGUpTVTyxMQ3bwIIeQUudfr_CkLMjCE19ECD-U",
+        "alg": "ES256",
+        "use": "sig",
+        "d": "jpsQnnGQmL-YBIffH1136cspYG6-0iY7X1fCE9-E9LI"
+      },
+      "kid": "oKIywvGUpTVTyxMQ3bwIIeQUudfr_CkLMjCE19ECD-U",
+      "claims": {
+        "dwk": "aauth-agent.json",
+        "ps": "https://ps.example",
+        "cnf": {
+          "jwk": {
+            "kty": "EC",
+            "crv": "P-256",
+            "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+            "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+            "kid": "oKIywvGUpTVTyxMQ3bwIIeQUudfr_CkLMjCE19ECD-U",
+            "alg": "ES256",
+            "use": "sig"
+          }
+        },
+        "iss": "https://agent.example",
+        "sub": "aauth:assistant@agent.example",
+        "exp": 4102444800,
+        "iat": 1767225600,
+        "jti": "agent-token-es256"
+      },
+      "token": "eyJhbGciOiJFUzI1NiIsImtpZCI6Im9LSXl3dkdVcFRWVHl4TVEzYndJSWVRVXVkZnJfQ2tMTWpDRTE5RUNELVUiLCJ0eXAiOiJhYS1hZ2VudCtqd3QifQ.eyJkd2siOiJhYXV0aC1hZ2VudC5qc29uIiwicHMiOiJodHRwczovL3BzLmV4YW1wbGUiLCJjbmYiOnsiandrIjp7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYiLCJ4IjoiZjgzT0ozRDJ4RjFCZzh2dWI5dExlMWdITXpWNzZlOFR1czl1UEh2UlZFVSIsInkiOiJ4X0ZFelJ1OW0zNkhMTl90dWU2NTlMTnBYVzZwQ3lTdGlrWWpLSVdJNWEwIiwia2lkIjoib0tJeXd2R1VwVFZUeXhNUTNid0lJZVFVdWRmcl9Da0xNakNFMTlFQ0QtVSIsImFsZyI6IkVTMjU2IiwidXNlIjoic2lnIn19LCJpc3MiOiJodHRwczovL2FnZW50LmV4YW1wbGUiLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQuZXhhbXBsZSIsImV4cCI6NDEwMjQ0NDgwMCwiaWF0IjoxNzY3MjI1NjAwLCJqdGkiOiJhZ2VudC10b2tlbi1lczI1NiJ9.Di1F2GPHxOziBaF0Ac3uCjOqX9TlmwJzeqZySA4RJ3BH7qd4CbhQedbMOftCh9gShjGbaBLgpakSazaBvwWG3Q",
+      "randomized": true
+    }
+  },
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "vector.jwt.es256",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

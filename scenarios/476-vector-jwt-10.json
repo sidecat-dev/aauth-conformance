@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "id": "vector.jwt.10",
+  "title": "Community vector jwt #10: cnf.jwk without alg is rejected",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/jwt.json",
+      "sha256": "5778abc224a1774f45d228d37039c293db51989a7ab7981cf755be47a446cfe0",
+      "index": 9
+    },
+    "kind": "jwt",
+    "case": {
+      "name": "cnf.jwk without alg is rejected",
+      "typ": "aa-agent+jwt",
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "alg": "Ed25519",
+        "use": "sig",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+      },
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "token": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoia1ByS19xbXhWV2FZVkE5d3dCRjZJdW8zdlZ6ejdUeEhDVHdYQnlnclM0ayIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJkd2siOiJhYXV0aC1hZ2VudC5qc29uIiwiY25mIjp7Imp3ayI6eyJrdHkiOiJPS1AiLCJjcnYiOiJFZDI1NTE5IiwieCI6IjExcVlBWUt4Q3JmVlNfN1R5V1FIT2c3aGN2UGFwaU1scndJYWFQY0hVUm8iLCJraWQiOiJrUHJLX3FteFZXYVlWQTl3d0JGNkl1bzN2Vnp6N1R4SENUd1hCeWdyUzRrIn19LCJpc3MiOiJodHRwczovL2FnZW50LmV4YW1wbGUiLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQuZXhhbXBsZSIsImV4cCI6NDEwMjQ0NDgwMCwiaWF0IjoxNzY3MjI1NjAwLCJqdGkiOiJhZ2VudC10b2tlbi0zIn0.QW8QDQ9ts7xm2qK18iVkx4sbe9piBB4CfTaIf7R14Oa2IYtrZvBPgM_2pRt26_dFzvn7SJv_G9O5Zda8nxunAA",
+      "reject": "cnf.jwk alg absent (signature-key §3.3)"
+    }
+  },
+  "assertions": [
+    {
+      "id": "refused",
+      "clause": "vector.jwt.key-alg-absent",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": false
+    }
+  ]
+}

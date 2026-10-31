@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "id": "vector.jwt.01",
+  "title": "Community vector jwt #1: agent token (exact compact bytes (minting) are not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/jwt.json",
+      "sha256": "5778abc224a1774f45d228d37039c293db51989a7ab7981cf755be47a446cfe0",
+      "index": 0
+    },
+    "kind": "jwt",
+    "case": {
+      "name": "agent token",
+      "typ": "aa-agent+jwt",
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "alg": "Ed25519",
+        "use": "sig",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+      },
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "claims": {
+        "dwk": "aauth-agent.json",
+        "ps": "https://ps.example",
+        "cnf": {
+          "jwk": {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+            "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+            "alg": "Ed25519",
+            "use": "sig"
+          }
+        },
+        "iss": "https://agent.example",
+        "sub": "aauth:assistant@agent.example",
+        "exp": 4102444800,
+        "iat": 1767225600,
+        "jti": "agent-token-1"
+      },
+      "token": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoia1ByS19xbXhWV2FZVkE5d3dCRjZJdW8zdlZ6ejdUeEhDVHdYQnlnclM0ayIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJkd2siOiJhYXV0aC1hZ2VudC5qc29uIiwicHMiOiJodHRwczovL3BzLmV4YW1wbGUiLCJjbmYiOnsiandrIjp7Imt0eSI6Ik9LUCIsImNydiI6IkVkMjU1MTkiLCJ4IjoiMTFxWUFZS3hDcmZWU183VHlXUUhPZzdoY3ZQYXBpTWxyd0lhYVBjSFVSbyIsImtpZCI6ImtQcktfcW14VldhWVZBOXd3QkY2SXVvM3ZWeno3VHhIQ1R3WEJ5Z3JTNGsiLCJhbGciOiJFZDI1NTE5IiwidXNlIjoic2lnIn19LCJpc3MiOiJodHRwczovL2FnZW50LmV4YW1wbGUiLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQuZXhhbXBsZSIsImV4cCI6NDEwMjQ0NDgwMCwiaWF0IjoxNzY3MjI1NjAwLCJqdGkiOiJhZ2VudC10b2tlbi0xIn0.zJMbl5ltau7oH7CxOtWeaVxDSp5AkpwE2rXJnYcJ_Lfjdy7wwVhGjf4_8FM88oFq0rQnZE5JP1606LxmbtfSCA"
+    }
+  },
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "vector.jwt.ed25519",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

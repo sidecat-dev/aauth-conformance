@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "vector.agent-identifier.01",
+  "title": "Community vector agent-identifier #1: assistant-v2",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/agent-identifier.json",
+      "sha256": "2f095ee94de677b9198466b7ce158840b38a36ef86de15172f99217bd9b77ead",
+      "index": 0
+    },
+    "kind": "agent-identifier",
+    "case": {
+      "input": "aauth:assistant-v2@agent.example",
+      "valid": true,
+      "name": "assistant-v2",
+      "domain": "agent.example"
+    }
+  },
+  "assertions": [
+    {
+      "id": "valid",
+      "clause": "vector.agent-identifier",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}
