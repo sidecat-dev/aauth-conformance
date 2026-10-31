@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "id": "events-ap-digest-without-body",
+  "title": "body_s256 with no body",
+  "role_under_test": "events.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 0,
+    "deliveries": [
+      {
+        "mutation": "digest-without-body",
+        "body": false
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "delivery-1",
+      "id": "status",
+      "clause": "events.ap.body-s256",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "stage": "delivery-1",
+      "id": "error",
+      "clause": "events.ap.body-s256",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_jwt"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "problem-type",
+      "clause": "events.ap.problem-type",
+      "kind": "problem-if-present",
+      "equals": "invalid_jwt"
+    }
+  ]
+}

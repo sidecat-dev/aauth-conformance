@@ -162,7 +162,7 @@ func run() error {
 			}
 		}
 		fmt.Printf("Built %s at %s\n", item.id, rev)
-		targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: rev, Command: []string{binary}, Claims: claims})
+		targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: rev, Command: []string{binary}, Claims: offeredClaims(claims, unofferedClaims[*role][item.id])})
 	}
 	b, err := json.MarshalIndent(targets, "", "  ")
 	if err != nil {
@@ -204,6 +204,21 @@ var rustRoleCrates = map[string][]string{
 	conformance.FederatedRole: {"aauth-rust-access-server"},
 	conformance.DeferredRole:  {"aauth-rust-access-server"},
 	conformance.SubagentRole:  {"aauth-rust-access-server"},
+}
+
+// unofferedClaims lists clauses an implementation's native API assigns to
+// host code, so a launcher-supplied component would decide them. They stay
+// unclaimed for that implementation and are reported as not offered.
+var unofferedClaims = map[string]map[string][]string{}
+
+func offeredClaims(claims, unoffered []string) []string {
+	offered := []string{}
+	for _, claim := range claims {
+		if !slices.Contains(unoffered, claim) {
+			offered = append(offered, claim)
+		}
+	}
+	return offered
 }
 
 // Remove role-specific sources when an output directory is reused for another

@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "id": "events-ap-max-uses",
+  "title": "max_uses 2: remaining_uses counts down and a third event is refused",
+  "role_under_test": "events.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 2,
+    "deliveries": [
+      {
+        "mutation": "none",
+        "body": true
+      },
+      {
+        "mutation": "none",
+        "body": true
+      },
+      {
+        "mutation": "none",
+        "body": false
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "subscribe",
+      "id": "subscribe-token",
+      "clause": "events.ap.subscribe-token",
+      "kind": "events-subscribe-token",
+      "equals": true
+    },
+    {
+      "stage": "delivery-1",
+      "id": "first-accepted",
+      "clause": "events.ap.accepted",
+      "kind": "status",
+      "equals": 202
+    },
+    {
+      "stage": "delivery-1",
+      "id": "first-remaining",
+      "clause": "events.ap.remaining-uses",
+      "kind": "json-member",
+      "member": "remaining_uses",
+      "equals": 1
+    },
+    {
+      "stage": "delivery-2",
+      "id": "second-accepted",
+      "clause": "events.ap.accepted",
+      "kind": "status",
+      "equals": 202
+    },
+    {
+      "stage": "delivery-2",
+      "id": "second-remaining",
+      "clause": "events.ap.remaining-uses",
+      "kind": "json-member",
+      "member": "remaining_uses",
+      "equals": 0
+    },
+    {
+      "stage": "delivery-3",
+      "id": "third-refused",
+      "clause": "events.ap.max-uses",
+      "kind": "status",
+      "equals": 404
+    }
+  ]
+}

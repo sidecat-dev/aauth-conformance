@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "id": "events-ap-cnf",
+  "title": "Event token carrying cnf",
+  "role_under_test": "events.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 0,
+    "deliveries": [
+      {
+        "mutation": "cnf",
+        "body": true
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "delivery-1",
+      "id": "status",
+      "clause": "events.ap.cnf-absent",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "stage": "delivery-1",
+      "id": "error",
+      "clause": "events.ap.validation",
+      "kind": "sfv-token-present",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": true
+    }
+  ]
+}

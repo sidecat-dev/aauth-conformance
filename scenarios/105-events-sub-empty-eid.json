@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "events-sub-empty-eid",
+  "title": "Subscribe token with an empty eid",
+  "role_under_test": "events.subscription",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "empty-eid"
+  },
+  "assertions": [
+    {
+      "stage": "registration",
+      "id": "status",
+      "clause": "events.sub.eid",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "stage": "registration",
+      "id": "error",
+      "clause": "events.sub.verification",
+      "kind": "sfv-token-present",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": true
+    }
+  ]
+}

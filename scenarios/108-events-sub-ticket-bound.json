@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "events-sub-ticket-bound",
+  "title": "Protected registration with the key the ticket recorded",
+  "role_under_test": "events.subscription",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "none",
+    "ticket": "bound"
+  },
+  "assertions": [
+    {
+      "stage": "ticket",
+      "id": "ticket-issued",
+      "clause": "events.sub.ticket-issued",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "registration",
+      "id": "registered",
+      "clause": "events.sub.ticket-bound",
+      "kind": "status-class",
+      "equals": "2xx"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "events-ap-other-resource",
+  "title": "Valid event from a Resource other than the subscribed one",
+  "role_under_test": "events.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 0,
+    "deliveries": [
+      {
+        "mutation": "other-resource",
+        "body": true
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "subscribe",
+      "id": "subscribe-token",
+      "clause": "events.ap.subscribe-token",
+      "kind": "events-subscribe-token",
+      "equals": true
+    },
+    {
+      "stage": "delivery-1",
+      "id": "forbidden",
+      "clause": "events.ap.resource-match",
+      "kind": "status",
+      "equals": 403
+    }
+  ]
+}

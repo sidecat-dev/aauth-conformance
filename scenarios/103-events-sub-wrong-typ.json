@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "id": "events-sub-wrong-typ",
+  "title": "Agent token type presented as a subscribe token",
+  "role_under_test": "events.subscription",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "wrong-typ"
+  },
+  "assertions": [
+    {
+      "stage": "registration",
+      "id": "status",
+      "clause": "events.sub.typ-dwk",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "stage": "registration",
+      "id": "error",
+      "clause": "events.sub.jwt-code",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_jwt"
+    },
+    {
+      "stage": "registration",
+      "id": "problem-type",
+      "clause": "events.sub.problem-type",
+      "kind": "problem-if-present",
+      "equals": "invalid_jwt"
+    }
+  ]
+}

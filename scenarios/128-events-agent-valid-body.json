@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "events-agent-valid-body",
+  "title": "Valid event with a body",
+  "role_under_test": "events.agent",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "none",
+    "body": true
+  },
+  "assertions": [
+    {
+      "stage": "event",
+      "id": "accepted",
+      "clause": "events.agent.accepts",
+      "kind": "events-accepted",
+      "equals": true
+    }
+  ]
+}
