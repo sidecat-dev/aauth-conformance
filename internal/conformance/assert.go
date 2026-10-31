@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"mime"
+	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/dunglas/httpsfv"
 )
@@ -31,7 +33,7 @@ func Check(a Assertion, r Response) Result {
 			result.Detail = "missing JSON member"
 			return result
 		}
-	case "sfv-token", "sfv-strings", "sfv-string-set":
+	case "sfv-token", "sfv-strings", "sfv-string-set", "sfv-integer":
 		dictionary, err := httpsfv.UnmarshalDictionary(r.Header.Values(a.Header))
 		if err != nil {
 			result.Detail = err.Error()
@@ -42,7 +44,19 @@ func Check(a Assertion, r Response) Result {
 			result.Detail = "missing dictionary member"
 			return result
 		}
-		if a.Kind == "sfv-token" {
+		if a.Kind == "sfv-integer" {
+			item, ok := member.(httpsfv.Item)
+			if !ok || item.Params != nil && len(item.Params.Names()) != 0 {
+				result.Detail = "member is not a bare Integer item"
+				return result
+			}
+			value, ok := item.Value.(int64)
+			if !ok {
+				result.Detail = "member is not an Integer"
+				return result
+			}
+			actual = float64(value)
+		} else if a.Kind == "sfv-token" {
 			item, ok := member.(httpsfv.Item)
 			if !ok {
 				result.Detail = "member is not an Item"
@@ -91,6 +105,90 @@ func Check(a Assertion, r Response) Result {
 				actual, expected = gotSet, wantSet
 			}
 		}
+	case "sfv-trailer-integer", "sfv-trailer-if-present":
+		trailer := fieldValues(r.Trailer, a.Header)
+		if a.Kind == "sfv-trailer-if-present" && len(trailer) == 0 {
+			result.State = "pass"
+			result.Actual = nil
+			result.Detail = "no trailer"
+			return result
+		}
+		if len(trailer) == 0 {
+			result.Detail = "missing trailer"
+			return result
+		}
+		dictionary, err := httpsfv.UnmarshalDictionary(trailer)
+		if err != nil {
+			result.Detail = err.Error()
+			return result
+		}
+		member, ok := dictionary.Get(a.Member)
+		if !ok {
+			result.Detail = "missing dictionary member"
+			return result
+		}
+		item, ok := member.(httpsfv.Item)
+		if !ok || item.Params != nil && len(item.Params.Names()) != 0 {
+			result.Detail = "member is not a bare Integer item"
+			return result
+		}
+		value, ok := item.Value.(int64)
+		if !ok {
+			result.Detail = "member is not an Integer"
+			return result
+		}
+		actual = float64(value)
+	case "sfv-absent", "sfv-trailer-absent":
+		values := r.Header.Values(a.Header)
+		if a.Kind == "sfv-trailer-absent" {
+			values = fieldValues(r.Trailer, a.Header)
+		}
+		if len(values) == 0 {
+			actual = true
+			break
+		}
+		dictionary, err := httpsfv.UnmarshalDictionary(values)
+		if err != nil {
+			result.Detail = err.Error()
+			return result
+		}
+		_, present := dictionary.Get(a.Member)
+		actual = !present
+	case "json-path":
+		var body any
+		if err := json.Unmarshal(r.Body, &body); err != nil {
+			result.Detail = err.Error()
+			return result
+		}
+		cursor := body
+		present := true
+		for _, part := range strings.Split(a.Member, ".") {
+			object, ok := cursor.(map[string]any)
+			if !ok {
+				present = false
+				break
+			}
+			cursor, present = object[part]
+			if !present {
+				break
+			}
+		}
+		if !present {
+			if expected != nil {
+				result.Detail = "missing JSON path"
+				return result
+			}
+			actual = nil
+			break
+		}
+		if expected == nil {
+			result.Actual = cursor
+			result.Detail = "JSON path is present"
+			return result
+		}
+		actual = cursor
+	case "header-equals":
+		actual = r.Header.Get(a.Header)
 	case "problem-if-present":
 		media, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if media != "application/problem+json" {
@@ -118,4 +216,22 @@ func Check(a Assertion, r Response) Result {
 		result.State = "pass"
 	}
 	return result
+}
+
+// fieldValues returns one field's lines. Header.Values reads only the
+// canonical MIME key, so a trailer map that still uses the wire spelling
+// is visible here too.
+func fieldValues(h http.Header, name string) []string {
+	if h == nil {
+		return nil
+	}
+	if values := h.Values(name); len(values) != 0 {
+		return values
+	}
+	for key, values := range h {
+		if strings.EqualFold(key, name) {
+			return values
+		}
+	}
+	return nil
 }

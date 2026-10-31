@@ -180,7 +180,7 @@ func TestFederatedSuiteKeepsMissingAdapterAnExecutionError(t *testing.T) {
 		t.Fatal(err)
 	}
 	selected, err := s.ForRole("authorization.federated")
-	if err != nil || len(selected.Scenarios) != 28 {
+	if err != nil || len(selected.Scenarios) != 34 {
 		t.Fatalf("four-party scenarios: %d, %v", len(selected.Scenarios), err)
 	}
 	report, err := RunSuite(context.Background(), s, Targets{Version: 1, Role: "authorization.federated",
@@ -189,7 +189,7 @@ func TestFederatedSuiteKeepsMissingAdapterAnExecutionError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Success() || report.Runs[0].Error == "" || len(report.Runs[0].Cases) != 28 {
+	if report.Success() || report.Runs[0].Error == "" || len(report.Runs[0].Cases) != 34 {
 		t.Fatal("missing, unclaimed implementation was hidden")
 	}
 }
@@ -285,6 +285,42 @@ func TestFederatedResourceOracleChecksChallengeLineage(t *testing.T) {
 				t.Fatalf("valid = %v", got)
 			}
 		})
+	}
+}
+
+// all_time is cumulative for one (ps, sub, aud). The grade is the charge.
+func TestUsageDeltaIgnoresEarlierMetering(t *testing.T) {
+	a := Assertion{ID: "delta", Clause: "budget.usage", Kind: "usage-delta", Equals: json.RawMessage(`1000`)}
+	before := Response{Status: 200, Body: []byte(`{"usage":{"all_time":2502000}}`)}
+	after := Response{Status: 200, Body: []byte(`{"usage":{"all_time":2503000}}`)}
+	if got := checkUsageDelta(a, before, after); got.State != "pass" {
+		t.Fatal(got)
+	}
+	omitted := Response{Status: 200, Body: []byte(`{"unit":"credits","decimals":0}`)}
+	fresh := Response{Status: 200, Body: []byte(`{"usage":{"all_time":1000}}`)}
+	if got := checkUsageDelta(a, omitted, fresh); got.State != "pass" {
+		t.Fatal(got)
+	}
+	if got := checkUsageDelta(a, omitted, Response{Status: 200, Body: []byte(`{"unit":"credits"}`)}); got.State != "fail" {
+		t.Fatal("missing all_time after the charge passed")
+	}
+}
+
+// A different-unit step-up may omit budget_consumed. A record in another scale fails.
+func TestConsumedRecordIsCheckedOnlyWhenPresent(t *testing.T) {
+	a := Assertion{ID: "other", Clause: "budget.consumption", Kind: "fed-consumed-if-present", Equals: json.RawMessage(`{"consumed":1500000,"unit":"credits","decimals":0}`)}
+	auth := PersonObservation{Claims: map[string]any{"jti": "auth-1"}}
+	points := map[string]any{"amount": float64(5_000_000), "unit": "points", "decimals": float64(0)}
+	credits := map[string]any{"amount": float64(5_000_000), "unit": "credits", "decimals": float64(0)}
+	record := map[string]any{"jti": "auth-1", "consumed": float64(1_500_000)}
+	if got := checkFederatedConsumedIfPresent(a, PersonObservation{Claims: map[string]any{"budget": points}}, auth); got.State != "pass" {
+		t.Fatal(got)
+	}
+	if got := checkFederatedConsumedIfPresent(a, PersonObservation{Claims: map[string]any{"budget": credits, "budget_consumed": record}}, auth); got.State != "pass" {
+		t.Fatal(got)
+	}
+	if got := checkFederatedConsumedIfPresent(a, PersonObservation{Claims: map[string]any{"budget": points, "budget_consumed": record}}, auth); got.State != "fail" {
+		t.Fatal("record in another scale passed")
 	}
 }
 

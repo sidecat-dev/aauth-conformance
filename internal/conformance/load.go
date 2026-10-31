@@ -187,7 +187,7 @@ func (s Suite) validate() error {
 		}
 		assertions := map[string]bool{}
 		for _, a := range scenario.Assertions {
-			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded", "deferred-pending", "deferred-proof", "deferred-forwarded", "deferred-stable", "subagent-jwt", "subagent-proof", "subagent-forwarded", "subagent-refused", "subagent-pending", "subagent-no-token", "subagent-cancelled"}, a.Kind) || !json.Valid(a.Equals) {
+			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "sfv-integer", "sfv-trailer-integer", "sfv-trailer-if-present", "sfv-absent", "sfv-trailer-absent", "json-member", "json-path", "usage-delta", "header-equals", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded", "fed-budget", "fed-consumed", "fed-consumed-if-present", "deferred-pending", "deferred-proof", "deferred-forwarded", "deferred-stable", "subagent-jwt", "subagent-proof", "subagent-forwarded", "subagent-refused", "subagent-pending", "subagent-no-token", "subagent-cancelled"}, a.Kind) || !json.Valid(a.Equals) {
 				return fmt.Errorf("invalid assertion %s/%s (clause %q)", scenario.ID, a.ID, a.Clause)
 			}
 			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") || strings.HasPrefix(a.Kind, "ps-") && scenario.Role != PersonServerRole && scenario.Role != FederatedRole && scenario.Role != DeferredRole || strings.HasPrefix(a.Kind, "fed-") && scenario.Role != FederatedRole || strings.HasPrefix(a.Kind, "subagent-") && scenario.Role != SubagentRole {
@@ -209,7 +209,7 @@ func (s Suite) validate() error {
 					scenario.Federated.HarnessPS && slices.Contains([]string{"person", "handoff", "token"}, a.Stage) {
 					return fmt.Errorf("invalid federation assertion stage/kind")
 				}
-				if strings.HasPrefix(a.Kind, "fed-") || strings.HasPrefix(a.Kind, "ps-") {
+				if a.Kind != "fed-budget" && a.Kind != "fed-consumed" && a.Kind != "fed-consumed-if-present" && a.Kind != "usage-delta" && (strings.HasPrefix(a.Kind, "fed-") || strings.HasPrefix(a.Kind, "ps-")) {
 					var b any
 					json.Unmarshal(a.Equals, &b)
 					if _, ok := b.(bool); !ok {
