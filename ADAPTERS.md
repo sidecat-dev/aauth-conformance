@@ -527,3 +527,29 @@ records the person's allow, without a reason, on the held act (Go
 `{"advance":true}` polls the supervisor once (`AdvanceSupervision`,
 `advance_supervision`); `{"deliver":true}` delivers queued events
 (`DeliverSupervisionEvents`, `deliver_supervision`).
+
+## Community vectors role
+
+`role: "vectors.library"` announces `/vector`. The runner POSTs one JSON
+object per case; the launcher calls one public function of its library for
+the case's `kind` and answers 200 with the normalized result, or 501
+`{"not_offered":"..."}`. It builds an in-memory request from the supplied
+method, URL, headers and body and passes the supplied clock, window, required
+components, key and trust documents; it never verifies, signs or repairs
+anything itself.
+
+| Kind | aauth-go | aauth-rust | community aauth-go |
+| --- | --- | --- | --- |
+| agent-identifier | `ValidateAgentIdentifier` | `validate_agent_identifier` | `ParseAgentIdentifier` |
+| server-identifier | `ValidateServerIdentifier` | `validate_server_identifier` | `ValidateServerIdentifier` |
+| jwk-thumbprint | `jose.JWK.Thumbprint` | `Jwk::thumbprint` | `JWK.Thumbprint` |
+| metadata | `events.DecodeAgentProviderMetadata` for `aauth-agent.json` only; the others are not offered | `metadata_jwks_uri` | decode into the role's type, then `Validate` |
+| signature-error | `signaturekey.ParseError` | `signature_error_code` (no `required_input`) | `ParseSignatureError` |
+| requirement | `ParseRequirement`, then `ParseAuthTokenRequirement` or `ParseInteractionRequirement` | Agent `Requirement::parse`; deferred values through `PendingResponse::parse` on the 202 framing | `ParseRequirement` |
+| signature-key | `signaturekey.PrepareRequest` with default (jwt-only) options | `PreparedRequest::prepare_with_schemes(..., &["jwt"])` | `ParseSignatureKey` |
+| jwt | `VerifyAgentToken`, `VerifyPersonToken`, `VerifyResourceToken`, `VerifyAuthToken` with a `StaticKeyResolver` | `AgentToken`, `PersonToken`, `ResourceToken`, `AuthToken` `parse` then `verify` with `TrustedIssuerKeys::from_documents` | `VerifyAgentToken` (agent-token lifetime ceiling lifted, as the module's own vector test does), `VerifyPersonToken`, `VerifyAuthToken`; no standalone resource-token verifier is exported |
+| http-signature | `PrepareRequest` then `Verify`; `require_body_coverage` adds content-digest and content-type to the required components | `prepare_with_schemes` then `verify`; required components beyond its profile are not offered | `VerifyRequestWithOptions` |
+
+The Go launcher is `adapters/go/vectors.go`, the Rust launcher
+`adapters/rust/src/vectors.rs` (feature `vectors`, with the Signature-Key
+crate), and the community launcher `adapters/community-go/vectors.go`.

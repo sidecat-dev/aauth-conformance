@@ -438,3 +438,19 @@ Server does with allow, deny and ask, when the supervisor is unavailable, and
 how it polls a deferred decision); their section text says so. Host
 rate-limiting is a host choice: an implementation that exports no
 rate_limited answer is recorded `not_exercised` with the reason, not passed.
+
+## Community test vectors
+
+The 94 test vectors of the community aauth-go v0.3.0 (`vectors/community/`,
+MIT, see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)) run as the
+`vectors.library` role, one scenario per case, against each library's own
+parsing and verification functions:
+
+```sh
+go run ./cmd/build-adapters -role vectors.library -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -community-source /path/to/community-aauth-go -out build/vectors
+go run ./cmd/aauth-conformance -targets build/vectors/targets.json -report build/vectors-report.json -markdown build/vectors-report.md
+```
+
+The scenarios grade what the pinned drafts fix, which is sometimes less than
+the vector says; [FORMAT.md](FORMAT.md#community-vectors-profile) lists each
+difference. Add `-claim-recommended` to grade the ES256 (SHOULD) cases too.

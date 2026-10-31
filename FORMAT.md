@@ -600,3 +600,50 @@ present and nonempty), `ss-request-equals`, `ss-request-token` (an exact
 forwarded token), `ss-sdi-distinct` (the first two decision requests carry
 different `sdi`) and `ss-mission-match` (a report's `s256` and `mission` are
 those the Agent received, and the digest matches).
+
+## Community vectors profile
+
+`role_under_test: "vectors.library"` grades the 94 test vectors of the
+community aauth-go v0.3.0, copied unchanged into `vectors/community/` (see its
+PROVENANCE.md), one scenario per case (`scenarios/400-493`). `input` holds
+`source` (`file` under `vectors/`, the file's `sha256`, the case `index`),
+the file's `kind` and the `case` exactly as the file carries it; a unit test
+checks every embedded case against the copied file. The fixture is unused
+apart from its clock, which a `signature-key` case uses as `created`.
+
+The runner turns each case into one JSON input for the launcher, so a
+launcher calls a native function and nothing else: the received request with
+the vector's signed headers and any tamper applied, the verifier's clock
+(`created` plus `at_offset`, or a JWT's `iat`, or 2026-01-01 when it has
+none, as the vector files define), the window (60 seconds when absent),
+the issuer's metadata and a JWKS holding the vector key without `d`, and for
+`requirement` a 202 framing around the vector's header. A `signature-key`
+case is a GET carrying the vector's Signature-Key and a placeholder signature
+for label `sig`, enough to reach Signature-Key processing.
+
+The launcher answers 200 with a normalized result (`accepted`, and per kind
+`code`, `thumbprint`, `required_input`, `requirement`, `resource_token`,
+`url`, `interaction_code`, `jwt`; `scheme` and `error` are evidence only),
+or 501 `{"not_offered":"..."}` when the library has no public function for
+the case. `unoffered` lists result members the library cannot produce.
+`vector-result` compares the result member named by `member` with `equals`;
+a not-offered kind or member is `not_exercised`, never a pass. The case's
+result object is kept as the report's case `evidence`.
+
+Expectations come from the drafts, not from the vectors. Where they differ:
+
+| Vector expectation | Graded as | Why |
+| --- | --- | --- |
+| `canonical` byte-for-byte serialization (signature-error, requirement) and exact minted JWT bytes | not graded | the files' own emitter's format; their examples put a space after `;`, RFC 9651 serializes none |
+| Signature-Error `params` keeping an unknown member's value | not graded | the draft only requires ignoring it (line 951) |
+| `sig="jwt";jwt="x"` and `sig=jwt` without `jwt`: `invalid_signature` | refusal only | protocol step 5 (line 2248) points to `invalid_key`, signature-key line 1018 ("malformed") to `invalid_signature` |
+| ES256 tokens, request keys and thumbprints accepted | `recommended` clauses | ES256 is a SHOULD (protocol line 2166) |
+| a changed body with the original Content-Digest refused | `out-of-slice`, recorded | no pinned MUST checks the digest against the body |
+| a JWT without `iat` refused; a person token carrying `scope` refused | `out-of-slice`, recorded | lines 2307 and 898 bind the issuer; no verification step names the refusal |
+| thumbprint of a JWK without `alg` | `out-of-slice`, recorded | every AAuth key carries `alg` (line 2170) |
+| agent-identifier `name`, `discriminator`, `domain` | not graded | parsed fields are an API choice; validity is graded |
+| metadata documents round-trip through Go types | accepted | the verifier-side check (line 1981) and REQUIRED members |
+
+The missing-member case (`sig1=jwt;...` with signature label `sig`) is graded
+`invalid_signature`, settled by the draft text in the
+`vector.sigkey.missing-member` clause.
