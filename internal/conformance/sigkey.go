@@ -183,20 +183,14 @@ func validateSigkeySigner(f Fixture, s Scenario) error {
 	return nil
 }
 
-// sigkeyOffered reports whether a target claims any of a scenario's clauses.
-// A scheme or algorithm a library does not offer is left unclaimed for it, and
-// its scenario is not run: an unclaimed case cannot pass, and running it would
-// only exercise the launcher's refusal to sign or route it.
+// sigkeyOffered reports whether a target claims a scenario's own clause, which
+// its first assertion names; later assertions may share a role-wide clause such
+// as the adapter-contract echo. A scheme or algorithm a library does not offer
+// is left unclaimed for it, and its scenario is not run: an unclaimed case
+// cannot pass, and running it would only exercise the launcher's refusal to
+// sign or route it.
 func sigkeyOffered(s Scenario, t Target) bool {
-	if t.Unavailable != "" {
-		return false
-	}
-	for _, a := range s.Assertions {
-		if slices.Contains(t.Claims, a.Clause) {
-			return true
-		}
-	}
-	return false
+	return t.Unavailable == "" && len(s.Assertions) > 0 && slices.Contains(t.Claims, s.Assertions[0].Clause)
 }
 
 func sigkeyNotOffered(t Target) string {

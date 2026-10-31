@@ -438,3 +438,29 @@ Server does with allow, deny and ask, when the supervisor is unavailable, and
 how it polls a deferred decision); their section text says so. Host
 rate-limiting is a host choice: an implementation that exports no
 rate_limited answer is recorded `not_exercised` with the reason, not passed.
+
+## Signature-Key schemes and algorithms
+
+`sigkey.verifier` grades a native AAuth Resource that also accepts the
+Signature-Key schemes AAuth does not use (protocol "Signature-Key Scheme
+Rejection"); `sigkey.signer` grades the native request signer. Together they
+cover the checks the community conformance scoping issue
+([aauth-dev/conformance#1](https://github.com/aauth-dev/conformance/issues/1))
+plans: correctly signed requests under every scheme and algorithm a library
+offers, live `/.well-known/<dwk>` discovery naming `jwks_uri`, a JWKS that
+mixes Ed25519 with ML-DSA-44 (`AKP`), a JWKS holding only ML-DSA-44, and the
+refusals of an uncovered `signature-key`, `hwk` with `kid`, polymorphic
+`EdDSA`, `alg` against `kty` or `crv`, a symmetric key, an unknown scheme,
+a JWT without `exp` and a missing member. CORS is not normative and is not
+graded.
+
+```sh
+go run ./cmd/build-adapters -role sigkey.verifier -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -community-source /path/to/community-aauth-go -out build/sigkey-verifier
+go run ./cmd/aauth-conformance -targets build/sigkey-verifier/targets.json -report build/sigkey-verifier-report.json -markdown build/sigkey-verifier-report.md
+```
+
+Use `-role sigkey.signer` the same way. ES256 is a SHOULD (protocol line
+2166): its cases sit under `recommended` clauses, graded only with
+`build-adapters -claim-recommended`. A scheme or algorithm a library does not
+offer is left unclaimed for it and its scenario is not run; ML-DSA-44 fixtures
+need a Go 1.27 toolchain for the harness.

@@ -118,3 +118,18 @@ func TestSigkeyMissingMemberMovesOnlyTheSignatureKeyLabel(t *testing.T) {
 		t.Fatalf("labels: %q %q", key, record.request.Header.Get("Signature-Input"))
 	}
 }
+
+// Catches running a scheme a library does not offer because a role-wide
+// clause, such as the adapter-contract echo, is still claimed.
+func TestSigkeyOfferedFollowsTheScenarioClause(t *testing.T) {
+	s := Scenario{Assertions: []Assertion{{Clause: "sigkey.v.hwk-ed25519"}, {Clause: "sigkey.v.echo"}}}
+	if sigkeyOffered(s, Target{Claims: []string{"sigkey.v.echo"}}) {
+		t.Fatal("scenario run on a role-wide clause alone")
+	}
+	if !sigkeyOffered(s, Target{Claims: []string{"sigkey.v.hwk-ed25519", "sigkey.v.echo"}}) {
+		t.Fatal("offered scenario skipped")
+	}
+	if sigkeyOffered(s, Target{Unavailable: "no", Claims: []string{"sigkey.v.hwk-ed25519"}}) {
+		t.Fatal("unavailable target run")
+	}
+}

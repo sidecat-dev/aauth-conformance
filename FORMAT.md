@@ -600,3 +600,47 @@ present and nonempty), `ss-request-equals`, `ss-request-token` (an exact
 forwarded token), `ss-sdi-distinct` (the first two decision requests carry
 different `sdi`) and `ss-mission-match` (a report's `s256` and `mission` are
 those the Agent received, and the digest matches).
+
+## Signature-Key profiles
+
+Two extension roles grade draft-hardt-httpbis-signature-key (catalog source
+`key`) and the AAuth HTTP Message Signatures profile (source `core`).
+`fixture.extensions.sigkey` holds the verifier URL, the signer's receiving
+URL, the `jwks_uri` signer identity (issuer, `aauth-resource.json`, kid,
+Ed25519 seed), the direct JWKS URL, PKCS #8 test keys for ES256, ES384, RS256
+and PS256, the ML-DSA-44 seed and its kids for the signer and the Agent
+Provider, the jkt-jwt identity seed and the self-jwt `typ`. All keys are
+public test keys.
+
+### `sigkey.verifier`
+
+`input` names `scheme` (`hwk`, `jwt`, `jwks_uri`, `jwks`, `self-jwt`,
+`jkt-jwt` or `x-unregistered`), `alg` (only `hwk` varies it; `ML-DSA-44`
+needs `jwks: pq-only`), `mutation` and an optional `jwks` key set (`mixed`
+or `pq-only`, for the Agent Provider under `jwt` or the signer under
+`jwks_uri`). The harness serves the Agent Provider, signer and direct JWKS
+documents on loopback, one origin each, and signs one request to the
+verifier with independent code. Mutations: `uncovered-signature-key`,
+`missing-member` (the Signature-Key label is `sig1` while the signature is
+`sig`), `hwk-kid`, `alg-eddsa` (hwk `alg` or `cnf.jwk` `alg`),
+`header-eddsa` (JWS `alg`), `alg-kty` (an OKP key naming ES256), `alg-crv`
+(a P-384 key naming ES256), `symmetric` (an HS256 key, HMAC signature),
+`no-exp` and `unknown-kid`. Generic kinds grade the response; `sigkey-pq`
+(a code string, `""` for any) passes when the request verified, or when the
+verifier answered 401 with that Signature-Error code: a verifier need not
+implement ML-DSA, but MUST refuse a key type it does not implement with
+defined feedback.
+
+### `sigkey.signer`
+
+`input` names `scheme` (`hwk`, `jwt`, `jwks_uri`, `jwks`, `self-jwt` or
+`jkt-jwt`), `alg` (only `hwk` varies it), `method` and `body`. The harness
+posts a control job with the fixture key, the target and the credential the
+signer presents (the jwt, self-jwt and jkt-jwt assertions are minted by the
+harness), receives the signed request and verifies it independently.
+`sigkey-signed` requires one signature label whose signature verifies under
+the expected key over the received components, covering `@method`,
+`@authority`, `@path` and `signature-key`, with a covered Content-Digest
+matching the body. `sigkey-member` requires the selected member to carry
+exactly the expected scheme and parameters (for hwk the public key with `alg`
+and no `kid`). `sigkey-created` compares `created` with the fixture clock.
