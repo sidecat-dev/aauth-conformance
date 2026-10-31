@@ -192,18 +192,24 @@ func command(dir, name string, args ...string) error {
 // Role-specific launcher sources, native Rust features and extra Rust crates.
 // Earlier implementation checkouts can still build the roles that need none.
 var goRoleSources = map[string][]string{
-	conformance.DeferredRole: {"deferred.go"},
-	conformance.SubagentRole: {"subagent.go"},
+	conformance.DeferredRole:   {"deferred.go"},
+	conformance.SubagentRole:   {"subagent.go"},
+	conformance.R3ResourceRole: {"r3.go"},
+	conformance.R3IssuerRole:   {"r3.go"},
 }
 var rustRoleFeatures = map[string]string{
-	conformance.FederatedRole: "federation",
-	conformance.DeferredRole:  "deferred",
-	conformance.SubagentRole:  "subagent",
+	conformance.FederatedRole:  "federation",
+	conformance.DeferredRole:   "deferred",
+	conformance.SubagentRole:   "subagent",
+	conformance.R3ResourceRole: "r3",
+	conformance.R3IssuerRole:   "r3",
 }
 var rustRoleCrates = map[string][]string{
-	conformance.FederatedRole: {"aauth-rust-access-server"},
-	conformance.DeferredRole:  {"aauth-rust-access-server"},
-	conformance.SubagentRole:  {"aauth-rust-access-server"},
+	conformance.FederatedRole:  {"aauth-rust-access-server"},
+	conformance.DeferredRole:   {"aauth-rust-access-server"},
+	conformance.SubagentRole:   {"aauth-rust-access-server"},
+	conformance.R3ResourceRole: {"aauth-rust-r3"},
+	conformance.R3IssuerRole:   {"aauth-rust-r3"},
 }
 
 // Remove role-specific sources when an output directory is reused for another

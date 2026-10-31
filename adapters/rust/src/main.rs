@@ -3,6 +3,8 @@
 mod deferred;
 #[cfg(feature = "federation")]
 mod federation;
+#[cfg(feature = "r3")]
+mod r3;
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAgentToken,
 };
@@ -157,6 +159,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if config.role == "agent.signing" {
         return run_agent(config);
+    }
+    #[cfg(feature = "r3")]
+    if config.role.starts_with("r3.") {
+        return r3::run(config);
     }
     if !config.role.is_empty() && config.role != "resource.agent-identity" {
         return Err(format!("rebuild this launcher for {}", config.role).into());
