@@ -241,21 +241,20 @@ impl R3CallStore for MemoryCalls {
             .records
             .get_mut(uri)
             .ok_or_else(|| R3StoreError::Unavailable(R3HostError::new("unknown proposal")))?;
-        match &entry.token {
-            None => {
-                entry.token = Some(token.clone());
-                entry.fence = Some(fence.clone());
-                Ok(R3Claim::Execute { fence })
-            }
-            Some(bound) if bound.compact_sha256 != token.compact_sha256 => {
-                Ok(R3Claim::DifferentToken)
-            }
-            Some(bound) => match &entry.result {
-                Some(_) if now >= bound.retain_until => Ok(R3Claim::Expired),
-                Some(result) => Ok(R3Claim::Replay(result.clone())),
-                None => Ok(R3Claim::Unfinished),
-            },
+        if entry.token.is_none() {
+            entry.token = Some(token.clone());
+            entry.fence = Some(fence.clone());
+            return Ok(R3Claim::Execute { fence });
         }
+        let bound = entry.token.as_ref().expect("token bound above");
+        if bound.compact_sha256 != token.compact_sha256 {
+            return Ok(R3Claim::DifferentToken);
+        }
+        Ok(match &entry.result {
+            Some(_) if now >= bound.retain_until => R3Claim::Expired,
+            Some(result) => R3Claim::Replay(result.clone()),
+            None => R3Claim::Unfinished,
+        })
     }
     fn retain(
         &self,
