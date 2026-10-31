@@ -380,8 +380,11 @@ not install an issuance record, `install` reads that document with
 leaves to the host. The native approval takes no expiry, so `expires_in` is
 reported as not offered. The launcher never terminates a mission itself.
 
-`mission.resource` runs the four-party bundle unchanged (Go
-`runFederatedServers`, Rust `federation::run`); its federation transport
-refuses every request because the slice stops at the Resource's challenge.
+`mission.resource` runs the four-party bundle (Go `runFederatedServers`,
+Rust `federation::run`); its federation transport refuses every request
+because the slice stops at the Resource's challenge. Rust's Resource refuses
+mission-bound person tokens unless the host opts in, so this role calls the
+native `with_mission_context`. Go's federated Resource documents that it needs
+no configuration for a mission-bound person token; nothing is added.
 Rust builds both roles with the `mission` feature, which includes
 `federation`, and adds the Access Server and Signature-Key crates.
