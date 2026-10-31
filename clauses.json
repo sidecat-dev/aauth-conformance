@@ -523,6 +523,142 @@
       "anchor": "ps-as-trust-establishment",
       "scope": "adapter-contract",
       "role": "authorization.subagent"
+    },
+    {
+      "id": "mission.endpoint-url",
+      "source": "core",
+      "section": "Endpoint and Other URLs, line 1973: mission_endpoint MUST use the https scheme and MUST NOT contain a query string or a fragment",
+      "anchor": "identifiers-and-discovery",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.action-required",
+      "source": "core",
+      "section": "Mission, line 1321: action is REQUIRED on a mission's own URL; a PS MUST reject a missing or unrecognized action with 400 Bad Request (invalid_request, Mission Endpoint Errors line 1536)",
+      "anchor": "missions",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.approval-s256",
+      "source": "core",
+      "section": "Mission Approval line 1412 (s256 REQUIRED: unpadded base64url SHA-256 of the bytes mission decodes to) and Mission Identifier line 1437 (the PS MUST compute s256 over the exact bytes it returns as mission)",
+      "anchor": "mission-identifier",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.approval-encoding",
+      "source": "core",
+      "section": "Mission Approval, line 1413: mission is REQUIRED, the mission blob base64url-encoded without padding",
+      "anchor": "mission-approval",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.blob-members",
+      "source": "core",
+      "section": "Mission Approval, lines 1417-1421: the mission blob MUST include agent, approved_at (ISO 8601) and description",
+      "anchor": "mission-approval",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.blob-served",
+      "source": "core",
+      "section": "Mission Identifier, line 1437: the PS MUST serve the same mission bytes wherever it later exposes the mission (graded only where the PS exposes it to the owner)",
+      "anchor": "mission-identifier",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.person-token-verify",
+      "source": "core",
+      "section": "Person Token Endpoint, line 810: the PS MUST verify the named mission exists, is active and belongs to this agent, and MUST reject the request otherwise (invalid_request for a malformed mission_s256, line 840)",
+      "anchor": "person-token-endpoint",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.person-token-claim",
+      "source": "core",
+      "section": "Person Token Endpoint line 810 and Person Token Structure line 872: for an active mission the PS includes mission_s256 in the issued person token",
+      "anchor": "person-token-endpoint",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.person-token-expiry",
+      "source": "core",
+      "section": "Person Token Structure, line 863: a person token MUST NOT outlive the mission's expires_at when mission_s256 is present",
+      "anchor": "person-token-structure",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.expires-at",
+      "source": "core",
+      "section": "Mission Approval, line 1425: every PS decision path that acts on a mission MUST treat a mission past expires_at as terminated",
+      "anchor": "mission-approval",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.terminated-rejected",
+      "source": "core",
+      "section": "Mission Management, line 1514: for a terminated mission the PS MUST reject requests with mission_terminated",
+      "anchor": "mission-management",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.no-reactivation",
+      "source": "core",
+      "section": "Mission Management, line 1516: a terminated mission MUST NOT return to active",
+      "anchor": "mission-management",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.status-error",
+      "source": "core",
+      "section": "Mission Status Errors, lines 1550-1565: a request to any PS endpoint naming a mission that is no longer active MUST get the error: 403, error mission_terminated, mission_status terminated",
+      "anchor": "mission-status-errors",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.not-found-equivalent",
+      "source": "core",
+      "section": "Mission Endpoint Errors, line 1540: a PS MUST return the same status, error, body and header set whether the mission does not exist or the agent does not own it (timing is not graded)",
+      "anchor": "mission-endpoint-errors",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.resource-token-mission",
+      "source": "core",
+      "section": "Resource Token Verification, line 768: if mission_s256 is present a PS MUST verify the mission is active and the current time precedes its expires_at",
+      "anchor": "resource-token-verification",
+      "scope": "protocol",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.host-policy",
+      "source": "core",
+      "section": "Fixture host policy: the person approves proposals as proposed, accepts updates and completions, grants permissions and the read scope; success of these host decisions is adapter contract",
+      "anchor": "missions",
+      "scope": "adapter-contract",
+      "role": "mission.person-server"
+    },
+    {
+      "id": "mission.resource-token-copy",
+      "source": "core",
+      "section": "Resource Token Structure, line 755: mission_s256 is REQUIRED in the resource token when the presented token carried one, copied unchanged",
+      "anchor": "resource-token-structure",
+      "scope": "protocol",
+      "role": "mission.resource"
     }
   ]
 }

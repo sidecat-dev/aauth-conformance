@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "mission-other-agent",
+  "title": "Missions: Person token for another agent's mission",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "other-agent"
+  },
+  "assertions": [
+    {
+      "id": "other-status-class-0",
+      "stage": "other",
+      "kind": "status-class",
+      "equals": "4xx",
+      "clause": "mission.person-token-verify"
+    },
+    {
+      "id": "other-mission-no-token-1",
+      "stage": "other",
+      "kind": "mission-no-token",
+      "equals": true,
+      "clause": "mission.person-token-verify"
+    }
+  ]
+}

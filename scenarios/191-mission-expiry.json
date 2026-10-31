@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "id": "mission-expiry",
+  "title": "Missions: An expired mission is terminated",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "expiry",
+    "expires_in": 30
+  },
+  "assertions": [
+    {
+      "id": "person-mission-person-token-0",
+      "stage": "person",
+      "kind": "mission-person-token",
+      "equals": true,
+      "clause": "mission.person-token-claim"
+    },
+    {
+      "id": "person-mission-person-exp-1",
+      "stage": "person",
+      "kind": "mission-person-exp",
+      "equals": true,
+      "clause": "mission.person-token-expiry"
+    },
+    {
+      "id": "after-person-status-2",
+      "stage": "after-person",
+      "kind": "status",
+      "equals": 403,
+      "clause": "mission.expires-at"
+    },
+    {
+      "id": "after-person-json-member-3",
+      "stage": "after-person",
+      "kind": "json-member",
+      "equals": "mission_terminated",
+      "clause": "mission.status-error",
+      "member": "error"
+    },
+    {
+      "id": "after-person-json-member-4",
+      "stage": "after-person",
+      "kind": "json-member",
+      "equals": "terminated",
+      "clause": "mission.status-error",
+      "member": "mission_status"
+    },
+    {
+      "id": "after-person-mission-no-token-5",
+      "stage": "after-person",
+      "kind": "mission-no-token",
+      "equals": true,
+      "clause": "mission.expires-at"
+    },
+    {
+      "id": "after-update-status-6",
+      "stage": "after-update",
+      "kind": "status",
+      "equals": 403,
+      "clause": "mission.expires-at"
+    },
+    {
+      "id": "after-update-json-member-7",
+      "stage": "after-update",
+      "kind": "json-member",
+      "equals": "mission_terminated",
+      "clause": "mission.terminated-rejected",
+      "member": "error"
+    }
+  ]
+}

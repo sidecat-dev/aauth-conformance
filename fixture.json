@@ -26,5 +26,12 @@
     "issuer": "https://access.conformance.test",
     "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
     "kid": "as-1"
+  },
+  "extensions": {
+    "missions": {
+      "other_agent_seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
+      "other_agent_subject": "aauth:other@ap.conformance.test",
+      "description": "# Reconcile invoices\n\nReconcile the March invoices and report the totals."
+    }
   }
 }
