@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "id": "supervision.ps-bad-signature",
+  "title": "An allow whose signature does not verify under the SS key set is not acted on",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "bad-signature"
+  },
+  "assertions": [
+    {
+      "id": "no-credential",
+      "clause": "supervision.ps.signed-verify",
+      "kind": "ps-credential",
+      "equals": false,
+      "stage": "person"
+    },
+    {
+      "id": "to-person",
+      "clause": "supervision.ps.unavailable",
+      "kind": "status",
+      "equals": 202,
+      "stage": "person"
+    },
+    {
+      "id": "consulted",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision/sdi"
+    }
+  ]
+}

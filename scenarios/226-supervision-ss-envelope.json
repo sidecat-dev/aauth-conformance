@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "id": "supervision.ss-envelope",
+  "title": "A supervision request missing an envelope member is invalid_request",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-envelope",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "no-sdi",
+        "endpoint": "decision",
+        "body": {
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      },
+      {
+        "stage": "no-iat",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-envelope-iat",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      },
+      {
+        "stage": "no-sub",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-envelope-sub",
+          "iat": "$now",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      },
+      {
+        "stage": "no-agent",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-envelope-agent",
+          "iat": "$now",
+          "sub": "$sub",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "no-sdi-status",
+      "clause": "supervision.ss.envelope",
+      "kind": "status",
+      "equals": 400,
+      "stage": "no-sdi"
+    },
+    {
+      "id": "no-sdi-error",
+      "clause": "supervision.ss.envelope",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "no-sdi",
+      "member": "error"
+    },
+    {
+      "id": "no-sdi-no-decision",
+      "clause": "supervision.ss.envelope",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "no-sdi"
+    },
+    {
+      "id": "no-iat-status",
+      "clause": "supervision.ss.envelope",
+      "kind": "status",
+      "equals": 400,
+      "stage": "no-iat"
+    },
+    {
+      "id": "no-iat-error",
+      "clause": "supervision.ss.envelope",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "no-iat",
+      "member": "error"
+    },
+    {
+      "id": "no-iat-no-decision",
+      "clause": "supervision.ss.envelope",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "no-iat"
+    },
+    {
+      "id": "no-sub-status",
+      "clause": "supervision.ss.envelope",
+      "kind": "status",
+      "equals": 400,
+      "stage": "no-sub"
+    },
+    {
+      "id": "no-sub-error",
+      "clause": "supervision.ss.envelope",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "no-sub",
+      "member": "error"
+    },
+    {
+      "id": "no-sub-no-decision",
+      "clause": "supervision.ss.envelope",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "no-sub"
+    },
+    {
+      "id": "no-agent-status",
+      "clause": "supervision.ss.envelope",
+      "kind": "status",
+      "equals": 400,
+      "stage": "no-agent"
+    },
+    {
+      "id": "no-agent-error",
+      "clause": "supervision.ss.envelope",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "no-agent",
+      "member": "error"
+    },
+    {
+      "id": "no-agent-no-decision",
+      "clause": "supervision.ss.envelope",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "no-agent"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "id": "supervision.ps-ask",
+  "title": "An ask goes to the person; their answer without a reason completes it and is reported",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "ask"
+  },
+  "assertions": [
+    {
+      "id": "pending",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "status",
+      "equals": 202,
+      "stage": "person"
+    },
+    {
+      "id": "no-credential",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "ps-credential",
+      "equals": false,
+      "stage": "person"
+    },
+    {
+      "id": "completed",
+      "clause": "supervision.ps.reason-optional",
+      "kind": "ps-credential",
+      "equals": true,
+      "stage": "poll"
+    },
+    {
+      "id": "answer",
+      "clause": "supervision.ps.decision-resolved",
+      "kind": "ss-request-equals",
+      "equals": "allow",
+      "stage": "deliver",
+      "member": "event:decision.resolved/answer"
+    },
+    {
+      "id": "resolved-id",
+      "clause": "supervision.ps.event-id",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "event:decision.resolved/id"
+    },
+    {
+      "id": "resolved-proof",
+      "clause": "supervision.ps.core-keying",
+      "kind": "ss-request-proof",
+      "equals": true,
+      "stage": "deliver",
+      "member": "event:decision.resolved"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "id": "supervision.ss-metadata",
+  "title": "Supervisor metadata names its issuer and HTTPS endpoints on its origin",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "metadata",
+        "endpoint": "metadata",
+        "method": "GET"
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "issuer",
+      "clause": "supervision.ss.metadata-issuer",
+      "kind": "json-member",
+      "equals": "https://ss.conformance.test",
+      "stage": "metadata",
+      "member": "issuer"
+    },
+    {
+      "id": "endpoints",
+      "clause": "supervision.ss.metadata-endpoints",
+      "kind": "ss-metadata-endpoints",
+      "equals": true,
+      "stage": "metadata"
+    }
+  ]
+}

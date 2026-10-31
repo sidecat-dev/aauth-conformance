@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "id": "supervision.ps-proposal",
+  "title": "A supervised mission proposal forwards the agent token, builds the allowed mission and reports it",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "mission_proposal",
+    "decision": "allow"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "status",
+      "equals": 200,
+      "stage": "mission"
+    },
+    {
+      "id": "mission",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "ps-mission",
+      "equals": true,
+      "stage": "mission"
+    },
+    {
+      "id": "proposal-proof",
+      "clause": "supervision.ps.body-coverage",
+      "kind": "ss-request-proof",
+      "equals": true,
+      "stage": "deliver",
+      "member": "proposal"
+    },
+    {
+      "id": "proposal-sdi",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "proposal/sdi"
+    },
+    {
+      "id": "proposal-agent-token",
+      "clause": "supervision.ps.act-members",
+      "kind": "ss-request-token",
+      "equals": true,
+      "stage": "deliver",
+      "member": "proposal/agent_token"
+    },
+    {
+      "id": "approved-action",
+      "clause": "supervision.ps.mission-action",
+      "kind": "ss-request-equals",
+      "equals": "approved",
+      "stage": "deliver",
+      "member": "report:approved/action"
+    },
+    {
+      "id": "approved-id",
+      "clause": "supervision.ps.event-id",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "report:approved/id"
+    },
+    {
+      "id": "approved-mission",
+      "clause": "supervision.ps.approved-report",
+      "kind": "ss-mission-match",
+      "equals": true,
+      "stage": "deliver",
+      "member": "report:approved"
+    },
+    {
+      "id": "approved-proof",
+      "clause": "supervision.ps.core-keying",
+      "kind": "ss-request-proof",
+      "equals": true,
+      "stage": "deliver",
+      "member": "report:approved"
+    }
+  ]
+}

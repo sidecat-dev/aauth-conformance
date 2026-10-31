@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "id": "supervision.ss-idempotent",
+  "title": "A repeated request under an answered sdi gets the same signed response",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-repeat",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "decide",
+        "endpoint": "decision",
+        "accept_signature": true,
+        "body": {
+          "sdi": "d-repeat-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "person_token",
+          "agent_token": "$agent_token",
+          "resource": "$resource"
+        }
+      },
+      {
+        "stage": "again",
+        "repeat": "decide"
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "supervision.ss.host-policy",
+      "kind": "status",
+      "equals": 200,
+      "stage": "decide"
+    },
+    {
+      "id": "sdi",
+      "clause": "supervision.ss.sdi-echo",
+      "kind": "json-member",
+      "equals": "d-repeat-1",
+      "stage": "decide",
+      "member": "sdi"
+    },
+    {
+      "id": "signed",
+      "clause": "supervision.ss.signed-coverage",
+      "kind": "ss-signed",
+      "equals": true,
+      "stage": "decide"
+    },
+    {
+      "id": "same",
+      "clause": "supervision.ss.idempotence",
+      "kind": "ss-same-response",
+      "equals": true,
+      "stage": "again",
+      "member": "decide"
+    }
+  ]
+}

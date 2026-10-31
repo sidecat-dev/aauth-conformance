@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "id": "supervision.ss-signed-allow",
+  "title": "A decision echoes the sdi and is signed by the issuer over status, type and digest",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-allow",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "decide",
+        "endpoint": "decision",
+        "accept_signature": true,
+        "body": {
+          "sdi": "d-allow-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "supervision.ss.host-policy",
+      "kind": "status",
+      "equals": 200,
+      "stage": "decide"
+    },
+    {
+      "id": "allowed",
+      "clause": "supervision.ss.host-policy",
+      "kind": "json-member",
+      "equals": "allow",
+      "stage": "decide",
+      "member": "decision"
+    },
+    {
+      "id": "sdi",
+      "clause": "supervision.ss.sdi-echo",
+      "kind": "json-member",
+      "equals": "d-allow-1",
+      "stage": "decide",
+      "member": "sdi"
+    },
+    {
+      "id": "signed",
+      "clause": "supervision.ss.signed-coverage",
+      "kind": "ss-signed",
+      "equals": true,
+      "stage": "decide"
+    }
+  ]
+}

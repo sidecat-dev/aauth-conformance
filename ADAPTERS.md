@@ -486,3 +486,44 @@ native `with_mission_context`. Go's federated Resource documents that it needs
 no configuration for a mission-bound person token; nothing is added.
 Rust builds both roles with the `mission` feature, which includes
 `federation`, and adds the Access Server and Signature-Key crates.
+## Supervision roles
+
+Both launchers are built with the Rust `supervision` feature and the
+`aauth-rust-supervision-server` crate, or with `adapters/go/supervision.go`.
+Each scenario starts a fresh launcher. The loopback-only host control is
+`POST /__fixture/supervision`; it changes host policy or calls a host
+method the library exposes, and its answer is never graded.
+
+`supervision.server` bootstraps `extension.supervisor` (issuer, public seed,
+kid) and `extension.person_servers` (issuer, kid, public JWK, `accept`).
+Announce the logical metadata path `/.well-known/aauth-supervisor.json` and
+serve the native handler for every other path, reconstructing logical HTTPS
+from the received Host. Configure the native server with its signing key, a
+fixed clock, an in-memory store and the admitted Person Server keys under
+`aauth-person.json`. Host connect policy accepts the `accept` Person Servers
+and refuses the others; host decision policy allows person-token, auth-token
+and mission acts and a permission whose action is `fixture.allow`, denies
+`fixture.deny`, asks for `fixture.ask` and defers `fixture.defer`. Controls:
+`{"resolve":{"sdi":"...","verdict":"allow"}}` resolves a deferred decision
+through the native host call (Go `ResolveDecision`, Rust `decide_pending`);
+`{"rate_limit":true}` makes the next supervision request a host rate limit.
+Neither supervision server limits a Person Server by itself. Rust answers the
+host limit with its own `SupervisionError::RateLimited.response`; Go exports
+no rate_limited response and answers `501` with `not_offered`.
+
+`supervision.person-server` bootstraps the Person Server fields of the
+direct role plus `extension` `supervisor`, `supervisor_transport` (the
+harness supervisor's loopback address), `supervisor_subject` (the directed
+sub, host configuration), `supervisor_keys` (the supervisor and the foreign
+supervisor under `aauth-supervisor.json`) and `resource`. Announce `/person`.
+Route every Agent to the supervisor, carry the native Person Server's signed
+requests unchanged to the transport (Go through its HTTP client, Rust
+through `Supervision::send`), and serve the supervisor's metadata to it from
+the same transport. The Person Server's own authorization policy refuses: it
+is never consulted for a supervised Agent. Controls: `{"resolve":"allow"}`
+records the person's allow, without a reason, on the held act (Go
+`ResolveSupervision` on a `PendingSupervision` entry, Rust
+`resolve_supervision` on the `SupervisionHold` the last response carried);
+`{"advance":true}` polls the supervisor once (`AdvanceSupervision`,
+`advance_supervision`); `{"deliver":true}` delivers queued events
+(`DeliverSupervisionEvents`, `deliver_supervision`).

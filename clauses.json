@@ -30,6 +30,12 @@
       "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
       "sha256": "39672880b054e380d39c9c997523b3320216bade2e348a8f79990f2d85e1f2aa",
       "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-r3.md"
+    },
+    {
+      "id": "supervision",
+      "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
+      "sha256": "9fd44f899e06bf2a1e903459799cccdd8c6365b5eb5fa1efe2ed5b23b1a6d1a3",
+      "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-supervision.md"
     }
   ],
   "clauses": [
@@ -1279,6 +1285,286 @@
       "anchor": "resource-token-structure",
       "scope": "protocol",
       "role": "mission.resource"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.metadata-issuer",
+      "source": "supervision",
+      "section": "Supervisor Metadata, line 157: issuer (REQUIRED) is the SS's HTTPS server identifier",
+      "anchor": "ss-metadata",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.metadata-endpoints",
+      "source": "supervision",
+      "section": "Supervisor Metadata, lines 159-162: connect, mission, decision and event endpoints (REQUIRED); line 165: endpoint URLs MUST be HTTPS on the issuer's origin",
+      "anchor": "ss-metadata",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.core-verification",
+      "source": "core",
+      "section": "AAuth Protocol Verification (Server), line 2242: any signature failure MUST be a 401 with the appropriate Signature-Error; step 2 answers missing required coverage with invalid_input (the SS requires content-digest and content-type on a body, Supervision line 188)",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.connected-only",
+      "source": "supervision",
+      "section": "PS Authentication, line 188: the SS MUST accept requests only from a PS it has connected for the sub the request names, answering others unsupported_iss (403) or unknown_sub (404)",
+      "anchor": "common-request",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.connect-action",
+      "source": "supervision",
+      "section": "Connect, line 238: action (REQUIRED) is connect or disconnect; a missing or unrecognized action is invalid_request (Errors, line 631)",
+      "anchor": "connect",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.envelope",
+      "source": "supervision",
+      "section": "Envelope, lines 196 and 198-200: sdi, iat, sub and agent (REQUIRED) on a supervision request; a missing member is invalid_request (Errors, line 631)",
+      "anchor": "envelope",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.event-id",
+      "source": "supervision",
+      "section": "Envelope, line 197: id (REQUIRED) on an event and on a report; a missing member is invalid_request (Errors, line 631)",
+      "anchor": "envelope",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.sdi-echo",
+      "source": "supervision",
+      "section": "Supervision Decisions, line 280: the response MUST echo the request's sdi",
+      "anchor": "decisions",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.deferred-pending",
+      "source": "supervision",
+      "section": "Deferred Decisions, line 286: an SS that cannot answer returns 202 with Location and Retry-After (stated without a BCP 14 keyword; the same paragraph's MUSTs are supervision.ss.deferred-poller)",
+      "anchor": "deferred-decisions",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.deferred-poller",
+      "source": "supervision",
+      "section": "Deferred Decisions, line 286: the SS MUST verify the poller is the identity that made the request and MUST answer unknown_pending to any other",
+      "anchor": "deferred-decisions",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.idempotence",
+      "source": "supervision",
+      "section": "Idempotence, line 316: a repeated request under an answered sdi MUST get the same decision and, where the SS signs, the same signed response; one still deciding is answered 202 with the same Location",
+      "anchor": "idempotence",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.signed-coverage",
+      "source": "supervision",
+      "section": "Signed Decisions, line 340: the response signature MUST cover @status, content-type and content-digest (signed under the issuer's jwks_uri key, line 320)",
+      "anchor": "signed-decisions",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.mission-action",
+      "source": "supervision",
+      "section": "Mission Endpoint, line 360: action is REQUIRED on a request to a mission's URL and the SS MUST reject a missing or unrecognized action with invalid_request",
+      "anchor": "mission-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.act-members",
+      "source": "supervision",
+      "section": "Proposal line 394 (agent_token), Person Token lines 480-481 (resource, agent_token), Auth Token line 504 (resource_token, presented_token): REQUIRED members; a missing member is invalid_request (Errors, line 631)",
+      "anchor": "decision-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.decision-resolved-answer",
+      "source": "supervision",
+      "section": "Decision Resolved, line 572: answer (REQUIRED); a missing member is invalid_request (Errors, line 631)",
+      "anchor": "event-decision-resolved",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.rate-limited",
+      "source": "supervision",
+      "section": "Errors, line 636: rate_limited is 429 and Retry-After is REQUIRED",
+      "anchor": "errors",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.server",
+      "id": "supervision.ss.host-policy",
+      "source": "supervision",
+      "section": "Fixture host policy: the connect and decision policies the launcher configures, and that the policy's allow, deny or deferral reaches the wire",
+      "anchor": "decisions",
+      "scope": "adapter-contract"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.core-keying",
+      "source": "core",
+      "section": "AAuth Protocol Keying Material, line 2187: a PS making a signed request in its own right MUST use the jwks_uri scheme with id its issuer and dwk aauth-person.json (Supervision PS Authentication, line 181)",
+      "anchor": "keying-material",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.body-coverage",
+      "source": "supervision",
+      "section": "PS Authentication, line 188: the signature MUST cover content-digest and content-type on a request with a body",
+      "anchor": "common-request",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.envelope",
+      "source": "supervision",
+      "section": "Envelope, lines 196 and 198-200: sdi, iat, sub and agent (REQUIRED) on every supervision request; agent from the presented agent token",
+      "anchor": "envelope",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.sdi-unique",
+      "source": "supervision",
+      "section": "Envelope, line 196: the sdi is minted by the PS and unique within it",
+      "anchor": "envelope",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.event-id",
+      "source": "supervision",
+      "section": "Envelope, line 197: id (REQUIRED) on an event and on a report",
+      "anchor": "envelope",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.connect-action",
+      "source": "supervision",
+      "section": "Connect, line 238: action (REQUIRED) is connect or disconnect",
+      "anchor": "connect",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.act-members",
+      "source": "supervision",
+      "section": "Proposal line 394 (agent_token), Person Token lines 480-481 (resource, the agent token presented) and Auth Token line 504 (resource_token and presented_token as the agent sent them), REQUIRED",
+      "anchor": "decision-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.sdi-verify",
+      "source": "supervision",
+      "section": "Supervision Decisions, line 280: the PS MUST verify the echoed sdi matches; a decision for another sdi is not acted on",
+      "anchor": "decisions",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.signed-verify",
+      "source": "supervision",
+      "section": "Signed Decisions, line 342: the PS MUST verify the signature against the SS's metadata key set and that the Signature-Key id is the SS it called; a failure, or an unsigned decision from an SS with jwks_uri, is server_error and is not acted on",
+      "anchor": "signed-decisions",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.allow-exp",
+      "source": "supervision",
+      "section": "Person Token, line 485: an allow's exp is a time no later than which the issued token's exp MUST be",
+      "anchor": "decision-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.decision-resolved",
+      "source": "supervision",
+      "section": "Decision Resolved, line 572: answer (REQUIRED) in the decision.resolved event the PS reports",
+      "anchor": "event-decision-resolved",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.reason-optional",
+      "source": "supervision",
+      "section": "Decision Resolved, line 578: a PS MUST NOT require the person to give a reason",
+      "anchor": "event-decision-resolved",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.mission-action",
+      "source": "supervision",
+      "section": "Mission Endpoint, line 360: action is REQUIRED on every request to a mission's URL, reports included",
+      "anchor": "mission-endpoint",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.proposal-description",
+      "source": "supervision",
+      "section": "Proposal, line 415: an allow of a proposal carries the approved description (REQUIRED); the PS builds the mission from it and does not approve one without it",
+      "anchor": "ss-mission-proposal",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.approved-report",
+      "source": "core",
+      "section": "AAuth Protocol Mission Identifier, line 1437: the PS MUST compute s256 over the exact blob bytes and return those bytes as mission; the approved report carries s256 and mission as returned to the agent (Supervision line 444)",
+      "anchor": "mission-identifier",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.decision-applied",
+      "source": "supervision",
+      "section": "Supervision Decisions, lines 255-262: on allow the PS proceeds with the act, on deny it refuses it, on ask it puts it to the person (stated without a BCP 14 keyword)",
+      "anchor": "decisions",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.unavailable",
+      "source": "supervision",
+      "section": "Unavailable Supervisor, lines 609-613: on server_error the PS puts the act to the person and does not decide in the SS's absence (stated without a BCP 14 keyword)",
+      "anchor": "unavailable",
+      "scope": "protocol"
+    },
+    {
+      "role": "supervision.person-server",
+      "id": "supervision.ps.deferred-poll",
+      "source": "supervision",
+      "section": "Deferred Decisions, line 286: after a 202 the PS polls the pending URL with a signed GET under the identity that made the request and sends no body (stated without a BCP 14 keyword)",
+      "anchor": "deferred-decisions",
+      "scope": "protocol"
     }
   ]
 }

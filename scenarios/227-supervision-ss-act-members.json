@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "id": "supervision.ss-act-members",
+  "title": "A supervision request missing a member its act requires is invalid_request",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-members",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "person-no-resource",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-members-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "person_token",
+          "agent_token": "$agent_token"
+        }
+      },
+      {
+        "stage": "person-no-agent-token",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-members-2",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "person_token",
+          "resource": "$resource"
+        }
+      },
+      {
+        "stage": "auth-no-resource-token",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-members-3",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "auth_token",
+          "agent_token": "$agent_token",
+          "presented_token": "$presented_token"
+        }
+      },
+      {
+        "stage": "auth-no-presented-token",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-members-4",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "auth_token",
+          "agent_token": "$agent_token",
+          "resource_token": "$resource_token"
+        }
+      },
+      {
+        "stage": "proposal-no-agent-token",
+        "endpoint": "mission",
+        "body": {
+          "sdi": "d-members-5",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "description": "# Fixture mission\n\nRead the fixture resource."
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "person-no-resource-status",
+      "clause": "supervision.ss.act-members",
+      "kind": "status",
+      "equals": 400,
+      "stage": "person-no-resource"
+    },
+    {
+      "id": "person-no-resource-error",
+      "clause": "supervision.ss.act-members",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "person-no-resource",
+      "member": "error"
+    },
+    {
+      "id": "person-no-agent-token-status",
+      "clause": "supervision.ss.act-members",
+      "kind": "status",
+      "equals": 400,
+      "stage": "person-no-agent-token"
+    },
+    {
+      "id": "person-no-agent-token-error",
+      "clause": "supervision.ss.act-members",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "person-no-agent-token",
+      "member": "error"
+    },
+    {
+      "id": "auth-no-resource-token-status",
+      "clause": "supervision.ss.act-members",
+      "kind": "status",
+      "equals": 400,
+      "stage": "auth-no-resource-token"
+    },
+    {
+      "id": "auth-no-resource-token-error",
+      "clause": "supervision.ss.act-members",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "auth-no-resource-token",
+      "member": "error"
+    },
+    {
+      "id": "auth-no-presented-token-status",
+      "clause": "supervision.ss.act-members",
+      "kind": "status",
+      "equals": 400,
+      "stage": "auth-no-presented-token"
+    },
+    {
+      "id": "auth-no-presented-token-error",
+      "clause": "supervision.ss.act-members",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "auth-no-presented-token",
+      "member": "error"
+    },
+    {
+      "id": "proposal-no-agent-token-status",
+      "clause": "supervision.ss.act-members",
+      "kind": "status",
+      "equals": 400,
+      "stage": "proposal-no-agent-token"
+    },
+    {
+      "id": "proposal-no-agent-token-error",
+      "clause": "supervision.ss.act-members",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "proposal-no-agent-token",
+      "member": "error"
+    }
+  ]
+}

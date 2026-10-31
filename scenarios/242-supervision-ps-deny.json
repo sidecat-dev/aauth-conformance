@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "supervision.ps-deny",
+  "title": "A deny refuses the act",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "deny"
+  },
+  "assertions": [
+    {
+      "id": "refused",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "status-class",
+      "equals": "4xx",
+      "stage": "person"
+    },
+    {
+      "id": "no-credential",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "ps-credential",
+      "equals": false,
+      "stage": "person"
+    }
+  ]
+}

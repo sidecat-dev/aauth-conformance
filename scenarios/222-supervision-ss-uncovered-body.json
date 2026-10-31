@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "id": "supervision.ss-uncovered-body",
+  "title": "A body whose content-type and content-digest are not covered is refused",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-uncovered",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "decide",
+        "endpoint": "decision",
+        "omit_body_components": true,
+        "body": {
+          "sdi": "d-uncovered-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "supervision.ss.core-verification",
+      "kind": "status",
+      "equals": 401,
+      "stage": "decide"
+    },
+    {
+      "id": "invalid-input",
+      "clause": "supervision.ss.core-verification",
+      "kind": "sfv-token",
+      "equals": "invalid_input",
+      "stage": "decide",
+      "member": "error",
+      "header": "Signature-Error"
+    },
+    {
+      "id": "no-decision",
+      "clause": "supervision.ss.connected-only",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "decide"
+    }
+  ]
+}

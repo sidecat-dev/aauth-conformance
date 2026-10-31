@@ -12,6 +12,7 @@ subagent = ["deferred"]
 events = []
 r3 = []
 mission = ["federation"]
+supervision = []
 
 [dependencies]
 aauth-rust-jose = "=0.1.0-alpha.2"

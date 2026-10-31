@@ -522,3 +522,81 @@ token for the Resource, bound to the Agent key, carrying the approved
 fixture Resource key and carries the presented `mission_s256`). Generic kinds
 grade the stage's response. When the approved blob has no `expires_at`, the
 expiry flow's later stages are `not_exercised` with the reason recorded.
+## Supervision profiles
+
+Two extension roles grade draft-hardt-aauth-supervision (catalog source
+`supervision`) from both sides. Identities are in `fixture.extensions.supervision`:
+the supervisor's issuer, seed and kid, the directed `subject` the harness
+Person Server connects, a second Person Server the supervisor's host refuses
+(`other_person_server`), a second supervisor whose keys a Person Server admits
+but never calls (`foreign_supervisor`), and the mission blob a harness Person
+Server reports. The harness Person Server of the first role is
+`fixture.person_server`. All seeds are public test vectors.
+
+### `supervision.server`
+
+The native supervision server is under test and the harness is its Person
+Server. `input.steps` is an ordered script; every step names a unique `stage`.
+A request step names an `endpoint` (`metadata`, `connect`, `mission`,
+`mission/$s256`, `decision`, `event`, or `location:<stage>` for the pending
+URL an earlier stage returned), an optional `method`, and a JSON `body`
+template. It is signed under `jwks_uri` by `signer` `ps` (default) or
+`other-ps`, or sent `unsigned`; `omit_body_components` sends the body's
+Content-Type and Content-Digest but leaves them uncovered; `accept_signature`
+adds the Accept-Signature a Person Server sends; `repeat` resends an earlier
+stage's exact bytes. `expect` is a prerequisite status: any other ends the
+case as an execution error. A `control` step posts its object to the
+launcher's host control instead. A control the launcher answers `501` with
+`not_offered` marks every claimed assertion `not_exercised` with that reason:
+the implementation does not offer the duty, which is never a pass.
+
+Body placeholders are whole JSON strings: `$now` and `$exp` (the clock and 60
+seconds later, as numbers), `$sub`, `$agent`, `$resource`, `$agent_token`,
+`$resource_token`, `$presented_token`, `$mission` and `$s256`. The forwarded
+tokens are signed by the fixture issuers; the supervisor treats them as
+opaque. An unknown placeholder is a loader error.
+
+Assertions name a request `stage`. Generic kinds grade that stage's response.
+Boolean kinds: `ss-signed` (a response signature that verifies under the
+fixture supervisor key, with `Signature-Key` `jwks_uri` naming its issuer and
+`aauth-supervisor.json`, covering `@status`, `content-type` and
+`content-digest`, `;req` components taken from the request, and a matching
+Content-Digest); `ss-same-response` and `ss-same-location` (equal to the stage
+named in `member`); `ss-pending` (202, same-origin Location, integer
+Retry-After); `ss-metadata-endpoints` (the four endpoints HTTPS on the
+issuer's origin); `ss-retry-after`; and `ss-no-decision` (a refusal carries
+no `decision`).
+
+### `supervision.person-server`
+
+The native Person Server is under test with supervision routing every Agent
+to the harness supervisor. The harness is that supervisor, the Agent and its
+Agent Provider. `input.act` is `person_token`, or `auth_token` or
+`mission_proposal` (each after a person token the supervisor allows);
+`input.decision` is how the harness supervisor answers that act: `allow`
+(signed; `allow_exp_offset` sets its `exp`; a proposal is allowed as
+proposed, with its description), `allow-no-description` (proposals only),
+`deny`, `ask`, `defer` (202 with a pending URL; a poll then gets a signed
+allow), `server-error`, `wrong-sdi`, `bad-signature` (another key under the
+supervisor's id), `foreign-signer` (the foreign supervisor's valid signature)
+or `unsigned`. Every other supervision request is allowed. `second_act`
+requests a second person token.
+
+The stages are `person`, `token`, `mission`, `poll` (the Agent's poll of the Person
+Server's pending URL after `ask`, `server-error` or `defer`), `person-again`
+and `deliver`. Host controls answer for the person (`ask`, `server-error`),
+advance a deferred decision once (`defer`) and finally deliver queued events.
+`ps-credential` requires a Person Server token in the stage response that
+verifies under the fixture key; `ps-credential-exp` also requires its `exp`
+no later than the allow's. `ps-mission` requires an approved mission whose
+`s256` is the digest of its `mission` bytes and whose description is the one
+allowed. At stage `deliver`, kinds grade what the
+supervisor received, chosen by `member` `selector` or `selector/path`, where
+a selector is `connect`, `decision`, `proposal`, `poll`, `event:<name>`,
+`report:<action>` or `mission:<action>`, with `#n` for the nth:
+`ss-request-proof` (the Person
+Server's `jwks_uri` signature, coverage and digest), `ss-request-has` (member
+present and nonempty), `ss-request-equals`, `ss-request-token` (an exact
+forwarded token), `ss-sdi-distinct` (the first two decision requests carry
+different `sdi`) and `ss-mission-match` (a report's `s256` and `mission` are
+those the Agent received, and the digest matches).

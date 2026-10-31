@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "id": "supervision.ps-server-error",
+  "title": "A server_error leaves the act to the person, not the PS",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "server-error"
+  },
+  "assertions": [
+    {
+      "id": "pending",
+      "clause": "supervision.ps.unavailable",
+      "kind": "status",
+      "equals": 202,
+      "stage": "person"
+    },
+    {
+      "id": "no-credential",
+      "clause": "supervision.ps.unavailable",
+      "kind": "ps-credential",
+      "equals": false,
+      "stage": "person"
+    },
+    {
+      "id": "person-decided",
+      "clause": "supervision.ps.unavailable",
+      "kind": "ps-credential",
+      "equals": true,
+      "stage": "poll"
+    },
+    {
+      "id": "answer",
+      "clause": "supervision.ps.decision-resolved",
+      "kind": "ss-request-equals",
+      "equals": "allow",
+      "stage": "deliver",
+      "member": "event:decision.resolved/answer"
+    }
+  ]
+}

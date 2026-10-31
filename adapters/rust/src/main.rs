@@ -9,6 +9,8 @@ mod federation;
 mod r3;
 #[cfg(feature = "mission")]
 mod mission;
+#[cfg(feature = "supervision")]
+mod supervision;
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAgentToken,
 };
@@ -179,6 +181,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return mission::run(config);
         #[cfg(not(feature = "mission"))]
         return Err(format!("rebuild this launcher for {}", config.role).into());
+    }
+    if config.role == "supervision.server" || config.role == "supervision.person-server" {
+        #[cfg(feature = "supervision")]
+        return if config.role == "supervision.server" {
+            supervision::run_server(config)
+        } else {
+            supervision::run_person_server(config)
+        };
+        #[cfg(not(feature = "supervision"))]
+        return Err("rebuild this launcher for the supervision roles".into());
     }
     if !config.role.is_empty() && config.role != "resource.agent-identity" {
         return Err(format!("rebuild this launcher for {}", config.role).into());
