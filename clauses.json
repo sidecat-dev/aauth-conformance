@@ -611,6 +611,46 @@
       "scope": "adapter-contract"
     },
     {
+      "role": "r3.resource",
+      "id": "r3.resource.document-signature-error",
+      "source": "core",
+      "section": "Verification (Server), lines 2242-2250, applied to the R3 document endpoint: any failure MUST result in a 401 with the appropriate Signature-Error; missing signature fields (step 1) and a signature that does not verify (step 7) are invalid_signature",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.per-call-requirement",
+      "source": "r3",
+      "section": "Grant Enforcement, line 758: operations in r3_per_call MUST trigger an AAuth-Requirement before being served; the challenge is a 401 or 202 whose Resource token references a proposal, not the class document, names the AS in aud and the presented Auth token in presented_jti (Flow, step 1, line 675; line 499)",
+      "anchor": "grant-enforcement",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.proposal-fields",
+      "source": "r3",
+      "section": "Proposal Document, lines 643-645: a per-call proposal's operations (REQUIRED) is the single r3_per_call operation invoked and its parameters (REQUIRED) carry the call's concrete parameters; it is content-addressed like a class document (line 637)",
+      "anchor": "proposal-document",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.per-call-parameters",
+      "source": "r3",
+      "section": "Flow, step 3, line 677: on the 401 retry the Resource MUST verify the presented parameters match the approved proposal and MUST reject the call if anything differs; nothing is executed",
+      "anchor": "per-call-flow",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.per-call-single-use",
+      "source": "r3",
+      "section": "Flow, step 4, line 678: a Resource MUST NOT execute more than one invocation under one per-call Auth token; the launcher counts its own executions",
+      "anchor": "per-call-flow",
+      "scope": "protocol"
+    },
+    {
       "role": "r3.issuer",
       "id": "r3.issuer.fetch",
       "source": "r3",

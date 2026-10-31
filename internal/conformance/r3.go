@@ -40,6 +40,9 @@ type R3ResourceInput struct {
 	Grant      []string `json:"grant,omitempty"`
 	PerCall    []string `json:"per_call,omitempty"`
 	Calls      []string `json:"calls,omitempty"`
+	// PerCallFlow completes the one per-call call: "complete" retries it with
+	// the approved parameters and repeats it; "mismatch" retries it with others.
+	PerCallFlow string `json:"per_call_flow,omitempty"`
 }
 
 // R3IssuerInput drives a native three-party PS as the Auth-token issuer. The
@@ -55,7 +58,7 @@ var r3IssuerDocuments = []string{"exact", "altered", "missing"}
 
 func init() {
 	RegisterRole(R3ResourceRole, ExtensionRole{
-		Kinds:    []string{"r3-resource-token", "r3-no-resource-token", "r3-document-digest", "r3-no-document", "r3-document-fields", "r3-document-covers", "r3-vocabularies"},
+		Kinds:    []string{"r3-resource-token", "r3-no-resource-token", "r3-document-digest", "r3-no-document", "r3-document-fields", "r3-document-covers", "r3-vocabularies", "r3-per-call-challenge", "r3-proposal", "r3-executions"},
 		Validate: validateR3ResourceScenario,
 		Run:      runR3Resources,
 	})
@@ -118,6 +121,14 @@ func r3Stages(in R3ResourceInput) []string {
 	for _, tool := range in.Calls {
 		stages = append(stages, "call-"+tool)
 	}
+	if in.PerCallFlow != "" && len(in.Calls) == 1 {
+		tool := in.Calls[0]
+		stages = append(stages, "fetch-proposal", "retry-"+tool)
+		if in.PerCallFlow == "complete" {
+			stages = append(stages, "repeat-"+tool)
+		}
+		stages = append(stages, "executions")
+	}
 	return stages
 }
 
@@ -158,16 +169,31 @@ func validateR3ResourceScenario(f Fixture, s Scenario) error {
 	if len(in.Calls) > 0 && len(in.Grant)+len(in.PerCall) == 0 {
 		return fmt.Errorf("%s: calls need an Auth token grant", s.ID)
 	}
+	if in.PerCallFlow != "" && (!slices.Contains([]string{"complete", "mismatch"}, in.PerCallFlow) || in.Topology != "four-party" ||
+		len(in.Calls) != 1 || !slices.Contains(in.PerCall, in.Calls[0])) {
+		return fmt.Errorf("%s: per_call_flow complete or mismatch follows exactly one four-party call to an r3_per_call operation", s.ID)
+	}
 	stages := r3Stages(in)
 	for _, a := range s.Assertions {
 		if !slices.Contains(stages, a.Stage) {
 			return fmt.Errorf("%s/%s: stage %q is not produced by this input", s.ID, a.ID, a.Stage)
 		}
+		if a.Kind == "r3-executions" {
+			var value any
+			json.Unmarshal(a.Equals, &value)
+			if _, ok := value.(float64); !ok || a.Stage != "executions" {
+				return fmt.Errorf("%s/%s: r3-executions is a count graded on the executions stage", s.ID, a.ID)
+			}
+			continue
+		}
+		if a.Stage == "executions" {
+			return fmt.Errorf("%s/%s: the executions stage carries only r3-executions", s.ID, a.ID)
+		}
 		if strings.HasPrefix(a.Kind, "r3-") {
 			if err := requireBoolean(a); err != nil {
 				return fmt.Errorf("%s/%s: %w", s.ID, a.ID, err)
 			}
-			want := map[string]string{"r3-resource-token": "authorize", "r3-no-resource-token": "authorize", "r3-vocabularies": "metadata"}[a.Kind]
+			want := map[string]string{"r3-resource-token": "authorize", "r3-no-resource-token": "authorize", "r3-vocabularies": "metadata", "r3-per-call-challenge": "call-", "r3-proposal": "fetch-proposal"}[a.Kind]
 			if want == "" {
 				want = "fetch-"
 			}
@@ -399,4 +425,42 @@ func noR3Token(response Response, name string) bool {
 	}
 	_, present := body[name]
 	return !present
+}
+
+// observeR3PerCallChallenge reads a per-call challenge: 401 or 202 with
+// requirement=auth-token and a native Resource token whose r3_uri names a
+// proposal other than the class document, addressed to the AS, whose
+// presented_jti names the class Auth token the call carried (Flow, step 1).
+func observeR3PerCallChallenge(f Fixture, response Response, classURI, classJTI string) R3TokenObservation {
+	if response.Status != 401 && response.Status != 202 {
+		return R3TokenObservation{Error: fmt.Sprintf("per-call call answered HTTP %d, not a 401 or 202 AAuth-Requirement", response.Status)}
+	}
+	compact, err := challengedResourceToken(response)
+	if err != nil {
+		return R3TokenObservation{Error: err.Error()}
+	}
+	body, _ := json.Marshal(map[string]string{"resource_token": compact})
+	o := observeR3ResourceToken(f, Response{Status: 200, Body: body}, f.Access.Issuer)
+	switch {
+	case !o.Valid:
+	case o.Claims["r3_uri"] == classURI:
+		o.Valid, o.Error = false, "per-call Resource token references the class document, not a proposal"
+	case o.Claims["presented_jti"] != classJTI:
+		o.Valid, o.Error = false, "per-call Resource token presented_jti does not name the class Auth token"
+	}
+	return o
+}
+
+// r3ProposalShape checks a served per-call proposal: operations is exactly
+// the invoked operation and parameters carries the call's record value
+// (Proposal Document, lines 643-645).
+func r3ProposalShape(response Response, vocabulary, tool string, record any) bool {
+	var proposal map[string]any
+	if response.Status != 200 || json.Unmarshal(response.Body, &proposal) != nil {
+		return false
+	}
+	operations, _ := proposal["operations"].([]any)
+	parameters, _ := proposal["parameters"].(map[string]any)
+	return proposal["vocabulary"] == vocabulary && len(operations) == 1 &&
+		jsonEqual(operations[0], r3Operations(vocabulary, []string{tool})[0]) && jsonEqual(parameters["record"], record)
 }

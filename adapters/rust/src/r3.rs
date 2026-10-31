@@ -14,11 +14,13 @@ use aauth_rust_person_server::{
 use aauth_rust_r3::{
     DefinitionRegistry, Display, FetchBody, FetchLimits, FetchResponse, FetchTransport,
     GrantedOperations, IssuanceError, IssuanceRecord, IssuanceStore, McpCodec, Operation,
-    ToolsListPage, ToolsListSnapshot, standard_registry,
+    Parameter, Parameters, PresentedParameter, ProposalDisplay, ToolsListPage, ToolsListSnapshot,
+    standard_registry,
 };
 use aauth_rust_resource::{
-    AuthDecision, PsAuthorizationConfig, PsAuthorizationResource, R3Config, R3DocumentRecord,
-    R3DocumentStore, R3HostError, R3StoreError, R3Vocabulary,
+    AuthDecision, PsAuthorizationConfig, PsAuthorizationResource, R3CallDescription,
+    R3CallResult, R3CallStore, R3CallToken, R3Claim, R3Config, R3DocumentRecord, R3DocumentStore,
+    R3HostError, R3PerCallConfig, R3ProposalRecord, R3StoreError, R3Vocabulary,
 };
 use http::{Request, Response};
 use serde::Deserialize;
@@ -176,6 +178,163 @@ impl R3DocumentStore for MemoryDocuments {
     }
 }
 
+fn poisoned<T>(_: T) -> R3StoreError {
+    R3StoreError::Unavailable(R3HostError::new("poisoned"))
+}
+
+/// In-memory proposal custody: each URI is created once; the first claim by a
+/// token gets one fenced execution and the same token later replays the
+/// retained result. Release gating is not configured, so nothing is held.
+#[derive(Default)]
+struct MemoryCalls(Mutex<CallState>);
+#[derive(Default)]
+struct CallState {
+    records: BTreeMap<String, CallEntry>,
+    fences: u64,
+}
+struct CallEntry {
+    record: R3ProposalRecord,
+    token: Option<R3CallToken>,
+    fence: Option<String>,
+    result: Option<R3CallResult>,
+}
+impl R3CallStore for MemoryCalls {
+    fn commit(&self, record: &R3ProposalRecord) -> Result<(), R3StoreError> {
+        let mut state = self.0.lock().map_err(poisoned)?;
+        if state.records.contains_key(record.reference.uri()) {
+            return Err(R3StoreError::Conflict);
+        }
+        state.records.insert(
+            record.reference.uri().into(),
+            CallEntry {
+                record: record.clone(),
+                token: None,
+                fence: None,
+                result: None,
+            },
+        );
+        Ok(())
+    }
+    fn load(&self, uri: &str) -> Result<Option<R3ProposalRecord>, R3StoreError> {
+        let state = self.0.lock().map_err(poisoned)?;
+        Ok(state.records.get(uri).map(|entry| entry.record.clone()))
+    }
+    fn load_pending(&self, pending_id: &str) -> Result<Option<R3ProposalRecord>, R3StoreError> {
+        let state = self.0.lock().map_err(poisoned)?;
+        Ok(state
+            .records
+            .values()
+            .find(|entry| {
+                entry
+                    .record
+                    .held
+                    .as_ref()
+                    .is_some_and(|held| held.pending_id == pending_id)
+            })
+            .map(|entry| entry.record.clone()))
+    }
+    fn claim(&self, uri: &str, token: &R3CallToken, now: i64) -> Result<R3Claim, R3StoreError> {
+        let mut state = self.0.lock().map_err(poisoned)?;
+        state.fences += 1;
+        let fence = format!("r3-fence-{}", state.fences);
+        let entry = state
+            .records
+            .get_mut(uri)
+            .ok_or_else(|| R3StoreError::Unavailable(R3HostError::new("unknown proposal")))?;
+        match &entry.token {
+            None => {
+                entry.token = Some(token.clone());
+                entry.fence = Some(fence.clone());
+                Ok(R3Claim::Execute { fence })
+            }
+            Some(bound) if bound.compact_sha256 != token.compact_sha256 => {
+                Ok(R3Claim::DifferentToken)
+            }
+            Some(bound) => match &entry.result {
+                Some(_) if now >= bound.retain_until => Ok(R3Claim::Expired),
+                Some(result) => Ok(R3Claim::Replay(result.clone())),
+                None => Ok(R3Claim::Unfinished),
+            },
+        }
+    }
+    fn retain(
+        &self,
+        uri: &str,
+        fence: &str,
+        result: &R3CallResult,
+    ) -> Result<R3CallResult, R3StoreError> {
+        let mut state = self.0.lock().map_err(poisoned)?;
+        let entry = state.records.get_mut(uri).ok_or(R3StoreError::Conflict)?;
+        if entry.fence.as_deref() != Some(fence) || entry.result.is_some() {
+            return Err(R3StoreError::Conflict);
+        }
+        entry.result = Some(result.clone());
+        Ok(result.clone())
+    }
+    fn held_releases(
+        &self,
+        _: &str,
+        _: &str,
+        _: i64,
+    ) -> Result<Vec<R3ProposalRecord>, R3StoreError> {
+        Ok(Vec::new())
+    }
+    fn supersede(&self, _: &str, _: &R3ProposalRecord, _: i64) -> Result<(), R3StoreError> {
+        Err(R3StoreError::Conflict)
+    }
+}
+
+/// The call's concrete parameter: its body's record value, as exact JSON.
+fn record_parameter(request: &Request<Vec<u8>>) -> Result<Vec<u8>, R3HostError> {
+    let body: serde_json::Value = serde_json::from_slice(request.body())
+        .map_err(|_| R3HostError::new("call body must be JSON"))?;
+    let record = body
+        .get("record")
+        .ok_or_else(|| R3HostError::new("call body needs a record"))?;
+    serde_json::to_vec(record).map_err(|e| R3HostError::new(e.to_string()))
+}
+
+fn per_call_config() -> R3PerCallConfig {
+    let host = |e: aauth_rust_r3::Error| R3HostError::new(e.to_string());
+    R3PerCallConfig {
+        present: Box::new(move |request: &Request<Vec<u8>>, _: &Operation| {
+            let presented = PresentedParameter::inline(&record_parameter(request)?).map_err(host)?;
+            Ok(BTreeMap::from([("record".to_owned(), presented)]))
+        }),
+        describe: Box::new(
+            move |_: &Operation, presented: &BTreeMap<String, PresentedParameter>, _: Option<&str>| {
+                let record = presented
+                    .get("record")
+                    .and_then(PresentedParameter::inline_json)
+                    .ok_or_else(|| R3HostError::new("record parameter is required"))?;
+                let parameters =
+                    Parameters::new([("record".to_owned(), Parameter::inline(&record).map_err(host)?)])
+                        .map_err(host)?;
+                let shown = String::from_utf8_lossy(&record).into_owned();
+                let display = ProposalDisplay::new(
+                    &Display::new(
+                        format!("Delete fixture record {shown}"),
+                        Some("The record is removed"),
+                        None,
+                        Some("Deletion cannot be undone"),
+                    )
+                    .map_err(host)?,
+                    Some("## Action\nDelete a fixture record"),
+                )
+                .map_err(host)?;
+                Ok(R3CallDescription {
+                    parameters,
+                    display: Some(display),
+                })
+            },
+        ),
+        calls: Arc::new(MemoryCalls::default()),
+        hold: false,
+        release: None,
+        held_result_lifetime: 0,
+    }
+}
+
 fn respond(incoming: tiny_http::Request, response: Response<Vec<u8>>) -> Result<(), Failure> {
     let mut wire = tiny_http::Response::from_data(response.body().clone())
         .with_status_code(response.status().as_u16());
@@ -279,8 +438,15 @@ fn run_resource(config: &Bootstrap, x: Extension) -> Result<(), Failure> {
         }),
         require_core_scope: false,
     })?;
+    // Per-call proposals run on the four-party composition, as in Go.
+    let resource = if x.topology == "three-party" {
+        resource
+    } else {
+        resource.with_r3_per_call(per_call_config())?
+    };
     let server = listen(config)?;
     let sequence = AtomicU64::new(0);
+    let mut executions: BTreeMap<String, u64> = BTreeMap::new();
     for mut incoming in server.incoming_requests() {
         let request = person_request(&mut incoming)?;
         let jti = format!("r3-{}", sequence.fetch_add(1, Ordering::Relaxed) + 1);
@@ -296,14 +462,26 @@ fn run_resource(config: &Bootstrap, x: Extension) -> Result<(), Failure> {
                 .authorize_endpoint(&request, config.now, &jti)
                 .into_response(),
             p if p.starts_with("/r3/") => resource.r3_document(&request, config.now),
+            "/__fixture/r3/executions" if request.method() == http::Method::GET => {
+                json_response(200, serde_json::json!(executions))
+            }
             p if p.starts_with("/op/") => match resource.authorize(&request, config.now, &jti) {
-                AuthDecision::Granted(admitted) => json_response(
-                    200,
-                    serde_json::json!({
-                        "operation": p.trim_start_matches("/op/"),
-                        "sub": admitted.token().claims().sub,
-                    }),
-                ),
+                AuthDecision::Granted(admitted) => {
+                    let tool = p.trim_start_matches("/op/").to_owned();
+                    *executions.entry(tool.clone()).or_default() += 1;
+                    let produced = json_response(
+                        200,
+                        serde_json::json!({
+                            "operation": tool,
+                            "sub": admitted.token().claims().sub,
+                        }),
+                    );
+                    // A per-call completion keeps its one result for replay.
+                    match admitted.r3_grant() {
+                        Some(grant) if grant.is_per_call() => resource.r3_retain(grant, produced),
+                        _ => produced,
+                    }
+                }
                 other => other.into_response(),
             },
             _ => json_response(404, serde_json::json!({"error":"not_found"})),

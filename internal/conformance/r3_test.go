@@ -37,6 +37,14 @@ func TestR3ScenariosLoadOnlyObservableStages(t *testing.T) {
 			s.Input = json.RawMessage(`{"topology":"four-party","operations":["records.read"],"calls":["records.read"]}`)
 			s.Assertions = s.Assertions[:1]
 		},
+		func(s *Scenario) {
+			s.Input = json.RawMessage(`{"topology":"three-party","operations":["records.delete"],"per_call":["records.delete"],"calls":["records.delete"],"per_call_flow":"complete"}`)
+			s.Assertions = s.Assertions[:1]
+		},
+		func(s *Scenario) {
+			s.Input = json.RawMessage(`{"topology":"four-party","operations":["records.delete"],"grant":["records.read"],"calls":["records.read"],"per_call_flow":"complete"}`)
+			s.Assertions = s.Assertions[:1]
+		},
 	} {
 		changed := resource
 		changed.Assertions = append([]Assertion(nil), resource.Assertions...)

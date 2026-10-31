@@ -110,6 +110,10 @@ type r3ResourceEvidence struct {
 	ResourceToken R3TokenObservation               `json:"resource_token"`
 	AuthToken     string                           `json:"harness_auth_token,omitempty"`
 	Documents     map[string]R3DocumentObservation `json:"documents,omitempty"`
+	PerCall       *R3TokenObservation              `json:"per_call_challenge,omitempty"`
+	PerCallToken  string                           `json:"harness_per_call_auth_token,omitempty"`
+	Proposal      bool                             `json:"proposal_shape"`
+	Executions    *float64                         `json:"executions,omitempty"`
 }
 
 func runR3Resources(ctx context.Context, s Suite, targets Targets, o Options, ap string, report Report) Report {
@@ -225,6 +229,68 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 				return err
 			}
 		}
+		if in.PerCallFlow == "" {
+			return nil
+		}
+		// The harness AS approves the proposal the native Resource published
+		// and issues the one-operation per-call token (Flow, steps 2-4).
+		tool := in.Calls[0]
+		challenge := observeR3PerCallChallenge(f, x.responses["call-"+tool], uri, "r3-auth-"+s.ID)
+		evidence.PerCall = &challenge
+		if !challenge.Valid {
+			return fmt.Errorf("cannot complete without a per-call challenge: %s", challenge.Error)
+		}
+		proposalURI, proposalDigest := challenge.Claims["r3_uri"].(string), challenge.Claims["r3_s256"].(string)
+		request, base, err = r3FetchRequest(f, r, "access", proposalURI, person)
+		if err != nil {
+			return err
+		}
+		proposal, err := x.send("fetch-proposal", request, base)
+		if err != nil {
+			return err
+		}
+		evidence.Documents["fetch-proposal"] = observeR3Document(proposal, proposalDigest, advertised, vocabulary, r3Operations(vocabulary, []string{tool}))
+		evidence.Proposal = r3ProposalShape(proposal, vocabulary, tool, "r-1")
+		perCall, err := mintJWT(a.Seed, a.Kid, "aa-auth+jwt", map[string]any{
+			"iss": a.Issuer, "dwk": "aauth-access.json", "aud": f.Origin, "jti": "r3-per-call-" + s.ID,
+			"ps": p.Issuer, "sub": claims["sub"], "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)},
+			"iat": f.Now, "exp": f.Now + p.AuthLifetime, "r3_uri": proposalURI, "r3_s256": proposalDigest,
+			"r3_granted": map[string]any{"vocabulary": vocabulary, "operations": r3Operations(vocabulary, []string{tool})},
+		})
+		if err != nil {
+			return err
+		}
+		evidence.PerCallToken = perCall
+		retryBody := []byte(`{"record":"r-1"}`)
+		if in.PerCallFlow == "mismatch" {
+			retryBody = []byte(`{"record":"r-2"}`)
+		}
+		stages := []string{"retry-" + tool}
+		if in.PerCallFlow == "complete" {
+			stages = append(stages, "repeat-"+tool)
+		}
+		for _, stage := range stages {
+			request, base, err := signedFixtureRequest(f, f.AgentSeed, "POST", f.Origin+"/op/"+tool, `sig=jwt;jwt="`+perCall+`"`, retryBody)
+			if err != nil {
+				return err
+			}
+			if _, err := x.send(stage, request, base); err != nil {
+				return err
+			}
+		}
+		// The launcher's own count of application executions, read after the
+		// calls; it is host evidence, not a protocol response.
+		countRequest, _ := http.NewRequest("GET", f.Origin+"/__fixture/r3/executions", nil)
+		counted, err := x.send("executions", countRequest, "")
+		if err != nil {
+			return err
+		}
+		var counts map[string]float64
+		if counted.Status != 200 || json.Unmarshal(counted.Body, &counts) != nil {
+			return fmt.Errorf("launcher did not report its execution counts")
+		}
+		count := counts[tool]
+		evidence.Executions = &count
 		return nil
 	}
 	if err := execute(); err != nil {
@@ -258,6 +324,18 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 				return CompareResult(a, document.Covers, document.Error)
 			case "r3-vocabularies":
 				return CompareResult(a, vocabulariesValid, "")
+			case "r3-per-call-challenge":
+				if evidence.PerCall == nil {
+					return CompareResult(a, false, "no per-call challenge was observed")
+				}
+				return CompareResult(a, evidence.PerCall.Valid, evidence.PerCall.Error)
+			case "r3-proposal":
+				return CompareResult(a, evidence.Proposal, "")
+			case "r3-executions":
+				if evidence.Executions == nil {
+					return CompareResult(a, nil, "no execution count")
+				}
+				return CompareResult(a, *evidence.Executions, "")
 			}
 			return CompareResult(a, nil, "unknown R3 assertion kind")
 		}))

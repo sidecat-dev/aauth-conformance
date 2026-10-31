@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "id": "r3-resource-per-call",
+  "title": "An r3_per_call operation is challenged, proposed, completed once",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "four-party",
+    "operations": [
+      "records.read",
+      "records.delete"
+    ],
+    "grant": [
+      "records.read"
+    ],
+    "per_call": [
+      "records.delete"
+    ],
+    "calls": [
+      "records.delete"
+    ],
+    "per_call_flow": "complete"
+  },
+  "assertions": [
+    {
+      "id": "challenge",
+      "stage": "call-records.delete",
+      "clause": "r3.resource.per-call-requirement",
+      "kind": "r3-per-call-challenge",
+      "equals": true
+    },
+    {
+      "id": "proposal-digest",
+      "stage": "fetch-proposal",
+      "clause": "r3.resource.content-addressing",
+      "kind": "r3-document-digest",
+      "equals": true
+    },
+    {
+      "id": "proposal-shape",
+      "stage": "fetch-proposal",
+      "clause": "r3.resource.proposal-fields",
+      "kind": "r3-proposal",
+      "equals": true
+    },
+    {
+      "id": "completed",
+      "stage": "retry-records.delete",
+      "clause": "r3.resource.granted-served",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "id": "completed-operation",
+      "stage": "retry-records.delete",
+      "clause": "r3.resource.granted-served",
+      "kind": "json-member",
+      "member": "operation",
+      "equals": "records.delete"
+    },
+    {
+      "id": "executed-once",
+      "stage": "executions",
+      "clause": "r3.resource.per-call-single-use",
+      "kind": "r3-executions",
+      "equals": 1
+    }
+  ]
+}

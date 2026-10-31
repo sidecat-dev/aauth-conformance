@@ -9,12 +9,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -160,6 +163,7 @@ func runR3Resource(config bootstrap, keys signaturekey.StaticKeyResolver) error 
 			return err
 		}
 	}
+	executions := &r3Executions{counts: map[string]int{}}
 	r3Settings := &resource.R3Config{
 		Registry: registry, Definitions: definitions,
 		Vocabularies: []resource.R3VocabularyConfig{{
@@ -169,10 +173,51 @@ func runR3Resource(config bootstrap, keys signaturekey.StaticKeyResolver) error 
 			},
 		}},
 		Documents: testutil.NewR3DocumentStore(),
-		HTTP: resource.R3HTTPAdapter{OperationForRequest: func(request *http.Request) (r3.Operation, bool, error) {
-			operation, ok := operations[strings.TrimPrefix(request.URL.Path, "/op/")]
-			return operation, ok && strings.HasPrefix(request.URL.Path, "/op/"), nil
-		}},
+		HTTP: resource.R3HTTPAdapter{
+			OperationForRequest: func(request *http.Request) (r3.Operation, bool, error) {
+				operation, ok := operations[strings.TrimPrefix(request.URL.Path, "/op/")]
+				return operation, ok && strings.HasPrefix(request.URL.Path, "/op/"), nil
+			},
+			// The call's concrete parameter is its body's record value.
+			PresentParameters: func(request *http.Request, _ r3.Operation) (map[string]r3.PresentedParameter, error) {
+				record, err := r3Record(request)
+				if err != nil {
+					return nil, err
+				}
+				presented, err := r3.NewPresentedInlineParameter(record)
+				return map[string]r3.PresentedParameter{"record": presented}, err
+			},
+		},
+	}
+	if extension.Topology != "three-party" {
+		// Per-call proposals are a federated composition in this library.
+		r3Settings.PerCall = &resource.R3PerCallConfig{
+			DescribeCall: func(_ context.Context, invocation r3.Invocation, _ *string) (resource.R3CallDescription, error) {
+				record, ok := invocation.PresentedParameters()["record"].InlineJSON()
+				if !ok {
+					return resource.R3CallDescription{}, fmt.Errorf("record parameter is required")
+				}
+				parameter, err := r3.NewInlineParameter(record)
+				if err != nil {
+					return resource.R3CallDescription{}, err
+				}
+				parameters, err := r3.NewParameters(map[string]r3.Parameter{"record": parameter})
+				if err != nil {
+					return resource.R3CallDescription{}, err
+				}
+				shown, err := r3.NewDisplay("Delete fixture record "+string(record), "The record is removed", "", "Deletion cannot be undone")
+				if err != nil {
+					return resource.R3CallDescription{}, err
+				}
+				detail, err := r3.NewProposalDisplay(shown, "## Action\nDelete a fixture record")
+				if err != nil {
+					return resource.R3CallDescription{}, err
+				}
+				return resource.R3CallDescription{Parameters: parameters, Display: &detail}, nil
+			},
+			Proposals: &r3ProposalStore{records: map[string]resource.R3ProposalRecord{}},
+			Retries:   &r3RetryStore{records: map[string]*r3RetryEntry{}},
+		}
 	}
 	clock := aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() })
 	var ids atomic.Uint64
@@ -193,8 +238,10 @@ func runR3Resource(config bootstrap, keys signaturekey.StaticKeyResolver) error 
 			http.Error(w, "native Resource did not supply a verified principal", 500)
 			return
 		}
+		tool := strings.TrimPrefix(r.URL.Path, "/op/")
+		executions.add(tool)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"operation": strings.TrimPrefix(r.URL.Path, "/op/"), "sub": principal.Subject})
+		json.NewEncoder(w).Encode(map[string]string{"operation": tool, "sub": principal.Subject})
 	})
 	var sut *resource.Server
 	if extension.Topology == "three-party" {
@@ -209,12 +256,167 @@ func runR3Resource(config bootstrap, keys signaturekey.StaticKeyResolver) error 
 			Clock: clock, NewID: nextID, ScopeDescriptions: descriptions,
 			RequiredScopes: func(*http.Request) []string { return nil },
 			ResolvePerson:  resolvePerson, Protected: protected, R3: r3Settings,
+			MaxRetainedRequestBodyBytes: 64 << 10, MaxRetainedResponseBodyBytes: 64 << 10, MaxRetainedHeaderBytes: 16 << 10,
 		})
 	}
 	if err != nil {
 		return err
 	}
-	return r3Serve(config, sut.Handler())
+	native := sut.Handler()
+	return r3Serve(config, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet && r.URL.Path == "/__fixture/r3/executions" {
+			executions.serve(w)
+			return
+		}
+		native.ServeHTTP(w, r)
+	}))
+}
+
+// r3Executions is the application's own count of executed calls per tool,
+// read by the harness through a loopback host control.
+type r3Executions struct {
+	mu     sync.Mutex
+	counts map[string]int
+}
+
+func (e *r3Executions) add(tool string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.counts[tool]++
+}
+func (e *r3Executions) serve(w http.ResponseWriter) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(e.counts)
+}
+
+func r3Record(request *http.Request) ([]byte, error) {
+	body, err := io.ReadAll(io.LimitReader(request.Body, 65536))
+	if err != nil {
+		return nil, err
+	}
+	var call struct {
+		Record json.RawMessage `json:"record"`
+	}
+	if err := json.Unmarshal(body, &call); err != nil || len(call.Record) == 0 {
+		return nil, fmt.Errorf("call body needs a record")
+	}
+	return call.Record, nil
+}
+
+// In-memory proposal custody: every URI is created once and loaded as an
+// independent copy, as the R3ProposalStore contract requires.
+type r3ProposalStore struct {
+	mu      sync.Mutex
+	records map[string]resource.R3ProposalRecord
+}
+
+func (store *r3ProposalStore) Commit(_ context.Context, record resource.R3ProposalRecord) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	if _, ok := store.records[record.Reference.URI()]; ok {
+		return resource.ErrR3ProposalConflict
+	}
+	record.ExactJSON = append([]byte(nil), record.ExactJSON...)
+	store.records[record.Reference.URI()] = record
+	return nil
+}
+func (store *r3ProposalStore) Load(_ context.Context, uri string) (resource.R3ProposalRecord, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	record, ok := store.records[uri]
+	if !ok {
+		return resource.R3ProposalRecord{}, resource.ErrR3ProposalNotFound
+	}
+	record.ExactJSON = append([]byte(nil), record.ExactJSON...)
+	return record, nil
+}
+
+// In-memory baseline-retry custody: the first claim by a token gets one
+// fenced execution; the same token later replays the retained response.
+type r3RetryEntry struct {
+	invocation resource.R3RetryInvocation
+	state      string
+	token      resource.R3RetryAuthToken
+	fence      string
+	response   resource.HeldResponse
+}
+type r3RetryStore struct {
+	mu      sync.Mutex
+	records map[string]*r3RetryEntry
+	fences  int
+}
+
+func r3CloneInvocation(invocation resource.R3RetryInvocation) resource.R3RetryInvocation {
+	invocation.ExactProposal = append([]byte(nil), invocation.ExactProposal...)
+	invocation.RequiredScopes = append([]string(nil), invocation.RequiredScopes...)
+	return invocation
+}
+func r3CloneResponse(response resource.HeldResponse) resource.HeldResponse {
+	response.Header = response.Header.Clone()
+	response.Trailer = response.Trailer.Clone()
+	response.Body = append([]byte(nil), response.Body...)
+	return response
+}
+func (store *r3RetryStore) Prepare(_ context.Context, invocation resource.R3RetryInvocation) error {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	invocation = r3CloneInvocation(invocation)
+	if retained, ok := store.records[invocation.Reference.URI()]; ok {
+		if !reflect.DeepEqual(retained.invocation, invocation) {
+			return resource.ErrR3RetryConflict
+		}
+		return nil
+	}
+	store.records[invocation.Reference.URI()] = &r3RetryEntry{invocation: invocation, state: "pending"}
+	return nil
+}
+func (store *r3RetryStore) Load(_ context.Context, reference r3.Reference) (resource.R3RetryInvocation, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	entry, ok := store.records[reference.URI()]
+	if !ok {
+		return resource.R3RetryInvocation{}, resource.ErrR3RetryNotFound
+	}
+	return r3CloneInvocation(entry.invocation), nil
+}
+func (store *r3RetryStore) Claim(_ context.Context, reference r3.Reference, token resource.R3RetryAuthToken) (resource.R3RetryClaim, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	entry, ok := store.records[reference.URI()]
+	if !ok {
+		return resource.R3RetryClaim{}, resource.ErrR3RetryNotFound
+	}
+	switch entry.state {
+	case "pending":
+		if !token.PresentedAt.Before(entry.invocation.CompletionUntil) {
+			entry.state = "expired"
+			return resource.R3RetryClaim{}, resource.ErrR3RetryExpired
+		}
+		store.fences++
+		entry.state, entry.token, entry.fence = "executing", token, fmt.Sprintf("r3-fence-%d", store.fences)
+		return resource.NewHeldExecution(resource.HeldExecution{InvocationID: reference.URI(), Fence: entry.fence}), nil
+	case "complete":
+		if entry.token.SHA256 != token.SHA256 {
+			return resource.R3RetryClaim{}, resource.ErrR3RetryTokenMismatch
+		}
+		return resource.NewHeldReplay(r3CloneResponse(entry.response)), nil
+	case "expired":
+		return resource.R3RetryClaim{}, resource.ErrR3RetryExpired
+	default:
+		return resource.R3RetryClaim{}, resource.ErrR3RetryConflict
+	}
+}
+func (store *r3RetryStore) Retain(_ context.Context, execution resource.R3RetryExecution, response resource.HeldResponse) (resource.HeldResponse, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	entry, ok := store.records[execution.InvocationID]
+	if !ok || entry.state != "executing" || entry.fence != execution.Fence {
+		return resource.HeldResponse{}, resource.ErrR3RetryCompletionStale
+	}
+	entry.state, entry.response = "complete", r3CloneResponse(response)
+	return r3CloneResponse(entry.response), nil
 }
 
 func runR3Issuer(config bootstrap, keys signaturekey.StaticKeyResolver) error {
