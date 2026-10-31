@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "id": "events-ap-body-mismatch",
+  "title": "body_s256 that does not match the body",
+  "role_under_test": "events.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 0,
+    "deliveries": [
+      {
+        "mutation": "body-mismatch",
+        "body": true
+      }
+    ],
+    "pending": true
+  },
+  "assertions": [
+    {
+      "stage": "delivery-1",
+      "id": "status",
+      "clause": "events.ap.body-s256",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "stage": "delivery-1",
+      "id": "error",
+      "clause": "events.ap.body-s256",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_jwt"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "problem-type",
+      "clause": "events.ap.problem-type",
+      "kind": "problem-if-present",
+      "equals": "invalid_jwt"
+    },
+    {
+      "stage": "pending",
+      "id": "pending-unchanged",
+      "clause": "events.ap.unchanged",
+      "kind": "events-pending",
+      "equals": true
+    }
+  ]
+}

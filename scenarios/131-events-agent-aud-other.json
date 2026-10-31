@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "events-agent-aud-other",
+  "title": "aud naming another Agent",
+  "role_under_test": "events.agent",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "aud-other",
+    "body": true
+  },
+  "assertions": [
+    {
+      "stage": "event",
+      "id": "accepted",
+      "clause": "events.agent.aud",
+      "kind": "events-accepted",
+      "equals": false
+    }
+  ]
+}

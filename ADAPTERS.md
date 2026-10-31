@@ -349,3 +349,58 @@ control at `POST /__fixture/subagent` accepts the same members as Rust's:
 only. They do not claim Agent-token revocation cascades, durable continuation
 recovery, real payment, consent UI, recursive delegation, missions, or
 production TLS/discovery.
+
+## Events roles
+
+The bootstrap `extension` object carries the Agent identifier (`agent`) and,
+per role: the Resource identity, subscription and ticket paths and trusted
+Person Servers (`events.subscription`); the event endpoint, the fixture AP
+seed and kid, the subscribed Resource and trusted Resources
+(`events.agent-provider`); trusted Resources and a fixture Agent token
+(`events.agent`). Trusted issuers are `{issuer, transport}` pairs; the launcher
+fetches their metadata and JWKS from the runner's loopback documents and
+admits them as fixed trust snapshots. Clocks are fixed at the bootstrap time.
+Go builds `adapters/go/events.go`; Rust builds the `events` feature and links
+the Agent Provider crate.
+
+- `events.subscription` announces the subscription path and routes it to the
+  native public registration (`EventService.PublicSubscriptionHandler`;
+  `EventsResource::register`), the ticket path to native protected
+  registration, and `POST /__fixture/ticket` `{"person_token"}` to a control
+  that verifies the person token natively (`aauth.VerifyPersonToken`;
+  `PersonToken::verify`) and issues a ticket from it, answering `{"url"}`.
+- `events.agent-provider` announces the event endpoint path and serves the
+  native AP: metadata, JWKS and the inbox (`agentprovider.Server.Handler`;
+  `AgentProvider::metadata`, `EventInbox::receive`). `POST /__fixture/subscribe`
+  `{"max_uses"}` calls native subscribe-token issuance for the fixture Agent
+  and the subscribed Resource and answers `{"token"}`.
+- `events.delivery` runs the subscription launcher with
+  `agent_providers` (`{issuer, transport}`) and adds `POST /__fixture/fire`
+  `{"agent_provider","eid","body"}`: native event preparation and delivery
+  (`EventService.PrepareEvent`/`DeliverEvent`;
+  `EventsResource::prepare_event`/`delivery_request`). Go resolves
+  `event_endpoint` through its native `HTTPEventEndpointResolver`; Rust's host
+  fetches the AP metadata and passes it to `delivery_request`, as its API
+  requires. Both transports change only the physical destination of the signed
+  request and answer `{"status"}` with the AP's HTTP status.
+- `events.agent` announces `/__fixture/event` and passes
+  `{"event_token","body","content_type"}` to the native check
+  (`agent.Client.AcceptEvent`; `aauth_rust_agent::verify_event`), answering
+  `{"accepted"}` with the native error text on refusal.
+
+aauth-go leaves some Events duties to host stores by its API contract. Its
+`agentprovider.EventInboxStore` compares a delivery's Resource and Agent with
+the subscription and counts uses, so `events.ap.resource-match`,
+`events.ap.audience`, `events.ap.max-uses` and `events.ap.remaining-uses` are
+not claimed for aauth-go: a launcher store would decide them. Its
+`EventInboxReader` holds the retained bytes the AP hands to the Agent, so
+`events.ap.unchanged` is not claimed either; `POST /__fixture/pending` calls
+native `PendingEvents` (Rust: `EventStore::pending` on the library's
+`MemoryEventStore`) and answers `{"events":[{"event_token","body"}]}`.
+`resource.ProtectedSubscriptionStore` consumes a ticket on commit, so
+`events.sub.ticket-single-use` is not claimed for aauth-go. The Go launcher's
+stores follow those contracts so the native handlers can run; the protected
+store does not compare thumbprints, leaving that refusal to the handler. The
+Go Agent store returns a context for every `eid`: context lookup and
+deduplication are not graded. aauth-rust's stores are its own
+(`MemorySubscriptionStore`, `MemoryEventStore`).

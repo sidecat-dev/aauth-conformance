@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "id": "events-sub-ticket-reused",
+  "title": "A used ticket presented with a second subscribe token",
+  "role_under_test": "events.subscription",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "none",
+    "ticket": "reused"
+  },
+  "assertions": [
+    {
+      "stage": "ticket",
+      "id": "ticket-issued",
+      "clause": "events.sub.ticket-issued",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "first",
+      "id": "first-registered",
+      "clause": "events.sub.ticket-bound",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "registration",
+      "id": "refused",
+      "clause": "events.sub.ticket-single-use",
+      "kind": "status-class",
+      "equals": "4xx"
+    }
+  ]
+}

@@ -9,6 +9,7 @@ publish = false
 federation = []
 deferred = ["federation"]
 subagent = ["deferred"]
+events = []
 
 [dependencies]
 aauth-rust-jose = "=0.1.0-alpha.2"

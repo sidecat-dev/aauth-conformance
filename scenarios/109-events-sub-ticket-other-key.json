@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "events-sub-ticket-other-key",
+  "title": "Protected registration with a key other than the ticket's",
+  "role_under_test": "events.subscription",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "none",
+    "ticket": "other-key"
+  },
+  "assertions": [
+    {
+      "stage": "ticket",
+      "id": "ticket-issued",
+      "clause": "events.sub.ticket-issued",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "registration",
+      "id": "refused",
+      "clause": "events.sub.ticket-bound",
+      "kind": "status-class",
+      "equals": "4xx"
+    }
+  ]
+}

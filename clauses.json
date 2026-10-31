@@ -18,6 +18,12 @@
       "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
       "sha256": "f00d34c91576476cdb30b7aa1aa13a0bc9fc1d99fc43b4f0389ccb3e8bf2e150",
       "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-budgets.md"
+    },
+    {
+      "id": "events",
+      "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
+      "sha256": "462b2fa2fdb10791dd976a7566cd09f5e5d64686c8d6e2966cc2e0caf87acd12",
+      "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-events.md"
     }
   ],
   "clauses": [
@@ -523,6 +529,398 @@
       "anchor": "ps-as-trust-establishment",
       "scope": "adapter-contract",
       "role": "authorization.subagent"
+    },
+    {
+      "id": "events.sub.verification",
+      "source": "events",
+      "section": "Subscribe Token > Verification, lines 277-284: the Resource MUST verify the subscribe token; any failing step is a signature failure, 401 with Signature-Error",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.aud",
+      "source": "events",
+      "section": "Subscribe Token > Structure, aud, line 225, and Verification step 2, line 280: the Resource MUST verify its own URL matches aud",
+      "anchor": "structure",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.exp",
+      "source": "events",
+      "section": "Subscribe Token > Structure, exp, line 230: the Resource MUST reject a subscribe token with exp in the past",
+      "anchor": "structure",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.typ-dwk",
+      "source": "events",
+      "section": "Subscribe Token > Verification step 1, line 279: Common JWT Verification with typ aa-subscribe+jwt and dwk aauth-agent.json",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.cnf",
+      "source": "events",
+      "section": "Subscribe Token > Verification step 3, line 281: cnf.jwk matches the key that signed the HTTP request",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.eid",
+      "source": "events",
+      "section": "Subscribe Token > Verification step 4, line 282: eid present and non-empty",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.expired-code",
+      "source": "core",
+      "section": "Verification (Server) step 5, line 2248: expired_jwt for an expired JWT in Signature-Key",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.jwt-code",
+      "source": "core",
+      "section": "Verification (Server) step 5, line 2248: invalid_jwt when a JWT scheme fails verification",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.signature-code",
+      "source": "core",
+      "section": "Verification (Server) step 7, line 2250: invalid_signature when the HTTP signature does not verify with the obtained key",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.ticket-bound",
+      "source": "events",
+      "section": "Pre-Authorized Subscription URL Security, line 615: the Resource MUST record the thumbprint of the verified key with the ticket and MUST verify the subscribe token's cnf.jwk thumbprint equals it",
+      "anchor": "pre-authorized-subscription-url-security",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.ticket-single-use",
+      "source": "events",
+      "section": "Pre-Authorized Subscription URL Security, lines 611-614: the Resource MUST ensure tickets are single-use",
+      "anchor": "pre-authorized-subscription-url-security",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.registered",
+      "source": "events",
+      "section": "Public and Protected Subscriptions: a verified registration is accepted (2xx; status is host choice)",
+      "anchor": "subscription-registration",
+      "scope": "adapter-contract",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.sub.ticket-issued",
+      "source": "events",
+      "section": "Protected Subscriptions step 2: host control issues a ticket after a natively verified person token",
+      "anchor": "protected-subscriptions",
+      "scope": "adapter-contract",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.ap.metadata",
+      "source": "events",
+      "section": "AP Metadata, line 196: the AP MUST publish event_endpoint in aauth-agent.json",
+      "anchor": "ap-metadata",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.subscribe-token",
+      "source": "events",
+      "section": "Subscribe Token > Structure, lines 210-236: typ aa-subscribe+jwt, kid, and the required payload claims iss, dwk, sub, aud, cnf, eid, jti, iat, exp; max_uses as requested (list heading 'Required', not a keyword row)",
+      "anchor": "structure",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.validation",
+      "source": "events",
+      "section": "AP Validation, lines 424-433 and 448: the AP MUST validate the delivery; a failure of step 1, 3, 4 or 8 is 401 with Signature-Error",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.typ",
+      "source": "events",
+      "section": "AP Validation step 1, line 426: Common JWT Verification with typ aa-event+jwt and dwk aauth-resource.json",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.cnf-absent",
+      "source": "events",
+      "section": "AP Validation step 1, line 426, and Event Token > Structure, line 373: cnf MUST be absent",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.same-key",
+      "source": "events",
+      "section": "AP Validation step 3, line 428: the HTTP signature verifies with the event token's key (self-jwt)",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.body-s256",
+      "source": "events",
+      "section": "AP Validation step 4, line 429, and Event Token > Structure, line 371: body_s256 REQUIRED with a body and absent without one; a mismatch is 401 invalid_jwt",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.coverage",
+      "source": "events",
+      "section": "Event Delivery > Request, line 418: with a body the signature MUST also cover content-digest and content-type",
+      "anchor": "request",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.unknown-eid",
+      "source": "events",
+      "section": "AP Validation step 5, line 430, and line 448: no active subscription for eid is 404",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.resource-match",
+      "source": "events",
+      "section": "AP Validation step 6, line 431; Subscribe Token Scope, line 595 (MUST reject); line 448: 403",
+      "anchor": "subscribe-token-scope",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.audience",
+      "source": "events",
+      "section": "AP Validation step 8, line 433: event aud other than the subscribed Agent is 401 invalid_jwt",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.max-uses",
+      "source": "events",
+      "section": "Subscribe Token > Structure, max_uses, line 234 (MUST NOT accept more); AP Validation step 7, line 432; line 448: 404 once exceeded",
+      "anchor": "structure",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.remaining-uses",
+      "source": "events",
+      "section": "AP Validation, line 435: with max_uses set the 202 MUST carry a JSON remaining_uses",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.accepted",
+      "source": "events",
+      "section": "AP Validation, line 435: if all checks pass the AP returns 202 Accepted",
+      "anchor": "ap-validation",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.expired-code",
+      "source": "core",
+      "section": "Verification (Server) step 5, line 2248, applied by Events line 448: expired_jwt",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.jwt-code",
+      "source": "core",
+      "section": "Verification (Server) step 5, line 2248: invalid_jwt when a JWT scheme fails verification",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.input-code",
+      "source": "core",
+      "section": "Verification (Server) step 2, line 2245: invalid_input with required_input when required components are not covered",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.signature-code",
+      "source": "core",
+      "section": "Verification (Server) step 7, line 2250: invalid_signature when the HTTP signature does not verify",
+      "anchor": "verification",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.unknown-key",
+      "source": "key",
+      "section": "Self-Issued JWT (self-jwt) verification step 6, line 653: unknown_key when the issuer JWKS has no key for kid",
+      "anchor": "self-issued-jwt-self-jwt",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.ap.control",
+      "source": "events",
+      "section": "Subscribe token acquisition is AP-internal (Protocol Overview, line 186); host control calls native issuance",
+      "anchor": "protocol-overview",
+      "scope": "adapter-contract",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.agent.verification",
+      "source": "events",
+      "section": "Agent Verification step 1, lines 462-464: the Agent MUST verify the event token per Common JWT Verification with typ aa-event+jwt and dwk aauth-resource.json",
+      "anchor": "agent-verification",
+      "scope": "protocol",
+      "role": "events.agent"
+    },
+    {
+      "id": "events.agent.exp",
+      "source": "events",
+      "section": "Event Token > Structure, exp, line 367, and Agent Verification step 1, line 464: the Agent MUST NOT act on an event token whose exp has passed",
+      "anchor": "agent-verification",
+      "scope": "protocol",
+      "role": "events.agent"
+    },
+    {
+      "id": "events.agent.aud",
+      "source": "events",
+      "section": "Event Token > Structure, aud, line 363, and Agent Verification step 2, line 465: aud matches the Agent's own identifier, compared exactly and case-sensitively",
+      "anchor": "agent-verification",
+      "scope": "protocol",
+      "role": "events.agent"
+    },
+    {
+      "id": "events.agent.body",
+      "source": "events",
+      "section": "Agent Verification step 3, line 466: the Agent MUST NOT act on an event whose body does not verify against body_s256, or a body without body_s256",
+      "anchor": "agent-verification",
+      "scope": "protocol",
+      "role": "events.agent"
+    },
+    {
+      "id": "events.agent.accepts",
+      "source": "events",
+      "section": "Agent Verification: a verified event may be acted on; the launcher reports the native acceptance",
+      "anchor": "agent-verification",
+      "scope": "adapter-contract",
+      "role": "events.agent"
+    },
+    {
+      "id": "events.sub.problem-type",
+      "source": "key",
+      "section": "Signature-Error > Response Body, line 961: a Problem Details body's type MUST be urn:ietf:params:sig-error:<code> (conditional on Problem Details)",
+      "anchor": "response-body",
+      "scope": "protocol",
+      "role": "events.subscription"
+    },
+    {
+      "id": "events.ap.problem-type",
+      "source": "key",
+      "section": "Signature-Error > Response Body, line 961: a Problem Details body's type MUST be urn:ietf:params:sig-error:<code> (conditional on Problem Details)",
+      "anchor": "response-body",
+      "scope": "protocol",
+      "role": "events.agent-provider"
+    },
+    {
+      "id": "events.delivery.self-jwt",
+      "source": "events",
+      "section": "Event Delivery > Request, lines 396-410, and Event Token > Structure, lines 349-373: the delivery presents an aa-event+jwt under self-jwt, signed by the Resource key (iss, dwk aauth-resource.json, aud, jti, iat, exp)",
+      "anchor": "event-delivery",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.eid",
+      "source": "events",
+      "section": "Event Token > Structure, eid, line 364: eid MUST match the subscribe token's eid",
+      "anchor": "event-token",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.cnf-absent",
+      "source": "events",
+      "section": "Event Token > Structure, line 373: the event token MUST NOT contain cnf",
+      "anchor": "event-token",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.body-s256",
+      "source": "events",
+      "section": "Event Token > Structure, body_s256, line 371: REQUIRED when the delivery carries a body, absent when it carries none",
+      "anchor": "event-token",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.coverage",
+      "source": "events",
+      "section": "Event Delivery > Request, line 418: the signature covers the base components and, with a body, MUST also cover content-digest and content-type",
+      "anchor": "request",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.proof",
+      "source": "key",
+      "section": "Self-Issued JWT (self-jwt), line 615 and step 9, line 659: the same key verifies the JWT and the HTTP signature",
+      "anchor": "self-issued-jwt-self-jwt",
+      "scope": "protocol",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.registered",
+      "source": "events",
+      "section": "Public Subscriptions: the harness registration that the delivery uses (2xx; status is host choice)",
+      "anchor": "public-subscriptions",
+      "scope": "adapter-contract",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.delivery.fired",
+      "source": "events",
+      "section": "Event Delivery: host control asks the native Resource to deliver one event and reports the AP status",
+      "anchor": "event-delivery",
+      "scope": "adapter-contract",
+      "role": "events.delivery"
+    },
+    {
+      "id": "events.ap.unchanged",
+      "source": "events",
+      "section": "Event Delivery: AP to Agent, line 456: the AP MUST deliver the body bytes to the Agent unchanged, with the event token; graded on the native retained record the host transport reads",
+      "anchor": "ap-to-agent",
+      "scope": "protocol",
+      "role": "events.agent-provider"
     }
   ]
 }

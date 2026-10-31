@@ -1,6 +1,8 @@
 //! Test transport and fixed host configuration around unmodified Rust APIs.
 #[cfg(feature = "deferred")]
 mod deferred;
+#[cfg(feature = "events")]
+mod events;
 #[cfg(feature = "federation")]
 mod federation;
 use aauth_rust_core::{
@@ -157,6 +159,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if config.role == "agent.signing" {
         return run_agent(config);
+    }
+    if config.role.starts_with("events.") {
+        #[cfg(feature = "events")]
+        return events::run(config);
+        #[cfg(not(feature = "events"))]
+        return Err(format!("rebuild this launcher for {}", config.role).into());
     }
     if !config.role.is_empty() && config.role != "resource.agent-identity" {
         return Err(format!("rebuild this launcher for {}", config.role).into());

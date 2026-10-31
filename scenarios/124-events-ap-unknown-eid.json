@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "events-ap-unknown-eid",
+  "title": "Event for an eid the AP never issued",
+  "role_under_test": "events.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 0,
+    "deliveries": [
+      {
+        "mutation": "unknown-eid",
+        "body": true
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "subscribe",
+      "id": "subscribe-token",
+      "clause": "events.ap.subscribe-token",
+      "kind": "events-subscribe-token",
+      "equals": true
+    },
+    {
+      "stage": "delivery-1",
+      "id": "not-found",
+      "clause": "events.ap.unknown-eid",
+      "kind": "status",
+      "equals": 404
+    }
+  ]
+}

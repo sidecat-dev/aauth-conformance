@@ -26,5 +26,24 @@
     "issuer": "https://access.conformance.test",
     "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
     "kid": "as-1"
+  },
+  "extensions": {
+    "events": {
+      "resource": {
+        "issuer": "https://resource.conformance.test",
+        "seed_hex": "0909090909090909090909090909090909090909090909090909090909090909",
+        "kid": "events-resource-1"
+      },
+      "other_resource": {
+        "issuer": "https://other-resource.conformance.test",
+        "seed_hex": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+        "kid": "events-resource-2"
+      },
+      "subscription_path": "/events/subscribe",
+      "ticket_path": "/events/tickets/",
+      "event_endpoint": "https://ap.conformance.test/events",
+      "other_agent": "aauth:Other@ap.conformance.test",
+      "other_key_seed_hex": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"
+    }
   }
 }
