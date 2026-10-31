@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "id": "supervision.ss-event-members",
+  "title": "An event without id, or a decision.resolved without answer, is invalid_request",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-events",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "issued",
+        "endpoint": "event",
+        "expect": 201,
+        "body": {
+          "event": "person_token.issued",
+          "id": "e-issued-1",
+          "sdi": "d-events-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "jti": "pt-events-1",
+          "aud": "$resource",
+          "exp": "$exp"
+        }
+      },
+      {
+        "stage": "no-id",
+        "endpoint": "event",
+        "body": {
+          "event": "person_token.issued",
+          "sdi": "d-events-2",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "jti": "pt-events-2",
+          "aud": "$resource",
+          "exp": "$exp"
+        }
+      },
+      {
+        "stage": "no-answer",
+        "endpoint": "event",
+        "body": {
+          "event": "decision.resolved",
+          "id": "e-resolved-1",
+          "sdi": "d-events-3",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "no-id-status",
+      "clause": "supervision.ss.event-id",
+      "kind": "status",
+      "equals": 400,
+      "stage": "no-id"
+    },
+    {
+      "id": "no-id-error",
+      "clause": "supervision.ss.event-id",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "no-id",
+      "member": "error"
+    },
+    {
+      "id": "no-answer-status",
+      "clause": "supervision.ss.decision-resolved-answer",
+      "kind": "status",
+      "equals": 400,
+      "stage": "no-answer"
+    },
+    {
+      "id": "no-answer-error",
+      "clause": "supervision.ss.decision-resolved-answer",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "no-answer",
+      "member": "error"
+    }
+  ]
+}

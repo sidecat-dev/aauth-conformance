@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "id": "supervision.ss-unknown-sub",
+  "title": "A request naming a sub the PS never connected is unknown_sub",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-unknown-sub",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "decide",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-unknown-sub-1",
+          "act": "permission",
+          "iat": "$now",
+          "sub": "unconnected-person",
+          "agent": "$agent",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "unknown-sub-status",
+      "clause": "supervision.ss.connected-only",
+      "kind": "status",
+      "equals": 404,
+      "stage": "decide"
+    },
+    {
+      "id": "unknown-sub-error",
+      "clause": "supervision.ss.connected-only",
+      "kind": "json-member",
+      "equals": "unknown_sub",
+      "stage": "decide",
+      "member": "error"
+    },
+    {
+      "id": "unknown-sub-no-decision",
+      "clause": "supervision.ss.connected-only",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "decide"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "id": "supervision.ss-unsigned",
+  "title": "An unsigned supervision request is a signature failure",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-unsigned",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "decide",
+        "endpoint": "decision",
+        "signer": "unsigned",
+        "body": {
+          "sdi": "d-unsigned-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "supervision.ss.core-verification",
+      "kind": "status",
+      "equals": 401,
+      "stage": "decide"
+    },
+    {
+      "id": "signature-error",
+      "clause": "supervision.ss.core-verification",
+      "kind": "sfv-token-present",
+      "equals": true,
+      "stage": "decide",
+      "member": "error",
+      "header": "Signature-Error"
+    },
+    {
+      "id": "no-decision",
+      "clause": "supervision.ss.connected-only",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "decide"
+    }
+  ]
+}

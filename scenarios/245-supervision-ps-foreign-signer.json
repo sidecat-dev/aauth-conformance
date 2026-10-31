@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "supervision.ps-foreign-signer",
+  "title": "An allow signed by another supervisor is not acted on",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "foreign-signer"
+  },
+  "assertions": [
+    {
+      "id": "no-credential",
+      "clause": "supervision.ps.signed-verify",
+      "kind": "ps-credential",
+      "equals": false,
+      "stage": "person"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "id": "supervision.ss-connect-action",
+  "title": "A connect without a recognized action is invalid_request",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "missing",
+        "endpoint": "connect",
+        "body": {
+          "id": "c-no-action",
+          "iat": "$now",
+          "sub": "$sub"
+        }
+      },
+      {
+        "stage": "unrecognized",
+        "endpoint": "connect",
+        "body": {
+          "action": "join",
+          "id": "c-bad-action",
+          "iat": "$now",
+          "sub": "$sub"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "missing-status",
+      "clause": "supervision.ss.connect-action",
+      "kind": "status",
+      "equals": 400,
+      "stage": "missing"
+    },
+    {
+      "id": "missing-error",
+      "clause": "supervision.ss.connect-action",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "missing",
+      "member": "error"
+    },
+    {
+      "id": "unrecognized-status",
+      "clause": "supervision.ss.connect-action",
+      "kind": "status",
+      "equals": 400,
+      "stage": "unrecognized"
+    },
+    {
+      "id": "unrecognized-error",
+      "clause": "supervision.ss.connect-action",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "unrecognized",
+      "member": "error"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "id": "supervision.ss-rate-limited",
+  "title": "A rate_limited answer is 429 with Retry-After",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-rate",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "limit",
+        "control": {
+          "rate_limit": true
+        }
+      },
+      {
+        "stage": "decide",
+        "endpoint": "decision",
+        "body": {
+          "sdi": "d-rate-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "supervision.ss.rate-limited",
+      "kind": "status",
+      "equals": 429,
+      "stage": "decide"
+    },
+    {
+      "id": "error",
+      "clause": "supervision.ss.rate-limited",
+      "kind": "json-member",
+      "equals": "rate_limited",
+      "stage": "decide",
+      "member": "error"
+    },
+    {
+      "id": "retry-after",
+      "clause": "supervision.ss.rate-limited",
+      "kind": "ss-retry-after",
+      "equals": true,
+      "stage": "decide"
+    }
+  ]
+}

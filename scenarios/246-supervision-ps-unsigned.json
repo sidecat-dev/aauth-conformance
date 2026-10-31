@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "supervision.ps-unsigned",
+  "title": "An unsigned allow from an SS that publishes jwks_uri is not acted on",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "unsigned"
+  },
+  "assertions": [
+    {
+      "id": "no-credential",
+      "clause": "supervision.ps.signed-verify",
+      "kind": "ps-credential",
+      "equals": false,
+      "stage": "person"
+    }
+  ]
+}

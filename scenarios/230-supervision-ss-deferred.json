@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "id": "supervision.ss-deferred",
+  "title": "A deferred decision is pending, answers only its requester, and is signed when decided",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-defer",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "decide",
+        "endpoint": "decision",
+        "accept_signature": true,
+        "body": {
+          "sdi": "d-defer-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.defer",
+          "description": "Fixture action"
+        }
+      },
+      {
+        "stage": "again",
+        "repeat": "decide"
+      },
+      {
+        "stage": "poll-other",
+        "endpoint": "location:decide",
+        "signer": "other-ps"
+      },
+      {
+        "stage": "poll-early",
+        "endpoint": "location:decide",
+        "accept_signature": true
+      },
+      {
+        "stage": "resolve",
+        "control": {
+          "resolve": {
+            "sdi": "d-defer-1",
+            "verdict": "allow"
+          }
+        }
+      },
+      {
+        "stage": "poll",
+        "endpoint": "location:decide",
+        "accept_signature": true
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "pending",
+      "clause": "supervision.ss.deferred-pending",
+      "kind": "ss-pending",
+      "equals": true,
+      "stage": "decide"
+    },
+    {
+      "id": "again-pending",
+      "clause": "supervision.ss.idempotence",
+      "kind": "status",
+      "equals": 202,
+      "stage": "again"
+    },
+    {
+      "id": "again-location",
+      "clause": "supervision.ss.idempotence",
+      "kind": "ss-same-location",
+      "equals": true,
+      "stage": "again",
+      "member": "decide"
+    },
+    {
+      "id": "other-status",
+      "clause": "supervision.ss.deferred-poller",
+      "kind": "status",
+      "equals": 404,
+      "stage": "poll-other"
+    },
+    {
+      "id": "other-error",
+      "clause": "supervision.ss.deferred-poller",
+      "kind": "json-member",
+      "equals": "unknown_pending",
+      "stage": "poll-other",
+      "member": "error"
+    },
+    {
+      "id": "other-no-decision",
+      "clause": "supervision.ss.deferred-poller",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "poll-other"
+    },
+    {
+      "id": "early-pending",
+      "clause": "supervision.ss.deferred-pending",
+      "kind": "status",
+      "equals": 202,
+      "stage": "poll-early"
+    },
+    {
+      "id": "decided",
+      "clause": "supervision.ss.host-policy",
+      "kind": "json-member",
+      "equals": "allow",
+      "stage": "poll",
+      "member": "decision"
+    },
+    {
+      "id": "sdi",
+      "clause": "supervision.ss.sdi-echo",
+      "kind": "json-member",
+      "equals": "d-defer-1",
+      "stage": "poll",
+      "member": "sdi"
+    },
+    {
+      "id": "signed",
+      "clause": "supervision.ss.signed-coverage",
+      "kind": "ss-signed",
+      "equals": true,
+      "stage": "poll"
+    }
+  ]
+}

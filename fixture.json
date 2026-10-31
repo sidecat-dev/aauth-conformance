@@ -26,5 +26,27 @@
     "issuer": "https://access.conformance.test",
     "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
     "kid": "as-1"
+  },
+  "extensions": {
+    "supervision": {
+      "issuer": "https://ss.conformance.test",
+      "seed_hex": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+      "kid": "ss-1",
+      "subject": "ss-directed-person-1",
+      "other_person_server": {
+        "issuer": "https://other-ps.conformance.test",
+        "seed_hex": "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+        "kid": "ps-other-1"
+      },
+      "foreign_supervisor": {
+        "issuer": "https://foreign-ss.conformance.test",
+        "seed_hex": "0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d",
+        "kid": "ss-foreign-1"
+      },
+      "mission": {
+        "approved_at": "2027-01-15T08:00:00Z",
+        "description": "# Fixture mission\n\nRead the fixture resource."
+      }
+    }
   }
 }

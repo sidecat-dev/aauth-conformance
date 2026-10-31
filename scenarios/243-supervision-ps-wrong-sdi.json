@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "supervision.ps-wrong-sdi",
+  "title": "An allow echoing another sdi is not acted on",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "wrong-sdi"
+  },
+  "assertions": [
+    {
+      "id": "no-credential",
+      "clause": "supervision.ps.sdi-verify",
+      "kind": "ps-credential",
+      "equals": false,
+      "stage": "person"
+    }
+  ]
+}
