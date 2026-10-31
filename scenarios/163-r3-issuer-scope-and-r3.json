@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "r3-issuer-scope-and-r3",
+  "title": "A Resource token with scope and R3 claims yields both",
+  "role_under_test": "r3.issuer",
+  "given": "agent-identity",
+  "input": {
+    "document": "exact",
+    "operations": [
+      "records.read"
+    ],
+    "scope": "read"
+  },
+  "assertions": [
+    {
+      "id": "auth-token",
+      "stage": "token",
+      "clause": "r3.issuer.auth-claims",
+      "kind": "r3-auth-token",
+      "equals": true
+    },
+    {
+      "id": "scope",
+      "stage": "token",
+      "clause": "r3.issuer.scope-and-r3",
+      "kind": "r3-auth-scope",
+      "equals": "read"
+    }
+  ]
+}

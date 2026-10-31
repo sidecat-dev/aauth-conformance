@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "id": "r3-resource-three-party",
+  "title": "Three-party class document: the PS is the only entitled fetcher",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "three-party",
+    "operations": [
+      "records.read"
+    ],
+    "fetches": [
+      "person",
+      "access"
+    ],
+    "grant": [
+      "records.read"
+    ],
+    "calls": [
+      "records.read"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "resource-token",
+      "stage": "authorize",
+      "clause": "r3.resource.token-claims",
+      "kind": "r3-resource-token",
+      "equals": true
+    },
+    {
+      "id": "ps-fetch-digest",
+      "stage": "fetch-person",
+      "clause": "r3.resource.content-addressing",
+      "kind": "r3-document-digest",
+      "equals": true
+    },
+    {
+      "id": "ps-fetch-fields",
+      "stage": "fetch-person",
+      "clause": "r3.resource.document-fields",
+      "kind": "r3-document-fields",
+      "equals": true
+    },
+    {
+      "id": "fetch-access-refused",
+      "stage": "fetch-access",
+      "clause": "r3.resource.document-entitlement",
+      "kind": "status-class",
+      "equals": "4xx"
+    },
+    {
+      "id": "fetch-access-no-document",
+      "stage": "fetch-access",
+      "clause": "r3.resource.document-entitlement",
+      "kind": "r3-no-document",
+      "equals": true
+    },
+    {
+      "id": "granted-served",
+      "stage": "call-records.read",
+      "clause": "r3.resource.granted-served",
+      "kind": "status-class",
+      "equals": "2xx"
+    }
+  ]
+}

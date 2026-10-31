@@ -26,5 +26,24 @@
     "issuer": "https://access.conformance.test",
     "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
     "kid": "as-1"
+  },
+  "extensions": {
+    "r3": {
+      "vocabulary": "urn:aauth:vocabulary:mcp",
+      "tools": [
+        "records.read",
+        "records.export",
+        "records.delete"
+      ],
+      "grantable": [
+        "records.read",
+        "records.export"
+      ],
+      "other_server": {
+        "issuer": "https://other.conformance.test",
+        "seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
+        "kid": "other-1"
+      }
+    }
   }
 }

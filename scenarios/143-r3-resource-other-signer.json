@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "r3-resource-other-signer",
+  "title": "A trusted server that is neither aud nor ps is refused",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "four-party",
+    "operations": [
+      "records.read"
+    ],
+    "fetches": [
+      "other"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "fetch-other-refused",
+      "stage": "fetch-other",
+      "clause": "r3.resource.document-entitlement",
+      "kind": "status-class",
+      "equals": "4xx"
+    },
+    {
+      "id": "fetch-other-no-document",
+      "stage": "fetch-other",
+      "clause": "r3.resource.document-entitlement",
+      "kind": "r3-no-document",
+      "equals": true
+    }
+  ]
+}
