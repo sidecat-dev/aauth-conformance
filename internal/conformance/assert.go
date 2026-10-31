@@ -189,6 +189,17 @@ func Check(a Assertion, r Response) Result {
 		actual = cursor
 	case "header-equals":
 		actual = r.Header.Get(a.Header)
+	case "status-class":
+		actual = fmt.Sprintf("%dxx", r.Status/100)
+	case "sfv-token-present":
+		actual = false
+		if dictionary, err := httpsfv.UnmarshalDictionary(r.Header.Values(a.Header)); err == nil {
+			if member, ok := dictionary.Get(a.Member); ok {
+				if item, ok := member.(httpsfv.Item); ok {
+					_, actual = item.Value.(httpsfv.Token)
+				}
+			}
+		}
 	case "problem-if-present":
 		media, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if media != "application/problem+json" {

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -54,6 +55,8 @@ type bootstrap struct {
 	Role                     string               `json:"role"`
 	AgentSeed                string               `json:"agent_seed_hex"`
 	Subject                  string               `json:"subject"`
+	// Extension is an extension role's own launcher configuration.
+	Extension json.RawMessage `json:"extension"`
 }
 
 // agentProviderTrust declares an additional fixture Agent Provider by its
@@ -70,6 +73,11 @@ var configureDeferredPS func(*personserver.FederatedAuthorizationConfig)
 var deferredHostControl func(*personserver.Server) http.Handler
 var runSubagentServers func(bootstrap, signaturekey.StaticKeyResolver) error
 
+// extensionLaunchers holds the launchers of extension roles. Each role's source
+// file registers itself and is compiled only into that role's build.
+var extensionLaunchers = map[string]func(bootstrap, signaturekey.StaticKeyResolver) error{}
+var builtInRoles = []string{"", "resource.agent-identity", "agent.signing", "person-server.direct", "authorization.federated", "authorization.deferred", "authorization.subagent"}
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -83,6 +91,9 @@ func run() error {
 	}
 	if config.Version != 1 {
 		return fmt.Errorf("bootstrap version must be 1")
+	}
+	if _, ok := extensionLaunchers[config.Role]; !ok && !slices.Contains(builtInRoles, config.Role) {
+		return fmt.Errorf("adapter source for role %q was not selected", config.Role)
 	}
 	origin, err := url.Parse(config.Resource)
 	if err != nil {
@@ -126,6 +137,9 @@ func run() error {
 	keys := signaturekey.StaticKeyResolver{}
 	for _, key := range jwks.Keys {
 		keys[signaturekey.StaticKeyReference{Issuer: config.Issuer, DiscoveryDocument: "aauth-agent.json", KeyID: key.Kid}] = key
+	}
+	if launch, ok := extensionLaunchers[config.Role]; ok {
+		return launch(config, keys)
 	}
 	if config.Role == "person-server.direct" {
 		return runPersonServer(config, keys)

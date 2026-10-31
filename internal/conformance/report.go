@@ -21,6 +21,7 @@ type Case struct {
 	Headers          map[string][]string `json:"request_headers,omitempty"`
 	SignatureBase    string              `json:"signature_base,omitempty"`
 	Response         *Response           `json:"response,omitempty"`
+	Evidence         any                 `json:"evidence,omitempty"`
 	Results          []Result            `json:"assertions"`
 }
 type Run struct {

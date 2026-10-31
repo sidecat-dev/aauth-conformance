@@ -74,6 +74,10 @@ struct Bootstrap {
     resource_kid: String,
     #[serde(default)]
     resource_jwk: serde_json::Value,
+    /// An extension role's own launcher configuration.
+    #[serde(default)]
+    #[allow(dead_code)]
+    extension: serde_json::Value,
 }
 
 // The harness's bounded fixture AP explicitly sends Content-Length and closes.
@@ -153,6 +157,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if config.role == "agent.signing" {
         return run_agent(config);
+    }
+    if !config.role.is_empty() && config.role != "resource.agent-identity" {
+        return Err(format!("rebuild this launcher for {}", config.role).into());
     }
     let keys = AgentProviderKeys::from_documents(
         &config.issuer,

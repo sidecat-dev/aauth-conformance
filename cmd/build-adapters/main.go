@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -25,12 +26,11 @@ func run() error {
 	goSource := flag.String("go-source", "", "aauth-go checkout (required unless -rust-source is supplied)")
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (required unless -go-source is supplied)")
 	out := flag.String("out", "build", "build output directory")
-	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing, person-server.direct, authorization.federated, authorization.deferred or authorization.subagent")
+	role := flag.String("role", conformance.ResourceRole, strings.Join(conformance.Roles(), ", "))
 	flag.Parse()
 	if *goSource == "" && *rustSource == "" {
 		return fmt.Errorf("supply -go-source and/or -rust-source")
 	}
-	nativeFederation := *role == conformance.FederatedRole || *role == conformance.DeferredRole || *role == conformance.SubagentRole
 	root, err := os.Getwd()
 	if err != nil {
 		return err
@@ -122,8 +122,8 @@ func run() error {
 			if err != nil {
 				return err
 			}
-			if nativeFederation {
-				manifest = append(manifest, []byte("\n[dependencies.aauth-rust-access-server]\nversion = \"=0.1.0-alpha.2\"\n")...)
+			for _, name := range rustRoleCrates[*role] {
+				manifest = append(manifest, []byte("\n[dependencies."+name+"]\nversion = \"=0.1.0-alpha.2\"\n")...)
 			}
 			// The launcher manifest names the crates by an exact alpha version;
 			// select the version the chosen checkout declares so the path patches apply.
@@ -135,9 +135,7 @@ func run() error {
 			if _, e := os.Stat(filepath.Join(source, "crates", "aauth-rust-person-server")); e == nil || *role == conformance.PersonServerRole {
 				names = append(names, "aauth-rust-person-server")
 			}
-			if nativeFederation {
-				names = append(names, "aauth-rust-access-server")
-			}
+			names = append(names, rustRoleCrates[*role]...)
 			for _, name := range names {
 				manifest = append(manifest, []byte(name+" = { path = "+strconv.Quote(filepath.ToSlash(filepath.Join(source, "crates", name)))+" }\n")...)
 			}
@@ -153,14 +151,7 @@ func run() error {
 				return err
 			}
 			buildArgs := []string{"build", "--target-dir", filepath.Join(root, "build", "rust-target-shared")}
-			if nativeFederation {
-				feature := "federation"
-				if *role == conformance.DeferredRole {
-					feature = "deferred"
-				}
-				if *role == conformance.SubagentRole {
-					feature = "subagent"
-				}
+			if feature := rustRoleFeatures[*role]; feature != "" {
 				buildArgs = append(buildArgs, "--features", feature)
 			}
 			if err = command(work, "cargo", buildArgs...); err != nil {
@@ -198,19 +189,41 @@ func command(dir, name string, args ...string) error {
 	return nil
 }
 
+// Role-specific launcher sources, native Rust features and extra Rust crates.
+// Earlier implementation checkouts can still build the roles that need none.
+var goRoleSources = map[string][]string{
+	conformance.DeferredRole: {"deferred.go"},
+	conformance.SubagentRole: {"subagent.go"},
+}
+var rustRoleFeatures = map[string]string{
+	conformance.FederatedRole: "federation",
+	conformance.DeferredRole:  "deferred",
+	conformance.SubagentRole:  "subagent",
+}
+var rustRoleCrates = map[string][]string{
+	conformance.FederatedRole: {"aauth-rust-access-server"},
+	conformance.DeferredRole:  {"aauth-rust-access-server"},
+	conformance.SubagentRole:  {"aauth-rust-access-server"},
+}
+
 // Remove role-specific sources when an output directory is reused for another
 // profile. Earlier implementation revisions need only the common launcher.
 func selectGoRoleSource(root, work, role string) error {
-	for source, selectedRole := range map[string]string{"deferred.go": conformance.DeferredRole, "subagent.go": conformance.SubagentRole} {
-		destination := filepath.Join(work, source)
-		if role == selectedRole {
-			if err := copyFile(filepath.Join(root, "adapters/go", source), destination); err != nil {
+	for selectedRole, sources := range goRoleSources {
+		for _, source := range sources {
+			destination := filepath.Join(work, source)
+			if role == selectedRole {
+				if err := copyFile(filepath.Join(root, "adapters/go", source), destination); err != nil {
+					return err
+				}
+				continue
+			}
+			if slices.Contains(goRoleSources[role], source) {
+				continue
+			}
+			if err := os.Remove(destination); err != nil && !os.IsNotExist(err) {
 				return err
 			}
-			continue
-		}
-		if err := os.Remove(destination); err != nil && !os.IsNotExist(err) {
-			return err
 		}
 	}
 	return nil

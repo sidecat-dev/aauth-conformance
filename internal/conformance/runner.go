@@ -161,6 +161,14 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 		return report, err
 	}
 	defer closeAP()
+	if extension, ok := extensionRoles[role]; ok {
+		report = extension.Run(ctx, s, targets, options, ap, report)
+		report.Execution = "failed_or_incomplete"
+		if report.Success() {
+			report.Execution = "passed"
+		}
+		return report, nil
+	}
 	if role == SubagentRole {
 		return runSubagents(ctx, s, targets, options, ap, report), nil
 	}

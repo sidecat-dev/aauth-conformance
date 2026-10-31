@@ -176,6 +176,7 @@ fn open_budget_resource(
             signed_origin: issuer,
             kid,
             signing_key,
+            scope_descriptions: fixture_scope_descriptions(&scopes),
             scopes,
         },
         access_server,
@@ -519,6 +520,7 @@ pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
             signed_origin: resource_issuer,
             kid: config.resource_kid,
             signing_key: resource_key,
+            scope_descriptions: fixture_scope_descriptions(&config.permitted_scopes),
             scopes: config.permitted_scopes,
         },
         &config.access_server,
@@ -997,4 +999,13 @@ mod tests {
         assert!(text.contains("signature-key: sig=jwks_uri\r\n"));
         assert!(text.ends_with(std::str::from_utf8(&body).unwrap()));
     }
+}
+
+// Resources publish a description for every scope they define; the fixture's
+// text is host content, not a protocol input under test.
+fn fixture_scope_descriptions(scopes: &[String]) -> std::collections::BTreeMap<String, String> {
+    scopes
+        .iter()
+        .map(|scope| (scope.clone(), format!("Fixture scope {scope}")))
+        .collect()
 }
