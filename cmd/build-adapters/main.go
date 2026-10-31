@@ -125,6 +125,11 @@ func run() error {
 			if nativeFederation {
 				manifest = append(manifest, []byte("\n[dependencies.aauth-rust-access-server]\nversion = \"=0.1.0-alpha.2\"\n")...)
 			}
+			// The launcher manifest names the crates by an exact alpha version;
+			// select the version the chosen checkout declares so the path patches apply.
+			if version := rustWorkspaceVersion(source); version != "" {
+				manifest = []byte(strings.ReplaceAll(string(manifest), `"=0.1.0-alpha.2"`, strconv.Quote("="+version)))
+			}
 			manifest = append(manifest, []byte("\n[patch.crates-io]\n")...)
 			names := []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose", "aauth-rust-budgets"}
 			if _, e := os.Stat(filepath.Join(source, "crates", "aauth-rust-person-server")); e == nil || *role == conformance.PersonServerRole {
@@ -209,4 +214,29 @@ func selectGoRoleSource(root, work, role string) error {
 		}
 	}
 	return nil
+}
+
+// rustWorkspaceVersion returns [workspace.package] version from the checkout's
+// root manifest, or "" when the checkout does not declare one.
+func rustWorkspaceVersion(source string) string {
+	b, err := os.ReadFile(filepath.Join(source, "Cargo.toml"))
+	if err != nil {
+		return ""
+	}
+	section := ""
+	for _, line := range strings.Split(string(b), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "[") {
+			section = line
+			continue
+		}
+		name, value, ok := strings.Cut(line, "=")
+		if section == "[workspace.package]" && ok && strings.TrimSpace(name) == "version" {
+			version, err := strconv.Unquote(strings.TrimSpace(value))
+			if err == nil {
+				return version
+			}
+		}
+	}
+	return ""
 }
