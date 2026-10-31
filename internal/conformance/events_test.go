@@ -89,3 +89,29 @@ func TestEventsDeliveryInputs(t *testing.T) {
 		t.Fatal(caseVariant("aauth:Agent@ap.conformance.test"))
 	}
 }
+
+// Catches a delivery oracle that passes a Resource delivery with cnf, missing
+// coverage, a foreign proof key, a wrong eid or a body digest mismatch.
+func TestEventsDeliveryOracle(t *testing.T) {
+	f, e := eventsTestFixture(t)
+	capture := func(mutation string, body bool) Captured {
+		record, err := eventsDelivery(f, e, eventsDeliveryInput{Mutation: mutation, Body: body}, "evt-1", "ev-"+mutation, "delivery-1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		return Captured{Method: record.request.Method, URL: record.request.URL.String(), Headers: record.request.Header.Clone(), Body: record.body}
+	}
+	for _, body := range []bool{true, false} {
+		valid := observeEventsDelivery(f, e, capture("none", body), "evt-1")
+		for _, property := range eventsDeliveryProperties {
+			if !valid.Properties[property] {
+				t.Fatalf("body %v: valid delivery failed %s: %+v", body, property, valid)
+			}
+		}
+	}
+	for mutation, property := range map[string]string{"cnf": "cnf-absent", "uncovered-content-digest": "coverage", "proof-key": "proof", "body-mismatch": "body-s256", "unknown-eid": "eid", "wrong-aud": "self-jwt"} {
+		if observed := observeEventsDelivery(f, e, capture(mutation, true), "evt-1"); observed.Properties[property] {
+			t.Fatalf("%s passed %s", mutation, property)
+		}
+	}
+}
