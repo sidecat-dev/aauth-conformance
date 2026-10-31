@@ -697,6 +697,54 @@
       "section": "Resource Token Extensions, line 530: when a Resource token carries both scope and R3 claims, the Auth token's issuer MUST enforce both independently; the granted scope is the host's",
       "anchor": "resource-token-extensions",
       "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.fetch",
+      "source": "r3",
+      "section": "Issuer Processing, lines 543-546: in four-party access the AS is the Auth-token issuer and MUST fetch the R3 document at r3_uri",
+      "anchor": "issuer-processing",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.fetch-signature",
+      "source": "r3",
+      "section": "R3 Document Access Restriction, line 729: the AS fetching r3_uri MUST sign as a server in its own right, under jwks_uri with id set to its issuer and aauth-access.json",
+      "anchor": "r3-document-access-restriction",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.hash-mismatch",
+      "source": "r3",
+      "section": "Issuer Processing, step 3, line 547: if the bytes the AS received do not hash to r3_s256, the issuer MUST reject the Resource token; no Auth token reaches the agent",
+      "anchor": "issuer-processing",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.auth-claims",
+      "source": "r3",
+      "section": "Issuer Processing, step 6 (line 550), and Auth Token Extensions, lines 569-571: the AS-issued Auth token MUST include the document's r3_uri and r3_s256 and r3_granted, whose operations are drawn from that document (line 617)",
+      "anchor": "auth-token-extensions",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.ps-fetch-signature",
+      "source": "r3",
+      "section": "R3 Document Access Restriction, lines 729 and 734: in four-party access the PS also fetches, and a party fetching r3_uri MUST sign as itself under jwks_uri (aauth-person.json); not exercised when the PS makes no fetch",
+      "anchor": "r3-document-access-restriction",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.ps-hash-verification",
+      "source": "r3",
+      "section": "Hash Verification, line 740: a party that fetches an R3 document MUST verify r3_s256 against it before using it; a PS served bytes that do not match gives no Auth token",
+      "anchor": "hash-verification",
+      "scope": "protocol"
     }
   ]
 }

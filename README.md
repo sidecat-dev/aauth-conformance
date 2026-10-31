@@ -359,3 +359,25 @@ revisions that provide native sub-agent PS, AS and binding-revocation APIs;
 an older checkout fails to compile its launcher rather than passing. See
 [the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
 for the observed boundaries and named gaps.
+
+## R3
+
+```sh
+go run ./cmd/build-adapters -role r3.resource -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/r3-resource
+go run ./cmd/aauth-conformance -targets build/r3-resource/targets.json -report build/r3-resource.json -markdown build/r3-resource.md
+```
+
+Use `-role r3.issuer` for the Person Server side. `r3.resource` puts a native
+Resource under test while the harness plays Agent, PS and AS: the Resource
+token's R3 claims, the signed-fetch restriction on R3 documents (unsigned,
+agent-signed, tampered and non-entitled signers refused; the AS and PS
+served the exact bytes that hash to `r3_s256`), operation validation, grant
+enforcement, and four-party per-call proposals: the challenge, the proposal,
+completion with the approved parameters, refusal with others, and one
+execution. `r3.issuer` puts a native three-party PS under test while the
+harness plays Agent and Resource: its own `jwks_uri` fetch proof, refusal on a
+hash mismatch or missing document, and the R3 claims it issues. FORMAT.md and
+ADAPTERS.md give the inputs, stages and launcher contract. Issuance by a
+four-party Access Server, the PS's delivery checks on an AS's R3 token, held
+(`202`) per-call delivery and release gating are not covered yet.
+

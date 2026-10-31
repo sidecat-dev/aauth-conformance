@@ -22,6 +22,7 @@ import (
 	"time"
 
 	aauth "gitlab.com/sidecat-dev/aauth-go"
+	"gitlab.com/sidecat-dev/aauth-go/accessserver"
 	"gitlab.com/sidecat-dev/aauth-go/jose"
 	"gitlab.com/sidecat-dev/aauth-go/personserver"
 	"gitlab.com/sidecat-dev/aauth-go/r3"
@@ -34,6 +35,7 @@ import (
 func init() {
 	extensionLaunchers["r3.resource"] = runR3Resource
 	extensionLaunchers["r3.issuer"] = runR3Issuer
+	extensionLaunchers["r3.federated-issuer"] = runR3FederatedIssuer
 }
 
 type r3Extension struct {
@@ -51,6 +53,7 @@ type r3Extension struct {
 	PermittedScopes []string `json:"permitted_scopes"`
 	AccessServer    string   `json:"access_server"`
 	AccessKid       string   `json:"access_kid"`
+	AccessSeed      string   `json:"access_seed_hex"`
 	AccessJWK       jose.JWK `json:"access_jwk"`
 	OtherServer     string   `json:"other_server"`
 	OtherKid        string   `json:"other_kid"`
@@ -100,6 +103,10 @@ func r3Serve(config bootstrap, handler http.Handler) error {
 	if err != nil {
 		return err
 	}
+	return r3ServeListener(listener, config, handler)
+}
+
+func r3ServeListener(listener net.Listener, config bootstrap, handler http.Handler) error {
 	defer listener.Close()
 	path, err := url.Parse(config.Resource)
 	if err != nil {
@@ -509,4 +516,157 @@ func runR3Issuer(config bootstrap, keys signaturekey.StaticKeyResolver) error {
 		return err
 	}
 	return r3Serve(config, sut.Handler())
+}
+
+// runR3FederatedIssuer hosts a native federated PS and AS on one listener.
+// The AS issues the R3 Auth token; the PS consents to the document and
+// verifies the delivery. Their signed R3 fetches reach the harness Resource
+// and the PS's AS requests reach this listener; only the socket changes.
+func runR3FederatedIssuer(config bootstrap, keys signaturekey.StaticKeyResolver) error {
+	extension, resourceID, err := r3Config(config)
+	if err != nil {
+		return err
+	}
+	personKey, err := r3SigningKey(extension.PersonSeed, extension.PersonKid)
+	if err != nil {
+		return err
+	}
+	accessKey, err := r3SigningKey(extension.AccessSeed, extension.AccessKid)
+	if err != nil {
+		return err
+	}
+	r3Trust(keys, resourceID, "aauth-resource.json", extension.ResourceKid, extension.ResourceJWK)
+	keys[signaturekey.StaticKeyReference{Issuer: extension.PersonServer, DiscoveryDocument: "aauth-person.json", KeyID: extension.PersonKid}] = personKey.PublicJWK()
+	keys[signaturekey.StaticKeyReference{Issuer: extension.AccessServer, DiscoveryDocument: "aauth-access.json", KeyID: extension.AccessKid}] = accessKey.PublicJWK()
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return err
+	}
+	documents, err := url.Parse(extension.R3Transport)
+	if err != nil || documents.Scheme != "http" || !net.ParseIP(documents.Hostname()).IsLoopback() {
+		return fmt.Errorf("R3 transport must be loopback HTTP")
+	}
+	self := &url.URL{Scheme: "http", Host: listener.Addr().String()}
+	transport := &http.Transport{Proxy: nil, DisableKeepAlives: true}
+	defer transport.CloseIdleConnections()
+	client := &http.Client{Timeout: 5 * time.Second, Transport: roundTripFunc(func(signed *http.Request) (*http.Response, error) {
+		switch signed.URL.Scheme + "://" + signed.URL.Host {
+		case resourceID:
+			return transport.RoundTrip(mapPhysicalRequest(signed, documents))
+		case extension.AccessServer:
+			return transport.RoundTrip(mapPhysicalRequest(signed, self))
+		}
+		return nil, fmt.Errorf("unexpected destination")
+	})}
+	registry, err := r3.NewRegistry(mcp.Vocabulary())
+	if err != nil {
+		return err
+	}
+	admit := func(_ context.Context, endpoint string) error {
+		if !strings.HasPrefix(endpoint, resourceID+"/r3/") {
+			return fmt.Errorf("R3 document endpoint is not admitted")
+		}
+		return nil
+	}
+	permitted := func(scopes []string) bool {
+		for _, scope := range scopes {
+			if !slices.Contains(extension.PermittedScopes, scope) {
+				return false
+			}
+		}
+		return true
+	}
+	clock := aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() })
+	var ids atomic.Uint64
+	nextID := func() string { return fmt.Sprintf("r3-federated-%d", ids.Add(1)) }
+	lifetime := time.Duration(extension.AuthLifetime) * time.Second
+	access, err := accessserver.New(accessserver.Config{
+		Issuer: extension.AccessServer, SigningKey: accessKey, KeyResolver: keys, Clock: clock, NewID: nextID,
+		TrustPersonServer: func(_ context.Context, issuer string) error {
+			if issuer != extension.PersonServer {
+				return accessserver.ErrAccessDenied
+			}
+			return nil
+		},
+		Authorize: func(_ context.Context, request accessserver.AuthorizationRequest) (accessserver.Decision, error) {
+			if !permitted(request.Scopes) {
+				return accessserver.Decision{}, accessserver.ErrAccessDenied
+			}
+			return accessserver.Decision{Scopes: append([]string(nil), request.Scopes...), Lifetime: lifetime}, nil
+		},
+		// Fixed host policy: the requested permitted scopes, and every
+		// document operation the fixture lists as grantable.
+		R3: &accessserver.R3Config{
+			Registry: registry, HTTPClient: client, Admit: admit,
+			AuthorizeDocument: func(_ context.Context, request accessserver.AuthorizationRequest, _ r3.Reference, document r3.Document) (accessserver.R3DocumentDecision, error) {
+				if !permitted(request.Scopes) {
+					return accessserver.R3DocumentDecision{}, accessserver.ErrAccessDenied
+				}
+				var chosen []r3.Operation
+				for _, operation := range document.OperationSet().Operations() {
+					if slices.Contains(extension.Grantable, r3Tool(operation)) {
+						chosen = append(chosen, operation)
+					}
+				}
+				granted, err := r3.NewGrantedOperations(mcp.Vocabulary(), chosen...)
+				if err != nil {
+					return accessserver.R3DocumentDecision{}, err
+				}
+				none, err := r3.NewGrantedOperations(mcp.Vocabulary())
+				if err != nil {
+					return accessserver.R3DocumentDecision{}, err
+				}
+				authorization, err := r3.NewAuthorization(granted, none, document)
+				if err != nil {
+					return accessserver.R3DocumentDecision{}, err
+				}
+				return accessserver.R3DocumentDecision{Scopes: append([]string(nil), request.Scopes...), Lifetime: lifetime, Authorization: &authorization}, nil
+			},
+			Issuances: testutil.NewR3IssuanceStore(),
+		},
+	})
+	if err != nil {
+		return err
+	}
+	people, err := personserver.NewFederatedAuthorization(personserver.FederatedAuthorizationConfig{
+		Issuer: extension.PersonServer, SigningKey: personKey, KeyResolver: keys, Clock: clock, NewID: nextID,
+		Tokens: testutil.NewMissionStore(), HTTPClient: client,
+		AccessServerEndpoint: func(_ context.Context, issuer string) (string, error) {
+			if issuer != extension.AccessServer {
+				return "", fmt.Errorf("unconfigured Access Server")
+			}
+			return issuer + "/token", nil
+		},
+		BindPerson: func(context.Context, personserver.PersonTokenRequest) (personserver.Person, error) {
+			return personserver.Person{Subject: extension.PersonSubject, Lifetime: time.Duration(extension.PersonLifetime) * time.Second}, nil
+		},
+		Consent: func(context.Context, personserver.AuthorizationRequest) error { return nil },
+		R3: &personserver.R3Config{
+			Registry: registry, Admit: admit,
+			ConsentDocument: func(context.Context, personserver.AuthorizationRequest, r3.Reference, r3.Document) error {
+				return nil
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	personHost, err := url.Parse(extension.PersonServer)
+	if err != nil {
+		return err
+	}
+	accessHost, err := url.Parse(extension.AccessServer)
+	if err != nil {
+		return err
+	}
+	return r3ServeListener(listener, config, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Host {
+		case personHost.Host:
+			people.Handler().ServeHTTP(w, r)
+		case accessHost.Host:
+			access.Handler().ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
 }

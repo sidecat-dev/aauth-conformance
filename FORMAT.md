@@ -360,3 +360,70 @@ An optional target `unavailable` string is permitted only for this role, with
 empty `command` and `claims`. It is a declaration of missing adapter support;
 all its assertions remain `not_claimed`, and an all-unavailable run cannot pass.
 No launcher is started and no native response is invented for such a target.
+
+## R3 profiles
+
+Two extension roles grade `draft-hardt-aauth-r3` at `70d6737` (catalog source
+`r3`). Fixture `extensions.r3` names the vocabulary (`urn:aauth:vocabulary:mcp`),
+the Resource's authoritative `tools`, the `grantable` tools of the issuer's
+fixed consent, and an `other_server` (issuer, public seed, kid): a server both
+launchers trust but that no R3 document entitles. Each scenario starts a fresh
+launcher. Scenario inputs are in `input`; every assertion names a `stage`.
+
+`role_under_test: "r3.resource"` puts a native Resource under test. The harness
+is Agent, AP, PS and (four-party) AS: it mints the Person token and the Auth
+tokens itself and signs every request. `input` has `topology` (`four-party`
+or `three-party`), `operations` (tools requested in `r3_operations`), optional
+`vocabulary` (`urn:aauth:vocabulary:openapi` to request an unadvertised one),
+`fetches`, `grant` and `per_call` (the harness Auth token's `r3_granted` and
+`r3_per_call`), `calls` and `per_call_flow`. Stages, in order:
+
+| Stage | Exchange |
+| --- | --- |
+| `metadata` | unsigned GET of `/.well-known/aauth-resource.json` |
+| `authorize` | POST `/authorize` with `r3_operations`, Person token in `Signature-Key` |
+| `fetch-<mode>` | GET `r3_uri` as `access` (AS, `jwks_uri`, `aauth-access.json`), `person` (PS, `aauth-person.json`), `other` (the other server), `agent` (Person token, `jwt`), `unsigned`, or `tampered` (AS id, flipped signature); a repeated mode is `fetch-<mode>-2` |
+| `call-<tool>` | POST `/op/<tool>` `{"record":"r-1"}` with the harness Auth token |
+| `fetch-proposal` | AS-signed GET of the proposal named by the per-call challenge |
+| `retry-<tool>`, `repeat-<tool>` | the call with the harness per-call Auth token; `mismatch` retries with `{"record":"r-2"}`, `complete` retries and repeats |
+| `executions` | the launcher's count of executed calls per tool (host control) |
+
+Kinds: `r3-vocabularies` (keys of `r3_vocabularies` are URIs, standard-namespace
+keys name a defined vocabulary, MCP is advertised), `r3-resource-token`
+(Resource-key Ed25519, `aa-resource+jwt`, Resource `iss`, topology `aud`, both
+`r3_uri` and `r3_s256`), `r3-no-resource-token`, `r3-document-digest` (status
+200 and SHA-256 of the served bytes equal `r3_s256`), `r3-no-document`,
+`r3-document-fields`, `r3-document-covers` (the document's operations include
+each requested one), `r3-per-call-challenge` (401 or 202 `requirement=auth-token`
+whose Resource token names a proposal, the AS and the class Auth token's
+`jti`), `r3-proposal` (exactly the invoked operation and its `record`
+parameter) and `r3-executions` (a count). All but `r3-executions` take boolean
+`equals`. Generic kinds grade any stage's response.
+
+`role_under_test: "r3.issuer"` puts a native three-party PS under test. The
+harness is Agent and AP (the PS issues the Person token natively), and the
+Resource: it mints an R3 Resource token whose `aud` is the PS and serves the
+document at `r3_uri` on a loopback endpoint the launcher reaches. `input` has
+`document` (`exact`, `altered`: equal-length bytes that do not hash to
+`r3_s256`, or `missing`: 404), `operations` and optional `scope` (`read`).
+Stages are `person`, `fetch` (the requests that reached the R3 endpoint; only
+role kinds) and `token`. Kinds: `r3-fetched` (every request was a GET of
+`r3_uri` and at least one arrived), `r3-fetch-proof` (each verifies as the PS
+under `jwks_uri` with `id` its issuer and `aauth-person.json`, covering the base
+components), `r3-auth-token` (PS-key `aa-auth+jwt`, PS `iss` and `ps`, Resource
+`aud`, the Resource token's `r3_uri`/`r3_s256`, `r3_granted` in the vocabulary
+with operations from the document), `r3-auth-scope` (the issued `scope`) and
+`r3-no-auth-token`.
+
+`role_under_test: "r3.federated-issuer"` puts a native four-party PS and AS
+under test as one bundle. The harness is Agent, AP and Resource: the Resource
+token's `aud` is the AS and the document endpoint chooses the bytes it serves
+by the `jwks_uri` id a request names. `input.document` is `exact`, `altered-as`
+or `altered-ps` (bytes that do not hash to `r3_s256`, served to that signer
+only). Stages are `person`, `fetch-access` and `fetch-person` (the requests
+naming that server; role kinds only) and `token`. `r3-fetched` and
+`r3-fetch-proof` grade the AS or PS fetches; a PS that makes no fetch leaves
+its proof `not_exercised`, and a request naming neither server fails both.
+`r3-auth-token` checks the AS-issued token (AS key, `aauth-access.json`, PS in
+`ps`) as for the three-party issuer. A target may be declared unavailable for
+this role.

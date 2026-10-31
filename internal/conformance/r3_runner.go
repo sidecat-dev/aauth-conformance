@@ -32,6 +32,7 @@ type r3Extension struct {
 	AuthLifetime    int64          `json:"auth_lifetime"`
 	PermittedScopes []string       `json:"permitted_scopes"`
 	AccessServer    string         `json:"access_server"`
+	AccessSeed      string         `json:"access_seed_hex,omitempty"`
 	AccessKid       string         `json:"access_kid"`
 	AccessJWK       map[string]any `json:"access_jwk"`
 	OtherServer     string         `json:"other_server"`

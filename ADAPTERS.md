@@ -349,3 +349,48 @@ control at `POST /__fixture/subagent` accepts the same members as Rust's:
 only. They do not claim Agent-token revocation cascades, durable continuation
 recovery, real payment, consent UI, recursive delegation, missions, or
 production TLS/discovery.
+
+## R3
+
+`r3.resource` and `r3.issuer` share `adapters/go/r3.go` (registered through
+`extensionLaunchers`) and the Rust `r3` feature, which adds the
+`aauth-rust-r3` crate. The bootstrap `extension` carries public JWKs and kids
+for the PS, AS, Resource and other server, the person subject and lifetimes,
+permitted scopes, the R3 vocabulary, `tools` and `grantable`, the Resource
+seed (`r3.resource`) or PS seed and `r3_transport` (`r3.issuer`). Both announce
+the fixture Resource path on a loopback listener and restore only the HTTPS
+scheme from the received Host.
+
+For `r3.resource` the launcher trusts the AP, PS (`aauth-person.json`), AS
+and other server (`aauth-access.json`) and the Resource's own key. It builds
+the authoritative MCP definition from `tools`, maps `POST /op/<tool>` to that
+tool, gives a fixed display, and an in-memory document store. Four-party uses
+Go `resource.NewFederatedAuthorization` and Rust
+`PsAuthorizationResource::new_federated`; three-party uses
+`resource.NewPSAuthorization` and `PsAuthorizationResource::new`, each with
+`R3Config` and the authorization endpoint. Four-party also enables per-call
+proposals (Go `R3PerCallConfig` with in-memory proposal and retry stores; Rust
+`with_r3_per_call` with an in-memory `R3CallStore`, `hold` off): the call's
+`record` body value is its one inline parameter. The application handler
+echoes `{"operation","sub"}` and counts its executions; Rust passes per-call
+results to `r3_retain`. `GET /__fixture/r3/executions` reports those counts.
+It is the only host control; it changes nothing.
+
+For `r3.issuer` the launcher runs Go `personserver.NewPSAuthorization` with
+`DirectR3Config`, or Rust `PersonServer::new(...).with_r3(R3IssuerConfig)`.
+Egress admission allows only `{Resource}/r3/`; the transport sends the PS's
+already signed fetch to `r3_transport`, changing only the socket. Fixed
+consent grants requested permitted scopes and the document's `grantable`
+operations; the R3 audit log is in memory. The native PS fetches, verifies the
+hash, signs and refuses on its own.
+
+These launchers make no TLS, discovery-admission, durable-custody, consent-UI,
+held (`202`) per-call or release-gating claim.
+
+For `r3.federated-issuer` the Go launcher hosts `accessserver.New` with
+`R3Config` and `personserver.NewFederatedAuthorization` with `R3Config` on one
+listener routed by Host. One HTTP client sends the PS's AS requests to that
+listener and both servers' R3 fetches to `r3_transport`. The AS policy grants
+requested permitted scopes and the document's `grantable` operations; the PS
+consents. aauth-rust's Access Server issues no R3 Auth tokens, so the build
+helper declares the Rust target unavailable for this role.
