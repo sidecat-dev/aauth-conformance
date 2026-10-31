@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "id": "r3-resource-class",
+  "title": "Four-party class document: signed fetch, exact bytes, enforcement",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "four-party",
+    "operations": [
+      "records.read",
+      "records.export"
+    ],
+    "fetches": [
+      "access",
+      "access",
+      "person"
+    ],
+    "grant": [
+      "records.read"
+    ],
+    "calls": [
+      "records.read",
+      "records.export"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "vocabularies",
+      "stage": "metadata",
+      "clause": "r3.resource.metadata-vocabularies",
+      "kind": "r3-vocabularies",
+      "equals": true
+    },
+    {
+      "id": "resource-token",
+      "stage": "authorize",
+      "clause": "r3.resource.token-claims",
+      "kind": "r3-resource-token",
+      "equals": true
+    },
+    {
+      "id": "as-fetch-status",
+      "stage": "fetch-access",
+      "clause": "r3.resource.content-addressing",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "as-fetch-digest",
+      "stage": "fetch-access",
+      "clause": "r3.resource.content-addressing",
+      "kind": "r3-document-digest",
+      "equals": true
+    },
+    {
+      "id": "as-fetch-fields",
+      "stage": "fetch-access",
+      "clause": "r3.resource.document-fields",
+      "kind": "r3-document-fields",
+      "equals": true
+    },
+    {
+      "id": "as-fetch-covers",
+      "stage": "fetch-access",
+      "clause": "r3.resource.composition",
+      "kind": "r3-document-covers",
+      "equals": true
+    },
+    {
+      "id": "as-refetch-digest",
+      "stage": "fetch-access-2",
+      "clause": "r3.resource.content-addressing",
+      "kind": "r3-document-digest",
+      "equals": true
+    },
+    {
+      "id": "ps-fetch-digest",
+      "stage": "fetch-person",
+      "clause": "r3.resource.content-addressing",
+      "kind": "r3-document-digest",
+      "equals": true
+    },
+    {
+      "id": "granted-served",
+      "stage": "call-records.read",
+      "clause": "r3.resource.granted-served",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "id": "granted-operation",
+      "stage": "call-records.read",
+      "clause": "r3.resource.granted-served",
+      "kind": "json-member",
+      "member": "operation",
+      "equals": "records.read"
+    },
+    {
+      "id": "ungranted-refused",
+      "stage": "call-records.export",
+      "clause": "r3.resource.grant-enforcement",
+      "kind": "status-class",
+      "equals": "4xx"
+    }
+  ]
+}

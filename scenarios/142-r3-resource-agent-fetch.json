@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "r3-resource-agent-fetch",
+  "title": "The agent cannot fetch the R3 document named in its Resource token",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "four-party",
+    "operations": [
+      "records.read"
+    ],
+    "fetches": [
+      "agent"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "fetch-agent-refused",
+      "stage": "fetch-agent",
+      "clause": "r3.resource.document-signature",
+      "kind": "status-class",
+      "equals": "4xx"
+    },
+    {
+      "id": "fetch-agent-no-document",
+      "stage": "fetch-agent",
+      "clause": "r3.resource.document-signature",
+      "kind": "r3-no-document",
+      "equals": true
+    }
+  ]
+}

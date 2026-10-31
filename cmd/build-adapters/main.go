@@ -75,6 +75,11 @@ func run() error {
 		if len(dirty) > 0 {
 			rev += "+dirty"
 		}
+		if reason := unavailableRoles[*role][item.id]; reason != "" {
+			fmt.Printf("%s at %s: not offered for %s\n", item.id, rev, *role)
+			targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: rev, Unavailable: reason})
+			continue
+		}
 		work := filepath.Join(directory, item.id+"-adapter")
 		if err = os.MkdirAll(work, 0755); err != nil {
 			return err
@@ -192,18 +197,31 @@ func command(dir, name string, args ...string) error {
 // Role-specific launcher sources, native Rust features and extra Rust crates.
 // Earlier implementation checkouts can still build the roles that need none.
 var goRoleSources = map[string][]string{
-	conformance.DeferredRole: {"deferred.go"},
-	conformance.SubagentRole: {"subagent.go"},
+	conformance.DeferredRole:          {"deferred.go"},
+	conformance.SubagentRole:          {"subagent.go"},
+	conformance.R3ResourceRole:        {"r3.go"},
+	conformance.R3IssuerRole:          {"r3.go"},
+	conformance.R3FederatedIssuerRole: {"r3.go"},
+}
+
+// unavailableRoles declares a role an implementation has no native API for.
+// Its target carries the reason instead of a launcher and claims nothing.
+var unavailableRoles = map[string]map[string]string{
+	conformance.R3FederatedIssuerRole: {"aauth-rust": "aauth-rust-access-server offers no R3 issuance; its crate documentation says full R3 is outside its profile and refused"},
 }
 var rustRoleFeatures = map[string]string{
-	conformance.FederatedRole: "federation",
-	conformance.DeferredRole:  "deferred",
-	conformance.SubagentRole:  "subagent",
+	conformance.FederatedRole:  "federation",
+	conformance.DeferredRole:   "deferred",
+	conformance.SubagentRole:   "subagent",
+	conformance.R3ResourceRole: "r3",
+	conformance.R3IssuerRole:   "r3",
 }
 var rustRoleCrates = map[string][]string{
-	conformance.FederatedRole: {"aauth-rust-access-server"},
-	conformance.DeferredRole:  {"aauth-rust-access-server"},
-	conformance.SubagentRole:  {"aauth-rust-access-server"},
+	conformance.FederatedRole:  {"aauth-rust-access-server"},
+	conformance.DeferredRole:   {"aauth-rust-access-server"},
+	conformance.SubagentRole:   {"aauth-rust-access-server"},
+	conformance.R3ResourceRole: {"aauth-rust-r3"},
+	conformance.R3IssuerRole:   {"aauth-rust-r3"},
 }
 
 // unofferedClaims lists clauses an implementation's native API assigns to

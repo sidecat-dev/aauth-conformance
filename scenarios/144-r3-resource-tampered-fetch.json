@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "id": "r3-resource-tampered-fetch",
+  "title": "The entitled AS id with a signature that does not verify is refused",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "four-party",
+    "operations": [
+      "records.read"
+    ],
+    "fetches": [
+      "tampered"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "fetch-tampered-refused",
+      "stage": "fetch-tampered",
+      "clause": "r3.resource.document-signature",
+      "kind": "status-class",
+      "equals": "4xx"
+    },
+    {
+      "id": "fetch-tampered-no-document",
+      "stage": "fetch-tampered",
+      "clause": "r3.resource.document-signature",
+      "kind": "r3-no-document",
+      "equals": true
+    },
+    {
+      "id": "fetch-tampered-status",
+      "stage": "fetch-tampered",
+      "clause": "r3.resource.document-signature-error",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "fetch-tampered-error",
+      "stage": "fetch-tampered",
+      "clause": "r3.resource.document-signature-error",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_signature"
+    }
+  ]
+}

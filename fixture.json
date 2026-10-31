@@ -44,6 +44,23 @@
       "event_endpoint": "https://ap.conformance.test/events",
       "other_agent": "aauth:Other@ap.conformance.test",
       "other_key_seed_hex": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"
+    },
+    "r3": {
+      "vocabulary": "urn:aauth:vocabulary:mcp",
+      "tools": [
+        "records.read",
+        "records.export",
+        "records.delete"
+      ],
+      "grantable": [
+        "records.read",
+        "records.export"
+      ],
+      "other_server": {
+        "issuer": "https://other.conformance.test",
+        "seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
+        "kid": "other-1"
+      }
     }
   }
 }

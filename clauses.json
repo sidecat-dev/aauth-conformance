@@ -24,6 +24,12 @@
       "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
       "sha256": "462b2fa2fdb10791dd976a7566cd09f5e5d64686c8d6e2966cc2e0caf87acd12",
       "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-events.md"
+    },
+    {
+      "id": "r3",
+      "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
+      "sha256": "39672880b054e380d39c9c997523b3320216bade2e348a8f79990f2d85e1f2aa",
+      "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-r3.md"
     }
   ],
   "clauses": [
@@ -921,6 +927,222 @@
       "anchor": "ap-to-agent",
       "scope": "protocol",
       "role": "events.agent-provider"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.metadata-vocabularies",
+      "source": "r3",
+      "section": "Resource Metadata Extensions, line 144: r3_vocabularies keys MUST be vocabulary URIs, urn:aauth:vocabulary: ones for the standard vocabularies",
+      "anchor": "resource-metadata-extensions",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.token-claims",
+      "source": "r3",
+      "section": "Resource Token Extensions, lines 497-503: a Resource token carrying R3 information MUST include both r3_uri and r3_s256 (also checked: Resource iss, and aud naming the AS in four-party or the PS in three-party access, line 499)",
+      "anchor": "resource-token-extensions",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.document-signature",
+      "source": "r3",
+      "section": "R3 Document, line 448: the Resource MUST require a valid HTTP Message Signature on requests to R3 document URIs and MUST reject requests not signed by the entitled AS or PS; agents cannot fetch R3 documents",
+      "anchor": "r3-document",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.document-entitlement",
+      "source": "r3",
+      "section": "R3 Document Access Restriction, lines 729-734: the Resource MUST reject any signer, identified by id, that is not the AS in the Resource token's aud or the PS in its ps; any other signer MUST be rejected",
+      "anchor": "r3-document-access-restriction",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.content-addressing",
+      "source": "r3",
+      "section": "Content Addressing, lines 486-488: r3_s256 is the SHA-256 of the bytes as served; the Resource MUST serve those exact bytes on every request for the same r3_uri, here to each entitled signer",
+      "anchor": "content-addressing",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.document-fields",
+      "source": "r3",
+      "section": "Fields, lines 469-471: vocabulary is REQUIRED and MUST match a vocabulary advertised in r3_vocabularies; operations is REQUIRED",
+      "anchor": "fields",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.composition",
+      "source": "r3",
+      "section": "Operations Spanning Multiple Definitions, line 435: the Resource MUST reference a single R3 document that covers all of the requested operations",
+      "anchor": "operations-spanning-definitions",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.operation-validation",
+      "source": "r3",
+      "section": "Operation Validation, line 748: the Resource MUST validate declared operations against its authoritative definition before issuing a Resource token; an operation outside it, or a vocabulary the Resource does not advertise (line 412), gets no Resource token",
+      "anchor": "operation-validation",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.grant-enforcement",
+      "source": "r3",
+      "section": "Grant Enforcement, line 758: Resources MUST enforce r3_granted and r3_per_call and MUST reject API calls that match an operation in neither claim",
+      "anchor": "grant-enforcement",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.granted-served",
+      "source": "r3",
+      "section": "Resource Enforcement, step 1 (line 625): a call matching r3_granted is served; the 2xx status and the operation echo are the launcher's",
+      "anchor": "resource-enforcement",
+      "scope": "adapter-contract"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.document-signature-error",
+      "source": "core",
+      "section": "Verification (Server), lines 2242-2250, applied to the R3 document endpoint: any failure MUST result in a 401 with the appropriate Signature-Error; missing signature fields (step 1) and a signature that does not verify (step 7) are invalid_signature",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.per-call-requirement",
+      "source": "r3",
+      "section": "Grant Enforcement, line 758: operations in r3_per_call MUST trigger an AAuth-Requirement before being served; the challenge is a 401 or 202 whose Resource token references a proposal, not the class document, names the AS in aud and the presented Auth token in presented_jti (Flow, step 1, line 675; line 499)",
+      "anchor": "grant-enforcement",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.proposal-fields",
+      "source": "r3",
+      "section": "Proposal Document, lines 643-645: a per-call proposal's operations (REQUIRED) is the single r3_per_call operation invoked and its parameters (REQUIRED) carry the call's concrete parameters; it is content-addressed like a class document (line 637)",
+      "anchor": "proposal-document",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.per-call-parameters",
+      "source": "r3",
+      "section": "Flow, step 3, line 677: on the 401 retry the Resource MUST verify the presented parameters match the approved proposal and MUST reject the call if anything differs; nothing is executed",
+      "anchor": "per-call-flow",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.resource",
+      "id": "r3.resource.per-call-single-use",
+      "source": "r3",
+      "section": "Flow, step 4, line 678: a Resource MUST NOT execute more than one invocation under one per-call Auth token; the launcher counts its own executions",
+      "anchor": "per-call-flow",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.issuer",
+      "id": "r3.issuer.fetch",
+      "source": "r3",
+      "section": "Issuer Processing, lines 543-546: an issuer receiving a Resource token carrying r3_uri and r3_s256 MUST fetch the R3 document at r3_uri",
+      "anchor": "issuer-processing",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.issuer",
+      "id": "r3.issuer.fetch-signature",
+      "source": "r3",
+      "section": "R3 Document Access Restriction, line 729: a party fetching r3_uri MUST sign the request as a server in its own right, under the jwks_uri scheme with id set to its issuer (aauth-person.json for a PS)",
+      "anchor": "r3-document-access-restriction",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.issuer",
+      "id": "r3.issuer.hash-mismatch",
+      "source": "r3",
+      "section": "Issuer Processing, step 3, line 547: if the SHA-256 of the bytes received does not match r3_s256, the issuer MUST reject the Resource token",
+      "anchor": "issuer-processing",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.issuer",
+      "id": "r3.issuer.hash-verification",
+      "source": "r3",
+      "section": "Hash Verification, line 740: a party that fetches an R3 document MUST verify r3_s256 against it before using it; with no document fetched there is nothing verified to grant from",
+      "anchor": "hash-verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.issuer",
+      "id": "r3.issuer.auth-claims",
+      "source": "r3",
+      "section": "Issuer Processing, step 6 (line 550), and Auth Token Extensions, lines 569-571: the issued Auth token MUST include r3_uri and r3_s256 of the document and r3_granted (REQUIRED), whose operations are drawn from that document (line 617)",
+      "anchor": "auth-token-extensions",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.issuer",
+      "id": "r3.issuer.scope-and-r3",
+      "source": "r3",
+      "section": "Resource Token Extensions, line 530: when a Resource token carries both scope and R3 claims, the Auth token's issuer MUST enforce both independently; the granted scope is the host's",
+      "anchor": "resource-token-extensions",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.fetch",
+      "source": "r3",
+      "section": "Issuer Processing, lines 543-546: in four-party access the AS is the Auth-token issuer and MUST fetch the R3 document at r3_uri",
+      "anchor": "issuer-processing",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.fetch-signature",
+      "source": "r3",
+      "section": "R3 Document Access Restriction, line 729: the AS fetching r3_uri MUST sign as a server in its own right, under jwks_uri with id set to its issuer and aauth-access.json",
+      "anchor": "r3-document-access-restriction",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.hash-mismatch",
+      "source": "r3",
+      "section": "Issuer Processing, step 3, line 547: if the bytes the AS received do not hash to r3_s256, the issuer MUST reject the Resource token; no Auth token reaches the agent",
+      "anchor": "issuer-processing",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.auth-claims",
+      "source": "r3",
+      "section": "Issuer Processing, step 6 (line 550), and Auth Token Extensions, lines 569-571: the AS-issued Auth token MUST include the document's r3_uri and r3_s256 and r3_granted, whose operations are drawn from that document (line 617)",
+      "anchor": "auth-token-extensions",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.ps-fetch-signature",
+      "source": "r3",
+      "section": "R3 Document Access Restriction, lines 729 and 734: in four-party access the PS also fetches, and a party fetching r3_uri MUST sign as itself under jwks_uri (aauth-person.json); not exercised when the PS makes no fetch",
+      "anchor": "r3-document-access-restriction",
+      "scope": "protocol"
+    },
+    {
+      "role": "r3.federated-issuer",
+      "id": "r3.as.ps-hash-verification",
+      "source": "r3",
+      "section": "Hash Verification, line 740: a party that fetches an R3 document MUST verify r3_s256 against it before using it; a PS served bytes that do not match gives no Auth token",
+      "anchor": "hash-verification",
+      "scope": "protocol"
     }
   ]
 }
