@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "sigkey-jkt-jwt",
+  "title": "jkt-jwt delegation verifies",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jkt-jwt",
+    "alg": "Ed25519",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.jkt-jwt",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "verified-scheme",
+      "clause": "sigkey.v.echo",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "jkt-jwt"
+    }
+  ]
+}

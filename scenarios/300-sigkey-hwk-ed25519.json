@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "sigkey-hwk-ed25519",
+  "title": "hwk with Ed25519 verifies",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "hwk",
+    "alg": "Ed25519",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.hwk-ed25519",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "verified-scheme",
+      "clause": "sigkey.v.echo",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "hwk"
+    }
+  ]
+}

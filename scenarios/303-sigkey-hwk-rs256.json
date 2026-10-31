@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "sigkey-hwk-rs256",
+  "title": "hwk with RS256 verifies",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "hwk",
+    "alg": "RS256",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.hwk-rs256",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "verified-scheme",
+      "clause": "sigkey.v.echo",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "hwk"
+    }
+  ]
+}

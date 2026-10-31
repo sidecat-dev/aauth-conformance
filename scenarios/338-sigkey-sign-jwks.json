@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "sigkey-sign-jwks",
+  "title": "Signer presents direct jwks",
+  "role_under_test": "sigkey.signer",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwks",
+    "alg": "Ed25519",
+    "method": "GET"
+  },
+  "assertions": [
+    {
+      "id": "signed",
+      "clause": "sigkey.s.jwks",
+      "kind": "sigkey-signed",
+      "equals": true
+    },
+    {
+      "id": "member",
+      "clause": "sigkey.s.jwks",
+      "kind": "sigkey-member",
+      "equals": true
+    },
+    {
+      "id": "created",
+      "clause": "sigkey.s.created",
+      "kind": "sigkey-created",
+      "equals": 1800000000
+    }
+  ]
+}

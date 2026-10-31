@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-cnf-kty-mismatch",
+  "title": "Agent token cnf.jwk OKP key naming ES256",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "Ed25519",
+    "mutation": "alg-kty"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.cnf-kty-mismatch",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error-present",
+      "clause": "sigkey.v.cnf-kty-mismatch",
+      "kind": "sfv-token-present",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": true
+    }
+  ]
+}

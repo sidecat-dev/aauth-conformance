@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "sigkey-jwks",
+  "title": "Direct jwks verifies",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwks",
+    "alg": "Ed25519",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.jwks",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "verified-scheme",
+      "clause": "sigkey.v.echo",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "jwks"
+    }
+  ]
+}

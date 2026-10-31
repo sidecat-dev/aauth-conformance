@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-cnf-eddsa",
+  "title": "Agent token cnf.jwk with polymorphic EdDSA",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "Ed25519",
+    "mutation": "alg-eddsa"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.cnf-eddsa",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigkey.v.cnf-eddsa",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "unsupported_algorithm"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-jws-eddsa",
+  "title": "Agent token signed under JWS alg EdDSA",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "Ed25519",
+    "mutation": "header-eddsa"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.jws-eddsa",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error-present",
+      "clause": "sigkey.v.jws-eddsa",
+      "kind": "sfv-token-present",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": true
+    }
+  ]
+}

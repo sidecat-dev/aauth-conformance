@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-hwk-kid",
+  "title": "hwk carrying kid",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "hwk",
+    "alg": "Ed25519",
+    "mutation": "hwk-kid"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.hwk-kid",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error-present",
+      "clause": "sigkey.v.hwk-kid",
+      "kind": "sfv-token-present",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": true
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "sigkey-sign-jwt",
+  "title": "Signer presents a jwt confirmation-key assertion",
+  "role_under_test": "sigkey.signer",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "Ed25519",
+    "method": "GET"
+  },
+  "assertions": [
+    {
+      "id": "signed",
+      "clause": "sigkey.s.jwt",
+      "kind": "sigkey-signed",
+      "equals": true
+    },
+    {
+      "id": "member",
+      "clause": "sigkey.s.jwt",
+      "kind": "sigkey-member",
+      "equals": true
+    },
+    {
+      "id": "created",
+      "clause": "sigkey.s.created",
+      "kind": "sigkey-created",
+      "equals": 1800000000
+    }
+  ]
+}
