@@ -1,7 +1,33 @@
 # AAuth conformance scenarios
 
-Run the same wire scenarios against different AAuth implementations. Six roles
-are available:
+Run the same wire scenarios against different AAuth implementations. The suite
+has 311 scenarios and 1,375 assertions in 20 roles:
+
+| Role | Scenario files | Scenarios | Assertions | Draft |
+| --- | --- | ---: | ---: | --- |
+| `resource.agent-identity` | 01-06 | 6 | 17 | protocol, Signature-Key |
+| `agent.signing` | 07-09 | 3 | 16 | protocol |
+| `person-server.direct` | 10-21 | 12 | 109 | protocol |
+| `authorization.federated` | 22-49, 73-78 | 34 | 398 | protocol, Budgets |
+| `authorization.deferred` | 50-54 | 5 | 88 | protocol |
+| `authorization.subagent` | 55-72 | 18 | 191 | protocol |
+| `events.subscription` | 100-110 | 11 | 27 | Events |
+| `events.agent-provider` | 111-127 | 17 | 54 | Events |
+| `events.agent` | 128-138 | 11 | 11 | Events |
+| `events.delivery` | 139 | 1 | 15 | Events |
+| `r3.resource` | 140-149 | 10 | 42 | R3 |
+| `r3.issuer` | 160-163 | 4 | 10 | R3 |
+| `r3.federated-issuer` | 165-167 | 3 | 7 | R3 |
+| `mission.person-server` | 180-192 | 13 | 55 | protocol (Mission) |
+| `mission.resource` | 193 | 1 | 1 | protocol (Mission) |
+| `supervision.server` | 220-233 | 14 | 73 | Supervision |
+| `supervision.person-server` | 240-251 | 12 | 64 | Supervision |
+| `sigkey.verifier` | 300-329 | 30 | 56 | Signature-Key, protocol |
+| `sigkey.signer` | 330-341 | 12 | 36 | Signature-Key, protocol |
+| `vectors.library` | 400-493 | 94 | 105 | community test vectors |
+
+Each role is a separate run: `build-adapters -role ROLE` builds the launchers
+and the runner grades that role's scenarios. The six original roles are:
 
 - **Resource in Agent-identity mode:** the harness plays the Agent and Agent
   Provider (AP), creating Ed25519 tokens/proofs and serving fixture metadata/JWKS.
@@ -376,6 +402,7 @@ The slice has 40 scenarios. Clauses an implementation's API leaves to host store
 claimed for it (see [ADAPTERS.md](ADAPTERS.md#events-roles)); they report as
 not claimed, never as passes. AsyncAPI documents, egress admission and the
 AP-to-Agent transport are outside these roles.
+
 ## R3
 
 ```sh
@@ -419,6 +446,7 @@ Host controls carry the person's decisions and the clock; see
 endpoint mission errors, clarification during review, the mission control
 plane (a companion draft), timing equivalence, and four-party mission
 federation at the Access Server.
+
 ## Supervision
 
 `supervision.server` grades a native supervision server with the harness as
@@ -453,6 +481,7 @@ The same scenario files and expected answers apply. What the module does not
 implement, or what its API cannot be driven to under the fixture's fixed
 clock, is declared unavailable or left unclaimed for that target; see
 [the adapter contract](ADAPTERS.md#community-aauth-go-launcher).
+
 ## Signature-Key schemes and algorithms
 
 `sigkey.verifier` grades a native AAuth Resource that also accepts the
@@ -478,6 +507,7 @@ Use `-role sigkey.signer` the same way. ES256 is a SHOULD (protocol line
 `build-adapters -claim-recommended`. A scheme or algorithm a library does not
 offer is left unclaimed for it and its scenario is not run; ML-DSA-44 fixtures
 need a Go 1.27 toolchain for the harness.
+
 ## Community test vectors
 
 The 94 test vectors of the community aauth-go v0.3.0 (`vectors/community/`,

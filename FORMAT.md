@@ -407,6 +407,7 @@ plus `content-digest` matching the body and `content-type` with a body) and
 `proof` (the HTTP signature verifies with the same key). Generic kinds grade the responses,
 including `status-class` and `sfv-token-present` where the draft fixes no
 status or code.
+
 ## R3 profiles
 
 Two extension roles grade `draft-hardt-aauth-r3` at `70d6737` (catalog source
@@ -476,6 +477,7 @@ its proof `not_exercised`, and a request naming neither server fails both.
 `r3-auth-token` checks the AS-issued token (AS key, `aauth-access.json`, PS in
 `ps`) as for the three-party issuer. A target may be declared unavailable for
 this role.
+
 ## Mission profiles
 
 `role_under_test: "mission.person-server"` runs a native Person Server with
@@ -522,6 +524,7 @@ token for the Resource, bound to the Agent key, carrying the approved
 fixture Resource key and carries the presented `mission_s256`). Generic kinds
 grade the stage's response. When the approved blob has no `expires_at`, the
 expiry flow's later stages are `not_exercised` with the reason recorded.
+
 ## Supervision profiles
 
 Two extension roles grade draft-hardt-aauth-supervision (catalog source
@@ -645,6 +648,7 @@ the expected key over the received components, covering `@method`,
 matching the body. `sigkey-member` requires the selected member to carry
 exactly the expected scheme and parameters (for hwk the public key with `alg`
 and no `kid`). `sigkey-created` compares `created` with the fixture clock.
+
 ## Community vectors profile
 
 `role_under_test: "vectors.library"` grades the 94 test vectors of the

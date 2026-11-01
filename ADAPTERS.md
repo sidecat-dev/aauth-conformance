@@ -404,6 +404,7 @@ store does not compare thumbprints, leaving that refusal to the handler. The
 Go Agent store returns a context for every `eid`: context lookup and
 deduplication are not graded. aauth-rust's stores are its own
 (`MemorySubscriptionStore`, `MemoryEventStore`).
+
 ## R3
 
 `r3.resource` and `r3.issuer` share `adapters/go/r3.go` (registered through
@@ -448,6 +449,7 @@ listener and both servers' R3 fetches to `r3_transport`. The AS policy grants
 requested permitted scopes and the document's `grantable` operations; the PS
 consents. aauth-rust's Access Server issues no R3 Auth tokens, so the build
 helper declares the Rust target unavailable for this role.
+
 ## Mission roles
 
 `mission.person-server` uses the Person Server bootstrap fields above. The
@@ -486,6 +488,7 @@ native `with_mission_context`. Go's federated Resource documents that it needs
 no configuration for a mission-bound person token; nothing is added.
 Rust builds both roles with the `mission` feature, which includes
 `federation`, and adds the Access Server and Signature-Key crates.
+
 ## Supervision roles
 
 Both launchers are built with the Rust `supervision` feature and the
@@ -574,6 +577,7 @@ drafts) and `authorization.subagent`, whose host control advances PS-to-AS
 polling once per reference; the module's PS polls its AS on each Agent poll.
 `authorization.deferred` is not run for this target for the same reason, and
 because the module's AS never answers 402 itself.
+
 ## Signature-Key roles
 
 `sigkey.verifier` and `sigkey.signer` read the bootstrap `extension`:
@@ -612,6 +616,7 @@ module uses `agentprovider.SignHWK`, `AttachSignatureKey` with `SignRequest`,
 `ServerSigner` and `agentprovider.SignJKTJWT`, which read the wall clock.
 Schemes and algorithms a library does not offer are listed in
 `cmd/build-adapters/sigkey.go` and left unclaimed.
+
 ## Community vectors role
 
 `role: "vectors.library"` announces `/vector`. The runner POSTs one JSON
