@@ -45,8 +45,13 @@ struct Documents {
 /// Fetch one logical HTTPS URL from the loopback transport serving its origin.
 fn fetch_logical(documents: &BTreeMap<String, String>, target: &str) -> Result<Vec<u8>, Failure> {
     let uri: http::Uri = target.parse()?;
-    let origin = format!("https://{}", uri.authority().ok_or("URL without authority")?);
-    let transport = documents.get(&origin).ok_or("no fixture transport for origin")?;
+    let origin = format!(
+        "https://{}",
+        uri.authority().ok_or("URL without authority")?
+    );
+    let transport = documents
+        .get(&origin)
+        .ok_or("no fixture transport for origin")?;
     fetch(transport, uri.path())
 }
 
@@ -214,7 +219,8 @@ fn announce(server: &tiny_http::Server, target: &str) -> Result<(), Failure> {
 
 fn respond(incoming: tiny_http::Request, response: Response<Vec<u8>>) -> Result<(), Failure> {
     let status = response.status().as_u16();
-    let mut reply = tiny_http::Response::from_data(response.body().clone()).with_status_code(status);
+    let mut reply =
+        tiny_http::Response::from_data(response.body().clone()).with_status_code(status);
     for (name, value) in response.headers() {
         if let Ok(header) = tiny_http::Header::from_bytes(name.as_str(), value.as_bytes()) {
             reply.add_header(header);
@@ -288,7 +294,10 @@ fn signing_key(job: &Job) -> Result<SigningKey, Failure> {
             .map_err(|_| "Ed25519 seed must be 32 bytes")?;
         return Ok(SigningKey::from_seed(seed));
     }
-    Ok(SigningKey::from_pkcs8_der(&job.alg, &hex_bytes(&job.pkcs8_hex)?)?)
+    Ok(SigningKey::from_pkcs8_der(
+        &job.alg,
+        &hex_bytes(&job.pkcs8_hex)?,
+    )?)
 }
 
 fn sign(job: &Job, now: i64) -> Result<Request<Vec<u8>>, Failure> {

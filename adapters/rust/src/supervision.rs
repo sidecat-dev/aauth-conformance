@@ -141,10 +141,7 @@ impl Policy for FixtureSupervisorPolicy {
     }
 }
 
-fn respond(
-    incoming: tiny_http::Request,
-    response: &Response<Vec<u8>>,
-) -> Result<(), Failure> {
+fn respond(incoming: tiny_http::Request, response: &Response<Vec<u8>>) -> Result<(), Failure> {
     let mut wire = tiny_http::Response::from_data(response.body().clone())
         .with_status_code(response.status().as_u16());
     for (name, value) in response.headers() {
@@ -434,7 +431,10 @@ pub(crate) fn run_person_server(config: Bootstrap) -> Result<(), Failure> {
     // Missions are enabled so a supervised Agent can propose one; the
     // supervisor approves it, never the host policy.
     .with_missions()
-    .with_supervision(SupervisionConfig::new(host, MemoryContinuations::new(10_000)))?;
+    .with_supervision(SupervisionConfig::new(
+        host,
+        MemoryContinuations::new(10_000),
+    ))?;
     let listener = listen("/person")?;
     let mut held: Option<String> = None;
     for mut incoming in listener.incoming_requests() {

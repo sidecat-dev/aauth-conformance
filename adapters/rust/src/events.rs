@@ -199,8 +199,13 @@ fn run_subscription(config: Bootstrap, extension: Extension) -> Result<(), Failu
                     content_type: "application/json",
                     body: br#"{"event_type":"slot.available"}"#,
                 });
-                let event =
-                    resource.prepare_event(&job.agent_provider, &job.eid, payload, now + 300, now)?;
+                let event = resource.prepare_event(
+                    &job.agent_provider,
+                    &job.eid,
+                    payload,
+                    now + 300,
+                    now,
+                )?;
                 let provider = extension
                     .agent_providers
                     .iter()
@@ -296,7 +301,10 @@ fn run_provider(config: Bootstrap, extension: Extension) -> Result<(), Failure> 
             // The AP-to-Agent read path the host transport uses.
             ("POST", "/__fixture/pending") => {
                 use aauth_rust_agent_provider::events::EventStore;
-                let pending = inbox.store().pending(&extension.agent).map_err(|e| e.to_string());
+                let pending = inbox
+                    .store()
+                    .pending(&extension.agent)
+                    .map_err(|e| e.to_string());
                 let listed = pending.and_then(|events| {
                     events
                         .into_iter()

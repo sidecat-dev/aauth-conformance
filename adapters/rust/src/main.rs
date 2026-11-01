@@ -5,14 +5,14 @@ mod deferred;
 mod events;
 #[cfg(feature = "federation")]
 mod federation;
-#[cfg(feature = "r3")]
-mod r3;
 #[cfg(feature = "mission")]
 mod mission;
-#[cfg(feature = "supervision")]
-mod supervision;
+#[cfg(feature = "r3")]
+mod r3;
 #[cfg(feature = "sigkey")]
 mod sigkey;
+#[cfg(feature = "supervision")]
+mod supervision;
 #[cfg(feature = "vectors")]
 mod vectors;
 use aauth_rust_core::{

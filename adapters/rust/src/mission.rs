@@ -150,7 +150,10 @@ fn run_mission_server(config: Bootstrap) -> Result<(), Failure> {
                 let mut reply = serde_json::Map::new();
                 if control.expires_in.is_some() {
                     // The native approval mints the blob without expires_at.
-                    reply.insert("expires_in".into(), "not offered by the native approval".into());
+                    reply.insert(
+                        "expires_in".into(),
+                        "not offered by the native approval".into(),
+                    );
                 }
                 if let Some(location) = control.approve {
                     // The person's approval: a POST signed as this Person
