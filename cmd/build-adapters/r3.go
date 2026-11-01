@@ -11,5 +11,8 @@ func init() {
 		rustRoleFeatures[role] = "r3"
 		rustRoleCrates[role] = []string{"aauth-rust-r3"}
 	}
-	unavailableRoles[conformance.R3FederatedIssuerRole] = map[string]string{"aauth-rust": "aauth-rust-access-server offers no R3 issuance; its crate documentation says full R3 is outside its profile and refused"}
+	if unavailableRoles[conformance.R3FederatedIssuerRole] == nil {
+		unavailableRoles[conformance.R3FederatedIssuerRole] = map[string]string{}
+	}
+	unavailableRoles[conformance.R3FederatedIssuerRole]["aauth-rust"] = "aauth-rust-access-server offers no R3 issuance; its crate documentation says full R3 is outside its profile and refused"
 }
