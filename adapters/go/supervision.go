@@ -98,7 +98,9 @@ func writeControl(w http.ResponseWriter, status int, value any) {
 // is fixed: it connects the Person Servers marked accept and refuses the
 // others; it allows person-token, auth-token and mission acts, and a
 // permission named fixture.allow, denies fixture.deny, asks for fixture.ask
-// and defers fixture.defer until a host control resolves it.
+// and defers fixture.defer until a host control resolves it. The rate_limit
+// control makes the host's RateLimit hook turn the next request away for 30
+// seconds.
 func runSupervisionServer(config bootstrap, _ signaturekey.StaticKeyResolver) error {
 	var extension struct {
 		Supervisor struct {
@@ -126,9 +128,16 @@ func runSupervisionServer(config bootstrap, _ signaturekey.StaticKeyResolver) er
 		accepted[ps.Issuer] = ps.Accept
 	}
 	clock := aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() })
+	var limitNext atomic.Bool
 	server, err := supervisionserver.New(supervisionserver.Config{
 		Issuer: extension.Supervisor.Issuer, Name: "Conformance supervisor", SigningKey: &key,
 		KeyResolver: keys, Clock: clock, Store: testutil.NewSupervisorStore(),
+		RateLimit: func(context.Context, string) (time.Duration, error) {
+			if limitNext.CompareAndSwap(true, false) {
+				return 30 * time.Second, nil
+			}
+			return 0, nil
+		},
 		Connect: func(_ context.Context, request supervisionserver.ConnectRequest) (supervisionserver.ConnectResult, error) {
 			return supervisionserver.ConnectResult{Accept: accepted[request.PersonServer]}, nil
 		},
@@ -167,7 +176,8 @@ func runSupervisionServer(config bootstrap, _ signaturekey.StaticKeyResolver) er
 		}
 		switch {
 		case body.RateLimit:
-			writeControl(w, http.StatusNotImplemented, map[string]string{"not_offered": "aauth-go supervisionserver never answers rate_limited and exports no rate_limited response for a host to send"})
+			limitNext.Store(true)
+			writeControl(w, http.StatusOK, map[string]bool{"rate_limited": true})
 		case body.Resolve != nil && body.Resolve.Verdict == "allow":
 			for _, ps := range extension.PersonServers {
 				if !ps.Accept {
