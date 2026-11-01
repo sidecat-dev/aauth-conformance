@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "sigkey-sign-jkt-jwt",
+  "title": "Signer presents a jkt-jwt delegation",
+  "role_under_test": "sigkey.signer",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jkt-jwt",
+    "alg": "Ed25519",
+    "method": "GET"
+  },
+  "assertions": [
+    {
+      "id": "signed",
+      "clause": "sigkey.s.jkt-jwt",
+      "kind": "sigkey-signed",
+      "equals": true
+    },
+    {
+      "id": "member",
+      "clause": "sigkey.s.jkt-jwt",
+      "kind": "sigkey-member",
+      "equals": true
+    },
+    {
+      "id": "created",
+      "clause": "sigkey.s.created",
+      "kind": "sigkey-created",
+      "equals": 1800000000
+    }
+  ]
+}

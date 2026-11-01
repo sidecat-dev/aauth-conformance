@@ -12,12 +12,16 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
+	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	aauth "gitlab.com/sidecat-dev/aauth-go"
 	"gitlab.com/sidecat-dev/aauth-go/accessserver"
 	"gitlab.com/sidecat-dev/aauth-go/agent"
+	"gitlab.com/sidecat-dev/aauth-go/budgets"
 	"gitlab.com/sidecat-dev/aauth-go/jose"
 	"gitlab.com/sidecat-dev/aauth-go/personserver"
 	"gitlab.com/sidecat-dev/aauth-go/resource"
@@ -51,6 +55,8 @@ type bootstrap struct {
 	Role                     string               `json:"role"`
 	AgentSeed                string               `json:"agent_seed_hex"`
 	Subject                  string               `json:"subject"`
+	// Extension is an extension role's own launcher configuration.
+	Extension json.RawMessage `json:"extension"`
 }
 
 // agentProviderTrust declares an additional fixture Agent Provider by its
@@ -67,6 +73,11 @@ var configureDeferredPS func(*personserver.FederatedAuthorizationConfig)
 var deferredHostControl func(*personserver.Server) http.Handler
 var runSubagentServers func(bootstrap, signaturekey.StaticKeyResolver) error
 
+// extensionLaunchers holds the launchers of extension roles. Each role's source
+// file registers itself and is compiled only into that role's build.
+var extensionLaunchers = map[string]func(bootstrap, signaturekey.StaticKeyResolver) error{}
+var builtInRoles = []string{"", "resource.agent-identity", "agent.signing", "person-server.direct", "authorization.federated", "authorization.deferred", "authorization.subagent"}
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -80,6 +91,9 @@ func run() error {
 	}
 	if config.Version != 1 {
 		return fmt.Errorf("bootstrap version must be 1")
+	}
+	if _, ok := extensionLaunchers[config.Role]; !ok && !slices.Contains(builtInRoles, config.Role) {
+		return fmt.Errorf("adapter source for role %q was not selected", config.Role)
 	}
 	origin, err := url.Parse(config.Resource)
 	if err != nil {
@@ -123,6 +137,9 @@ func run() error {
 	keys := signaturekey.StaticKeyResolver{}
 	for _, key := range jwks.Keys {
 		keys[signaturekey.StaticKeyReference{Issuer: config.Issuer, DiscoveryDocument: "aauth-agent.json", KeyID: key.Kid}] = key
+	}
+	if launch, ok := extensionLaunchers[config.Role]; ok {
+		return launch(config, keys)
 	}
 	if config.Role == "person-server.direct" {
 		return runPersonServer(config, keys)
@@ -228,8 +245,14 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 					return accessserver.Decision{}, accessserver.ErrAccessDenied
 				}
 			}
-			return accessserver.Decision{Scopes: append([]string(nil), request.Scopes...), Lifetime: time.Duration(config.AuthLifetime) * time.Second}, nil
+			decision := accessserver.Decision{Scopes: append([]string(nil), request.Scopes...), Lifetime: time.Duration(config.AuthLifetime) * time.Second}
+			if request.Budget != nil {
+				grant := *request.Budget
+				decision.Budget = &grant
+			}
+			return decision, nil
 		},
+		Budget: &accessserver.BudgetConfig{ResolveResourceUnits: fixtureBudgetUnits(resourceID)},
 	}
 	if config.Role == "authorization.deferred" {
 		configureDeferredAS(&accessConfig)
@@ -263,6 +286,22 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			return personserver.Person{Subject: config.PersonSubject, Lifetime: time.Duration(config.PersonLifetime) * time.Second}, nil
 		},
 		Consent: func(context.Context, personserver.AuthorizationRequest) error { return nil },
+		Budget: &personserver.FederatedBudgetConfig{
+			ResolveResourceUnits: fixtureBudgetUnits(resourceID),
+			Ceiling: func(_ context.Context, request personserver.AuthorizationRequest) (*budgets.Value, error) {
+				if request.Budget == nil {
+					return nil, nil
+				}
+				if request.Budget.Amount() > 5_000_000 {
+					return nil, nil
+				}
+				ceiling, err := fixtureCredits(2_000_000)
+				if err != nil {
+					return nil, err
+				}
+				return &ceiling, nil
+			},
+		},
 	}
 	if config.Role == "authorization.deferred" {
 		configureDeferredPS(&peopleConfig)
@@ -271,6 +310,25 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 	if err != nil {
 		return err
 	}
+	credits, err := budgets.NewUnit("credits", 0)
+	if err != nil {
+		return err
+	}
+	points, err := budgets.NewUnit("points", 0)
+	if err != nil {
+		return err
+	}
+	creditsDeclaration, err := budgets.NewBoundedUnitDeclaration(credits, 10_000_000, "")
+	if err != nil {
+		return err
+	}
+	pointsDeclaration, err := budgets.NewBoundedUnitDeclaration(points, 10_000_000, "")
+	if err != nil {
+		return err
+	}
+	var fixtureOfferUnit atomic.Value
+	fixtureOfferUnit.Store("credits")
+	grantPath := resourceURL.Path + "-budget-grant"
 	protected, err := resource.NewFederatedAuthorization(resource.FederatedAuthorizationConfig{
 		Issuer: resourceID, AccessServer: config.AccessServer, SigningKey: resourceKey, KeyResolver: keys,
 		Clock: clock, NewID: nextID, ScopeDescriptions: map[string]string{"read": "Read fixture identity"},
@@ -290,6 +348,148 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]string{"sub": principal.Subject})
 		}),
+		Budget: &resource.BudgetConfig{
+			Units:         []budgets.UnitDeclaration{creditsDeclaration, pointsDeclaration},
+			Metered:       func(r *http.Request) bool { return r.URL.Path == grantPath },
+			RetainLineage: func(context.Context, resource.BudgetLineage) error { return nil },
+			Cost: func(_ context.Context, request resource.BudgetCostRequest) (int64, error) {
+				unit := "credits"
+				if request.Request != nil && request.Request.Header.Get("X-Fixture-Offer") == "points" {
+					unit = "points"
+				}
+				fixtureOfferUnit.Store(unit)
+				raw := ""
+				if request.Request != nil {
+					raw = request.Request.Header.Get("X-Fixture-Cost")
+				}
+				if raw == "" {
+					return 1000, nil
+				}
+				cost, err := strconv.ParseInt(raw, 10, 64)
+				if err != nil || cost <= 0 {
+					return 0, fmt.Errorf("fixture Budget cost")
+				}
+				return cost, nil
+			},
+			Store: testutil.NewBudgetStore(),
+			Challenge: func(_ context.Context, challenge resource.BudgetChallengeRequest) (string, error) {
+				unit := credits
+				if name, _ := fixtureOfferUnit.Load().(string); name == "points" {
+					unit = points
+				}
+				offer, err := budgets.NewValue(5_000_000, unit)
+				if err != nil {
+					return "", err
+				}
+				var consumed *budgets.ConsumptionRecord
+				if unit.Equal(challenge.Grant.Unit()) {
+					record, err := budgets.ConsumptionForPresentedGrant(challenge.Token.JTI, challenge.Grant, challenge.Remaining)
+					if err != nil {
+						return "", err
+					}
+					consumed = &record
+				}
+				thumbprint, err := challenge.Principal.Confirmation.Thumbprint()
+				if err != nil {
+					return "", err
+				}
+				now := clock.Now()
+				return budgets.MintResourceToken(resourceKey, aauth.ResourceTokenClaims{
+					Issuer: resourceID, DWK: aauth.ResourceDiscoveryDocument, Audience: config.AccessServer,
+					PersonServer: challenge.Principal.PersonServer, Subject: challenge.Principal.Subject,
+					JTI: nextID(), PresentedJTI: challenge.Token.JTI, AgentJKT: thumbprint,
+					Scope: strings.Join(challenge.Principal.Scope, " "), Account: challenge.Principal.Account,
+					IssuedAt: now.Unix(), ExpiresAt: now.Add(5 * time.Minute).Unix(),
+				}, offer, consumed)
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	reservePath := resourceURL.Path + "-budget-reserve"
+	reserveProtected, err := resource.NewFederatedAuthorization(resource.FederatedAuthorizationConfig{
+		Issuer: resourceID, AccessServer: config.AccessServer, SigningKey: resourceKey, KeyResolver: keys,
+		Clock: clock, NewID: nextID, ScopeDescriptions: map[string]string{"read": "Read fixture identity"},
+		RequiredScopes: func(*http.Request) []string { return []string{"read"} },
+		ResolvePerson: func(_ context.Context, identity resource.PersonIdentity, _ resource.PersonContext) error {
+			if identity.Issuer != config.PersonServer || identity.Subject != config.PersonSubject {
+				return fmt.Errorf("unrecognized fixture person")
+			}
+			return nil
+		},
+		Protected: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			principal, ok := resource.AuthPrincipalFromContext(r.Context())
+			if !ok {
+				http.Error(w, "native Resource did not supply verified principal", 500)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"sub": principal.Subject})
+			raw := r.Header.Get("X-Fixture-Settle")
+			if raw == "" {
+				return
+			}
+			cost, err := strconv.ParseInt(raw, 10, 64)
+			if err != nil {
+				return
+			}
+			_ = resource.SettleBudget(r.Context(), cost)
+		}),
+		Budget: &resource.BudgetConfig{
+			Units:         []budgets.UnitDeclaration{creditsDeclaration, pointsDeclaration},
+			RetainLineage: func(context.Context, resource.BudgetLineage) error { return nil },
+			Cost:          func(context.Context, resource.BudgetCostRequest) (int64, error) { return 1000, nil },
+			Maximum: func(_ context.Context, request resource.BudgetCostRequest) (int64, error) {
+				raw := ""
+				if request.Request != nil {
+					raw = request.Request.Header.Get("X-Fixture-Hold")
+				}
+				hold, err := strconv.ParseInt(raw, 10, 64)
+				if err != nil || hold <= 0 {
+					return 0, fmt.Errorf("fixture Budget hold")
+				}
+				return hold, nil
+			},
+			Store: testutil.NewBudgetStore(),
+			Challenge: func(context.Context, resource.BudgetChallengeRequest) (string, error) {
+				return "", fmt.Errorf("fixture does not reissue a Budget challenge")
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	usagePath := resourceURL.Path + "-budget-usage"
+	usageProtected, err := resource.NewFederatedAuthorization(resource.FederatedAuthorizationConfig{
+		Issuer: resourceID, AccessServer: config.AccessServer, SigningKey: resourceKey, KeyResolver: keys,
+		Clock: clock, NewID: nextID, ScopeDescriptions: map[string]string{"read": "Read fixture identity"},
+		RequiredScopes: func(*http.Request) []string { return []string{"read"} },
+		ResolvePerson: func(_ context.Context, identity resource.PersonIdentity, _ resource.PersonContext) error {
+			if identity.Issuer != config.PersonServer || identity.Subject != config.PersonSubject {
+				return fmt.Errorf("unrecognized fixture person")
+			}
+			return nil
+		},
+		Protected: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			principal, ok := resource.AuthPrincipalFromContext(r.Context())
+			if !ok {
+				http.Error(w, "native Resource did not supply verified principal", 500)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"sub": principal.Subject})
+		}),
+		Budget: &resource.BudgetConfig{
+			Units:         []budgets.UnitDeclaration{creditsDeclaration, pointsDeclaration},
+			Metered:       func(r *http.Request) bool { return r.URL.Path == usagePath },
+			RetainLineage: func(context.Context, resource.BudgetLineage) error { return nil },
+			Cost:          func(context.Context, resource.BudgetCostRequest) (int64, error) { return 1000, nil },
+			Store:         testutil.NewBudgetStore(),
+			Challenge: func(context.Context, resource.BudgetChallengeRequest) (string, error) {
+				return "", fmt.Errorf("fixture does not reissue a Budget challenge")
+			},
+		},
 	})
 	if err != nil {
 		return err
@@ -312,6 +512,14 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 			return
 		}
 		r.URL.Scheme, r.URL.Host = "https", r.Host
+		if "https://"+r.Host == resourceID && (r.URL.Path == reservePath || r.URL.Path == usagePath || r.Method == http.MethodPost && r.URL.Path == "/usage") {
+			if r.URL.Path == reservePath {
+				reserveProtected.Handler().ServeHTTP(w, r)
+			} else {
+				usageProtected.Handler().ServeHTTP(w, r)
+			}
+			return
+		}
 		handler := handlers["https://"+r.Host]
 		if handler == nil {
 			http.NotFound(w, r)
@@ -325,6 +533,31 @@ func runFederatedServers(config bootstrap, keys signaturekey.StaticKeyResolver) 
 		return err
 	}
 	return (&http.Server{Handler: bridge, ReadHeaderTimeout: 5 * time.Second}).Serve(listener)
+}
+
+func fixtureCredits(amount int64) (budgets.Value, error) {
+	unit, err := budgets.NewUnit("credits", 0)
+	if err != nil {
+		return budgets.Value{}, err
+	}
+	return budgets.NewValue(amount, unit)
+}
+
+func fixtureBudgetUnits(resourceID string) func(context.Context, string) ([]budgets.UnitDeclaration, error) {
+	return func(_ context.Context, resource string) ([]budgets.UnitDeclaration, error) {
+		if resource != resourceID {
+			return nil, fmt.Errorf("unexpected Budget resource")
+		}
+		unit, err := budgets.NewUnit("credits", 0)
+		if err != nil {
+			return nil, err
+		}
+		declaration, err := budgets.NewBoundedUnitDeclaration(unit, 10_000_000, "")
+		if err != nil {
+			return nil, err
+		}
+		return []budgets.UnitDeclaration{declaration}, nil
+	}
 }
 
 type roundTripFunc func(*http.Request) (*http.Response, error)

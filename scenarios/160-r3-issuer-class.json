@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "id": "r3-issuer-class",
+  "title": "Three-party PS fetches the document as itself and issues R3 claims",
+  "role_under_test": "r3.issuer",
+  "given": "agent-identity",
+  "input": {
+    "document": "exact",
+    "operations": [
+      "records.read",
+      "records.export"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "fetched",
+      "stage": "fetch",
+      "clause": "r3.issuer.fetch",
+      "kind": "r3-fetched",
+      "equals": true
+    },
+    {
+      "id": "fetch-proof",
+      "stage": "fetch",
+      "clause": "r3.issuer.fetch-signature",
+      "kind": "r3-fetch-proof",
+      "equals": true
+    },
+    {
+      "id": "auth-token",
+      "stage": "token",
+      "clause": "r3.issuer.auth-claims",
+      "kind": "r3-auth-token",
+      "equals": true
+    }
+  ]
+}

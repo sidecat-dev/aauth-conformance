@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "sigkey-ap-mixed-jwks",
+  "title": "Agent token whose AP JWKS also holds an ML-DSA-44 key",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "Ed25519",
+    "mutation": "none",
+    "jwks": "mixed"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.ap-mixed-jwks",
+      "kind": "status",
+      "equals": 200
+    }
+  ]
+}

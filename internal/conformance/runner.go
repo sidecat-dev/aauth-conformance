@@ -47,7 +47,7 @@ func Exchange(ctx context.Context, logical *http.Request, transport string, time
 	if len(body) > 65536 {
 		return Response{}, fmt.Errorf("response exceeds 64 KiB")
 	}
-	return Response{Status: response.StatusCode, Header: response.Header.Clone(), Body: body}, nil
+	return Response{Status: response.StatusCode, Header: response.Header.Clone(), Trailer: response.Trailer.Clone(), Body: body}, nil
 }
 func startAP(f Fixture) (string, func(), error) {
 	key := publicJWK(f.APSeed)
@@ -161,11 +161,32 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 		return report, err
 	}
 	defer closeAP()
+	if extension, ok := extensionRoles[role]; ok {
+		available, unavailable := splitUnavailable(s, targets)
+		if len(available.Implementations) > 0 {
+			report = extension.Run(ctx, s, available, options, ap, report)
+		}
+		report.Runs = append(report.Runs, unavailable...)
+		report.Execution = "failed_or_incomplete"
+		if report.Success() {
+			report.Execution = "passed"
+		}
+		return report, nil
+	}
 	if role == SubagentRole {
 		return runSubagents(ctx, s, targets, options, ap, report), nil
 	}
 	if role == DeferredRole {
-		return runDeferred(ctx, s, targets, options, ap, report), nil
+		available, unavailable := splitUnavailable(s, targets)
+		if len(available.Implementations) > 0 {
+			report = runDeferred(ctx, s, available, options, ap, report)
+		}
+		report.Runs = append(report.Runs, unavailable...)
+		report.Execution = "failed_or_incomplete"
+		if report.Success() {
+			report.Execution = "passed"
+		}
+		return report, nil
 	}
 	if role == FederatedRole {
 		return runFederated(ctx, s, targets, options, ap, report), nil

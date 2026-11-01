@@ -110,21 +110,34 @@ func (s Suite) validate() error {
 	clauses := map[string]bool{}
 	clauseRoles := map[string]string{}
 	for _, c := range s.Catalog.Clauses {
-		if c.ID == "" || clauses[c.ID] || !sources[c.Source] || c.Section == "" || c.Anchor == "" || !slices.Contains([]string{"protocol", "adapter-contract", "out-of-slice"}, c.Scope) {
+		if c.ID == "" || clauses[c.ID] || !sources[c.Source] || c.Section == "" || c.Anchor == "" || !slices.Contains([]string{"protocol", "adapter-contract", "recommended", "out-of-slice"}, c.Scope) {
 			return fmt.Errorf("invalid/duplicate clause %q", c.ID)
 		}
 		clauses[c.ID] = true
-		if clauseRole(c) != ResourceRole && clauseRole(c) != AgentRole && clauseRole(c) != PersonServerRole && clauseRole(c) != FederatedRole && clauseRole(c) != DeferredRole && clauseRole(c) != SubagentRole {
+		if !KnownRole(clauseRole(c)) {
 			return fmt.Errorf("unknown clause role")
 		}
 		clauseRoles[c.ID] = clauseRole(c)
 	}
 	ids := map[string]bool{}
 	for _, scenario := range s.Scenarios {
-		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !slices.Contains([]string{ResourceRole, AgentRole, PersonServerRole, FederatedRole, DeferredRole, SubagentRole}, scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
+		if scenario.Version != 1 || scenario.ID == "" || ids[scenario.ID] || !KnownRole(scenario.Role) || scenario.Given != f.ID || len(scenario.Assertions) == 0 {
 			return fmt.Errorf("invalid scenario %q", scenario.ID)
 		}
 		ids[scenario.ID] = true
+		if _, extension := extensionRoles[scenario.Role]; extension {
+			req := scenario.Request
+			if req.Method != "" || req.Path != "" || req.Proof != "" || req.CreatedOffset != 0 || req.Tamper || len(req.Covered) > 0 || len(req.Headers) > 0 {
+				return fmt.Errorf("%s: extension roles carry inputs in input, not request", scenario.ID)
+			}
+			if err := validateExtensionScenario(f, scenario, clauseRoles); err != nil {
+				return err
+			}
+			continue
+		}
+		if len(scenario.Input) > 0 {
+			return fmt.Errorf("%s: input is for extension roles", scenario.ID)
+		}
 		if scenario.Role == PersonServerRole {
 			if f.Person == nil || scenario.Person == nil {
 				return fmt.Errorf("Person Server fixture/spec required")
@@ -187,7 +200,7 @@ func (s Suite) validate() error {
 		}
 		assertions := map[string]bool{}
 		for _, a := range scenario.Assertions {
-			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded", "deferred-pending", "deferred-proof", "deferred-forwarded", "deferred-stable", "subagent-jwt", "subagent-proof", "subagent-forwarded", "subagent-refused", "subagent-pending", "subagent-no-token", "subagent-cancelled"}, a.Kind) || !json.Valid(a.Equals) {
+			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-token-present", "status-class", "sfv-strings", "sfv-string-set", "sfv-integer", "sfv-trailer-integer", "sfv-trailer-if-present", "sfv-absent", "sfv-trailer-absent", "json-member", "json-path", "usage-delta", "header-equals", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded", "fed-budget", "fed-consumed", "fed-consumed-if-present", "deferred-pending", "deferred-proof", "deferred-forwarded", "deferred-stable", "subagent-jwt", "subagent-proof", "subagent-forwarded", "subagent-refused", "subagent-pending", "subagent-no-token", "subagent-cancelled"}, a.Kind) || !json.Valid(a.Equals) {
 				return fmt.Errorf("invalid assertion %s/%s (clause %q)", scenario.ID, a.ID, a.Clause)
 			}
 			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") || strings.HasPrefix(a.Kind, "ps-") && scenario.Role != PersonServerRole && scenario.Role != FederatedRole && scenario.Role != DeferredRole || strings.HasPrefix(a.Kind, "fed-") && scenario.Role != FederatedRole || strings.HasPrefix(a.Kind, "subagent-") && scenario.Role != SubagentRole {
@@ -209,7 +222,7 @@ func (s Suite) validate() error {
 					scenario.Federated.HarnessPS && slices.Contains([]string{"person", "handoff", "token"}, a.Stage) {
 					return fmt.Errorf("invalid federation assertion stage/kind")
 				}
-				if strings.HasPrefix(a.Kind, "fed-") || strings.HasPrefix(a.Kind, "ps-") {
+				if a.Kind != "fed-budget" && a.Kind != "fed-consumed" && a.Kind != "fed-consumed-if-present" && a.Kind != "usage-delta" && (strings.HasPrefix(a.Kind, "fed-") || strings.HasPrefix(a.Kind, "ps-")) {
 					var b any
 					json.Unmarshal(a.Equals, &b)
 					if _, ok := b.(bool); !ok {
@@ -257,6 +270,14 @@ func (s Suite) validate() error {
 					return fmt.Errorf("status equals must be an HTTP status")
 				}
 			}
+			if a.Kind == "status-class" && !slices.Contains([]string{"1xx", "2xx", "3xx", "4xx", "5xx"}, fmt.Sprint(value)) {
+				return fmt.Errorf("status-class equals must name a class such as 2xx")
+			}
+			if a.Kind == "sfv-token-present" {
+				if _, ok := value.(bool); !ok || a.Header == "" || a.Member == "" {
+					return fmt.Errorf("sfv-token-present needs header/member and a boolean")
+				}
+			}
 			if a.Kind == "sfv-token" || a.Kind == "problem-if-present" {
 				if _, ok := value.(string); !ok {
 					return fmt.Errorf("%s equals must be a string", a.Kind)
@@ -295,7 +316,7 @@ func ValidateTargets(targets Targets, s Suite) error {
 	}
 	ids := map[string]bool{}
 	for _, t := range targets.Implementations {
-		if t.ID == "" || ids[t.ID] || t.Revision == "" || (t.Unavailable == "" && (len(t.Command) == 0 || t.Command[0] == "")) || (t.Unavailable != "" && (targetRole(targets.Role) != SubagentRole || len(t.Command) != 0 || len(t.Claims) != 0)) {
+		if t.ID == "" || ids[t.ID] || t.Revision == "" || (t.Unavailable == "" && (len(t.Command) == 0 || t.Command[0] == "")) || (t.Unavailable != "" && (!unavailablePermitted(targets.Role) || len(t.Command) != 0 || len(t.Claims) != 0)) {
 			return fmt.Errorf("target requires unique id, revision and command")
 		}
 		ids[t.ID] = true
@@ -308,4 +329,10 @@ func ValidateTargets(targets Targets, s Suite) error {
 		}
 	}
 	return nil
+}
+
+func unavailablePermitted(role string) bool {
+	role = targetRole(role)
+	_, extension := extensionRoles[role]
+	return role == SubagentRole || role == DeferredRole || extension
 }

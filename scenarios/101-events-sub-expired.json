@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "id": "events-sub-expired",
+  "title": "Subscribe token with exp in the past",
+  "role_under_test": "events.subscription",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "expired"
+  },
+  "assertions": [
+    {
+      "stage": "registration",
+      "id": "status",
+      "clause": "events.sub.exp",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "stage": "registration",
+      "id": "error",
+      "clause": "events.sub.expired-code",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "expired_jwt"
+    },
+    {
+      "stage": "registration",
+      "id": "problem-type",
+      "clause": "events.sub.problem-type",
+      "kind": "problem-if-present",
+      "equals": "expired_jwt"
+    }
+  ]
+}

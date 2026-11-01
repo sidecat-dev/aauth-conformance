@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "vector.signature-key.08",
+  "title": "Community vector signature-key #8: sig=\"jwt\";jwt=\"x\" (the vector expects invalid_signature; the drafts leave the code open, so only the refusal is graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/signature-key.json",
+      "sha256": "ab8aea985d7d3a10595aa774192f76db6998f26abc2a1acc4cb2de0cbd3375e8",
+      "index": 7
+    },
+    "kind": "signature-key",
+    "case": {
+      "header": "sig=\"jwt\";jwt=\"x\"",
+      "error": "invalid_signature"
+    }
+  },
+  "assertions": [
+    {
+      "id": "refused",
+      "clause": "vector.sigkey.malformed-member",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": false
+    }
+  ]
+}

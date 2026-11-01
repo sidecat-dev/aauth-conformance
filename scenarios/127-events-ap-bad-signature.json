@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "id": "events-ap-bad-signature",
+  "title": "Event token not signed by the Resource key",
+  "role_under_test": "events.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 0,
+    "deliveries": [
+      {
+        "mutation": "bad-signature",
+        "body": true
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "delivery-1",
+      "id": "status",
+      "clause": "events.ap.validation",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "stage": "delivery-1",
+      "id": "error",
+      "clause": "events.ap.jwt-code",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_jwt"
+    },
+    {
+      "stage": "delivery-1",
+      "id": "problem-type",
+      "clause": "events.ap.problem-type",
+      "kind": "problem-if-present",
+      "equals": "invalid_jwt"
+    }
+  ]
+}

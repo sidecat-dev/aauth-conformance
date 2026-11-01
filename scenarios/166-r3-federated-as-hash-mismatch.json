@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "r3-federated-as-hash-mismatch",
+  "title": "Four-party: bytes served to the AS do not hash to r3_s256",
+  "role_under_test": "r3.federated-issuer",
+  "given": "agent-identity",
+  "input": {
+    "document": "altered-as",
+    "operations": [
+      "records.read",
+      "records.export"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "as-fetched",
+      "stage": "fetch-access",
+      "clause": "r3.as.fetch",
+      "kind": "r3-fetched",
+      "equals": true
+    },
+    {
+      "id": "no-auth-token",
+      "stage": "token",
+      "clause": "r3.as.hash-mismatch",
+      "kind": "r3-no-auth-token",
+      "equals": true
+    }
+  ]
+}

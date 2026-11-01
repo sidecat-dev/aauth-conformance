@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "r3-resource-unadvertised-vocabulary",
+  "title": "A vocabulary the Resource does not advertise gets no Resource token",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "four-party",
+    "vocabulary": "urn:aauth:vocabulary:openapi",
+    "operations": [
+      "readRecord"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "refused",
+      "stage": "authorize",
+      "clause": "r3.resource.operation-validation",
+      "kind": "status-class",
+      "equals": "4xx"
+    },
+    {
+      "id": "no-resource-token",
+      "stage": "authorize",
+      "clause": "r3.resource.operation-validation",
+      "kind": "r3-no-resource-token",
+      "equals": true
+    }
+  ]
+}

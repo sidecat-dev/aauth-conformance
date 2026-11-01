@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "events-agent-wrong-dwk",
+  "title": "Event token naming the Agent Provider document",
+  "role_under_test": "events.agent",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "wrong-dwk",
+    "body": true
+  },
+  "assertions": [
+    {
+      "stage": "event",
+      "id": "accepted",
+      "clause": "events.agent.verification",
+      "kind": "events-accepted",
+      "equals": false
+    }
+  ]
+}

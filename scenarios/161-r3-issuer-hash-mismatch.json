@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "id": "r3-issuer-hash-mismatch",
+  "title": "Served bytes that do not hash to r3_s256 are refused",
+  "role_under_test": "r3.issuer",
+  "given": "agent-identity",
+  "input": {
+    "document": "altered",
+    "operations": [
+      "records.read",
+      "records.export"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "fetched",
+      "stage": "fetch",
+      "clause": "r3.issuer.fetch",
+      "kind": "r3-fetched",
+      "equals": true
+    },
+    {
+      "id": "refused",
+      "stage": "token",
+      "clause": "r3.issuer.hash-mismatch",
+      "kind": "status-class",
+      "equals": "4xx"
+    },
+    {
+      "id": "no-auth-token",
+      "stage": "token",
+      "clause": "r3.issuer.hash-mismatch",
+      "kind": "r3-no-auth-token",
+      "equals": true
+    }
+  ]
+}

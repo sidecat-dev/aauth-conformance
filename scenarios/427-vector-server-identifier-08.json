@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "vector.server-identifier.08",
+  "title": "Community vector server-identifier #8: https://agent.example/",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/server-identifier.json",
+      "sha256": "0979d8f808c09b0fbbca978151b71601f0d7a78dd8304f65d4a35947bfa5ea69",
+      "index": 7
+    },
+    "kind": "server-identifier",
+    "case": {
+      "input": "https://agent.example/",
+      "valid": false
+    }
+  },
+  "assertions": [
+    {
+      "id": "valid",
+      "clause": "vector.server-identifier",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": false
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-jwt-no-exp",
+  "title": "Agent token without exp",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "Ed25519",
+    "mutation": "no-exp"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.jwt-exp",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigkey.v.jwt-exp",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_jwt"
+    }
+  ]
+}

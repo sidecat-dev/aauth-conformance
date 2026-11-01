@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "id": "r3-resource-per-call-mismatch",
+  "title": "A per-call token with other parameters is refused and nothing runs",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "four-party",
+    "operations": [
+      "records.read",
+      "records.delete"
+    ],
+    "grant": [
+      "records.read"
+    ],
+    "per_call": [
+      "records.delete"
+    ],
+    "calls": [
+      "records.delete"
+    ],
+    "per_call_flow": "mismatch"
+  },
+  "assertions": [
+    {
+      "id": "challenge",
+      "stage": "call-records.delete",
+      "clause": "r3.resource.per-call-requirement",
+      "kind": "r3-per-call-challenge",
+      "equals": true
+    },
+    {
+      "id": "refused",
+      "stage": "retry-records.delete",
+      "clause": "r3.resource.per-call-parameters",
+      "kind": "status-class",
+      "equals": "4xx"
+    },
+    {
+      "id": "not-executed",
+      "stage": "executions",
+      "clause": "r3.resource.per-call-parameters",
+      "kind": "r3-executions",
+      "equals": 0
+    }
+  ]
+}

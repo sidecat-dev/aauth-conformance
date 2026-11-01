@@ -1,8 +1,20 @@
 //! Test transport and fixed host configuration around unmodified Rust APIs.
 #[cfg(feature = "deferred")]
 mod deferred;
+#[cfg(feature = "events")]
+mod events;
 #[cfg(feature = "federation")]
 mod federation;
+#[cfg(feature = "mission")]
+mod mission;
+#[cfg(feature = "r3")]
+mod r3;
+#[cfg(feature = "sigkey")]
+mod sigkey;
+#[cfg(feature = "supervision")]
+mod supervision;
+#[cfg(feature = "vectors")]
+mod vectors;
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAgentToken,
 };
@@ -74,6 +86,10 @@ struct Bootstrap {
     resource_kid: String,
     #[serde(default)]
     resource_jwk: serde_json::Value,
+    /// An extension role's own launcher configuration.
+    #[serde(default)]
+    #[allow(dead_code)]
+    extension: serde_json::Value,
 }
 
 // The harness's bounded fixture AP explicitly sends Content-Length and closes.
@@ -153,6 +169,51 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if config.role == "agent.signing" {
         return run_agent(config);
+    }
+    if config.role.starts_with("events.") {
+        #[cfg(feature = "events")]
+        return events::run(config);
+        #[cfg(not(feature = "events"))]
+        return Err(format!("rebuild this launcher for {}", config.role).into());
+    }
+    #[cfg(feature = "r3")]
+    if config.role.starts_with("r3.") {
+        return r3::run(config);
+    }
+    if config.role == "mission.person-server" || config.role == "mission.resource" {
+        #[cfg(feature = "mission")]
+        return mission::run(config);
+        #[cfg(not(feature = "mission"))]
+        return Err(format!("rebuild this launcher for {}", config.role).into());
+    }
+    if config.role == "supervision.server" || config.role == "supervision.person-server" {
+        #[cfg(feature = "supervision")]
+        return if config.role == "supervision.server" {
+            supervision::run_server(config)
+        } else {
+            supervision::run_person_server(config)
+        };
+        #[cfg(not(feature = "supervision"))]
+        return Err("rebuild this launcher for the supervision roles".into());
+    }
+    if config.role == "sigkey.verifier" || config.role == "sigkey.signer" {
+        #[cfg(feature = "sigkey")]
+        return if config.role == "sigkey.verifier" {
+            sigkey::run_verifier(config)
+        } else {
+            sigkey::run_signer(config)
+        };
+        #[cfg(not(feature = "sigkey"))]
+        return Err("rebuild this launcher for the sigkey roles".into());
+    }
+    if config.role == "vectors.library" {
+        #[cfg(feature = "vectors")]
+        return vectors::run(config);
+        #[cfg(not(feature = "vectors"))]
+        return Err("rebuild this launcher for vectors.library".into());
+    }
+    if !config.role.is_empty() && config.role != "resource.agent-identity" {
+        return Err(format!("rebuild this launcher for {}", config.role).into());
     }
     let keys = AgentProviderKeys::from_documents(
         &config.issuer,

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "id": "mission-malformed-mission",
+  "title": "Missions: Person token for a malformed mission identifier",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "malformed-mission"
+  },
+  "assertions": [
+    {
+      "id": "malformed-status-0",
+      "stage": "malformed",
+      "kind": "status",
+      "equals": 400,
+      "clause": "mission.person-token-verify"
+    },
+    {
+      "id": "malformed-json-member-1",
+      "stage": "malformed",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "clause": "mission.person-token-verify",
+      "member": "error"
+    },
+    {
+      "id": "malformed-mission-no-token-2",
+      "stage": "malformed",
+      "kind": "mission-no-token",
+      "equals": true,
+      "clause": "mission.person-token-verify"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-missing-member-jwt",
+  "title": "jwt member under another label",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "Ed25519",
+    "mutation": "missing-member"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.missing-member-jwt",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigkey.v.missing-member-jwt",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_signature"
+    }
+  ]
+}

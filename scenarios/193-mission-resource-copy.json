@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "mission-resource-copy",
+  "title": "Missions: The Resource copies mission_s256 into its challenge",
+  "role_under_test": "mission.resource",
+  "given": "agent-identity",
+  "input": {
+    "flow": "resource-copy"
+  },
+  "assertions": [
+    {
+      "id": "challenge-mission-resource-copy-0",
+      "stage": "challenge",
+      "kind": "mission-resource-copy",
+      "equals": true,
+      "clause": "mission.resource-token-copy"
+    }
+  ]
+}

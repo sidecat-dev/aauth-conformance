@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "mission-action-missing",
+  "title": "Missions: Mission request without action",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "action-missing"
+  },
+  "assertions": [
+    {
+      "id": "action-status-0",
+      "stage": "action",
+      "kind": "status",
+      "equals": 400,
+      "clause": "mission.action-required"
+    },
+    {
+      "id": "action-json-member-1",
+      "stage": "action",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "clause": "mission.action-required",
+      "member": "error"
+    }
+  ]
+}

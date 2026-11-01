@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "sigkey-ap-pq-only",
+  "title": "Agent token signed by the AP's only key, ML-DSA-44",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "Ed25519",
+    "mutation": "none",
+    "jwks": "pq-only"
+  },
+  "assertions": [
+    {
+      "id": "outcome",
+      "clause": "sigkey.v.ap-pq-only",
+      "kind": "sigkey-pq",
+      "equals": ""
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "id": "vector.signature-key.04",
+  "title": "Community vector signature-key #4: sig=jwks_uri;id=\"https://ps.example\";dwk=\"aauth-person.json\";kid=\"k...",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/signature-key.json",
+      "sha256": "ab8aea985d7d3a10595aa774192f76db6998f26abc2a1acc4cb2de0cbd3375e8",
+      "index": 3
+    },
+    "kind": "signature-key",
+    "case": {
+      "header": "sig=jwks_uri;id=\"https://ps.example\";dwk=\"aauth-person.json\";kid=\"key-1\"",
+      "scheme": "jwks_uri",
+      "params": {
+        "id": "https://ps.example",
+        "dwk": "aauth-person.json",
+        "kid": "key-1"
+      },
+      "error": "unsupported_scheme"
+    }
+  },
+  "assertions": [
+    {
+      "id": "code",
+      "clause": "vector.sigkey.unsupported-scheme",
+      "kind": "vector-result",
+      "member": "code",
+      "equals": "unsupported_scheme"
+    }
+  ]
+}

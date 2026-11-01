@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-missing-member-hwk",
+  "title": "hwk member under another label",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "hwk",
+    "alg": "Ed25519",
+    "mutation": "missing-member"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.missing-member-hwk",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigkey.v.missing-member-hwk",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_signature"
+    }
+  ]
+}

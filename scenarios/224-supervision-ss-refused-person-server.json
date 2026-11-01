@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "id": "supervision.ss-refused-person-server",
+  "title": "A Person Server the SS does not accept is refused at connect and after",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-refused",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "signer": "other-ps"
+      },
+      {
+        "stage": "decide",
+        "endpoint": "decision",
+        "signer": "other-ps",
+        "body": {
+          "sdi": "d-refused-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "act": "permission",
+          "action": "fixture.allow",
+          "description": "Fixture action"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "connect-status",
+      "clause": "supervision.ss.connected-only",
+      "kind": "status",
+      "equals": 403,
+      "stage": "connect"
+    },
+    {
+      "id": "connect-error",
+      "clause": "supervision.ss.connected-only",
+      "kind": "json-member",
+      "equals": "unsupported_iss",
+      "stage": "connect",
+      "member": "error"
+    },
+    {
+      "id": "connect-no-decision",
+      "clause": "supervision.ss.connected-only",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "connect"
+    },
+    {
+      "id": "decide-refused",
+      "clause": "supervision.ss.connected-only",
+      "kind": "status-class",
+      "equals": "4xx",
+      "stage": "decide"
+    },
+    {
+      "id": "decide-no-decision",
+      "clause": "supervision.ss.connected-only",
+      "kind": "ss-no-decision",
+      "equals": true,
+      "stage": "decide"
+    }
+  ]
+}

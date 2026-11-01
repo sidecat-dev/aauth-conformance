@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "events-sub-valid",
+  "title": "Registration with a valid subscribe token",
+  "role_under_test": "events.subscription",
+  "given": "agent-identity",
+  "input": {
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "stage": "registration",
+      "id": "registered",
+      "clause": "events.sub.registered",
+      "kind": "status-class",
+      "equals": "2xx"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "sigkey-sign-hwk-ed25519",
+  "title": "Signer presents hwk with Ed25519",
+  "role_under_test": "sigkey.signer",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "hwk",
+    "alg": "Ed25519",
+    "method": "GET"
+  },
+  "assertions": [
+    {
+      "id": "signed",
+      "clause": "sigkey.s.hwk-ed25519",
+      "kind": "sigkey-signed",
+      "equals": true
+    },
+    {
+      "id": "member",
+      "clause": "sigkey.s.hwk-ed25519",
+      "kind": "sigkey-member",
+      "equals": true
+    },
+    {
+      "id": "created",
+      "clause": "sigkey.s.created",
+      "kind": "sigkey-created",
+      "equals": 1800000000
+    }
+  ]
+}

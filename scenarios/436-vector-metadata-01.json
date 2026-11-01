@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "id": "vector.metadata.01",
+  "title": "Community vector metadata #1: aauth-agent.json (the vector's round trip through Go types is not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/metadata.json",
+      "sha256": "edae9c211152116749351724efd54a83f4e21b82108b2781f8940366414f6c83",
+      "index": 0
+    },
+    "kind": "metadata",
+    "case": {
+      "document": "aauth-agent.json",
+      "json": {
+        "issuer": "https://agent.example",
+        "jwks_uri": "https://agent.example/.well-known/jwks.json",
+        "name": "Example AI Assistant",
+        "description": "**Example AI Assistant** drafts and sends email on your behalf.",
+        "logo_uri": "https://agent.example/logo.png",
+        "logo_dark_uri": "https://agent.example/logo-dark.png",
+        "documentation_uri": "https://agent.example/docs",
+        "callback_endpoint": "https://agent.example/callback",
+        "event_endpoint": "https://agent.example/events",
+        "localhost_callback_allowed": true,
+        "tos_uri": "https://agent.example/tos",
+        "policy_uri": "https://agent.example/privacy"
+      }
+    }
+  },
+  "assertions": [
+    {
+      "id": "accepted",
+      "clause": "vector.metadata",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

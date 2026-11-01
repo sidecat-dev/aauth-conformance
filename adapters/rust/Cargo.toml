@@ -9,13 +9,20 @@ publish = false
 federation = []
 deferred = ["federation"]
 subagent = ["deferred"]
+events = []
+r3 = []
+mission = ["federation"]
+supervision = []
+sigkey = []
+vectors = []
 
 [dependencies]
-aauth-rust-jose = "=0.1.0-alpha.1"
-aauth-rust-agent = "=0.1.0-alpha.1"
-aauth-rust-core = "=0.1.0-alpha.1"
-aauth-rust-resource = "=0.1.0-alpha.1"
-aauth-rust-person-server = "=0.1.0-alpha.1"
+aauth-rust-jose = "=0.1.0-alpha.2"
+aauth-rust-budgets = "=0.1.0-alpha.2"
+aauth-rust-agent = "=0.1.0-alpha.2"
+aauth-rust-core = "=0.1.0-alpha.2"
+aauth-rust-resource = "=0.1.0-alpha.2"
+aauth-rust-person-server = "=0.1.0-alpha.2"
 http = "1"
 httparse = "1"
 serde = { version = "1", features = ["derive"] }

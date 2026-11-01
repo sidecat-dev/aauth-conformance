@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "r3-resource-unknown-operation",
+  "title": "An operation outside the authoritative definition gets no Resource token",
+  "role_under_test": "r3.resource",
+  "given": "agent-identity",
+  "input": {
+    "topology": "four-party",
+    "operations": [
+      "records.read",
+      "records.purge"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "refused",
+      "stage": "authorize",
+      "clause": "r3.resource.operation-validation",
+      "kind": "status-class",
+      "equals": "4xx"
+    },
+    {
+      "id": "no-resource-token",
+      "stage": "authorize",
+      "clause": "r3.resource.operation-validation",
+      "kind": "r3-no-resource-token",
+      "equals": true
+    }
+  ]
+}

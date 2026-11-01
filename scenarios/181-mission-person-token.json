@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "id": "mission-person-token",
+  "title": "Missions: Mission-bound person token",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "person-token"
+  },
+  "assertions": [
+    {
+      "id": "person-mission-person-token-0",
+      "stage": "person",
+      "kind": "mission-person-token",
+      "equals": true,
+      "clause": "mission.person-token-claim"
+    }
+  ]
+}

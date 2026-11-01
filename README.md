@@ -1,7 +1,33 @@
 # AAuth conformance scenarios
 
-Run the same wire scenarios against different AAuth implementations. Six roles
-are available:
+Run the same wire scenarios against different AAuth implementations. The suite
+has 311 scenarios and 1,375 assertions in 20 roles:
+
+| Role | Scenario files | Scenarios | Assertions | Draft |
+| --- | --- | ---: | ---: | --- |
+| `resource.agent-identity` | 01-06 | 6 | 17 | protocol, Signature-Key |
+| `agent.signing` | 07-09 | 3 | 16 | protocol |
+| `person-server.direct` | 10-21 | 12 | 109 | protocol |
+| `authorization.federated` | 22-49, 73-78 | 34 | 398 | protocol, Budgets |
+| `authorization.deferred` | 50-54 | 5 | 88 | protocol |
+| `authorization.subagent` | 55-72 | 18 | 191 | protocol |
+| `events.subscription` | 100-110 | 11 | 27 | Events |
+| `events.agent-provider` | 111-127 | 17 | 54 | Events |
+| `events.agent` | 128-138 | 11 | 11 | Events |
+| `events.delivery` | 139 | 1 | 15 | Events |
+| `r3.resource` | 140-149 | 10 | 42 | R3 |
+| `r3.issuer` | 160-163 | 4 | 10 | R3 |
+| `r3.federated-issuer` | 165-167 | 3 | 7 | R3 |
+| `mission.person-server` | 180-192 | 13 | 55 | protocol (Mission) |
+| `mission.resource` | 193 | 1 | 1 | protocol (Mission) |
+| `supervision.server` | 220-233 | 14 | 73 | Supervision |
+| `supervision.person-server` | 240-251 | 12 | 64 | Supervision |
+| `sigkey.verifier` | 300-329 | 30 | 56 | Signature-Key, protocol |
+| `sigkey.signer` | 330-341 | 12 | 36 | Signature-Key, protocol |
+| `vectors.library` | 400-493 | 94 | 105 | community test vectors |
+
+Each role is a separate run: `build-adapters -role ROLE` builds the launchers
+and the runner grades that role's scenarios. The six original roles are:
 
 - **Resource in Agent-identity mode:** the harness plays the Agent and Agent
   Provider (AP), creating Ed25519 tokens/proofs and serving fixture metadata/JWKS.
@@ -184,11 +210,24 @@ go run ./cmd/build-adapters -role authorization.federated -go-source /path/to/aa
 go run ./cmd/aauth-conformance -targets build/federated/targets.json -report build/federated-report.json -markdown build/federated-report.md
 ```
 
-This slice has **28 scenarios and 336 assertions per implementation**. The
+This slice has **34 scenarios and 398 assertions per implementation**. Scenarios
+01–49 are the original four-party cases (28 scenarios, 336 assertions). Scenario
+73 is the native Budget grant: the Resource offers 5000000, the Person Server
+narrows it to 2000000, and the protected call costs 1000. Scenarios 74–78 use
+the harness Person Server. Scenario 74 omits the Budget parameter and requires
+the Access Server to issue no budget claim. Scenario 75 requires a same-scale
+consumption record and checks a different-unit record only when the Resource
+sends one. Scenario 76 reserves a hold and settles part of it; a cost-only
+trailer is graded when present. Scenario 77 charges 1000 and grades the usage
+query as a delta from a baseline read. Scenario 78 spends 1500000 on each of
+two auth tokens, then refuses a further 1000000 on the first token without
+lowering its remaining 500000. The fixture amounts, paths, and assertion kinds
+are in `FORMAT.md`. The
 [four-party report](reports/four-party-authorization.md) records Go `831d55f` and
-Rust `843be82`, using the same expected answers. Select those revisions or
+Rust `843be82` for the original 28 scenarios. Select those revisions or
 compatible successors; older Rust checkouts without native AS/federation APIs
-can still run the other roles.
+can still run the other roles. A checkout without the Budget authorization
+endpoint fails scenarios 73–78.
 
 Ten independent-PS cases play Agent, AP and PS entirely in the harness, testing
 the native Resource and AS with the same fixture credentials and wire recipe.
@@ -346,3 +385,141 @@ revisions that provide native sub-agent PS, AS and binding-revocation APIs;
 an older checkout fails to compile its launcher rather than passing. See
 [the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
 for the observed boundaries and named gaps.
+
+## Events
+
+Four roles grade draft-hardt-aauth-events: the Resource registering subscribe
+tokens (public and ticket-protected), the Resource delivering events, the Agent
+Provider's event endpoint and metadata, and the Agent's event-token check.
+
+```sh
+go run ./cmd/build-adapters -role events.agent-provider -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/events-ap
+go run ./cmd/aauth-conformance -targets build/events-ap/targets.json -report build/events-ap-report.json -markdown build/events-ap-report.md
+```
+
+Use `events.subscription`, `events.delivery` or `events.agent` the same way.
+The slice has 40 scenarios. Clauses an implementation's API leaves to host stores are not
+claimed for it (see [ADAPTERS.md](ADAPTERS.md#events-roles)); they report as
+not claimed, never as passes. AsyncAPI documents, egress admission and the
+AP-to-Agent transport are outside these roles.
+
+## R3
+
+```sh
+go run ./cmd/build-adapters -role r3.resource -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/r3-resource
+go run ./cmd/aauth-conformance -targets build/r3-resource/targets.json -report build/r3-resource.json -markdown build/r3-resource.md
+```
+
+Use `-role r3.issuer` for a three-party Person Server and
+`-role r3.federated-issuer` for a four-party PS and AS. `r3.resource` puts a native
+Resource under test while the harness plays Agent, PS and AS: the Resource
+token's R3 claims, the signed-fetch restriction on R3 documents (unsigned,
+agent-signed, tampered and non-entitled signers refused; the AS and PS
+served the exact bytes that hash to `r3_s256`), operation validation, grant
+enforcement, and four-party per-call proposals: the challenge, the proposal,
+completion with the approved parameters, refusal with others, and one
+execution. `r3.issuer` puts a native three-party PS under test while the
+harness plays Agent and Resource: its own `jwks_uri` fetch proof, refusal on a
+hash mismatch or missing document, and the R3 claims it issues.
+`r3.federated-issuer` does the same for an AS, with the PS's own fetch and
+hash check graded apart. FORMAT.md and ADAPTERS.md give the inputs, stages and
+launcher contract. The PS's delivery checks on an AS's R3 token, held (`202`)
+per-call delivery and release gating are not covered yet.
+
+## Missions
+
+Fourteen scenarios (180-193) grade the Mission section of the protocol draft
+against a native Person Server (`mission.person-server`) and the Resource of
+the four-party bundle (`mission.resource`): approval and the mission
+identifier, the mission endpoint's errors, owner-scoped refusals, completion
+and expiry as terminations at every Person Server endpoint, and
+`mission_s256` in person and Resource tokens. Each assertion names its pinned
+line.
+
+```sh
+go run ./cmd/build-adapters -role mission.person-server -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/mission
+go run ./cmd/aauth-conformance -targets build/mission/targets.json -report build/mission-report.json -markdown build/mission-report.md
+```
+
+Host controls carry the person's decisions and the clock; see
+[the adapter contract](ADAPTERS.md#mission-roles). Not graded: interaction
+endpoint mission errors, clarification during review, the mission control
+plane (a companion draft), timing equivalence, and four-party mission
+federation at the Access Server.
+
+## Supervision
+
+`supervision.server` grades a native supervision server with the harness as
+its Person Server; `supervision.person-server` grades a native Person Server
+that consults the harness as its supervision server. Both cite
+draft-hardt-aauth-supervision at the pin and use the same files for Go and
+Rust:
+
+```sh
+go run ./cmd/build-adapters -role supervision.server -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/supervision-server
+go run ./cmd/aauth-conformance -targets build/supervision-server/targets.json -report build/supervision-server-report.json -markdown build/supervision-server-report.md
+```
+
+Use `-role supervision.person-server` the same way. A few clauses state
+normative behavior the draft gives without a BCP 14 keyword (what a Person
+Server does with allow, deny and ask, when the supervisor is unavailable, and
+how it polls a deferred decision); their section text says so. Host
+rate-limiting is a host choice: an implementation that exports no
+rate_limited answer is recorded `not_exercised` with the reason, not passed.
+
+## Community aauth-go module
+
+The core roles also run against the community Go module
+`github.com/aauth-dev/aauth-go`:
+
+```sh
+go run ./cmd/build-adapters -role resource.agent-identity -community-source /path/to/community-aauth-go -out build/community
+go run ./cmd/aauth-conformance -targets build/community/targets.json -report build/community-report.json -markdown build/community-report.md
+```
+
+The same scenario files and expected answers apply. What the module does not
+implement, or what its API cannot be driven to under the fixture's fixed
+clock, is declared unavailable or left unclaimed for that target; see
+[the adapter contract](ADAPTERS.md#community-aauth-go-launcher).
+
+## Signature-Key schemes and algorithms
+
+`sigkey.verifier` grades a native AAuth Resource that also accepts the
+Signature-Key schemes AAuth does not use (protocol "Signature-Key Scheme
+Rejection"); `sigkey.signer` grades the native request signer. Together they
+cover the checks the community conformance scoping issue
+([aauth-dev/conformance#1](https://github.com/aauth-dev/conformance/issues/1))
+plans: correctly signed requests under every scheme and algorithm a library
+offers, live `/.well-known/<dwk>` discovery naming `jwks_uri`, a JWKS that
+mixes Ed25519 with ML-DSA-44 (`AKP`), a JWKS holding only ML-DSA-44, and the
+refusals of an uncovered `signature-key`, `hwk` with `kid`, polymorphic
+`EdDSA`, `alg` against `kty` or `crv`, a symmetric key, an unknown scheme,
+a JWT without `exp` and a missing member. CORS is not normative and is not
+graded.
+
+```sh
+go run ./cmd/build-adapters -role sigkey.verifier -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -community-source /path/to/community-aauth-go -out build/sigkey-verifier
+go run ./cmd/aauth-conformance -targets build/sigkey-verifier/targets.json -report build/sigkey-verifier-report.json -markdown build/sigkey-verifier-report.md
+```
+
+Use `-role sigkey.signer` the same way. ES256 is a SHOULD (protocol line
+2166): its cases sit under `recommended` clauses, graded only with
+`build-adapters -claim-recommended`. A scheme or algorithm a library does not
+offer is left unclaimed for it and its scenario is not run; ML-DSA-44 fixtures
+need a Go 1.27 toolchain for the harness.
+
+## Community test vectors
+
+The 94 test vectors of the community aauth-go v0.3.0 (`vectors/community/`,
+MIT, see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)) run as the
+`vectors.library` role, one scenario per case, against each library's own
+parsing and verification functions:
+
+```sh
+go run ./cmd/build-adapters -role vectors.library -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -community-source /path/to/community-aauth-go -out build/vectors
+go run ./cmd/aauth-conformance -targets build/vectors/targets.json -report build/vectors-report.json -markdown build/vectors-report.md
+```
+
+The scenarios grade what the pinned drafts fix, which is sometimes less than
+the vector says; [FORMAT.md](FORMAT.md#community-vectors-profile) lists each
+difference. Add `-claim-recommended` to grade the ES256 (SHOULD) cases too.

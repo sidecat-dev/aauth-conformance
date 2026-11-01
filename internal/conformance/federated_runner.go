@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -77,12 +78,30 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		c.Exchanges = append(c.Exchanges, entry)
 		return response, err
 	}
-	send := func(stage, method, url, token string, body []byte) (Response, error) {
+	sendHeaders := func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error) {
 		request, base, err := signedFixtureRequest(f, f.AgentSeed, method, url, `sig=jwt;jwt="`+token+`"`, body)
 		if err != nil {
 			return Response{}, err
 		}
+		for name, value := range headers {
+			request.Header.Set(name, value)
+		}
 		return exchange(stage, request, base)
+	}
+	send := func(stage, method, url, token string, body []byte) (Response, error) {
+		return sendHeaders(stage, method, url, token, body, nil)
+	}
+	resourceURL := f.Origin + f.Path
+	protectedURL := resourceURL
+	switch s.Federated.Budget {
+	case "grant", "consume", "cap":
+		protectedURL += "-budget-grant"
+	case "omit":
+		protectedURL += "-budget-omit"
+	case "header":
+		protectedURL += "-budget-reserve"
+	case "usage":
+		protectedURL += "-budget-usage"
 	}
 	execute := func() error {
 		if startError != nil {
@@ -93,7 +112,7 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		if err != nil {
 			return err
 		}
-		if _, err := send("initial", "GET", f.Origin+f.Path, agentToken, nil); err != nil {
+		if _, err := send("initial", "GET", resourceURL, agentToken, nil); err != nil {
 			return err
 		}
 		var person string
@@ -125,11 +144,25 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		if !po.Valid {
 			return fmt.Errorf("cannot advance from invalid Person token: %s", po.Error)
 		}
-		challengeResponse, err := send("challenge", "GET", f.Origin+f.Path, person, nil)
-		if err != nil {
-			return err
+		var challengeResponse Response
+		var resource string
+		if s.Federated.Budget != "" {
+			body, bodyErr := budgetAuthorizationBody(s.Federated.Budget)
+			if bodyErr != nil {
+				return bodyErr
+			}
+			challengeResponse, err = send("challenge", "POST", f.Origin+"/authorize", person, body)
+			if err != nil {
+				return err
+			}
+			resource, err = responseToken(challengeResponse, "resource_token")
+		} else {
+			challengeResponse, err = send("challenge", "GET", resourceURL, person, nil)
+			if err != nil {
+				return err
+			}
+			resource, err = challengedResourceToken(challengeResponse)
 		}
-		resource, err := challengedResourceToken(challengeResponse)
 		if err != nil {
 			return err
 		}
@@ -148,26 +181,8 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 			}
 		}
 		if s.Federated.HarnessPS {
-			body, _ := json.Marshal(map[string]string{
-				"resource_token": resource, "presented_token": person, "agent_token": agentToken,
-			})
-			credential := fmt.Sprintf(`sig=jwks_uri;id=%q;dwk="aauth-person.json";kid=%q`, f.Person.Issuer, f.Person.Kid)
-			request, base, err := signedFixtureRequest(f, f.Person.Seed, "POST", f.Access.Issuer+"/token", credential, body)
-			if err != nil {
-				return err
-			}
-			if err := mutateASRequest(f, s.Federated.Mutation, request); err != nil {
-				return err
-			}
-			if s.Federated.Mutation != "none" && s.Federated.Mutation != "short-agent" {
-				base = "" // The original base does not describe the deliberately changed input.
-			}
-			response, err := exchange("access", request, base)
+			response, compact, err := postHarnessToken(f, exchange, "access", resource, person, agentToken, budgetAllocation(s.Federated.Budget), s.Federated.Mutation)
 			if err != nil || response.Status != 200 {
-				return err
-			}
-			compact, err := responseToken(response, "auth_token")
-			if err != nil {
 				return err
 			}
 			o := checkResponseExpiry(response, observeFederatedAuth(f, compact, po.Claims, agentExp))
@@ -176,9 +191,9 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				if !o.Valid {
 					return fmt.Errorf("cannot use invalid AS Auth token: %s", o.Error)
 				}
-				_, err = send("protected", "GET", f.Origin+f.Path, compact, nil)
+				return presentBudgetFollowUp(s.Federated.Budget, true, f, relay, physical, s.Federated.Mutation, exchange, sendHeaders, observations, protectedURL, compact, person, agentToken, agentExp, po.Claims)
 			}
-			return err
+			return nil
 		}
 		relay.reset(physical, s.Federated.Mutation, map[string]string{
 			"resource_token": resource, "presented_token": person, "agent_token": agentToken,
@@ -217,8 +232,7 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				if !o.Valid {
 					return fmt.Errorf("cannot use invalid delivered Auth token: %s", o.Error)
 				}
-				_, err = send("protected", "GET", f.Origin+f.Path, compact, nil)
-				return err
+				return presentBudgetFollowUp(s.Federated.Budget, false, f, relay, physical, s.Federated.Mutation, exchange, sendHeaders, observations, protectedURL, compact, person, agentToken, agentExp, observations["person"].Claims)
 			}
 		}
 		return nil
@@ -250,6 +264,31 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 				result.State = "pass"
 			}
 		case exists:
+			if assertion.Kind == "fed-budget" {
+				result = checkFederatedBudget(assertion, observations[assertion.Stage])
+				break
+			}
+			if assertion.Kind == "fed-consumed" {
+				result = checkFederatedConsumed(assertion, observations[assertion.Stage], presentedGrant(observations))
+				break
+			}
+			if assertion.Kind == "fed-consumed-if-present" {
+				observation, ok := observations[assertion.Stage]
+				if !ok {
+					result.State = "error"
+					result.Detail = c.Error
+					if result.Detail == "" {
+						result.Detail = "step-up resource token was not observed"
+					}
+					break
+				}
+				result = checkFederatedConsumedIfPresent(assertion, observation, presentedGrant(observations))
+				break
+			}
+			if assertion.Kind == "usage-delta" {
+				result = checkUsageDelta(assertion, responses["usage-baseline"], responses["usage"])
+				break
+			}
 			if assertion.Kind == "fed-challenge" {
 				assertion.Kind = "ps-jwt"
 			}
@@ -263,6 +302,431 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		c.Results = append(c.Results, result)
 	}
 	return c
+}
+
+func checkFederatedBudget(a Assertion, observation PersonObservation) Result {
+	result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "fail"}
+	var want any
+	if err := json.Unmarshal(a.Equals, &want); err != nil {
+		result.Detail = err.Error()
+		return result
+	}
+	raw, present := observation.Claims["budget"]
+	if want == nil {
+		result.Actual = raw
+		if !present {
+			result.Actual = nil
+			result.State = "pass"
+		} else {
+			result.Detail = "budget claim is present"
+		}
+		return result
+	}
+	if !present {
+		result.Detail = "missing budget claim"
+		return result
+	}
+	result.Actual = raw
+	if reflect.DeepEqual(raw, want) {
+		result.State = "pass"
+	}
+	return result
+}
+
+func presentBudgetFollowUp(
+	mode string,
+	harness bool,
+	f Fixture,
+	relay *federationRelay,
+	physical, mutation string,
+	exchange func(stage string, request *http.Request, base string) (Response, error),
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	observations map[string]PersonObservation,
+	protectedURL, compact, person, agentToken string,
+	agentExp int64,
+	personClaims map[string]any,
+) error {
+	switch mode {
+	case "consume":
+		return presentBudgetConsumption(f, send, observations, protectedURL, compact)
+	case "header":
+		return presentBudgetHeader(send, protectedURL, compact)
+	case "usage":
+		return presentBudgetUsage(f, exchange, send, protectedURL, compact)
+	case "cap":
+		return presentBudgetCap(harness, f, relay, physical, mutation, exchange, send, protectedURL, compact, person, agentToken, agentExp, personClaims, observations)
+	default:
+		_, err := send("protected", "GET", protectedURL, compact, nil, nil)
+		return err
+	}
+}
+
+func presentBudgetCap(
+	harness bool,
+	f Fixture,
+	relay *federationRelay,
+	physical, mutation string,
+	exchange func(stage string, request *http.Request, base string) (Response, error),
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	protectedURL, compact, person, agentToken string,
+	agentExp int64,
+	personClaims map[string]any,
+	observations map[string]PersonObservation,
+) error {
+	if _, err := send("protected", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost": "1500000",
+	}); err != nil {
+		return err
+	}
+	body, err := budgetAuthorizationBody("grant")
+	if err != nil {
+		return err
+	}
+	secondChallenge, err := send("second-challenge", "POST", f.Origin+"/authorize", person, body, nil)
+	if err != nil {
+		return err
+	}
+	resource, err := responseToken(secondChallenge, "resource_token")
+	if err != nil {
+		return err
+	}
+	var secondToken Response
+	var secondCompact string
+	if harness {
+		// The fixture Person Server states a fresh per-token allocation. The
+		// native PS ceiling is not on this path, so two grants do not share it.
+		secondToken, secondCompact, err = postHarnessToken(f, exchange, "second-token", resource, person, agentToken, true, "none")
+		if err != nil || secondToken.Status != 200 {
+			return err
+		}
+	} else {
+		relay.reset(physical, mutation, map[string]string{
+			"resource_token": resource, "presented_token": person, "agent_token": agentToken,
+		})
+		tokenBody, _ := json.Marshal(map[string]string{"resource_token": resource, "presented_token": person})
+		secondToken, err = send("second-token", "POST", f.Person.Issuer+"/token", agentToken, tokenBody, nil)
+		if err != nil {
+			return err
+		}
+		secondCompact, err = responseToken(secondToken, "auth_token")
+		if err != nil {
+			return err
+		}
+	}
+	observations["second-token"] = checkResponseExpiry(secondToken, observeFederatedAuth(f, secondCompact, personClaims, agentExp))
+	if _, err := send("second-protected", "GET", protectedURL, secondCompact, nil, map[string]string{
+		"X-Fixture-Cost": "1500000",
+	}); err != nil {
+		return err
+	}
+	_, err = send("refusal", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost": "1000000",
+	})
+	return err
+}
+
+func presentBudgetUsage(
+	f Fixture,
+	exchange func(stage string, request *http.Request, base string) (Response, error),
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	protectedURL, compact string,
+) error {
+	credential := fmt.Sprintf(`sig=jwks_uri;id=%q;dwk="aauth-access.json";kid=%q`, f.Access.Issuer, f.Access.Kid)
+	post := func(stage, body string) error {
+		request, base, err := signedFixtureRequest(f, f.Access.Seed, "POST", f.Origin+"/usage", credential, []byte(body))
+		if err != nil {
+			return err
+		}
+		_, err = exchange(stage, request, base)
+		return err
+	}
+	known := fmt.Sprintf(`{"sub":%q,"ps":%q}`, f.Person.Subject, f.Person.Issuer)
+	// The ledger key is (ps, sub, aud). all_time is everything metered under
+	// that key, including earlier scenarios in this process. Grade the charge
+	// as a delta from a query taken first.
+	if err := post("usage-baseline", known); err != nil {
+		return err
+	}
+	if _, err := send("protected", "GET", protectedURL, compact, nil, nil); err != nil {
+		return err
+	}
+	if err := post("usage", known); err != nil {
+		return err
+	}
+	if err := post("usage-unknown", fmt.Sprintf(`{"sub":"unknown-person","ps":%q}`, f.Person.Issuer)); err != nil {
+		return err
+	}
+	if err := post("usage-no-ps", fmt.Sprintf(`{"sub":%q}`, f.Person.Subject)); err != nil {
+		return err
+	}
+	if err := post("usage-two-keys", fmt.Sprintf(`{"sub":%q,"tenant":"fixture","ps":%q}`, f.Person.Subject, f.Person.Issuer)); err != nil {
+		return err
+	}
+	return post("usage-jkts", `{"jkts":["AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"]}`)
+}
+
+func presentBudgetHeader(
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	protectedURL, compact string,
+) error {
+	if _, err := send("reserved", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Hold":   "800000",
+		"X-Fixture-Settle": "400000",
+	}); err != nil {
+		return err
+	}
+	// The next hold is 100000 against the grant after the 400000 commit.
+	// Header remaining is net of that new hold: 2000000 - 400000 - 100000.
+	_, err := send("following", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Hold":   "100000",
+		"X-Fixture-Settle": "100000",
+	})
+	return err
+}
+
+func presentBudgetConsumption(
+	f Fixture,
+	send func(stage, method, url, token string, body []byte, headers map[string]string) (Response, error),
+	observations map[string]PersonObservation,
+	protectedURL, compact string,
+) error {
+	if _, err := send("protected", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost": "1500000",
+	}); err != nil {
+		return err
+	}
+	same, err := send("step-up", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost": "1000000",
+	})
+	if err != nil {
+		return err
+	}
+	grant := presentedGrant(observations)
+	if err := observeBudgetChallenge("step-up", f, same, grant.Claims, observations); err != nil {
+		return err
+	}
+	other, err := send("step-up-other", "GET", protectedURL, compact, nil, map[string]string{
+		"X-Fixture-Cost":  "1000000",
+		"X-Fixture-Offer": "points",
+	})
+	if err != nil {
+		return err
+	}
+	return observeBudgetChallenge("step-up-other", f, other, grant.Claims, observations)
+}
+
+func checkFederatedConsumed(a Assertion, observation, auth PersonObservation) Result {
+	result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "fail"}
+	var want any
+	if err := json.Unmarshal(a.Equals, &want); err != nil {
+		result.Detail = err.Error()
+		return result
+	}
+	raw, present := observation.Claims["budget_consumed"]
+	if want == nil {
+		result.Actual = raw
+		if !present {
+			result.Actual = nil
+			result.State = "pass"
+		} else {
+			result.Detail = "budget_consumed claim is present"
+		}
+		return result
+	}
+	if !present {
+		result.Detail = "missing budget_consumed claim"
+		return result
+	}
+	result.Actual = raw
+	expected, ok := want.(map[string]any)
+	got, gotOK := raw.(map[string]any)
+	consumed, consumedOK := expected["consumed"].(float64)
+	authJTI, jtiOK := auth.Claims["jti"].(string)
+	if !ok || !gotOK || !consumedOK || !jtiOK || len(expected) != 1 || len(got) != 2 {
+		result.Detail = "budget_consumed shape does not match"
+		return result
+	}
+	if got["jti"] == authJTI && got["consumed"] == consumed {
+		result.State = "pass"
+	}
+	return result
+}
+
+func presentedGrant(observations map[string]PersonObservation) PersonObservation {
+	if observation, ok := observations["token"]; ok {
+		return observation
+	}
+	return observations["access"]
+}
+
+func observeBudgetChallenge(stage string, f Fixture, response Response, parent map[string]any, observations map[string]PersonObservation) error {
+	token, err := challengedResourceToken(response)
+	if err != nil {
+		return fmt.Errorf("%s resource token: %s", stage, err)
+	}
+	observed := observeFederatedResource(f, token, parent)
+	if !observed.Valid {
+		return fmt.Errorf("%s resource token: %s", stage, observed.Error)
+	}
+	observations[stage] = observed
+	return nil
+}
+
+func budgetAllocation(mode string) bool {
+	switch mode {
+	case "consume", "header", "usage", "cap":
+		return true
+	default:
+		return false
+	}
+}
+
+func harnessAccessBody(resource, person, agent string, allocate bool) ([]byte, error) {
+	if !allocate {
+		return json.Marshal(map[string]string{
+			"resource_token": resource, "presented_token": person, "agent_token": agent,
+		})
+	}
+	return json.Marshal(map[string]any{
+		"resource_token":  resource,
+		"presented_token": person,
+		"agent_token":     agent,
+		"budget":          map[string]any{"amount": 2_000_000, "unit": "credits", "decimals": 0},
+	})
+}
+
+func postHarnessToken(
+	f Fixture,
+	exchange func(stage string, request *http.Request, base string) (Response, error),
+	stage, resource, person, agent string,
+	allocate bool,
+	mutation string,
+) (Response, string, error) {
+	body, err := harnessAccessBody(resource, person, agent, allocate)
+	if err != nil {
+		return Response{}, "", err
+	}
+	credential := fmt.Sprintf(`sig=jwks_uri;id=%q;dwk="aauth-person.json";kid=%q`, f.Person.Issuer, f.Person.Kid)
+	request, base, err := signedFixtureRequest(f, f.Person.Seed, "POST", f.Access.Issuer+"/token", credential, body)
+	if err != nil {
+		return Response{}, "", err
+	}
+	if stage == "access" {
+		if err := mutateASRequest(f, mutation, request); err != nil {
+			return Response{}, "", err
+		}
+		if mutation != "none" && mutation != "short-agent" {
+			base = "" // The original base does not describe the deliberately changed input.
+		}
+	}
+	response, err := exchange(stage, request, base)
+	if err != nil || response.Status != 200 {
+		return response, "", err
+	}
+	compact, err := responseToken(response, "auth_token")
+	return response, compact, err
+}
+
+func checkFederatedConsumedIfPresent(a Assertion, observation, auth PersonObservation) Result {
+	result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "fail"}
+	var expected map[string]any
+	if err := json.Unmarshal(a.Equals, &expected); err != nil {
+		result.Detail = err.Error()
+		return result
+	}
+	raw, present := observation.Claims["budget_consumed"]
+	if !present || raw == nil {
+		result.Actual = nil
+		result.State = "pass"
+		result.Detail = "budget_consumed omitted"
+		return result
+	}
+	result.Actual = raw
+	got, ok := raw.(map[string]any)
+	consumed, consumedOK := expected["consumed"].(float64)
+	unit, unitOK := expected["unit"].(string)
+	decimals, decimalsOK := expected["decimals"].(float64)
+	authJTI, jtiOK := auth.Claims["jti"].(string)
+	budget, budgetOK := observation.Claims["budget"].(map[string]any)
+	if !ok || !consumedOK || !unitOK || !decimalsOK || !jtiOK || !budgetOK || len(expected) != 3 || len(got) != 2 {
+		result.Detail = "budget_consumed shape does not match"
+		return result
+	}
+	if got["jti"] == authJTI && got["consumed"] == consumed && budget["unit"] == unit && budget["decimals"] == decimals {
+		result.State = "pass"
+		result.Detail = ""
+	}
+	return result
+}
+
+func usageAllTime(response Response) (float64, bool, error) {
+	if response.Status != 200 {
+		return 0, false, fmt.Errorf("usage query returned HTTP %d", response.Status)
+	}
+	var body map[string]any
+	if err := json.Unmarshal(response.Body, &body); err != nil {
+		return 0, false, err
+	}
+	usage, present := body["usage"]
+	if !present || usage == nil {
+		return 0, false, nil
+	}
+	object, ok := usage.(map[string]any)
+	if !ok {
+		return 0, false, fmt.Errorf("usage is not an object")
+	}
+	value, ok := object["all_time"]
+	if !ok || value == nil {
+		return 0, false, fmt.Errorf("usage.all_time is absent")
+	}
+	number, ok := value.(float64)
+	if !ok {
+		return 0, false, fmt.Errorf("usage.all_time is not a number")
+	}
+	return number, true, nil
+}
+
+func checkUsageDelta(a Assertion, before, after Response) Result {
+	result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "fail"}
+	var want float64
+	if err := json.Unmarshal(a.Equals, &want); err != nil {
+		result.Detail = err.Error()
+		return result
+	}
+	if before.Status == 0 {
+		result.Detail = "no baseline usage query"
+		return result
+	}
+	base, _, err := usageAllTime(before)
+	if err != nil {
+		result.Detail = err.Error()
+		return result
+	}
+	total, present, err := usageAllTime(after)
+	if err != nil {
+		result.Detail = err.Error()
+		return result
+	}
+	if !present {
+		result.Detail = "usage.all_time missing after the charge"
+		return result
+	}
+	result.Actual = total - base
+	if total-base == want {
+		result.State = "pass"
+	}
+	return result
+}
+
+func budgetAuthorizationBody(mode string) ([]byte, error) {
+	amount := int64(5_000_000)
+	if mode == "omit" {
+		amount = 9_000_000
+	}
+	return json.Marshal(map[string]any{
+		"scope":  "read",
+		"budget": map[string]any{"amount": amount, "unit": "credits", "decimals": 0},
+	})
 }
 
 func federationAgentToken(f Fixture, id string, issued, expires int64) (string, error) {

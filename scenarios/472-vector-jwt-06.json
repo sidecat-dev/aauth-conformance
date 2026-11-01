@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "id": "vector.jwt.06",
+  "title": "Community vector jwt #6: person token (recorded, not graded: aud is a one-element array; the drafts define aud as one URL and verify per RFC 7519 without settling the array form)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/jwt.json",
+      "sha256": "5778abc224a1774f45d228d37039c293db51989a7ab7981cf755be47a446cfe0",
+      "index": 5
+    },
+    "kind": "jwt",
+    "case": {
+      "name": "person token",
+      "typ": "aa-person+jwt",
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "alg": "Ed25519",
+        "use": "sig",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+      },
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "claims": {
+        "dwk": "aauth-person.json",
+        "cnf": {
+          "jwk": {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+            "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+            "alg": "Ed25519",
+            "use": "sig"
+          }
+        },
+        "mission_s256": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+        "iss": "https://ps.example",
+        "sub": "8f14e45fceea167a5a36dedd4bea2543",
+        "aud": [
+          "https://resource.example"
+        ],
+        "exp": 1730221200,
+        "iat": 1730217600,
+        "jti": "pt-3ab910"
+      },
+      "audience": "https://resource.example",
+      "token": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoia1ByS19xbXhWV2FZVkE5d3dCRjZJdW8zdlZ6ejdUeEhDVHdYQnlnclM0ayIsInR5cCI6ImFhLXBlcnNvbitqd3QifQ.eyJkd2siOiJhYXV0aC1wZXJzb24uanNvbiIsImNuZiI6eyJqd2siOnsia3R5IjoiT0tQIiwiY3J2IjoiRWQyNTUxOSIsIngiOiIxMXFZQVlLeENyZlZTXzdUeVdRSE9nN2hjdlBhcGlNbHJ3SWFhUGNIVVJvIiwia2lkIjoia1ByS19xbXhWV2FZVkE5d3dCRjZJdW8zdlZ6ejdUeEhDVHdYQnlnclM0ayIsImFsZyI6IkVkMjU1MTkiLCJ1c2UiOiJzaWcifX0sIm1pc3Npb25fczI1NiI6ImRCamZ0SmVaNENWUC1tQjkySzI3dWhiVUpVMXAxcl93VzFnRldGT0VqWGsiLCJpc3MiOiJodHRwczovL3BzLmV4YW1wbGUiLCJzdWIiOiI4ZjE0ZTQ1ZmNlZWExNjdhNWEzNmRlZGQ0YmVhMjU0MyIsImF1ZCI6WyJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiXSwiZXhwIjoxNzMwMjIxMjAwLCJpYXQiOjE3MzAyMTc2MDAsImp0aSI6InB0LTNhYjkxMCJ9.wU-H76ncuYCAv5ig2JK6kawA1Focm0wh7QHmRXRk6Dm3Cg11d-FyXHo6gSqUJ7G2WNO-nPGL4QygD48qkjxHCA"
+    }
+  },
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "vector.jwt.aud-array",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

@@ -21,6 +21,9 @@ import (
 type FederatedSpec struct {
 	Mutation  string `json:"mutation"`
 	HarnessPS bool   `json:"harness_ps,omitempty"`
+	// Budget selects the four-party Budget fixture. Empty keeps the reactive
+	// challenge and offers nothing. "grant", "omit", "consume", "header", "usage", and "cap" are the modes.
+	Budget string `json:"budget,omitempty"`
 }
 
 var federationMutations = []string{
@@ -31,6 +34,24 @@ var federationMutations = []string{
 }
 
 func validFederatedAssertion(a Assertion) bool {
+	if a.Kind == "fed-budget" {
+		return slices.Contains([]string{"challenge", "access", "token", "step-up", "step-up-other", "second-token"}, a.Stage)
+	}
+	if a.Kind == "fed-consumed" {
+		return a.Stage == "step-up" || a.Stage == "step-up-other"
+	}
+	if a.Kind == "fed-consumed-if-present" {
+		return a.Stage == "step-up-other"
+	}
+	if a.Kind == "usage-delta" {
+		return a.Stage == "usage"
+	}
+	if a.Kind == "sfv-trailer-if-present" {
+		return slices.Contains([]string{"reserved", "abandoned", "following"}, a.Stage)
+	}
+	if a.Kind == "sfv-integer" || a.Kind == "sfv-trailer-integer" || a.Kind == "sfv-absent" || a.Kind == "sfv-trailer-absent" {
+		return slices.Contains([]string{"initial", "person", "challenge", "access", "token", "protected", "step-up", "step-up-other", "reserved", "abandoned", "following", "second-protected", "refusal"}, a.Stage)
+	}
 	if a.Stage == "handoff" {
 		return a.Kind == "fed-ps-proof" || a.Kind == "fed-forwarded"
 	}
@@ -40,14 +61,15 @@ func validFederatedAssertion(a Assertion) bool {
 	if strings.HasPrefix(a.Kind, "ps-") {
 		return slices.Contains([]string{"person", "access", "token"}, a.Stage)
 	}
-	return slices.Contains([]string{"initial", "person", "challenge", "access", "token", "protected"}, a.Stage) &&
-		slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "json-member", "problem-if-present"}, a.Kind)
+	return slices.Contains([]string{"initial", "person", "challenge", "access", "token", "protected", "step-up", "step-up-other", "reserved", "abandoned", "following", "usage", "usage-unknown", "usage-no-ps", "usage-two-keys", "usage-jkts", "second-token", "second-protected", "refusal"}, a.Stage) &&
+		slices.Contains([]string{"status", "sfv-token", "sfv-strings", "sfv-string-set", "sfv-integer", "sfv-trailer-integer", "sfv-trailer-if-present", "sfv-absent", "sfv-trailer-absent", "json-member", "json-path", "usage-delta", "header-equals", "problem-if-present"}, a.Kind)
 }
 
 func validateFederatedScenario(f Fixture, s Scenario) error {
 	if f.Person == nil || f.Access == nil || s.Federated == nil || s.Person != nil ||
 		!reflect.DeepEqual(s.Request, RequestSpec{}) ||
 		!slices.Contains(federationMutations, s.Federated.Mutation) ||
+		!slices.Contains([]string{"", "grant", "omit", "consume", "header", "usage", "cap"}, s.Federated.Budget) ||
 		s.Federated.HarnessPS && strings.HasPrefix(s.Federated.Mutation, "grant-") {
 		return fmt.Errorf("invalid four-party fixture or scenario")
 	}

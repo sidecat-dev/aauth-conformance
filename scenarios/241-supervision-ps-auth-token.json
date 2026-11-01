@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "id": "supervision.ps-auth-token",
+  "title": "A supervised auth token forwards the resource and presented tokens as the Agent sent them",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "auth_token",
+    "decision": "allow"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "status",
+      "equals": 200,
+      "stage": "token"
+    },
+    {
+      "id": "credential",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "ps-credential",
+      "equals": true,
+      "stage": "token"
+    },
+    {
+      "id": "act",
+      "clause": "supervision.ps.act-members",
+      "kind": "ss-request-equals",
+      "equals": "auth_token",
+      "stage": "deliver",
+      "member": "decision#2/act"
+    },
+    {
+      "id": "resource-token",
+      "clause": "supervision.ps.act-members",
+      "kind": "ss-request-token",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision#2/resource_token"
+    },
+    {
+      "id": "presented-token",
+      "clause": "supervision.ps.act-members",
+      "kind": "ss-request-token",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision#2/presented_token"
+    },
+    {
+      "id": "proof",
+      "clause": "supervision.ps.body-coverage",
+      "kind": "ss-request-proof",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision#2"
+    },
+    {
+      "id": "sdi",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision#2/sdi"
+    }
+  ]
+}

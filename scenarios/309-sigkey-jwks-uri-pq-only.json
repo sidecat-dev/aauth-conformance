@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "id": "sigkey-jwks-uri-pq-only",
+  "title": "jwks_uri selecting an ML-DSA-44 key",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwks_uri",
+    "alg": "ML-DSA-44",
+    "mutation": "none",
+    "jwks": "pq-only"
+  },
+  "assertions": [
+    {
+      "id": "outcome",
+      "clause": "sigkey.v.signer-pq-only",
+      "kind": "sigkey-pq",
+      "equals": "unsupported_algorithm"
+    }
+  ]
+}

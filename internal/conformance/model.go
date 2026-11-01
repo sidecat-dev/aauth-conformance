@@ -19,6 +19,8 @@ type Fixture struct {
 	AgentSeed string         `json:"agent_seed_hex"`
 	Person    *PersonFixture `json:"person_server,omitempty"`
 	Access    *AccessFixture `json:"access_server,omitempty"`
+	// Extensions holds identities for extension roles, keyed by role family.
+	Extensions map[string]json.RawMessage `json:"extensions,omitempty"`
 }
 type TokenSpec struct {
 	IATOffset int64 `json:"iat_offset"`
@@ -34,18 +36,20 @@ type RequestSpec struct {
 	Tamper        bool              `json:"tamper_signature"`
 }
 type Scenario struct {
-	Subagent   *SubagentSpec  `json:"subagent,omitempty"`
-	Deferred   *DeferredSpec  `json:"deferred,omitempty"`
-	Version    int            `json:"version"`
-	ID         string         `json:"id"`
-	Title      string         `json:"title"`
-	Role       string         `json:"role_under_test"`
-	Given      string         `json:"given"`
-	Token      TokenSpec      `json:"token"`
-	Request    RequestSpec    `json:"request"`
-	Person     *PersonSpec    `json:"person,omitempty"`
-	Federated  *FederatedSpec `json:"federated,omitempty"`
-	Assertions []Assertion    `json:"assertions"`
+	Subagent  *SubagentSpec  `json:"subagent,omitempty"`
+	Deferred  *DeferredSpec  `json:"deferred,omitempty"`
+	Version   int            `json:"version"`
+	ID        string         `json:"id"`
+	Title     string         `json:"title"`
+	Role      string         `json:"role_under_test"`
+	Given     string         `json:"given"`
+	Token     TokenSpec      `json:"token"`
+	Request   RequestSpec    `json:"request"`
+	Person    *PersonSpec    `json:"person,omitempty"`
+	Federated *FederatedSpec `json:"federated,omitempty"`
+	// Input carries an extension role's scenario inputs; the role decodes it.
+	Input      json.RawMessage `json:"input,omitempty"`
+	Assertions []Assertion     `json:"assertions"`
 }
 type Assertion struct {
 	Stage  string          `json:"stage,omitempty"`
@@ -122,15 +126,18 @@ type Bootstrap struct {
 	Issuer                   string               `json:"issuer"`
 	Resource                 string               `json:"resource"`
 	APTransport              string               `json:"ap_transport"`
+	// Extension carries an extension role's launcher configuration.
+	Extension json.RawMessage `json:"extension,omitempty"`
 }
 type Ready struct {
 	Version int    `json:"version"`
 	URL     string `json:"url"`
 }
 type Response struct {
-	Status int         `json:"status"`
-	Header http.Header `json:"headers"`
-	Body   []byte      `json:"body_base64"`
+	Status  int         `json:"status"`
+	Header  http.Header `json:"headers"`
+	Trailer http.Header `json:"trailers,omitempty"`
+	Body    []byte      `json:"body_base64"`
 }
 type Result struct {
 	Assertion string          `json:"assertion"`

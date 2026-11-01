@@ -220,6 +220,18 @@ endpoint resolution and transport. The build helper includes the Rust AS crate
 and enables the launcher's `federation` feature only for this role, leaving the
 other roles buildable against earlier native APIs.
 
+Budget scenarios use the same listener. `POST /authorize` is the Resource
+authorization endpoint and `POST /usage` is the usage query. Protected paths
+are `{path}-budget-grant` (metered), `{path}-budget-omit` (not metered; an
+auth token with no budget claim still returns the subject),
+`{path}-budget-reserve` (a header reservation and an optional cost-only
+trailer), and `{path}-budget-usage` (metered on the usage ledger). The unsigned
+fixture headers are `X-Fixture-Cost`, `X-Fixture-Offer`, `X-Fixture-Hold`, and
+`X-Fixture-Settle`. Declared units are `credits` and `points`, both decimals 0,
+with metadata maximum 10000000. When the harness Person Server allocates, it
+sends `budget.amount` 2000000 in `credits`. The adapter does not read
+`budget_units` or `usage_endpoint` metadata; those two paths are fixed.
+
 ## Deferred four-party authorization
 
 `role: "authorization.deferred"` uses the four-party fixture and native role
@@ -337,3 +349,296 @@ control at `POST /__fixture/subagent` accepts the same members as Rust's:
 only. They do not claim Agent-token revocation cascades, durable continuation
 recovery, real payment, consent UI, recursive delegation, missions, or
 production TLS/discovery.
+
+## Events roles
+
+The bootstrap `extension` object carries the Agent identifier (`agent`) and,
+per role: the Resource identity, subscription and ticket paths and trusted
+Person Servers (`events.subscription`); the event endpoint, the fixture AP
+seed and kid, the subscribed Resource and trusted Resources
+(`events.agent-provider`); trusted Resources and a fixture Agent token
+(`events.agent`). Trusted issuers are `{issuer, transport}` pairs; the launcher
+fetches their metadata and JWKS from the runner's loopback documents and
+admits them as fixed trust snapshots. Clocks are fixed at the bootstrap time.
+Go builds `adapters/go/events.go`; Rust builds the `events` feature and links
+the Agent Provider crate.
+
+- `events.subscription` announces the subscription path and routes it to the
+  native public registration (`EventService.PublicSubscriptionHandler`;
+  `EventsResource::register`), the ticket path to native protected
+  registration, and `POST /__fixture/ticket` `{"person_token"}` to a control
+  that verifies the person token natively (`aauth.VerifyPersonToken`;
+  `PersonToken::verify`) and issues a ticket from it, answering `{"url"}`.
+- `events.agent-provider` announces the event endpoint path and serves the
+  native AP: metadata, JWKS and the inbox (`agentprovider.Server.Handler`;
+  `AgentProvider::metadata`, `EventInbox::receive`). `POST /__fixture/subscribe`
+  `{"max_uses"}` calls native subscribe-token issuance for the fixture Agent
+  and the subscribed Resource and answers `{"token"}`.
+- `events.delivery` runs the subscription launcher with
+  `agent_providers` (`{issuer, transport}`) and adds `POST /__fixture/fire`
+  `{"agent_provider","eid","body"}`: native event preparation and delivery
+  (`EventService.PrepareEvent`/`DeliverEvent`;
+  `EventsResource::prepare_event`/`delivery_request`). Go resolves
+  `event_endpoint` through its native `HTTPEventEndpointResolver`; Rust's host
+  fetches the AP metadata and passes it to `delivery_request`, as its API
+  requires. Both transports change only the physical destination of the signed
+  request and answer `{"status"}` with the AP's HTTP status.
+- `events.agent` announces `/__fixture/event` and passes
+  `{"event_token","body","content_type"}` to the native check
+  (`agent.Client.AcceptEvent`; `aauth_rust_agent::verify_event`), answering
+  `{"accepted"}` with the native error text on refusal.
+
+aauth-go leaves some Events duties to host stores by its API contract. Its
+`agentprovider.EventInboxStore` compares a delivery's Resource and Agent with
+the subscription and counts uses, so `events.ap.resource-match`,
+`events.ap.audience`, `events.ap.max-uses` and `events.ap.remaining-uses` are
+not claimed for aauth-go: a launcher store would decide them. Its
+`EventInboxReader` holds the retained bytes the AP hands to the Agent, so
+`events.ap.unchanged` is not claimed either; `POST /__fixture/pending` calls
+native `PendingEvents` (Rust: `EventStore::pending` on the library's
+`MemoryEventStore`) and answers `{"events":[{"event_token","body"}]}`.
+`resource.ProtectedSubscriptionStore` consumes a ticket on commit, so
+`events.sub.ticket-single-use` is not claimed for aauth-go. The Go launcher's
+stores follow those contracts so the native handlers can run; the protected
+store does not compare thumbprints, leaving that refusal to the handler. The
+Go Agent store returns a context for every `eid`: context lookup and
+deduplication are not graded. aauth-rust's stores are its own
+(`MemorySubscriptionStore`, `MemoryEventStore`).
+
+## R3
+
+`r3.resource` and `r3.issuer` share `adapters/go/r3.go` (registered through
+`extensionLaunchers`) and the Rust `r3` feature, which adds the
+`aauth-rust-r3` crate. The bootstrap `extension` carries public JWKs and kids
+for the PS, AS, Resource and other server, the person subject and lifetimes,
+permitted scopes, the R3 vocabulary, `tools` and `grantable`, the Resource
+seed (`r3.resource`) or PS seed and `r3_transport` (`r3.issuer`). Both announce
+the fixture Resource path on a loopback listener and restore only the HTTPS
+scheme from the received Host.
+
+For `r3.resource` the launcher trusts the AP, PS (`aauth-person.json`), AS
+and other server (`aauth-access.json`) and the Resource's own key. It builds
+the authoritative MCP definition from `tools`, maps `POST /op/<tool>` to that
+tool, gives a fixed display, and an in-memory document store. Four-party uses
+Go `resource.NewFederatedAuthorization` and Rust
+`PsAuthorizationResource::new_federated`; three-party uses
+`resource.NewPSAuthorization` and `PsAuthorizationResource::new`, each with
+`R3Config` and the authorization endpoint. Four-party also enables per-call
+proposals (Go `R3PerCallConfig` with in-memory proposal and retry stores; Rust
+`with_r3_per_call` with an in-memory `R3CallStore`, `hold` off): the call's
+`record` body value is its one inline parameter. The application handler
+echoes `{"operation","sub"}` and counts its executions; Rust passes per-call
+results to `r3_retain`. `GET /__fixture/r3/executions` reports those counts.
+It is the only host control; it changes nothing.
+
+For `r3.issuer` the launcher runs Go `personserver.NewPSAuthorization` with
+`DirectR3Config`, or Rust `PersonServer::new(...).with_r3(R3IssuerConfig)`.
+Egress admission allows only `{Resource}/r3/`; the transport sends the PS's
+already signed fetch to `r3_transport`, changing only the socket. Fixed
+consent grants requested permitted scopes and the document's `grantable`
+operations; the R3 audit log is in memory. The native PS fetches, verifies the
+hash, signs and refuses on its own.
+
+These launchers make no TLS, discovery-admission, durable-custody, consent-UI,
+held (`202`) per-call or release-gating claim.
+
+For `r3.federated-issuer` the Go launcher hosts `accessserver.New` with
+`R3Config` and `personserver.NewFederatedAuthorization` with `R3Config` on one
+listener routed by Host. One HTTP client sends the PS's AS requests to that
+listener and both servers' R3 fetches to `r3_transport`. The AS policy grants
+requested permitted scopes and the document's `grantable` operations; the PS
+consents. aauth-rust's Access Server issues no R3 Auth tokens, so the build
+helper declares the Rust target unavailable for this role.
+
+## Mission roles
+
+`mission.person-server` uses the Person Server bootstrap fields above. The
+launcher serves the native Person Server, announces the fixture Resource path
+for the readiness check (only its physical origin is used) and adds the
+loopback host control `POST /__fixture/mission`. Its members are host inputs
+only: `now_offset` (seconds, shared clock), `expires_in` (the approval policy's
+mission lifetime), `approve` (a pending proposal's `Location`, approved as the
+person) and `install` (`{"s256","agent"}`: record an approved mission for
+issuance). The fixture person approves proposals as proposed, accepts updates
+and completions, grants permissions and grants the `read` scope.
+
+Go configures `personserver.NewPSAuthorization` with `MissionConfig` (an
+immediate `Approve` that copies the proposal and sets `ExpiresAt` from
+`expires_in`, `AcceptUpdate`, `ConfirmPersonAcceptedCompletion`),
+`PermissionConfig`, `AuditConfig` and `testutil.NewMissionStore`. Its approval
+is immediate and retains the mission for issuance itself, so `approve` is
+refused and `install` changes nothing.
+
+Rust configures `PersonServer::new(...).with_missions().with_governance(...)`
+over `MemoryStore`. A proposal is always deferred; `approve` signs the native
+approval POST as the Person Server (`jwks_uri`, covered digest and type) with
+`aauth_rust_signature_key::sign_request` and passes it to `handle`. Because
+`with_missions` retains the approved document in the mission audit and does
+not install an issuance record, `install` reads that document with
+`Store::read_mission_audit` and installs it with
+`MemoryStore::install_approved_mission` for the fixture person, as the crate
+leaves to the host. The native approval takes no expiry, so `expires_in` is
+reported as not offered. The launcher never terminates a mission itself.
+
+`mission.resource` runs the four-party bundle (Go `runFederatedServers`,
+Rust `federation::run`); its federation transport refuses every request
+because the slice stops at the Resource's challenge. Rust's Resource refuses
+mission-bound person tokens unless the host opts in, so this role calls the
+native `with_mission_context`. Go's federated Resource documents that it needs
+no configuration for a mission-bound person token; nothing is added.
+Rust builds both roles with the `mission` feature, which includes
+`federation`, and adds the Access Server and Signature-Key crates.
+
+## Supervision roles
+
+Both launchers are built with the Rust `supervision` feature and the
+`aauth-rust-supervision-server` crate, or with `adapters/go/supervision.go`.
+Each scenario starts a fresh launcher. The loopback-only host control is
+`POST /__fixture/supervision`; it changes host policy or calls a host
+method the library exposes, and its answer is never graded.
+
+`supervision.server` bootstraps `extension.supervisor` (issuer, public seed,
+kid) and `extension.person_servers` (issuer, kid, public JWK, `accept`).
+Announce the logical metadata path `/.well-known/aauth-supervisor.json` and
+serve the native handler for every other path, reconstructing logical HTTPS
+from the received Host. Configure the native server with its signing key, a
+fixed clock, an in-memory store and the admitted Person Server keys under
+`aauth-person.json`. Host connect policy accepts the `accept` Person Servers
+and refuses the others; host decision policy allows person-token, auth-token
+and mission acts and a permission whose action is `fixture.allow`, denies
+`fixture.deny`, asks for `fixture.ask` and defers `fixture.defer`. Controls:
+`{"resolve":{"sdi":"...","verdict":"allow"}}` resolves a deferred decision
+through the native host call (Go `ResolveDecision`, Rust `decide_pending`);
+`{"rate_limit":true}` makes the next supervision request a host rate limit.
+Neither supervision server limits a Person Server by itself. Rust answers the
+host limit with its own `SupervisionError::RateLimited.response`; Go exports
+no rate_limited response and answers `501` with `not_offered`.
+
+`supervision.person-server` bootstraps the Person Server fields of the
+direct role plus `extension` `supervisor`, `supervisor_transport` (the
+harness supervisor's loopback address), `supervisor_subject` (the directed
+sub, host configuration), `supervisor_keys` (the supervisor and the foreign
+supervisor under `aauth-supervisor.json`) and `resource`. Announce `/person`.
+Route every Agent to the supervisor, carry the native Person Server's signed
+requests unchanged to the transport (Go through its HTTP client, Rust
+through `Supervision::send`), and serve the supervisor's metadata to it from
+the same transport. The Person Server's own authorization policy refuses: it
+is never consulted for a supervised Agent. Controls: `{"resolve":"allow"}`
+records the person's allow, without a reason, on the held act (Go
+`ResolveSupervision` on a `PendingSupervision` entry, Rust
+`resolve_supervision` on the `SupervisionHold` the last response carried);
+`{"advance":true}` polls the supervisor once (`AdvanceSupervision`,
+`advance_supervision`); `{"deliver":true}` delivers queued events
+(`DeliverSupervisionEvents`, `deliver_supervision`).
+
+## Community aauth-go launcher
+
+`build-adapters -community-source DIR` compiles `adapters/community-go`
+against a checkout of the community module `github.com/aauth-dev/aauth-go`
+(tested at v0.3.0, commit `5aff16d`); the target id is `aauth-go-community`.
+Every source file in that directory is compiled, and each role file registers
+its launcher; a role with no registration is refused at startup. The launcher
+uses only the module's exported API, with the fixture's fixed clock wherever
+the API takes one.
+
+- `resource.agent-identity`: `ResourceGuard` at `AccessAgent`, with a
+  `StaticResolver` holding the fixture AP's published JWKS.
+- `agent.signing`: `AttachSignatureKey` and `SignRequest` on the control
+  job's request. `SignRequest` takes `created` from the wall clock and has no
+  clock input, so `core.agent-created` is not claimed for this target.
+- `person-server.direct`: `personserver.New` at `/person` and `/token`, with
+  `MemoryStore`, a `Decider` that binds the agent to the fixture person and
+  refuses scopes outside the fixture policy (host code `access_denied`), and
+  static resolvers for the AP, the fixture Resource and the PS's own key. The
+  module derives directed subjects itself, so the configured-subject adapter
+  contract (`ps.host-person-profile`) is not claimed.
+- `authorization.federated`: the module's `personserver.Server` (federating
+  through `accessserver.NewClient`), `accessserver.Server` and a Resource,
+  routed by received Host. The Resource is composed from the exported
+  functions `ResourceGuard` itself calls (`ParseSignatureKey`,
+  `VerifyAndExtract*`, `IssueResourceToken`, the challenge helpers and
+  `WriteSignatureFailure`), because the guard issues resource tokens at the
+  wall clock while `IssueResourceToken` takes the fixture clock. The AS's own
+  metadata request is answered in process by the native AS; signed token
+  requests go through `federation_transport`. The module's server signer
+  also takes `created` from the wall clock, so under the fixture clock the
+  native AS refuses the native PS's request as stale; scenarios that use the
+  native PS cannot complete for this target. The independent-PS scenarios
+  are unaffected. The module has no Budgets, so the budget clauses are not
+  claimed.
+- `mission.person-server` and `mission.resource`: the module's mission,
+  permission and audit endpoints with an approval policy that approves as
+  proposed and sets `expires_at` from the `expires_in` control; approval is
+  immediate, so `approve` is refused and `install` changes nothing.
+
+Declared unavailable for this target (`cmd/build-adapters/community.go`): the
+Events, R3 and Supervision roles (the module does not implement those
+drafts) and `authorization.subagent`, whose host control advances PS-to-AS
+polling once per reference; the module's PS polls its AS on each Agent poll.
+`authorization.deferred` is not run for this target for the same reason, and
+because the module's AS never answers 402 itself.
+
+## Signature-Key roles
+
+`sigkey.verifier` and `sigkey.signer` read the bootstrap `extension`:
+`verifier`, `agent_provider`, `signer`, `signer_dwk`, `jwks_url`,
+`self_jwt_typ`, `algorithms` and `documents`, a map from each logical HTTPS
+origin to the loopback transport serving its discovery documents. The
+verifier announces the path of `verifier`; the signer announces the path of
+the bootstrap `resource` (`/control`). Each verifier scenario starts a fresh
+launcher, since its documents differ.
+
+The verifier is the native Resource with its further schemes enabled; its
+responses are returned unchanged. The 200 echo of the verified scheme is
+adapter contract. Go uses `resource.NewAgentIdentity` with
+`FurtherSchemesConfig` (hwk, jkt-jwt, jwks_uri, jwks) and a native
+`signaturekey.HTTPKeyResolver` for Agent Provider, jwks_uri and jwks keys: the
+resolver fetches, parses and selects keys itself; the host supplies only an
+egress admitter for the fixture origins and a transport that maps them to
+loopback. Rust uses `AgentIdentityResource::with_further_schemes` and, for a
+`Decision::OtherScheme`, the `PreparedRequest` method its member calls for.
+The crate never fetches, so the launcher fetches the fixture documents (the
+JWKS through the `jwks_uri` that `metadata_jwks_uri` validates) and passes
+their bytes to `AgentProviderKeys`, `TrustedIssuerKeys`, `verify_self_jwt`
+and `verify_jwks`; for jwks the crate leaves selecting the kid to the host, so
+mixed key sets are graded under jwks_uri and the Agent Provider only. Proof
+errors are answered with the crate's own `Decision::SignatureFailure`
+mapping. The community launcher sends a jwks_uri member to
+`VerifyServerRequest` and every other request to `VerifyAndExtractAgent`,
+which refuses other schemes itself, and answers failures with
+`WriteSignatureFailure`.
+
+The signer posts its result to the job's `transport`, preserving the logical
+Host. Go uses `SignHWKRequest`, `SignJWTRequest`, `SignJWKSURIRequest`,
+`SignSelfJWTRequest` and `SignRequest` with jwks and jkt-jwt credentials;
+Rust uses `sign_request` with the matching `KeyMaterial`; the community
+module uses `agentprovider.SignHWK`, `AttachSignatureKey` with `SignRequest`,
+`ServerSigner` and `agentprovider.SignJKTJWT`, which read the wall clock.
+Schemes and algorithms a library does not offer are listed in
+`cmd/build-adapters/sigkey.go` and left unclaimed.
+
+## Community vectors role
+
+`role: "vectors.library"` announces `/vector`. The runner POSTs one JSON
+object per case; the launcher calls one public function of its library for
+the case's `kind` and answers 200 with the normalized result, or 501
+`{"not_offered":"..."}`. It builds an in-memory request from the supplied
+method, URL, headers and body and passes the supplied clock, window, required
+components, key and trust documents; it never verifies, signs or repairs
+anything itself.
+
+| Kind | aauth-go | aauth-rust | community aauth-go |
+| --- | --- | --- | --- |
+| agent-identifier | `ValidateAgentIdentifier` | `validate_agent_identifier` | `ParseAgentIdentifier` |
+| server-identifier | `ValidateServerIdentifier` | `validate_server_identifier` | `ValidateServerIdentifier` |
+| jwk-thumbprint | `jose.JWK.Thumbprint` | `Jwk::thumbprint` | `JWK.Thumbprint` |
+| metadata | `events.DecodeAgentProviderMetadata` for `aauth-agent.json` only; the others are not offered | `metadata_jwks_uri` | decode into the role's type, then `Validate` |
+| signature-error | `signaturekey.ParseError` | `signature_error_code` (no `required_input`) | `ParseSignatureError` |
+| requirement | `ParseRequirement`, then `ParseAuthTokenRequirement` or `ParseInteractionRequirement` | Agent `Requirement::parse`; deferred values through `PendingResponse::parse` on the 202 framing | `ParseRequirement` |
+| signature-key | `signaturekey.PrepareRequest` with default (jwt-only) options | `PreparedRequest::prepare_with_schemes(..., &["jwt"])` | `ParseSignatureKey` |
+| jwt | `VerifyAgentToken`, `VerifyPersonToken`, `VerifyResourceToken`, `VerifyAuthToken` with a `StaticKeyResolver` | `AgentToken`, `PersonToken`, `ResourceToken`, `AuthToken` `parse` then `verify` with `TrustedIssuerKeys::from_documents` | `VerifyAgentToken` (agent-token lifetime ceiling lifted, as the module's own vector test does), `VerifyPersonToken`, `VerifyAuthToken`; no standalone resource-token verifier is exported |
+| http-signature | `PrepareRequest` then `Verify`; `require_body_coverage` adds content-digest and content-type to the required components | `prepare_with_schemes` then `verify`; required components beyond its profile are not offered | `VerifyRequestWithOptions` |
+
+The Go launcher is `adapters/go/vectors.go`, the Rust launcher
+`adapters/rust/src/vectors.rs` (feature `vectors`, with the Signature-Key
+crate), and the community launcher `adapters/community-go/vectors.go`.

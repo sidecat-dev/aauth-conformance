@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "id": "supervision.ps-allow",
+  "title": "A supervised person token: signed envelope, required members, distinct sdi and the allow's exp",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "allow",
+    "allow_exp_offset": 30,
+    "second_act": true
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "status",
+      "equals": 200,
+      "stage": "person"
+    },
+    {
+      "id": "credential",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "ps-credential",
+      "equals": true,
+      "stage": "person"
+    },
+    {
+      "id": "exp",
+      "clause": "supervision.ps.allow-exp",
+      "kind": "ps-credential-exp",
+      "equals": true,
+      "stage": "person"
+    },
+    {
+      "id": "connect-proof",
+      "clause": "supervision.ps.core-keying",
+      "kind": "ss-request-proof",
+      "equals": true,
+      "stage": "deliver",
+      "member": "connect"
+    },
+    {
+      "id": "connect-action",
+      "clause": "supervision.ps.connect-action",
+      "kind": "ss-request-equals",
+      "equals": "connect",
+      "stage": "deliver",
+      "member": "connect/action"
+    },
+    {
+      "id": "decision-proof",
+      "clause": "supervision.ps.body-coverage",
+      "kind": "ss-request-proof",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision"
+    },
+    {
+      "id": "sdi",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision/sdi"
+    },
+    {
+      "id": "iat",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision/iat"
+    },
+    {
+      "id": "sub",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision/sub"
+    },
+    {
+      "id": "agent",
+      "clause": "supervision.ps.envelope",
+      "kind": "ss-request-equals",
+      "equals": "aauth:Agent@ap.conformance.test",
+      "stage": "deliver",
+      "member": "decision/agent"
+    },
+    {
+      "id": "act",
+      "clause": "supervision.ps.act-members",
+      "kind": "ss-request-equals",
+      "equals": "person_token",
+      "stage": "deliver",
+      "member": "decision/act"
+    },
+    {
+      "id": "resource",
+      "clause": "supervision.ps.act-members",
+      "kind": "ss-request-equals",
+      "equals": "https://resource.conformance.test",
+      "stage": "deliver",
+      "member": "decision/resource"
+    },
+    {
+      "id": "agent-token",
+      "clause": "supervision.ps.act-members",
+      "kind": "ss-request-token",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision/agent_token"
+    },
+    {
+      "id": "distinct-sdi",
+      "clause": "supervision.ps.sdi-unique",
+      "kind": "ss-sdi-distinct",
+      "equals": true,
+      "stage": "deliver",
+      "member": "decision"
+    },
+    {
+      "id": "again",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "ps-credential",
+      "equals": true,
+      "stage": "person-again"
+    },
+    {
+      "id": "issued-proof",
+      "clause": "supervision.ps.core-keying",
+      "kind": "ss-request-proof",
+      "equals": true,
+      "stage": "deliver",
+      "member": "event:person_token.issued"
+    },
+    {
+      "id": "issued-id",
+      "clause": "supervision.ps.event-id",
+      "kind": "ss-request-has",
+      "equals": true,
+      "stage": "deliver",
+      "member": "event:person_token.issued/id"
+    }
+  ]
+}

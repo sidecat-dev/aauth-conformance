@@ -26,5 +26,100 @@
     "issuer": "https://access.conformance.test",
     "seed_hex": "0505050505050505050505050505050505050505050505050505050505050505",
     "kid": "as-1"
+  },
+  "extensions": {
+    "events": {
+      "resource": {
+        "issuer": "https://resource.conformance.test",
+        "seed_hex": "0909090909090909090909090909090909090909090909090909090909090909",
+        "kid": "events-resource-1"
+      },
+      "other_resource": {
+        "issuer": "https://other-resource.conformance.test",
+        "seed_hex": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+        "kid": "events-resource-2"
+      },
+      "subscription_path": "/events/subscribe",
+      "ticket_path": "/events/tickets/",
+      "event_endpoint": "https://ap.conformance.test/events",
+      "other_agent": "aauth:Other@ap.conformance.test",
+      "other_key_seed_hex": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"
+    },
+    "r3": {
+      "vocabulary": "urn:aauth:vocabulary:mcp",
+      "tools": [
+        "records.read",
+        "records.export",
+        "records.delete"
+      ],
+      "grantable": [
+        "records.read",
+        "records.export"
+      ],
+      "other_server": {
+        "issuer": "https://other.conformance.test",
+        "seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
+        "kid": "other-1"
+      }
+    },
+    "missions": {
+      "other_agent_seed_hex": "0707070707070707070707070707070707070707070707070707070707070707",
+      "other_agent_subject": "aauth:other@ap.conformance.test",
+      "description": "# Reconcile invoices\n\nReconcile the March invoices and report the totals."
+    },
+    "supervision": {
+      "issuer": "https://ss.conformance.test",
+      "seed_hex": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+      "kid": "ss-1",
+      "subject": "ss-directed-person-1",
+      "other_person_server": {
+        "issuer": "https://other-ps.conformance.test",
+        "seed_hex": "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+        "kid": "ps-other-1"
+      },
+      "foreign_supervisor": {
+        "issuer": "https://foreign-ss.conformance.test",
+        "seed_hex": "0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d",
+        "kid": "ss-foreign-1"
+      },
+      "mission": {
+        "approved_at": "2027-01-15T08:00:00Z",
+        "description": "# Fixture mission\n\nRead the fixture resource."
+      }
+    },
+    "sigkey": {
+      "verifier": "https://verifier.conformance.test/verify",
+      "receiver": "https://receiver.conformance.test/inbox",
+      "signer": {
+        "issuer": "https://signer.conformance.test",
+        "dwk": "aauth-resource.json",
+        "kid": "signer-1",
+        "seed_hex": "0808080808080808080808080808080808080808080808080808080808080808"
+      },
+      "jwks_url": "https://keys.conformance.test/signer.jwks",
+      "keys": {
+        "ES256": {
+          "kid": "es256-1",
+          "pkcs8_base64": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgNlaxjQ7D1R9/SgK6E2Yc6LkBMTQ43qA8RJLhrkqHaxShRANCAAQovbPipIF/aA0RkH5TNxSSBNGckdU5FzpOX48R/bF8AJowQSSAbmg2YT6flA0NiWApkmfXG2iF5LTQMbyL/AtR"
+        },
+        "ES384": {
+          "kid": "es384-1",
+          "pkcs8_base64": "MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDCyZRQT+/IfS05QyZixo3wrWlLpPVXul4yoPhMrBAhuP5H7Gkj4TH2XUiPSolderNehZANiAAT//d6WhCnZr13GHCFGK/rF7TAkJvwSrchUKstYM4LuU6+nUXvhJs9CFmDiQAl9maHy8ItLJsYktI/LQbxfXtUu1r9Q/2IWXGvJC8y/SHldkQPhOopGkFgZCVdMnQ4cSKo="
+        },
+        "RS256": {
+          "kid": "rs256-1",
+          "pkcs8_base64": "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDUoU2SKKyqEKD/Qvyc4A0OKnsxROPHcnBbEjtTz7P729AV/fyI7TrrICnNuJIv4MGWX5fvbZ3oFkVTCaClQzTE4JtvZdlTRoUXVk9pdSuKJUkPMVUa0JapNQ95e8I1vpN1DOpDsobDybWYKo33rOZZSm8iJ1cSpeNgbysJiHRnEGyxOfkdZYQ5ngbmFngDCJdIpqtnqCvnTC6cXxPC0LyzwGgH275Z38tagCmjczMAYdao3PA8dbQicARImefauCyI07q0SVg6kpvEqUQkdp3rqgfbqK5fPCQFKcDqR+iwypCr+txDZvDXZl+HBl9Mkcqd+ETqsRHkUspLUOZTDH0bAgMBAAECggEAC27NkMrOwemD+/BaTIXAM0n1zB05UXuQmVepHfq14ZhySgRumYmGmKbm6IYAl5dyVpy25YD+M8D4IvIKaRMXLsYpmrtIt1wRgu2OoTZ+IVRGPI1kAehDpD8ooQPBBQpwEPlL+AOM5dEeNQYwvP0Bzmecrc2ctnF6ANuUCP6vzOzG4NE6Wwcuu9tBMXtfsWLBCBGejwOIQOHccwzvoXdjbwdAEeWJwJBf+fPgM6sKgwYTvbISN1xvchPSS1T03oe/bZ+CN9JynYNZpZlTAkVUxToFKzxJu9cISdFRYQUa+N7zsz7s/KzpAC6K2JICeGUBvmyWApE76CJML9p1PpHpHQKBgQDzzqMTw20YvMp+lDFrpLEuUJnVeFn6gZQEt6lIpxHaxN6qLzGQFZxEqyghXaQw/dAOBxCddjJJrKD1Ls3kF7ZwkHaKs2jK5RgTZBKCAsoT6KWlR9XaksX1jQhXBM7BwPyVt14D7A79zKBtanFQkHW+CLzGZ+QkxcStWwvuJEzT7wKBgQDfQ4TB9ASeK0Ffdlv17PQhVrAHz2gDFyFGBtnZm9jfpph7G7xCYf3qBQTWxZpyKXdSEAHGSjrVTOzB1yXzWzhqyHs6Ggmmui8A2xmaGHJ6ZnzX4rj6m5MGj1us4K364Jo5tYuAZ8T+Wz1zL+exH1xYRnU0sHRJB2PFrVmVE44NlQKBgHiaeDsXigkZosWYwxWvg2IYxvA9N61emfz3aUsiMgfZKRhgfhD7T7D8Rb6zlrwRYfD+d66cwGWHepuuinTRchMeszULaMQtLYqyDyG3BYVxqTcoYNZdkoVUPZLmMuzPbWMWMPCZvhS4O4fEhsdGnqfhpJg03jt+hTsH9c/YrxSLAoGAcVEEnahre5f6uygIrr5QfmdQOvaTFRZ1ReSOR3tpTMJym/FM0OiJhnB7r0JmDFFthVIohGsCh2ZeuFeppGWFMfWFTc0PXvcaijWqPeLwn51K+gvR1SiHLAow/oKe6zl6LZYuMsL4Yh0PCFqlHuoK5acFL/PrYXGFuzwrvpVJQS0CgYEAwCWz2N4zjzkgrUKWwCy5RGnBaZMOmeCMOVXQghnZMSBp8bXpGyXvx0elOolPQhLc0KqH/t0c5bjfyFkfp+PUeP5RjR5Ud81w1OPFqn5/c4ssWUF3WZi8IWeSRt0eSdLrWedqXBnsD5KD83cZ1wowilWege8dVZQTSzRfSVUAOqw="
+        },
+        "PS256": {
+          "kid": "ps256-1",
+          "pkcs8_base64": "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC0TaFDtGhdYgZRkiUYbSLvjxKnS4bztfl573oKp4wbXUXY0JgWW54afqUYHfFgLkD5Cp6hQHcE/9vuVjnihFF8gIP8oTksX4PxtdLgmhx1B+r2E7hDEG5VkbnuhazxtcgKvCz4uP8ua75l5lbkriijKep3PF9vHz/b4w/VKWYPc3+Y4/MeJpUNLF6WvLTEfrVguH/SdQesrDfvCIirBBmCwoOdMEw3VgyY2x0i3kBR0qXJYnNAE31LRMIAoTju8nFmipVMMHFz7DaMbXOJ/7aH+bBvMudZCPQV5sr+wjmNqBUMQafn9nPPDetcWGNgOGtpaSowZuZl2rSx3wjD2MXlAgMBAAECggEACbijyMA53ksSNySvjlUYDJ2ErnNyh8JYfJwOUvO8qJ8LTIjWomH3MMuCQD4hDQQBacwKSHxuzlyzMXMBtPZYZGOTejQBHqTZutcIUybMAP1XzEO87BS/NirgwP0BGZko+3cw34ot7AVQIzNbnQHM3Bs+8oXVSWsAaO0hpecRAyUqXe2676n53fUOvU4hXk9cFIFvBm6xpQvrURdLW8w9JrLVmua5junBLIiboL39eHt6WmwKJ3dwoLhl+rsPRGLq9wmrgf0DD2rfbHT2biqvtivF0T7tpS+USROBCxbeLxTwNaSkb4zW/OaWpFMy2pYK8GY6lr2RwZSr20YKaS6mgwKBgQDenhlGc5Nv6kWu3x6nutHrKgy7wMi+npZfjbiJJkD3hr6I6Jl5Z7rUXP+k4MarImP37N3VfKkO9F4Iq9SLXrS/dmo42+FG4Dhv1OEOTpx/PA6CMcDw/M0ShdBkAbuP/TCIxG/OsLwywccs7nOVSNbJQsDIwVtJ1Aesa3YaCmQLXwKBgQDPVyhcgjoQ9sjugS5bioJ8xl+VRsM1xBwfPCNM7JM/VLscA9xzRsNQaTn344A4c7g6KrwkqegfuGFLPCn07hX3ozYqQYquE+gGFhpnin5t+FAtCxM01vJrYvd+dImq1fks0pIyK28/g1O+1YILJUNPvnab1IkYHwiTtTqNMP45OwKBgQCMFOIEsf9pofo9QssQcn9bQjeHAZWQVUx8Tjp7muWwnEpS7kJ84afvr6FyB7sbvuU3AgbJKstazKxLOozhMjP8cq/+nWXRapA41rTTguX5LjpW9KXbPshwSmHKPEjhH0omFa3hWtbh/Yuum1GB87asKGQVL46ZE2HMvkYvtrAjcwKBgAobqqkP5DrNfTA7dgIad5ATr7c8Uun9HI3dRa9LXUZaICEWgxnPmlgCOUQ/gBHAenvDd5al/d4GBCBB153MOZ/wAgT/Wv5vlAEv9KuVkeJUl7wKbS5HSFw53+z3S3rboaEwxtXRTkQfZ+bGy+c1MtnhZDDmpKRbZvSkgi099TbfAoGAQRUwX17yz7axPkGgbtxXswliIfnlCYikkK/3aJbni7Znyam+o4uKPFFKYyq8qa42Jb1VFKTNK/mSMNAuSuiNNMB2OcB7CKU0aNPYRt/z8E+1UO4mauMqgp3uUYL3+0W3QV3TewhuaxlkFZboIbqaWcdT6tlOH5/Igl7bI5VOD3w="
+        }
+      },
+      "pq_seed_hex": "0909090909090909090909090909090909090909090909090909090909090909",
+      "pq_kid": "signer-pq",
+      "ap_pq_kid": "ap-pq",
+      "jkt_identity_seed_hex": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+      "self_jwt_typ": "conformance-self+jwt"
+    }
   }
 }

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "mission-not-owned",
+  "title": "Missions: Another agent's mission answers as an unknown one",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "not-owned"
+  },
+  "assertions": [
+    {
+      "id": "not-owned-mission-equivalent-0",
+      "stage": "not-owned",
+      "kind": "mission-equivalent",
+      "equals": true,
+      "clause": "mission.not-found-equivalent"
+    },
+    {
+      "id": "not-owned-status-class-1",
+      "stage": "not-owned",
+      "kind": "status-class",
+      "equals": "4xx",
+      "clause": "mission.not-found-equivalent"
+    }
+  ]
+}

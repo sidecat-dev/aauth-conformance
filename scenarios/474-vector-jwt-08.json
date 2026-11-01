@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "id": "vector.jwt.08",
+  "title": "Community vector jwt #8: JWS alg EdDSA is rejected",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/jwt.json",
+      "sha256": "5778abc224a1774f45d228d37039c293db51989a7ab7981cf755be47a446cfe0",
+      "index": 7
+    },
+    "kind": "jwt",
+    "case": {
+      "name": "JWS alg EdDSA is rejected",
+      "typ": "aa-agent+jwt",
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "alg": "Ed25519",
+        "use": "sig",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+      },
+      "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+      "token": "eyJhbGciOiJFZERTQSIsImtpZCI6ImtQcktfcW14VldhWVZBOXd3QkY2SXVvM3ZWeno3VHhIQ1R3WEJ5Z3JTNGsiLCJ0eXAiOiJhYS1hZ2VudCtqd3QifQ.eyJkd2siOiJhYXV0aC1hZ2VudC5qc29uIiwicHMiOiJodHRwczovL3BzLmV4YW1wbGUiLCJjbmYiOnsiandrIjp7Imt0eSI6Ik9LUCIsImNydiI6IkVkMjU1MTkiLCJ4IjoiMTFxWUFZS3hDcmZWU183VHlXUUhPZzdoY3ZQYXBpTWxyd0lhYVBjSFVSbyIsImtpZCI6ImtQcktfcW14VldhWVZBOXd3QkY2SXVvM3ZWeno3VHhIQ1R3WEJ5Z3JTNGsiLCJhbGciOiJFZERTQSIsInVzZSI6InNpZyJ9fSwiaXNzIjoiaHR0cHM6Ly9hZ2VudC5leGFtcGxlIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LmV4YW1wbGUiLCJleHAiOjQxMDI0NDQ4MDAsImlhdCI6MTc2NzIyNTYwMCwianRpIjoiYWdlbnQtdG9rZW4tMSJ9.7YwkiFcQL0mJLJdhQH2gJHsWZ4YQ68pHLdflJSLG2CXnotRrmN9lSdAhJbeSW8HeOuhO7Rzt6IfbU-Xozo6RBA",
+      "reject": "polymorphic EdDSA header alg (draft -11 §11.5.1)"
+    }
+  },
+  "assertions": [
+    {
+      "id": "refused",
+      "clause": "vector.jwt.prohibited-alg",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": false
+    }
+  ]
+}

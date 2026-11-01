@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "sigkey-self-jwt",
+  "title": "self-jwt verifies",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "self-jwt",
+    "alg": "Ed25519",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.self-jwt",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "verified-scheme",
+      "clause": "sigkey.v.echo",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "self-jwt"
+    }
+  ]
+}

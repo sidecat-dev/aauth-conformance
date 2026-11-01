@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "id": "vector.jwk-thumbprint.03",
+  "title": "Community vector jwk-thumbprint #3: P-256 (RFC 7515 Appendix A.3 key)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/jwk-thumbprint.json",
+      "sha256": "1c76db6d2e39c811d4c291f455f676723a38c87c33b08ebf444b135c5a270ed5",
+      "index": 2
+    },
+    "kind": "jwk-thumbprint",
+    "case": {
+      "name": "P-256 (RFC 7515 Appendix A.3 key)",
+      "jwk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+        "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+        "kid": "oKIywvGUpTVTyxMQ3bwIIeQUudfr_CkLMjCE19ECD-U",
+        "alg": "ES256",
+        "use": "sig"
+      },
+      "thumbprint": "oKIywvGUpTVTyxMQ3bwIIeQUudfr_CkLMjCE19ECD-U"
+    }
+  },
+  "assertions": [
+    {
+      "id": "thumbprint",
+      "clause": "vector.jwk-thumbprint.es256",
+      "kind": "vector-result",
+      "member": "thumbprint",
+      "equals": "oKIywvGUpTVTyxMQ3bwIIeQUudfr_CkLMjCE19ECD-U"
+    }
+  ]
+}

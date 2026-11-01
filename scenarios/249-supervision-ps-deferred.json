@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "id": "supervision.ps-deferred",
+  "title": "A deferred decision is polled with a signed bodyless GET and then applied",
+  "role_under_test": "supervision.person-server",
+  "given": "agent-identity",
+  "input": {
+    "act": "person_token",
+    "decision": "defer"
+  },
+  "assertions": [
+    {
+      "id": "pending",
+      "clause": "supervision.ps.deferred-poll",
+      "kind": "status",
+      "equals": 202,
+      "stage": "person"
+    },
+    {
+      "id": "no-credential",
+      "clause": "supervision.ps.deferred-poll",
+      "kind": "ps-credential",
+      "equals": false,
+      "stage": "person"
+    },
+    {
+      "id": "poll-proof",
+      "clause": "supervision.ps.deferred-poll",
+      "kind": "ss-request-proof",
+      "equals": true,
+      "stage": "deliver",
+      "member": "poll"
+    },
+    {
+      "id": "applied",
+      "clause": "supervision.ps.decision-applied",
+      "kind": "ps-credential",
+      "equals": true,
+      "stage": "poll"
+    }
+  ]
+}

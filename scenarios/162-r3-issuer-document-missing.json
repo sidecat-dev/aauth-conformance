@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "r3-issuer-document-missing",
+  "title": "No document at r3_uri, no Auth token",
+  "role_under_test": "r3.issuer",
+  "given": "agent-identity",
+  "input": {
+    "document": "missing",
+    "operations": [
+      "records.read",
+      "records.export"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "fetched",
+      "stage": "fetch",
+      "clause": "r3.issuer.fetch",
+      "kind": "r3-fetched",
+      "equals": true
+    },
+    {
+      "id": "no-auth-token",
+      "stage": "token",
+      "clause": "r3.issuer.hash-verification",
+      "kind": "r3-no-auth-token",
+      "equals": true
+    }
+  ]
+}

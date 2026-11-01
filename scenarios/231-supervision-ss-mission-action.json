@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "id": "supervision.ss-mission-action",
+  "title": "A request to a mission's URL without a recognized action, or a report without id, is invalid_request",
+  "role_under_test": "supervision.server",
+  "given": "agent-identity",
+  "input": {
+    "steps": [
+      {
+        "stage": "connect",
+        "endpoint": "connect",
+        "body": {
+          "action": "connect",
+          "id": "c-mission",
+          "iat": "$now",
+          "sub": "$sub"
+        },
+        "expect": 200
+      },
+      {
+        "stage": "proposal",
+        "endpoint": "mission",
+        "accept_signature": true,
+        "expect": 200,
+        "body": {
+          "sdi": "d-proposal-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "agent_token": "$agent_token",
+          "description": "# Fixture mission\n\nRead the fixture resource."
+        }
+      },
+      {
+        "stage": "approved-no-id",
+        "endpoint": "mission/$s256",
+        "body": {
+          "action": "approved",
+          "sdi": "d-proposal-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "s256": "$s256",
+          "mission": "$mission"
+        }
+      },
+      {
+        "stage": "approved",
+        "endpoint": "mission/$s256",
+        "expect": 201,
+        "body": {
+          "action": "approved",
+          "id": "e-approved-1",
+          "sdi": "d-proposal-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "s256": "$s256",
+          "mission": "$mission"
+        }
+      },
+      {
+        "stage": "no-action",
+        "endpoint": "mission/$s256",
+        "body": {
+          "sdi": "d-update-1",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "mission_s256": "$s256",
+          "description": "Fixture update"
+        }
+      },
+      {
+        "stage": "unrecognized",
+        "endpoint": "mission/$s256",
+        "body": {
+          "sdi": "d-update-2",
+          "iat": "$now",
+          "sub": "$sub",
+          "agent": "$agent",
+          "action": "rename",
+          "mission_s256": "$s256",
+          "description": "Fixture update"
+        }
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "id": "missing-status",
+      "clause": "supervision.ss.mission-action",
+      "kind": "status",
+      "equals": 400,
+      "stage": "no-action"
+    },
+    {
+      "id": "missing-error",
+      "clause": "supervision.ss.mission-action",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "no-action",
+      "member": "error"
+    },
+    {
+      "id": "unrecognized-status",
+      "clause": "supervision.ss.mission-action",
+      "kind": "status",
+      "equals": 400,
+      "stage": "unrecognized"
+    },
+    {
+      "id": "unrecognized-error",
+      "clause": "supervision.ss.mission-action",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "unrecognized",
+      "member": "error"
+    },
+    {
+      "id": "report-no-id-status",
+      "clause": "supervision.ss.event-id",
+      "kind": "status",
+      "equals": 400,
+      "stage": "approved-no-id"
+    },
+    {
+      "id": "report-no-id-error",
+      "clause": "supervision.ss.event-id",
+      "kind": "json-member",
+      "equals": "invalid_request",
+      "stage": "approved-no-id",
+      "member": "error"
+    }
+  ]
+}

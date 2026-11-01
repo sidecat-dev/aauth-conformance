@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "id": "mission-completion-token",
+  "title": "Missions: A completed mission's Resource token is refused",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "completion-token"
+  },
+  "assertions": [
+    {
+      "id": "person-mission-person-token-0",
+      "stage": "person",
+      "kind": "mission-person-token",
+      "equals": true,
+      "clause": "mission.person-token-claim"
+    },
+    {
+      "id": "before-token-status-class-1",
+      "stage": "before-token",
+      "kind": "status-class",
+      "equals": "2xx",
+      "clause": "mission.host-policy"
+    },
+    {
+      "id": "action-status-class-2",
+      "stage": "action",
+      "kind": "status-class",
+      "equals": "2xx",
+      "clause": "mission.host-policy"
+    },
+    {
+      "id": "after-token-status-3",
+      "stage": "after-token",
+      "kind": "status",
+      "equals": 403,
+      "clause": "mission.resource-token-mission"
+    },
+    {
+      "id": "after-token-json-member-4",
+      "stage": "after-token",
+      "kind": "json-member",
+      "equals": "mission_terminated",
+      "clause": "mission.status-error",
+      "member": "error"
+    },
+    {
+      "id": "after-token-json-member-5",
+      "stage": "after-token",
+      "kind": "json-member",
+      "equals": "terminated",
+      "clause": "mission.status-error",
+      "member": "mission_status"
+    },
+    {
+      "id": "after-token-mission-no-token-6",
+      "stage": "after-token",
+      "kind": "mission-no-token",
+      "equals": true,
+      "clause": "mission.resource-token-mission"
+    }
+  ]
+}

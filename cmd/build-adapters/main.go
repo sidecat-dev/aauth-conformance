@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -24,13 +25,14 @@ func main() {
 func run() error {
 	goSource := flag.String("go-source", "", "aauth-go checkout (required unless -rust-source is supplied)")
 	rustSource := flag.String("rust-source", "", "aauth-rust checkout (required unless -go-source is supplied)")
+	communitySource := flag.String("community-source", "", "github.com/aauth-dev/aauth-go checkout, built with adapters/community-go")
 	out := flag.String("out", "build", "build output directory")
-	role := flag.String("role", conformance.ResourceRole, "resource.agent-identity, agent.signing, person-server.direct, authorization.federated, authorization.deferred or authorization.subagent")
+	role := flag.String("role", conformance.ResourceRole, strings.Join(conformance.Roles(), ", "))
+	recommended := flag.Bool("claim-recommended", false, "also claim the role's SHOULD-level (recommended) clauses")
 	flag.Parse()
-	if *goSource == "" && *rustSource == "" {
-		return fmt.Errorf("supply -go-source and/or -rust-source")
+	if *goSource == "" && *rustSource == "" && *communitySource == "" {
+		return fmt.Errorf("supply -go-source, -rust-source and/or -community-source")
 	}
-	nativeFederation := *role == conformance.FederatedRole || *role == conformance.DeferredRole || *role == conformance.SubagentRole
 	root, err := os.Getwd()
 	if err != nil {
 		return err
@@ -50,12 +52,15 @@ func run() error {
 		return err
 	}
 	claims := conformance.Claims(suite, *role)
+	if *recommended {
+		claims = append(claims, conformance.RecommendedClaims(suite, *role)...)
+	}
 	targets := conformance.Targets{Version: 1, Role: *role}
 	suffix := ""
 	if runtime.GOOS == "windows" {
 		suffix = ".exe"
 	}
-	for _, item := range []struct{ id, source string }{{"aauth-go", *goSource}, {"aauth-rust", *rustSource}} {
+	for _, item := range []struct{ id, source string }{{"aauth-go", *goSource}, {"aauth-rust", *rustSource}, {"aauth-go-community", *communitySource}} {
 		if item.source == "" {
 			continue
 		}
@@ -75,12 +80,21 @@ func run() error {
 		if len(dirty) > 0 {
 			rev += "+dirty"
 		}
+		if reason := unavailableRoles[*role][item.id]; reason != "" {
+			fmt.Printf("%s at %s: not offered for %s\n", item.id, rev, *role)
+			targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: rev, Unavailable: reason})
+			continue
+		}
 		work := filepath.Join(directory, item.id+"-adapter")
 		if err = os.MkdirAll(work, 0755); err != nil {
 			return err
 		}
 		binary := filepath.Join(directory, item.id+"-launcher"+suffix)
-		if item.id == "aauth-go" {
+		if item.id == "aauth-go-community" {
+			if err = buildCommunity(root, work, source, binary); err != nil {
+				return err
+			}
+		} else if item.id == "aauth-go" {
 			if err = selectGoRoleSource(root, work, *role); err != nil {
 				return err
 			}
@@ -122,17 +136,20 @@ func run() error {
 			if err != nil {
 				return err
 			}
-			if nativeFederation {
-				manifest = append(manifest, []byte("\n[dependencies.aauth-rust-access-server]\nversion = \"=0.1.0-alpha.1\"\n")...)
+			for _, name := range rustRoleCrates[*role] {
+				manifest = append(manifest, []byte("\n[dependencies."+name+"]\nversion = \"=0.1.0-alpha.2\"\n")...)
+			}
+			// The launcher manifest names the crates by an exact alpha version;
+			// select the version the chosen checkout declares so the path patches apply.
+			if version := rustWorkspaceVersion(source); version != "" {
+				manifest = []byte(strings.ReplaceAll(string(manifest), `"=0.1.0-alpha.2"`, strconv.Quote("="+version)))
 			}
 			manifest = append(manifest, []byte("\n[patch.crates-io]\n")...)
-			names := []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose"}
+			names := []string{"aauth-rust-core", "aauth-rust-resource", "aauth-rust-agent", "aauth-rust-jose", "aauth-rust-budgets"}
 			if _, e := os.Stat(filepath.Join(source, "crates", "aauth-rust-person-server")); e == nil || *role == conformance.PersonServerRole {
 				names = append(names, "aauth-rust-person-server")
 			}
-			if nativeFederation {
-				names = append(names, "aauth-rust-access-server")
-			}
+			names = append(names, rustRoleCrates[*role]...)
 			for _, name := range names {
 				manifest = append(manifest, []byte(name+" = { path = "+strconv.Quote(filepath.ToSlash(filepath.Join(source, "crates", name)))+" }\n")...)
 			}
@@ -147,26 +164,19 @@ func run() error {
 			if err = copyFile(filepath.Join(source, "rust-toolchain.toml"), filepath.Join(work, "rust-toolchain.toml")); err != nil {
 				return err
 			}
-			buildArgs := []string{"build", "--target-dir", filepath.Join(directory, "rust-target")}
-			if nativeFederation {
-				feature := "federation"
-				if *role == conformance.DeferredRole {
-					feature = "deferred"
-				}
-				if *role == conformance.SubagentRole {
-					feature = "subagent"
-				}
+			buildArgs := []string{"build", "--target-dir", filepath.Join(root, "build", "rust-target-shared")}
+			if feature := rustRoleFeatures[*role]; feature != "" {
 				buildArgs = append(buildArgs, "--features", feature)
 			}
 			if err = command(work, "cargo", buildArgs...); err != nil {
 				return err
 			}
-			if err = copyFile(filepath.Join(directory, "rust-target/debug/aauth-conformance-rust-adapter"+suffix), binary); err != nil {
+			if err = copyFile(filepath.Join(root, "build", "rust-target-shared", "debug", "aauth-conformance-rust-adapter"+suffix), binary); err != nil {
 				return err
 			}
 		}
 		fmt.Printf("Built %s at %s\n", item.id, rev)
-		targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: rev, Command: []string{binary}, Claims: claims})
+		targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: rev, Command: []string{binary}, Claims: offeredClaims(claims, unofferedClaims[*role][item.id])})
 	}
 	b, err := json.MarshalIndent(targets, "", "  ")
 	if err != nil {
@@ -193,20 +203,109 @@ func command(dir, name string, args ...string) error {
 	return nil
 }
 
+// Role-specific launcher sources, native Rust features and extra Rust crates.
+// Earlier implementation checkouts can still build the roles that need none.
+var goRoleSources = map[string][]string{
+	conformance.DeferredRole: {"deferred.go"},
+	conformance.SubagentRole: {"subagent.go"},
+}
+var rustRoleFeatures = map[string]string{
+	conformance.FederatedRole: "federation",
+	conformance.DeferredRole:  "deferred",
+	conformance.SubagentRole:  "subagent",
+}
+var rustRoleCrates = map[string][]string{
+	conformance.FederatedRole: {"aauth-rust-access-server"},
+	conformance.DeferredRole:  {"aauth-rust-access-server"},
+	conformance.SubagentRole:  {"aauth-rust-access-server"},
+}
+
+// unavailableRoles declares a role an implementation has no native API for.
+// Its target carries the reason instead of a launcher and claims nothing.
+var unavailableRoles = map[string]map[string]string{}
+
+// unofferedClaims lists clauses an implementation's native API assigns to
+// host code, so a launcher-supplied component would decide them. They stay
+// unclaimed for that implementation and are reported as not offered.
+var unofferedClaims = map[string]map[string][]string{}
+
+func offeredClaims(claims, unoffered []string) []string {
+	offered := []string{}
+	for _, claim := range claims {
+		if !slices.Contains(unoffered, claim) {
+			offered = append(offered, claim)
+		}
+	}
+	return offered
+}
+
 // Remove role-specific sources when an output directory is reused for another
 // profile. Earlier implementation revisions need only the common launcher.
 func selectGoRoleSource(root, work, role string) error {
-	for source, selectedRole := range map[string]string{"deferred.go": conformance.DeferredRole, "subagent.go": conformance.SubagentRole} {
-		destination := filepath.Join(work, source)
-		if role == selectedRole {
-			if err := copyFile(filepath.Join(root, "adapters/go", source), destination); err != nil {
+	for selectedRole, sources := range goRoleSources {
+		for _, source := range sources {
+			destination := filepath.Join(work, source)
+			if role == selectedRole {
+				if err := copyFile(filepath.Join(root, "adapters/go", source), destination); err != nil {
+					return err
+				}
+				continue
+			}
+			if slices.Contains(goRoleSources[role], source) {
+				continue
+			}
+			if err := os.Remove(destination); err != nil && !os.IsNotExist(err) {
 				return err
 			}
-			continue
-		}
-		if err := os.Remove(destination); err != nil && !os.IsNotExist(err) {
-			return err
 		}
 	}
 	return nil
+}
+
+// rustWorkspaceVersion returns [workspace.package] version from the checkout's
+// root manifest, or "" when the checkout does not declare one.
+func rustWorkspaceVersion(source string) string {
+	b, err := os.ReadFile(filepath.Join(source, "Cargo.toml"))
+	if err != nil {
+		return ""
+	}
+	section := ""
+	for _, line := range strings.Split(string(b), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "[") {
+			section = line
+			continue
+		}
+		name, value, ok := strings.Cut(line, "=")
+		if section == "[workspace.package]" && ok && strings.TrimSpace(name) == "version" {
+			version, err := strconv.Unquote(strings.TrimSpace(value))
+			if err == nil {
+				return version
+			}
+		}
+	}
+	return ""
+}
+
+// buildCommunity compiles adapters/community-go against the selected checkout
+// of the community module. Every source file is included: role files register
+// themselves, and the launcher refuses a role none registered.
+func buildCommunity(root, work, source, binary string) error {
+	files, err := filepath.Glob(filepath.Join(root, "adapters/community-go/*.go"))
+	if err != nil {
+		return err
+	}
+	files = append(files, filepath.Join(root, "adapters/community-go/go.mod"))
+	for _, file := range files {
+		if err := copyFile(file, filepath.Join(work, filepath.Base(file))); err != nil {
+			return err
+		}
+	}
+	if err := command(work, "go", "mod", "edit", "-replace=github.com/aauth-dev/aauth-go="+source); err != nil {
+		return err
+	}
+	if err := command(work, "go", "mod", "tidy"); err != nil {
+		return err
+	}
+	return command(work, "go", "build", "-buildvcs=false", "-o", binary, ".")
 }

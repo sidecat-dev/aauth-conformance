@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "r3-federated-ps-hash-mismatch",
+  "title": "Four-party: bytes served to the PS do not hash to r3_s256",
+  "role_under_test": "r3.federated-issuer",
+  "given": "agent-identity",
+  "input": {
+    "document": "altered-ps",
+    "operations": [
+      "records.read",
+      "records.export"
+    ]
+  },
+  "assertions": [
+    {
+      "id": "no-auth-token",
+      "stage": "token",
+      "clause": "r3.as.ps-hash-verification",
+      "kind": "r3-no-auth-token",
+      "equals": true
+    }
+  ]
+}

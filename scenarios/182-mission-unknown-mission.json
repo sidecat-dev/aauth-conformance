@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "mission-unknown-mission",
+  "title": "Missions: Person token for an unknown mission",
+  "role_under_test": "mission.person-server",
+  "given": "agent-identity",
+  "input": {
+    "flow": "unknown-mission"
+  },
+  "assertions": [
+    {
+      "id": "unknown-status-class-0",
+      "stage": "unknown",
+      "kind": "status-class",
+      "equals": "4xx",
+      "clause": "mission.person-token-verify"
+    },
+    {
+      "id": "unknown-mission-no-token-1",
+      "stage": "unknown",
+      "kind": "mission-no-token",
+      "equals": true,
+      "clause": "mission.person-token-verify"
+    }
+  ]
+}

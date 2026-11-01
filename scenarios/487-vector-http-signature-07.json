@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "id": "vector.http-signature.07",
+  "title": "Community vector http-signature #7: created within the window verifies",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/http-signature.json",
+      "sha256": "d37870542ce41136e80e2e170483ebfa31e6ab6f1a5ae56f7aa960b43173b691",
+      "index": 6
+    },
+    "kind": "http-signature",
+    "case": {
+      "name": "created within the window verifies",
+      "signing_key": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
+        "alg": "Ed25519",
+        "use": "sig",
+        "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+      },
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/documents",
+        "headers": {
+          "Signature-Key": "sig=jwt; jwt=\"eyJhbGciOiJFZDI1NTE5In0.e30.c2ln\""
+        }
+      },
+      "signed": {
+        "Signature": "sig=:CM3sVqR9XUQWmhOyG14A3/mhmxb3Dc3MmemFxSqDhP29hcT+Him1BYsyVQzd+di7mvQckrJpOVw8XTQsGIbOBg==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1791275958"
+      },
+      "verify": {
+        "at_offset": 59
+      },
+      "expect": "valid"
+    }
+  },
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "vector.http-sig.window",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

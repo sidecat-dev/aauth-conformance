@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-jwks-uri-unknown-kid",
+  "title": "jwks_uri naming a kid the JWKS lacks",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwks_uri",
+    "alg": "Ed25519",
+    "mutation": "unknown-kid"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.unknown-kid",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigkey.v.unknown-kid",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "unknown_key"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "id": "events-ap-delivery-with-body",
+  "title": "Metadata, native subscribe token and a valid delivery with a body",
+  "role_under_test": "events.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "max_uses": 0,
+    "deliveries": [
+      {
+        "mutation": "none",
+        "body": true
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "metadata",
+      "id": "metadata-status",
+      "clause": "events.ap.metadata",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "metadata",
+      "id": "event-endpoint",
+      "clause": "events.ap.metadata",
+      "kind": "json-member",
+      "member": "event_endpoint",
+      "equals": "https://ap.conformance.test/events"
+    },
+    {
+      "stage": "subscribe",
+      "id": "subscribe-control",
+      "clause": "events.ap.control",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "subscribe",
+      "id": "subscribe-token",
+      "clause": "events.ap.subscribe-token",
+      "kind": "events-subscribe-token",
+      "equals": true
+    },
+    {
+      "stage": "delivery-1",
+      "id": "accepted",
+      "clause": "events.ap.accepted",
+      "kind": "status",
+      "equals": 202
+    }
+  ]
+}
