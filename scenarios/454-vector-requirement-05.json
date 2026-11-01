@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "id": "vector.requirement.05",
+  "title": "Community vector requirement #5: requirement=interaction; url=\"https://ps.example/interaction\"; code... (canonical serialization is not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/requirement.json",
+      "sha256": "3409442f2f0c66bdc75a5433ff331b1d0cc7bd31d62c96c52b4df9563a25671b",
+      "index": 4
+    },
+    "kind": "requirement",
+    "case": {
+      "header": "requirement=interaction; url=\"https://ps.example/interaction\"; code=\"A1B2-C3D4\"",
+      "parsed": {
+        "Requirement": "interaction",
+        "URL": "https://ps.example/interaction",
+        "Code": "A1B2-C3D4"
+      },
+      "canonical": true
+    }
+  },
+  "assertions": [
+    {
+      "id": "requirement",
+      "clause": "vector.requirement",
+      "kind": "vector-result",
+      "member": "requirement",
+      "equals": "interaction"
+    },
+    {
+      "id": "url",
+      "clause": "vector.requirement.interaction",
+      "kind": "vector-result",
+      "member": "url",
+      "equals": "https://ps.example/interaction"
+    },
+    {
+      "id": "code",
+      "clause": "vector.requirement.interaction",
+      "kind": "vector-result",
+      "member": "interaction_code",
+      "equals": "A1B2-C3D4"
+    }
+  ]
+}

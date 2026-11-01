@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "id": "vector.metadata.04",
+  "title": "Community vector metadata #4: aauth-resource.json (the vector's round trip through Go types is not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/metadata.json",
+      "sha256": "edae9c211152116749351724efd54a83f4e21b82108b2781f8940366414f6c83",
+      "index": 3
+    },
+    "kind": "metadata",
+    "case": {
+      "document": "aauth-resource.json",
+      "json": {
+        "issuer": "https://resource.example",
+        "jwks_uri": "https://resource.example/.well-known/jwks.json",
+        "access_mode": "auth-token",
+        "name": "Example Data Service",
+        "description": "**Example Data Service** stores and serves your documents.",
+        "logo_uri": "https://resource.example/logo.png",
+        "logo_dark_uri": "https://resource.example/logo-dark.png",
+        "documentation_uri": "https://resource.example/docs",
+        "tos_uri": "https://resource.example/tos",
+        "policy_uri": "https://resource.example/privacy",
+        "authorization_endpoint": "https://resource.example/authorize",
+        "scope_descriptions": {
+          "data.read": "Read access to your data and documents",
+          "data.write": "Create and update your data and documents",
+          "data.delete": "Permanently delete your data and documents"
+        },
+        "signature_window": 120,
+        "additional_signature_components": [
+          "content-type",
+          "content-digest"
+        ],
+        "revocation_endpoint": "https://resource.example/revoke"
+      }
+    }
+  },
+  "assertions": [
+    {
+      "id": "accepted",
+      "clause": "vector.metadata",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "id": "vector.requirement.04",
+  "title": "Community vector requirement #4: requirement=auth-token; resource-token=\"eyJhbGciOiJFZDI1NTE5In0.e30... (canonical serialization is not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/requirement.json",
+      "sha256": "3409442f2f0c66bdc75a5433ff331b1d0cc7bd31d62c96c52b4df9563a25671b",
+      "index": 3
+    },
+    "kind": "requirement",
+    "case": {
+      "header": "requirement=auth-token; resource-token=\"eyJhbGciOiJFZDI1NTE5In0.e30.c2ln\"",
+      "parsed": {
+        "Requirement": "auth-token",
+        "ResourceToken": "eyJhbGciOiJFZDI1NTE5In0.e30.c2ln"
+      },
+      "canonical": true
+    }
+  },
+  "assertions": [
+    {
+      "id": "requirement",
+      "clause": "vector.requirement",
+      "kind": "vector-result",
+      "member": "requirement",
+      "equals": "auth-token"
+    },
+    {
+      "id": "resource-token",
+      "clause": "vector.requirement.auth-token",
+      "kind": "vector-result",
+      "member": "resource_token",
+      "equals": "eyJhbGciOiJFZDI1NTE5In0.e30.c2ln"
+    }
+  ]
+}

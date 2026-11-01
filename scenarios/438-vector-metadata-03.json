@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "id": "vector.metadata.03",
+  "title": "Community vector metadata #3: aauth-access.json (the vector's round trip through Go types is not graded)",
+  "role_under_test": "vectors.library",
+  "given": "agent-identity",
+  "input": {
+    "source": {
+      "file": "vectors/community/metadata.json",
+      "sha256": "edae9c211152116749351724efd54a83f4e21b82108b2781f8940366414f6c83",
+      "index": 2
+    },
+    "kind": "metadata",
+    "case": {
+      "document": "aauth-access.json",
+      "json": {
+        "issuer": "https://as.resource.example",
+        "name": "Example Access Server",
+        "description": "**Example Access Server** — issues access for the Example resource.",
+        "logo_uri": "https://as.resource.example/logo.png",
+        "logo_dark_uri": "https://as.resource.example/logo-dark.png",
+        "documentation_uri": "https://as.resource.example/docs",
+        "tos_uri": "https://as.resource.example/tos",
+        "policy_uri": "https://as.resource.example/privacy",
+        "auth_token_endpoint": "https://as.resource.example/token",
+        "revocation_endpoint": "https://as.resource.example/revoke",
+        "jwks_uri": "https://as.resource.example/.well-known/jwks.json"
+      }
+    }
+  },
+  "assertions": [
+    {
+      "id": "accepted",
+      "clause": "vector.metadata",
+      "kind": "vector-result",
+      "member": "accepted",
+      "equals": true
+    }
+  ]
+}

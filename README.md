@@ -478,3 +478,18 @@ Use `-role sigkey.signer` the same way. ES256 is a SHOULD (protocol line
 `build-adapters -claim-recommended`. A scheme or algorithm a library does not
 offer is left unclaimed for it and its scenario is not run; ML-DSA-44 fixtures
 need a Go 1.27 toolchain for the harness.
+## Community test vectors
+
+The 94 test vectors of the community aauth-go v0.3.0 (`vectors/community/`,
+MIT, see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)) run as the
+`vectors.library` role, one scenario per case, against each library's own
+parsing and verification functions:
+
+```sh
+go run ./cmd/build-adapters -role vectors.library -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -community-source /path/to/community-aauth-go -out build/vectors
+go run ./cmd/aauth-conformance -targets build/vectors/targets.json -report build/vectors-report.json -markdown build/vectors-report.md
+```
+
+The scenarios grade what the pinned drafts fix, which is sometimes less than
+the vector says; [FORMAT.md](FORMAT.md#community-vectors-profile) lists each
+difference. Add `-claim-recommended` to grade the ES256 (SHOULD) cases too.
