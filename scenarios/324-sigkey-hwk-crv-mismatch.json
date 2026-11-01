@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-hwk-crv-mismatch",
+  "title": "hwk P-384 key naming ES256",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "hwk",
+    "alg": "Ed25519",
+    "mutation": "alg-crv"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.hwk-crv-mismatch",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigkey.v.hwk-crv-mismatch",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_key"
+    }
+  ]
+}

@@ -1565,6 +1565,350 @@
       "section": "Deferred Decisions, line 286: after a 202 the PS polls the pending URL with a signed GET under the identity that made the request and sends no body (stated without a BCP 14 keyword)",
       "anchor": "deferred-decisions",
       "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.echo",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Signature-Key Scheme Rejection, line 2266: a Resource that serves clients outside AAuth MAY accept further schemes (the 200 echo of the verified scheme is adapter contract)",
+      "anchor": "scheme-rejection",
+      "scope": "adapter-contract"
+    },
+    {
+      "id": "sigkey.v.hwk-ed25519",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Header Web Key (hwk), lines 241-297; protocol Signature Algorithms line 2166: every party MUST support Ed25519",
+      "anchor": "header-web-key-hwk",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.hwk-es256",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Signature Algorithms, line 2166: every party SHOULD support ES256 (recommended, claimed only with -claim-recommended)",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "id": "sigkey.v.hwk-es384",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Algorithm Determination, line 225: a key whose alg the verifier supports clears the check; hwk EC keys, lines 260-276 (claimed where the verifier implements ES384)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.hwk-rs256",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Algorithm Determination, line 225; hwk RSA keys, lines 278-288 (claimed where the verifier implements RS256)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.hwk-ps256",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Algorithm Determination, line 225; hwk RSA keys, lines 278-288 (claimed where the verifier implements PS256)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.ap-mixed-jwks",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "JWKS Discovery and Caching, line 2282: a verifier MUST select the key matching kid without requiring any other member of the JWKS to be usable; signature-key Algorithm Determination line 235",
+      "anchor": "jwks-discovery",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.ap-pq-only",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Algorithm Determination, line 233: a verifier that does not implement a JWK's kty (AKP, ML-DSA-44) MUST reject it with defined error feedback and MUST NOT fail in an undefined manner; here the Agent Provider's only key, so the 401 code is not fixed (protocol step 5 invalid_jwt versus line 233 unsupported_algorithm)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.jwks-uri",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "JWKS URI Discovery (jwks_uri), lines 446-480: fetch {id}/.well-known/{dwk}, check issuer, fetch jwks_uri, select kid; the metadata MUST contain issuer and jwks_uri (line 462)",
+      "anchor": "jwks-uri-scheme",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.signer-mixed-jwks",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Algorithm Determination, line 235: MUST select the member matching kid and MUST NOT fail because an unselected member names a kty or alg the verifier does not implement",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.signer-pq-only",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Verification (Server) step 6, line 2249: return unsupported_algorithm for a key type the server does not implement; signature-key line 233 (a verifier implementing ML-DSA-44 verifies instead)",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.unknown-kid",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Verification (Server) step 5, line 2248: unknown_key if the key is not found at the jwks_uri; any failure is 401 (line 2242)",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.jwks",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Direct JWKS (jwks), lines 490-525: fetch url, parse the JWKS, select kid (claimed where the verifier implements jwks)",
+      "anchor": "jwks-scheme",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.self-jwt",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Self-Issued JWT (self-jwt), lines 613-660: the issuer's discovered key verifies the JWT and the HTTP signature (claimed where the verifier implements self-jwt)",
+      "anchor": "self-jwt",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.jkt-jwt",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "JKT JWT Self-Issued Key Delegation (jkt-jwt), lines 305-430: implementations MUST support jkt-s256+jwt (line 331); verification procedure lines 408-430",
+      "anchor": "jkt-jwt-scheme",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.uncovered-hwk",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Signature-Key Integrity, line 1301: verifiers MUST reject requests where signature-key is not covered; protocol Verification step 2 (line 2245) answers invalid_input",
+      "anchor": "signature-key-integrity",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.uncovered-jwks-uri",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Signature-Key Integrity, line 1301, under jwks_uri; protocol Verification step 2 (line 2245) answers invalid_input",
+      "anchor": "signature-key-integrity",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.unknown-scheme",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Unknown schemes, line 155: a verifier MUST reject a member whose scheme it does not implement with error=unsupported_scheme; protocol Verification step 4, line 2247",
+      "anchor": "signature-key-http-request-header",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.missing-member-jwt",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Signature-Key HTTP Request Header item 4, line 179, and Label Consistency, line 187: no member for the verified label MUST fail. Code settled by the text: invalid_signature covers missing Signature-Key material (line 1018) and protocol step 1 (line 2244) maps missing headers to invalid_signature; invalid_key (line 1046, protocol step 5 line 2248) is for a key that is present but cannot be parsed, and here there is no member to parse",
+      "anchor": "signature-key-http-request-header",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.missing-member-hwk",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "As sigkey.v.missing-member-jwt (lines 179, 187, 1018; protocol 2244, 2248), for a further scheme: invalid_signature",
+      "anchor": "signature-key-http-request-header",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.hwk-kid",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Header Web Key constraints, line 295: the kid parameter MUST NOT be used (no code is fixed; any failure is 401 with Signature-Error, protocol line 2242)",
+      "anchor": "header-web-key-hwk",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.hwk-eddsa",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Verification (Server) step 6, line 2249: unsupported_algorithm for a polymorphic alg; signature-key lines 203 and 211",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.cnf-eddsa",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Verification (Server) step 6, line 2249, for the cnf.jwk of a jwt-scheme token: unsupported_algorithm; Signature Algorithms line 2171",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.jws-eddsa",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Common JWT Claims, line 2297: implementations MUST NOT accept the polymorphic EdDSA identifier (the code is not fixed; 401 with Signature-Error, line 2242)",
+      "anchor": "common-claims",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.hwk-kty-mismatch",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Verification (Server) step 6, line 2249: invalid_key when kty disagrees with alg; signature-key line 229",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.hwk-crv-mismatch",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Verification (Server) step 6, line 2249: invalid_key when crv disagrees with alg (ES256 on P-384); signature-key line 229",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.cnf-kty-mismatch",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Algorithm Determination, line 229: MUST reject a cnf.jwk whose kty disagrees with alg (the code depends on whether ES256 is implemented for cnf keys, protocol step 6; 401 with Signature-Error)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.hwk-symmetric",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Algorithm Determination, line 217: a verifier MUST reject a scheme conveying a symmetric (oct, HS256) key (the code is not fixed; 401 with Signature-Error)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.cnf-symmetric",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "Algorithm Determination, line 217, for a cnf.jwk: MUST reject a symmetric key (401 with Signature-Error)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.v.jwt-es256",
+      "role": "sigkey.verifier",
+      "source": "core",
+      "section": "Signature Algorithms, lines 2166 and 2175: SHOULD support ES256, RECOMMENDED for hardware-backed keys; an Agent token whose cnf.jwk is ES256 (recommended, claimed only with -claim-recommended)",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "id": "sigkey.v.jwt-exp",
+      "role": "sigkey.verifier",
+      "source": "key",
+      "section": "JWT Confirmation Key (jwt), line 552: the JWT MUST contain exp; protocol Verification step 5, line 2248: invalid_jwt when a JWT scheme fails verification",
+      "anchor": "jwt-confirmation-key-jwt",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.created",
+      "role": "sigkey.signer",
+      "source": "core",
+      "section": "Signature Parameters, line 2234: created MUST be set to the current time, here the configured fixture clock (claimed where the signer takes a clock)",
+      "anchor": "signature-parameters",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.hwk-ed25519",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "Header Web Key (hwk), lines 241-297: the member carries the signer's public key with alg present (line 293) and no kid (line 295); Signature-Key Integrity line 1289: signature-key is covered",
+      "anchor": "header-web-key-hwk",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.hwk-es256",
+      "role": "sigkey.signer",
+      "source": "core",
+      "section": "Signature Algorithms, line 2166: SHOULD support ES256 (recommended)",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "id": "sigkey.s.hwk-es384",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "hwk EC keys, lines 260-276; Integrity line 1289 (claimed where the signer implements ES384)",
+      "anchor": "header-web-key-hwk",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.hwk-rs256",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "hwk RSA keys, lines 278-288, alg naming padding and hash (line 288); Integrity line 1289 (claimed where the signer implements RS256)",
+      "anchor": "header-web-key-hwk",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.hwk-ps256",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "hwk RSA keys, lines 278-288; Integrity line 1289 (claimed where the signer implements PS256)",
+      "anchor": "header-web-key-hwk",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.jwt",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "JWT Confirmation Key (jwt), line 536: the jwt parameter is REQUIRED and carries the assertion unchanged; Integrity line 1289; protocol Signature Parameters line 2234 (created is the current time)",
+      "anchor": "jwt-confirmation-key-jwt",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.jwt-es256",
+      "role": "sigkey.signer",
+      "source": "core",
+      "section": "Signature Algorithms, line 2166: SHOULD support ES256; a jwt member confirming an ES256 key (recommended)",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "id": "sigkey.s.jwks-uri",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "JWKS URI Discovery (jwks_uri), lines 450-456: id, dwk and kid REQUIRED; Integrity line 1289",
+      "anchor": "jwks-uri-scheme",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.jwks",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "Direct JWKS (jwks), lines 494-498 and 522: url and kid REQUIRED, the same bytes for the same identity; Integrity line 1289",
+      "anchor": "jwks-scheme",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.self-jwt",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "Self-Issued JWT (self-jwt), line 619: jwt REQUIRED; the discovered issuer key signs the request; Integrity line 1289",
+      "anchor": "self-jwt",
+      "scope": "protocol"
+    },
+    {
+      "id": "sigkey.s.jkt-jwt",
+      "role": "sigkey.signer",
+      "source": "key",
+      "section": "JKT JWT (jkt-jwt), line 323: jwt REQUIRED; the delegated cnf.jwk signs the request (line 430); Integrity line 1289",
+      "anchor": "jkt-jwt-scheme",
+      "scope": "protocol"
     }
   ]
 }

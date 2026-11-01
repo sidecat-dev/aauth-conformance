@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-uncovered-jwks-uri",
+  "title": "jwks_uri without signature-key coverage",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwks_uri",
+    "alg": "Ed25519",
+    "mutation": "uncovered-signature-key"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.uncovered-jwks-uri",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigkey.v.uncovered-jwks-uri",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "invalid_input"
+    }
+  ]
+}

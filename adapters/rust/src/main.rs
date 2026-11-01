@@ -11,6 +11,8 @@ mod r3;
 mod mission;
 #[cfg(feature = "supervision")]
 mod supervision;
+#[cfg(feature = "sigkey")]
+mod sigkey;
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAgentToken,
 };
@@ -191,6 +193,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         #[cfg(not(feature = "supervision"))]
         return Err("rebuild this launcher for the supervision roles".into());
+    }
+    if config.role == "sigkey.verifier" || config.role == "sigkey.signer" {
+        #[cfg(feature = "sigkey")]
+        return if config.role == "sigkey.verifier" {
+            sigkey::run_verifier(config)
+        } else {
+            sigkey::run_signer(config)
+        };
+        #[cfg(not(feature = "sigkey"))]
+        return Err("rebuild this launcher for the sigkey roles".into());
     }
     if !config.role.is_empty() && config.role != "resource.agent-identity" {
         return Err(format!("rebuild this launcher for {}", config.role).into());

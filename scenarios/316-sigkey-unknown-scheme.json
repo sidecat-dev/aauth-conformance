@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-unknown-scheme",
+  "title": "Unregistered scheme token",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "x-unregistered",
+    "alg": "Ed25519",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.unknown-scheme",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigkey.v.unknown-scheme",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "unsupported_scheme"
+    }
+  ]
+}

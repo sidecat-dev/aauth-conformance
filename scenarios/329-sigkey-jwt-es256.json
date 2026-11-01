@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "sigkey-jwt-es256",
+  "title": "Agent token confirming an ES256 key",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwt",
+    "alg": "ES256",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.jwt-es256",
+      "kind": "status",
+      "equals": 200
+    }
+  ]
+}

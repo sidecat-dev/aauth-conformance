@@ -574,3 +574,41 @@ drafts) and `authorization.subagent`, whose host control advances PS-to-AS
 polling once per reference; the module's PS polls its AS on each Agent poll.
 `authorization.deferred` is not run for this target for the same reason, and
 because the module's AS never answers 402 itself.
+## Signature-Key roles
+
+`sigkey.verifier` and `sigkey.signer` read the bootstrap `extension`:
+`verifier`, `agent_provider`, `signer`, `signer_dwk`, `jwks_url`,
+`self_jwt_typ`, `algorithms` and `documents`, a map from each logical HTTPS
+origin to the loopback transport serving its discovery documents. The
+verifier announces the path of `verifier`; the signer announces the path of
+the bootstrap `resource` (`/control`). Each verifier scenario starts a fresh
+launcher, since its documents differ.
+
+The verifier is the native Resource with its further schemes enabled; its
+responses are returned unchanged. The 200 echo of the verified scheme is
+adapter contract. Go uses `resource.NewAgentIdentity` with
+`FurtherSchemesConfig` (hwk, jkt-jwt, jwks_uri, jwks) and a native
+`signaturekey.HTTPKeyResolver` for Agent Provider, jwks_uri and jwks keys: the
+resolver fetches, parses and selects keys itself; the host supplies only an
+egress admitter for the fixture origins and a transport that maps them to
+loopback. Rust uses `AgentIdentityResource::with_further_schemes` and, for a
+`Decision::OtherScheme`, the `PreparedRequest` method its member calls for.
+The crate never fetches, so the launcher fetches the fixture documents (the
+JWKS through the `jwks_uri` that `metadata_jwks_uri` validates) and passes
+their bytes to `AgentProviderKeys`, `TrustedIssuerKeys`, `verify_self_jwt`
+and `verify_jwks`; for jwks the crate leaves selecting the kid to the host, so
+mixed key sets are graded under jwks_uri and the Agent Provider only. Proof
+errors are answered with the crate's own `Decision::SignatureFailure`
+mapping. The community launcher sends a jwks_uri member to
+`VerifyServerRequest` and every other request to `VerifyAndExtractAgent`,
+which refuses other schemes itself, and answers failures with
+`WriteSignatureFailure`.
+
+The signer posts its result to the job's `transport`, preserving the logical
+Host. Go uses `SignHWKRequest`, `SignJWTRequest`, `SignJWKSURIRequest`,
+`SignSelfJWTRequest` and `SignRequest` with jwks and jkt-jwt credentials;
+Rust uses `sign_request` with the matching `KeyMaterial`; the community
+module uses `agentprovider.SignHWK`, `AttachSignatureKey` with `SignRequest`,
+`ServerSigner` and `agentprovider.SignJKTJWT`, which read the wall clock.
+Schemes and algorithms a library does not offer are listed in
+`cmd/build-adapters/sigkey.go` and left unclaimed.

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "id": "sigkey-sign-hwk-ps256",
+  "title": "Signer presents hwk with PS256",
+  "role_under_test": "sigkey.signer",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "hwk",
+    "alg": "PS256",
+    "method": "GET"
+  },
+  "assertions": [
+    {
+      "id": "signed",
+      "clause": "sigkey.s.hwk-ps256",
+      "kind": "sigkey-signed",
+      "equals": true
+    },
+    {
+      "id": "member",
+      "clause": "sigkey.s.hwk-ps256",
+      "kind": "sigkey-member",
+      "equals": true
+    },
+    {
+      "id": "created",
+      "clause": "sigkey.s.created",
+      "kind": "sigkey-created",
+      "equals": 1800000000
+    }
+  ]
+}

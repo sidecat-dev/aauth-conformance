@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "sigkey-jwks-uri-mixed",
+  "title": "jwks_uri whose JWKS also holds an ML-DSA-44 key",
+  "role_under_test": "sigkey.verifier",
+  "given": "agent-identity",
+  "input": {
+    "scheme": "jwks_uri",
+    "alg": "Ed25519",
+    "mutation": "none",
+    "jwks": "mixed"
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "sigkey.v.signer-mixed-jwks",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "verified-scheme",
+      "clause": "sigkey.v.echo",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "jwks_uri"
+    }
+  ]
+}
