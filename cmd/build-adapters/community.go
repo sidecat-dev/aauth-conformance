@@ -23,6 +23,7 @@ func init() {
 		// reference; the module's PS polls its AS on each Agent poll and has
 		// no such entry point, and its AS never answers 402 itself.
 		conformance.SubagentRole: "the module's PS polls the Access Server on each Agent poll and offers no host-advanced poll, which this profile's deferred child outcomes require",
+		conformance.DeferredRole: "the module's PS polls the Access Server on each Agent poll and offers no host-advanced poll, and its Access Server never answers 402 itself; this profile's settlement and approval controls have no entry point",
 	} {
 		if unavailableRoles[role] == nil {
 			unavailableRoles[role] = map[string]string{}

@@ -334,5 +334,5 @@ func ValidateTargets(targets Targets, s Suite) error {
 func unavailablePermitted(role string) bool {
 	role = targetRole(role)
 	_, extension := extensionRoles[role]
-	return role == SubagentRole || extension
+	return role == SubagentRole || role == DeferredRole || extension
 }
