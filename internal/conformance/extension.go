@@ -23,7 +23,8 @@ type ExtensionRole struct {
 	Validate func(f Fixture, s Scenario) error
 	// Run starts each target and grades every scenario of the role.
 	Run func(ctx context.Context, s Suite, targets Targets, options Options, ap string, report Report) Report
-	// Unavailable permits targets that declare missing native support.
+	// Unavailable is retained for existing roles; every extension role
+	// accepts targets that declare missing native support.
 	Unavailable bool
 }
 
@@ -209,4 +210,29 @@ func jsonEqual(a, b any) bool {
 // validSeed reports whether seed is a 32-byte Ed25519 seed in lowercase hex.
 func validSeed(seed string) bool {
 	return len(seed) == 64 && strings.Trim(seed, "0123456789abcdef") == ""
+}
+
+// splitUnavailable separates targets that declare missing native support.
+// Their runs record every assertion as not claimed, with the declared reason,
+// so the role's runner never starts a launcher for them.
+func splitUnavailable(s Suite, targets Targets) (Targets, []Run) {
+	available := targets
+	available.Implementations = nil
+	runs := []Run{}
+	for _, target := range targets.Implementations {
+		if target.Unavailable == "" {
+			available.Implementations = append(available.Implementations, target)
+			continue
+		}
+		run := Run{Target: target}
+		for _, scenario := range s.Scenarios {
+			c := Case{ID: scenario.ID}
+			for _, a := range scenario.Assertions {
+				c.Results = append(c.Results, Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_claimed", Detail: target.Unavailable})
+			}
+			run.Cases = append(run.Cases, c)
+		}
+		runs = append(runs, run)
+	}
+	return available, runs
 }

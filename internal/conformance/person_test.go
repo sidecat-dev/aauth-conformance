@@ -20,9 +20,23 @@ func TestPersonOracleRejectsSignatureLineageScopeAndLifetime(t *testing.T) {
 	if !o.Valid {
 		t.Fatal(o)
 	}
+	for name, value := range map[string]any{"aud": []any{f.Origin}, "sub": "another-person"} {
+		cloned := map[string]any{}
+		for k, v := range claims {
+			cloned[k] = v
+		}
+		cloned[name] = value
+		other, _ := mintJWT(ps.Seed, ps.Kid, "aa-person+jwt", cloned)
+		// A one-member aud array is RFC 7519 aud; another subject is a host
+		// binding, graded only by the configured-subject check.
+		o := observePersonJWT(f, ps, other, "person", nil, f.Now+150)
+		if !o.Valid || o.Subject != (name == "aud") {
+			t.Fatal("protocol-valid Person token misgraded", cloned, o)
+		}
+	}
 	for _, mutate := range []func(map[string]any){
 		func(c map[string]any) { c["aud"] = "https://foreign.test" },
-		func(c map[string]any) { c["sub"] = "another-person" },
+		func(c map[string]any) { c["aud"] = []any{f.Origin, "https://foreign.test"} },
 		func(c map[string]any) { c["cnf"] = map[string]any{"jwk": publicJWK(strings.Repeat("08", 32))} },
 		func(c map[string]any) { c["exp"] = f.Now + 151 },
 		func(c map[string]any) { c["scope"] = "read" },
@@ -53,7 +67,7 @@ func TestPersonOracleRejectsSignatureLineageScopeAndLifetime(t *testing.T) {
 	if !observePersonJWT(f, ps, good, "auth", parent, f.Now+150).Valid {
 		t.Fatal("valid Auth token refused")
 	}
-	for _, mutate := range []func(map[string]any){func(c map[string]any) { c["scope"] = "read admin" }, func(c map[string]any) { c["exp"] = f.Now + 121 }, func(c map[string]any) { c["ps"] = "https://foreign.test" }} {
+	for _, mutate := range []func(map[string]any){func(c map[string]any) { c["sub"] = "another-person" }, func(c map[string]any) { c["scope"] = "read admin" }, func(c map[string]any) { c["exp"] = f.Now + 121 }, func(c map[string]any) { c["ps"] = "https://foreign.test" }} {
 		cloned := map[string]any{}
 		for k, v := range auth {
 			cloned[k] = v

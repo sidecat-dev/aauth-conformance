@@ -438,3 +438,18 @@ Server does with allow, deny and ask, when the supervisor is unavailable, and
 how it polls a deferred decision); their section text says so. Host
 rate-limiting is a host choice: an implementation that exports no
 rate_limited answer is recorded `not_exercised` with the reason, not passed.
+
+## Community aauth-go module
+
+The core roles also run against the community Go module
+`github.com/aauth-dev/aauth-go`:
+
+```sh
+go run ./cmd/build-adapters -role resource.agent-identity -community-source /path/to/community-aauth-go -out build/community
+go run ./cmd/aauth-conformance -targets build/community/targets.json -report build/community-report.json -markdown build/community-report.md
+```
+
+The same scenario files and expected answers apply. What the module does not
+implement, or what its API cannot be driven to under the fixture's fixed
+clock, is declared unavailable or left unclaimed for that target; see
+[the adapter contract](ADAPTERS.md#community-aauth-go-launcher).

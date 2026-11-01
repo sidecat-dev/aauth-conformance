@@ -128,14 +128,14 @@ and `json-member` work against that stage's actual response. New boolean kinds:
 | Kind | Check |
 | --- | --- |
 | `ps-jwt-signature` | Independent Ed25519 verification plus exact alg, typ and fixture kid. |
-| `ps-jwt-identity` | PS issuer/discovery document, Resource audience, nonempty subject/JTI; Auth PS and subject match presented Person lineage. This fixture forbids unexpected mission, tenant and delegation fields. |
+| `ps-jwt-identity` | PS issuer/discovery document, Resource audience (a string, or the one-member array RFC 7519 also permits), nonempty subject/JTI; Auth PS and subject match presented Person lineage. This fixture forbids unexpected mission, tenant and delegation fields. |
 | `ps-jwt-subject` | Subject equals the configured host binding; adapter contract. |
 | `ps-jwt-key` | Confirmation public JWK equals this Agent's fixture key. |
 | `ps-jwt-lifetime` | Integer issued time at fixture now, positive current expiry, one-hour and Agent/presented parent bounds; response expires_in equals signed expiry. Resource-token expiry is not an Auth-token parent bound. |
 | `ps-jwt-no-authorization` | Person claims contain neither scope nor account. |
 | `ps-jwt-scope` | Auth token has exactly configured read scope, no unrequested account; adapter contract. |
 | `ps-no-token` | Parameter-token refusal JSON object releases neither Person nor Auth token. |
-| `ps-jwt` | Combined valid fixture JWT profile, available for composite tests. |
+| `ps-jwt` | Combined valid fixture JWT profile, available for composite tests. It grades subject lineage, not the configured host subject, which only `ps-jwt-subject` grades. |
 
 Reports retain ordered `exchanges`, each with stage, actual method/logical URL,
 headers, base64 request body, signature base, response and independently observed

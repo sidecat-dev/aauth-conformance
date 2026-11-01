@@ -162,7 +162,11 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 	}
 	defer closeAP()
 	if extension, ok := extensionRoles[role]; ok {
-		report = extension.Run(ctx, s, targets, options, ap, report)
+		available, unavailable := splitUnavailable(s, targets)
+		if len(available.Implementations) > 0 {
+			report = extension.Run(ctx, s, available, options, ap, report)
+		}
+		report.Runs = append(report.Runs, unavailable...)
 		report.Execution = "failed_or_incomplete"
 		if report.Success() {
 			report.Execution = "passed"
