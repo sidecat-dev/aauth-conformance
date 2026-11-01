@@ -120,6 +120,9 @@ func (r Report) Markdown(out io.Writer) error {
 	if r.Role == AgentRole {
 		title = "Agent signing"
 	}
+	if _, extension := extensionRoles[r.Role]; extension {
+		title = "`" + r.Role + "`"
+	}
 	fmt.Fprintf(&b, "# %s report\n\nSuite SHA-256: `%s`\n\nVerifier clock: `%d` Unix seconds\n\n", title, r.SuiteSHA256, r.Clock)
 	state := "failed or incomplete"
 	if r.Success() {
