@@ -24,6 +24,15 @@ type EventsIdentity struct {
 	Issuer string `json:"issuer"`
 	Seed   string `json:"seed_hex"`
 	Kid    string `json:"kid"`
+	// Published holds a deployed server's keys; remote mode sets it.
+	Published keySet `json:"-"`
+}
+
+func (id EventsIdentity) keys() keySet {
+	if id.Published != nil {
+		return id.Published
+	}
+	return fixtureKeys(id.Seed, id.Kid)
 }
 
 // EventsFixture is fixture.json extensions.events.
@@ -35,6 +44,28 @@ type EventsFixture struct {
 	EventEndpoint    string         `json:"event_endpoint"`
 	OtherAgent       string         `json:"other_agent"`
 	OtherKeySeed     string         `json:"other_key_seed_hex"`
+	// ProviderKeys holds a deployed Agent Provider's keys; remote mode sets
+	// it. Otherwise the fixture AP seed signs subscribe tokens.
+	ProviderKeys keySet `json:"-"`
+	// AnyTicketPath accepts a ticket URL anywhere on the Resource's origin:
+	// a deployed Resource chooses its own ticket path.
+	AnyTicketPath bool `json:"-"`
+}
+
+func (e EventsFixture) providerKeys(f Fixture) keySet {
+	if e.ProviderKeys != nil {
+		return e.ProviderKeys
+	}
+	return fixtureKeys(f.APSeed, f.Kid)
+}
+
+// eventsControlURL is where a case posts a host control: the launcher's
+// logical origin, or in remote mode the deployment's control.
+func eventsControlURL(ctx context.Context, origin, path string) string {
+	if remote := remoteFrom(ctx); remote != nil {
+		return remote.ControlURL(path)
+	}
+	return origin + path
 }
 
 type eventsSubscriptionInput struct {

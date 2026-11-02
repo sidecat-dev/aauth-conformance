@@ -51,11 +51,18 @@ func run() int {
 	skew := flag.Int64("skew", 5, "remote mode: seconds a server's issued-at time may differ from the suite's clock")
 	resolve := resolveFlags{}
 	flag.Var(resolve, "resolve", "remote mode: host:port=address to connect to instead of DNS (repeatable)")
+	names := flag.Bool("harness-names", false, "remote mode: print the host names the suite serves, one per line, and exit")
 	flag.Parse()
 	suite, err := conformance.Load(*suitePath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
+	}
+	if *names {
+		for _, name := range conformance.HarnessNames(suite.Fixture) {
+			fmt.Println(name)
+		}
+		return 0
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -97,13 +104,15 @@ func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out
 		fmt.Fprintln(os.Stderr, err)
 		return 2
 	}
-	stop, err := serveHarness(suite, listen, certFile, keyFile)
+	harness := conformance.NewHarness(suite.Fixture)
+	stop, err := serveHarness(harness, listen, certFile, keyFile)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
 	}
 	defer stop()
-	reports, err := conformance.RunRemote(conformance.WithNetwork(ctx, network), suite, deployment, conformance.RemoteOptions{Timeout: timeout, Skew: skew})
+	ctx = conformance.WithHarness(conformance.WithNetwork(ctx, network), harness)
+	reports, err := conformance.RunRemote(ctx, suite, deployment, conformance.RemoteOptions{Timeout: timeout, Skew: skew})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
@@ -145,9 +154,8 @@ func remoteNetwork(caFile string, resolve resolveFlags) (*conformance.Network, e
 	return network, nil
 }
 
-// serveHarness serves the suite's Agent Provider, Resource and Person Server
-// documents over HTTPS until stop is called.
-func serveHarness(suite conformance.Suite, listen, certFile, keyFile string) (func(), error) {
+// serveHarness serves the suite's parties over HTTPS until stop is called.
+func serveHarness(harness *conformance.Harness, listen, certFile, keyFile string) (func(), error) {
 	if certFile == "" || keyFile == "" {
 		return nil, fmt.Errorf("remote mode needs -tls-cert and -tls-key for the suite's party names")
 	}
@@ -160,7 +168,7 @@ func serveHarness(suite conformance.Suite, listen, certFile, keyFile string) (fu
 		return nil, err
 	}
 	server := &http.Server{
-		Handler: conformance.HarnessHandler(suite.Fixture), ReadHeaderTimeout: 5 * time.Second,
+		Handler: harness, ReadHeaderTimeout: 5 * time.Second,
 		TLSConfig: &tls.Config{Certificates: []tls.Certificate{certificate}, MinVersion: tls.VersionTLS12},
 	}
 	done := make(chan struct{})

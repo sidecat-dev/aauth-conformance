@@ -12,7 +12,6 @@ import (
 	"time"
 
 	aauth "gitlab.com/sidecat-dev/aauth-go"
-	"gitlab.com/sidecat-dev/aauth-go/events"
 	"gitlab.com/sidecat-dev/aauth-go/jose"
 	"gitlab.com/sidecat-dev/aauth-go/signaturekey"
 )
@@ -125,16 +124,26 @@ func vectorHandle(in vectorInput) (map[string]any, error) {
 		}
 		return map[string]any{"accepted": true, "thumbprint": thumbprint}, nil
 	case "metadata":
-		// Go publishes metadata documents but decodes only the Agent
-		// Provider's, through the Events package.
-		if in.Document != "aauth-agent.json" {
-			return nil, vectorNotOffered("aauth-go has no public decoder for " + in.Document)
-		}
+		// The document is decoded as if fetched from the issuer it names.
 		var issuer struct {
 			Issuer string `json:"issuer"`
 		}
 		json.Unmarshal([]byte(in.JSON), &issuer)
-		if _, err := events.DecodeAgentProviderMetadata([]byte(in.JSON), issuer.Issuer); err != nil {
+		exact := []byte(in.JSON)
+		var err error
+		switch in.Document {
+		case "aauth-agent.json":
+			_, err = aauth.DecodeAgentProviderMetadata(exact, issuer.Issuer)
+		case "aauth-person.json":
+			_, err = aauth.DecodePersonServerMetadata(exact, issuer.Issuer)
+		case "aauth-access.json":
+			_, err = aauth.DecodeAccessServerMetadata(exact, issuer.Issuer)
+		case "aauth-resource.json":
+			_, err = aauth.DecodeResourceMetadata(exact, issuer.Issuer)
+		default:
+			return nil, vectorNotOffered("aauth-go has no decoder for " + in.Document)
+		}
+		if err != nil {
 			return map[string]any{"accepted": false, "error": err.Error()}, nil
 		}
 		return map[string]any{"accepted": true}, nil

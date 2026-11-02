@@ -111,6 +111,10 @@ func (x *r3Exchanger) send(stage string, request *http.Request, base string) (Re
 // does, but as an ordinary persistent HTTP/1.1 request: it sends no
 // Connection: close, and closes the idle connection afterwards.
 func r3Exchange(ctx context.Context, logical *http.Request, transport string, timeout time.Duration) (Response, error) {
+	if transport == "" {
+		// Remote mode: the logical HTTPS URL itself, over the context's Network.
+		return Exchange(ctx, logical, "", timeout)
+	}
 	request := logical.Clone(ctx)
 	physical, err := url.Parse(transport)
 	if err != nil {
@@ -183,6 +187,7 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 	}
 	var advertised map[string]any
 	vocabulariesValid := false
+	remote := remoteFrom(ctx)
 	execute := func() error {
 		if startError != nil {
 			return startError
@@ -193,6 +198,13 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 			return err
 		}
 		advertised, vocabulariesValid = r3Vocabularies(metadata, r.Vocabulary)
+		authorize := f.Origin + "/authorize"
+		if remote != nil {
+			// A deployed Resource names its authorization endpoint.
+			if endpoint := r3AuthorizationEndpoint(metadata, f.Origin); endpoint != "" {
+				authorize = endpoint
+			}
+		}
 		person, err := mintJWT(p.Seed, p.Kid, "aa-person+jwt", map[string]any{
 			"iss": p.Issuer, "dwk": "aauth-person.json", "aud": f.Origin,
 			"sub": p.Subject, "jti": "r3-person-" + s.ID,
@@ -203,7 +215,7 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 			return err
 		}
 		body, _ := json.Marshal(map[string]any{"r3_operations": map[string]any{"vocabulary": vocabulary, "operations": requested}})
-		request, base, err := signedFixtureRequest(f, f.AgentSeed, "POST", f.Origin+"/authorize", `sig=jwt;jwt="`+person+`"`, body)
+		request, base, err := signedFixtureRequest(f, f.AgentSeed, "POST", authorize, `sig=jwt;jwt="`+person+`"`, body)
 		if err != nil {
 			return err
 		}
@@ -254,6 +266,14 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 			return err
 		}
 		evidence.AuthToken = auth
+		// A deployed Resource counts executions over its whole life, so a
+		// remote case grades the count its own calls added.
+		var before map[string]float64
+		if remote != nil && in.PerCallFlow != "" && remote.ControlURL("") != "" {
+			if before, err = r3ReadExecutions(x, "executions-before", remote.ControlURL("/__fixture/r3/executions")); err != nil {
+				return err
+			}
+		}
 		for _, tool := range in.Calls {
 			callBody := []byte(`{"record":"r-1"}`)
 			request, base, err := signedFixtureRequest(f, f.AgentSeed, "POST", f.Origin+"/op/"+tool, `sig=jwt;jwt="`+auth+`"`, callBody)
@@ -314,17 +334,19 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 			}
 		}
 		// The launcher's own count of application executions, read after the
-		// calls; it is host evidence, not a protocol response.
-		countRequest, _ := http.NewRequest("GET", f.Origin+"/__fixture/r3/executions", nil)
-		counted, err := x.send("executions", countRequest, "")
+		// calls; it is host evidence, not a protocol response. A deployment
+		// serves it under its control, if it names one.
+		executions := f.Origin + "/__fixture/r3/executions"
+		if remote != nil {
+			if executions = remote.ControlURL("/__fixture/r3/executions"); executions == "" {
+				return nil
+			}
+		}
+		counts, err := r3ReadExecutions(x, "executions", executions)
 		if err != nil {
 			return err
 		}
-		var counts map[string]float64
-		if counted.Status != 200 || json.Unmarshal(counted.Body, &counts) != nil {
-			return fmt.Errorf("launcher did not report its execution counts")
-		}
-		count := counts[tool]
+		count := counts[tool] - before[tool]
 		evidence.Executions = &count
 		return nil
 	}
@@ -382,6 +404,21 @@ func runR3ResourceCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, 
 		}))
 	}
 	return c
+}
+
+// r3ReadExecutions reads the host's count of application executions per
+// operation through its host control.
+func r3ReadExecutions(x *r3Exchanger, stage, target string) (map[string]float64, error) {
+	request, _ := http.NewRequest("GET", target, nil)
+	counted, err := x.send(stage, request, "")
+	if err != nil {
+		return nil, err
+	}
+	var counts map[string]float64
+	if counted.Status != 200 || json.Unmarshal(counted.Body, &counts) != nil {
+		return nil, fmt.Errorf("launcher did not report its execution counts")
+	}
+	return counts, nil
 }
 
 // r3FetchRequest signs GET r3_uri as each kind of caller. Server callers sign
@@ -518,7 +555,7 @@ func runR3IssuerCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, in
 		}
 		credential := `sig=jwt;jwt="` + agent + `"`
 		personBody, _ := json.Marshal(map[string]string{"resource": f.Origin})
-		request, base, err := signedFixtureRequest(f, f.AgentSeed, "POST", p.Issuer+"/person", credential, personBody)
+		request, base, err := signedFixtureRequest(f, f.AgentSeed, "POST", p.personURL(), credential, personBody)
 		if err != nil {
 			return err
 		}
@@ -530,7 +567,7 @@ func runR3IssuerCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, in
 		if err != nil {
 			return err
 		}
-		_, personClaims, err := verifyJWT(person, p.Seed, p.Kid, "aa-person+jwt")
+		_, personClaims, err := verifyJWTWith(person, p.keys(), "aa-person+jwt")
 		if err != nil {
 			return fmt.Errorf("cannot advance from an unverifiable Person token: %w", err)
 		}
@@ -548,7 +585,7 @@ func runR3IssuerCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, in
 		}
 		evidence.Resource = resource
 		tokenBody, _ := json.Marshal(map[string]string{"resource_token": resource, "presented_token": person})
-		request, base, err = signedFixtureRequest(f, f.AgentSeed, "POST", p.Issuer+"/token", credential, tokenBody)
+		request, base, err = signedFixtureRequest(f, f.AgentSeed, "POST", p.tokenURL(), credential, tokenBody)
 		if err != nil {
 			return err
 		}

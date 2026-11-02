@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 	"time"
@@ -273,55 +274,70 @@ func runEventsSubscription(ctx context.Context, s Suite, targets Targets, o Opti
 			}
 			return config
 		},
-		func(ctx context.Context, f Fixture, e EventsFixture, s Scenario, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
-			var in eventsSubscriptionInput
-			DecodeInput(s, &in)
-			stages, exchanges := map[string]*Response{}, []PersonExchange{}
-			target := e.Resource.Issuer + e.SubscriptionPath
-			if in.Ticket != "" {
-				if f.Person == nil {
-					return stages, exchanges, nil, fmt.Errorf("ticket scenarios need fixture person_server")
-				}
-				holder := f.AgentSeed
-				if in.Ticket == "other-key" {
-					holder = e.OtherKeySeed
-				}
-				person, err := mintJWT(f.Person.Seed, f.Person.Kid, "aa-person+jwt", map[string]any{"iss": f.Person.Issuer, "dwk": "aauth-person.json", "aud": e.Resource.Issuer, "sub": f.Person.Subject, "jti": s.ID + "-person", "iat": f.Now - 10, "exp": f.Now + 300, "cnf": map[string]any{"jwk": publicJWK(holder)}})
-				if err != nil {
-					return stages, exchanges, nil, err
-				}
-				control, err := controlRequest("ticket", e.Resource.Issuer+"/__fixture/ticket", map[string]string{"person_token": person})
-				if err != nil {
-					return stages, exchanges, nil, err
-				}
-				if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
-					return stages, exchanges, nil, err
-				}
-				ticket, err := controlMember(stages["ticket"], "url")
-				if err != nil {
-					return stages, exchanges, nil, err
-				}
-				if !strings.HasPrefix(ticket, e.Resource.Issuer+e.TicketPath) || strings.ContainsAny(ticket[len(e.Resource.Issuer+e.TicketPath):], "/?#") {
-					return stages, exchanges, nil, fmt.Errorf("ticket URL %q is not under the configured ticket path", ticket)
-				}
-				target = ticket
-			}
-			if in.Ticket == "reused" {
-				first, err := eventsRegistrationRequest(f, e, "none", target, s.ID+"-first", s.ID+"-first", "first")
-				if err != nil {
-					return stages, exchanges, nil, err
-				}
-				if err := eventsExchange(ctx, first, ready, o, stages, &exchanges); err != nil {
-					return stages, exchanges, nil, err
-				}
-			}
-			registration, err := eventsRegistrationRequest(f, e, in.Mutation, target, s.ID, s.ID, "registration")
-			if err != nil {
-				return stages, exchanges, nil, err
-			}
-			err = eventsExchange(ctx, registration, ready, o, stages, &exchanges)
+		eventsSubscriptionCase)
+}
+
+// eventsSubscriptionCase registers one subscribe token, after a ticket and a
+// first registration when the scenario asks for them.
+func eventsSubscriptionCase(ctx context.Context, f Fixture, e EventsFixture, s Scenario, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
+	var in eventsSubscriptionInput
+	DecodeInput(s, &in)
+	stages, exchanges := map[string]*Response{}, []PersonExchange{}
+	target := e.Resource.Issuer + e.SubscriptionPath
+	if in.Ticket != "" {
+		if f.Person == nil {
+			return stages, exchanges, nil, fmt.Errorf("ticket scenarios need fixture person_server")
+		}
+		holder := f.AgentSeed
+		if in.Ticket == "other-key" {
+			holder = e.OtherKeySeed
+		}
+		person, err := mintJWT(f.Person.Seed, f.Person.Kid, "aa-person+jwt", map[string]any{"iss": f.Person.Issuer, "dwk": "aauth-person.json", "aud": e.Resource.Issuer, "sub": f.Person.Subject, "jti": s.ID + "-person", "iat": f.Now - 10, "exp": f.Now + 300, "cnf": map[string]any{"jwk": publicJWK(holder)}})
+		if err != nil {
 			return stages, exchanges, nil, err
-		})
+		}
+		control, err := controlRequest("ticket", eventsControlURL(ctx, e.Resource.Issuer, "/__fixture/ticket"), map[string]string{"person_token": person})
+		if err != nil {
+			return stages, exchanges, nil, err
+		}
+		if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
+			return stages, exchanges, nil, err
+		}
+		ticket, err := controlMember(stages["ticket"], "url")
+		if err != nil {
+			return stages, exchanges, nil, err
+		}
+		if !ticketUnder(e, ticket) {
+			return stages, exchanges, nil, fmt.Errorf("ticket URL %q is not under the configured ticket path", ticket)
+		}
+		target = ticket
+	}
+	if in.Ticket == "reused" {
+		first, err := eventsRegistrationRequest(f, e, "none", target, s.ID+"-first", s.ID+"-first", "first")
+		if err != nil {
+			return stages, exchanges, nil, err
+		}
+		if err := eventsExchange(ctx, first, ready, o, stages, &exchanges); err != nil {
+			return stages, exchanges, nil, err
+		}
+	}
+	registration, err := eventsRegistrationRequest(f, e, in.Mutation, target, s.ID, s.ID, "registration")
+	if err != nil {
+		return stages, exchanges, nil, err
+	}
+	err = eventsExchange(ctx, registration, ready, o, stages, &exchanges)
+	return stages, exchanges, nil, err
+}
+
+// ticketUnder reports whether a ticket URL is one path segment under the
+// configured ticket path or, for a deployed Resource, any path on its
+// origin, without query or fragment.
+func ticketUnder(e EventsFixture, ticket string) bool {
+	if e.AnyTicketPath {
+		u, err := url.Parse(ticket)
+		return err == nil && u.Scheme+"://"+u.Host == e.Resource.Issuer && len(u.Path) > 1 && u.RawQuery == "" && !u.ForceQuery && u.Fragment == ""
+	}
+	return strings.HasPrefix(ticket, e.Resource.Issuer+e.TicketPath) && !strings.ContainsAny(ticket[len(e.Resource.Issuer+e.TicketPath):], "/?#")
 }
 
 func runEventsProvider(ctx context.Context, s Suite, targets Targets, o Options, ap string, report Report) Report {
@@ -333,68 +349,89 @@ func runEventsProvider(ctx context.Context, s Suite, targets Targets, o Options,
 				{Issuer: e.OtherResource.Issuer, Transport: documents[e.OtherResource.Issuer]},
 			}}
 		},
-		func(ctx context.Context, f Fixture, e EventsFixture, s Scenario, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
-			var in eventsProviderInput
-			DecodeInput(s, &in)
-			stages, exchanges, own := map[string]*Response{}, []PersonExchange{}, map[string]Result{}
-			metadata, _ := http.NewRequest(http.MethodGet, f.Issuer+"/.well-known/aauth-agent.json", nil)
-			if err := eventsExchange(ctx, &requestRecord{stage: "metadata", request: metadata}, ready, o, stages, &exchanges); err != nil {
-				return stages, exchanges, own, err
+		eventsProviderCase)
+}
+
+// eventsProviderCase reads the AP's metadata, has the host issue a subscribe
+// token, delivers events to the AP and reads what it retained.
+func eventsProviderCase(ctx context.Context, f Fixture, e EventsFixture, s Scenario, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
+	var in eventsProviderInput
+	DecodeInput(s, &in)
+	stages, exchanges, own := map[string]*Response{}, []PersonExchange{}, map[string]Result{}
+	remote := remoteFrom(ctx) != nil
+	metadata, _ := http.NewRequest(http.MethodGet, f.Issuer+"/.well-known/aauth-agent.json", nil)
+	if err := eventsExchange(ctx, &requestRecord{stage: "metadata", request: metadata}, ready, o, stages, &exchanges); err != nil {
+		return stages, exchanges, own, err
+	}
+	job := map[string]any{"max_uses": in.MaxUses}
+	if remote {
+		// A deployed AP has no bootstrap: the control names the Agent, its
+		// key and the Resource, as a launcher's bootstrap does.
+		job["agent"], job["agent_jwk"], job["resource"] = f.Subject, publicJWK(f.AgentSeed), e.Resource.Issuer
+	}
+	control, err := controlRequest("subscribe", eventsControlURL(ctx, f.Issuer, "/__fixture/subscribe"), job)
+	if err != nil {
+		return stages, exchanges, own, err
+	}
+	if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
+		return stages, exchanges, own, err
+	}
+	token, err := controlMember(stages["subscribe"], "token")
+	if err != nil {
+		return stages, exchanges, own, err
+	}
+	valid, claims, detail := observeSubscribeToken(f, e, token, in.MaxUses)
+	for _, a := range s.Assertions {
+		if a.Kind == "events-subscribe-token" {
+			own[a.ID] = CompareResult(a, valid, detail)
+			own[a.ID] = withActual(own[a.ID], claims)
+		}
+	}
+	eid, _ := claims["eid"].(string)
+	if eid == "" && len(in.Deliveries) > 0 {
+		return stages, exchanges, own, fmt.Errorf("native subscribe token carries no eid to deliver to")
+	}
+	sent := []*requestRecord{}
+	for i, d := range in.Deliveries {
+		stage := fmt.Sprintf("delivery-%d", i+1)
+		delivery, err := eventsDelivery(f, e, d, eid, s.ID+"-"+stage, stage)
+		if err != nil {
+			return stages, exchanges, own, err
+		}
+		if err := eventsExchange(ctx, delivery, ready, o, stages, &exchanges); err != nil {
+			return stages, exchanges, own, err
+		}
+		sent = append(sent, delivery)
+	}
+	if in.Pending {
+		body := map[string]string{}
+		if remote {
+			body["agent"] = f.Subject
+		}
+		control, err := controlRequest("pending", eventsControlURL(ctx, f.Issuer, "/__fixture/pending"), body)
+		if err != nil {
+			return stages, exchanges, own, err
+		}
+		if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
+			return stages, exchanges, own, err
+		}
+		// A long-running deployed AP also retains other cases' events for
+		// the Agent; only this case's subscription is compared.
+		only := ""
+		if remote {
+			only = eid
+		}
+		unchanged, detail, err := observePending(stages, sent, only)
+		if err != nil {
+			return stages, exchanges, own, err
+		}
+		for _, a := range s.Assertions {
+			if a.Kind == "events-pending" {
+				own[a.ID] = CompareResult(a, unchanged, detail)
 			}
-			control, err := controlRequest("subscribe", f.Issuer+"/__fixture/subscribe", map[string]int64{"max_uses": in.MaxUses})
-			if err != nil {
-				return stages, exchanges, own, err
-			}
-			if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
-				return stages, exchanges, own, err
-			}
-			token, err := controlMember(stages["subscribe"], "token")
-			if err != nil {
-				return stages, exchanges, own, err
-			}
-			valid, claims, detail := observeSubscribeToken(f, e, token, in.MaxUses)
-			for _, a := range s.Assertions {
-				if a.Kind == "events-subscribe-token" {
-					own[a.ID] = CompareResult(a, valid, detail)
-					own[a.ID] = withActual(own[a.ID], claims)
-				}
-			}
-			eid, _ := claims["eid"].(string)
-			if eid == "" && len(in.Deliveries) > 0 {
-				return stages, exchanges, own, fmt.Errorf("native subscribe token carries no eid to deliver to")
-			}
-			sent := []*requestRecord{}
-			for i, d := range in.Deliveries {
-				stage := fmt.Sprintf("delivery-%d", i+1)
-				delivery, err := eventsDelivery(f, e, d, eid, s.ID+"-"+stage, stage)
-				if err != nil {
-					return stages, exchanges, own, err
-				}
-				if err := eventsExchange(ctx, delivery, ready, o, stages, &exchanges); err != nil {
-					return stages, exchanges, own, err
-				}
-				sent = append(sent, delivery)
-			}
-			if in.Pending {
-				control, err := controlRequest("pending", f.Issuer+"/__fixture/pending", map[string]string{})
-				if err != nil {
-					return stages, exchanges, own, err
-				}
-				if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
-					return stages, exchanges, own, err
-				}
-				unchanged, detail, err := observePending(stages, sent)
-				if err != nil {
-					return stages, exchanges, own, err
-				}
-				for _, a := range s.Assertions {
-					if a.Kind == "events-pending" {
-						own[a.ID] = CompareResult(a, unchanged, detail)
-					}
-				}
-			}
-			return stages, exchanges, own, nil
-		})
+		}
+	}
+	return stages, exchanges, own, nil
 }
 
 func withActual(r Result, claims map[string]any) Result {
@@ -405,10 +442,10 @@ func withActual(r Result, claims map[string]any) Result {
 }
 
 // observeSubscribeToken independently verifies a native AP's subscribe token:
-// Ed25519 under the fixture AP key with typ and kid, and the claims the
+// its signature under the AP's key with typ and kid, and the claims the
 // Structure section lists for this fixture's Agent and Resource.
 func observeSubscribeToken(f Fixture, e EventsFixture, compact string, maxUses int64) (bool, map[string]any, string) {
-	_, claims, err := verifyJWT(compact, f.APSeed, f.Kid, "aa-subscribe+jwt")
+	_, claims, err := verifyJWTWith(compact, e.providerKeys(f), "aa-subscribe+jwt")
 	if err != nil {
 		return false, unverifiedClaims(compact), err.Error()
 	}
@@ -468,49 +505,54 @@ func runEventsAgent(ctx context.Context, s Suite, targets Targets, o Options, ap
 			token, _ := MintToken(f, TokenSpec{IATOffset: -10, EXPOffset: 3600}, "events-agent")
 			return eventsLauncher{AgentToken: token, TrustedResources: []AgentProviderTrust{{Issuer: e.Resource.Issuer, Transport: documents[e.Resource.Issuer]}}}
 		},
-		func(ctx context.Context, f Fixture, e EventsFixture, s Scenario, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
-			var in eventsAgentInput
-			DecodeInput(s, &in)
-			stages, exchanges, own := map[string]*Response{}, []PersonExchange{}, map[string]Result{}
-			var body []byte
-			if in.Body {
-				body = eventsPayload
-			}
-			token, _, err := mintEventToken(f, e, in.Mutation, "evt-"+s.ID, s.ID, body)
-			if err != nil {
-				return stages, exchanges, own, err
-			}
-			// The payload is JSON text, so the job carries its exact bytes as a string.
-			job := map[string]string{"event_token": token, "body": string(body)}
-			if len(body) > 0 {
-				job["content_type"] = "application/json"
-			}
-			control, err := controlRequest("event", f.Issuer+"/__fixture/event", job)
-			if err != nil {
-				return stages, exchanges, own, err
-			}
-			if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
-				return stages, exchanges, own, err
-			}
-			response := stages["event"]
-			var decision struct {
-				Accepted *bool  `json:"accepted"`
-				Error    string `json:"error"`
-			}
-			if response.Status != http.StatusOK || json.Unmarshal(response.Body, &decision) != nil || decision.Accepted == nil {
-				return stages, exchanges, own, fmt.Errorf("Agent host control returned %d: %s", response.Status, strings.TrimSpace(string(response.Body)))
-			}
-			for _, a := range s.Assertions {
-				own[a.ID] = CompareResult(a, *decision.Accepted, decision.Error)
-			}
-			return stages, exchanges, own, nil
-		})
+		eventsAgentCase)
+}
+
+// eventsAgentCase hands the Agent one event token and body, as its AP would
+// forward them, and reads whether it accepted the event.
+func eventsAgentCase(ctx context.Context, f Fixture, e EventsFixture, s Scenario, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
+	var in eventsAgentInput
+	DecodeInput(s, &in)
+	stages, exchanges, own := map[string]*Response{}, []PersonExchange{}, map[string]Result{}
+	var body []byte
+	if in.Body {
+		body = eventsPayload
+	}
+	token, _, err := mintEventToken(f, e, in.Mutation, "evt-"+s.ID, s.ID, body)
+	if err != nil {
+		return stages, exchanges, own, err
+	}
+	// The payload is JSON text, so the job carries its exact bytes as a string.
+	job := map[string]string{"event_token": token, "body": string(body)}
+	if len(body) > 0 {
+		job["content_type"] = "application/json"
+	}
+	control, err := controlRequest("event", eventsControlURL(ctx, f.Issuer, "/__fixture/event"), job)
+	if err != nil {
+		return stages, exchanges, own, err
+	}
+	if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
+		return stages, exchanges, own, err
+	}
+	response := stages["event"]
+	var decision struct {
+		Accepted *bool  `json:"accepted"`
+		Error    string `json:"error"`
+	}
+	if response.Status != http.StatusOK || json.Unmarshal(response.Body, &decision) != nil || decision.Accepted == nil {
+		return stages, exchanges, own, fmt.Errorf("Agent host control returned %d: %s", response.Status, strings.TrimSpace(string(response.Body)))
+	}
+	for _, a := range s.Assertions {
+		own[a.ID] = CompareResult(a, *decision.Accepted, decision.Error)
+	}
+	return stages, exchanges, own, nil
 }
 
 // observePending compares the native AP's retained deliveries for the Agent
 // with what the harness sent: every delivery answered 202 appears once with
-// its exact token and body bytes, and no refused delivery appears.
-func observePending(stages map[string]*Response, sent []*requestRecord) (bool, string, error) {
+// its exact token and body bytes, and no refused delivery appears. A
+// nonempty only keeps the retained events whose token names that eid.
+func observePending(stages map[string]*Response, sent []*requestRecord, only string) (bool, string, error) {
 	response := stages["pending"]
 	if response.Status != http.StatusOK {
 		return false, "", fmt.Errorf("pending control returned %d: %s", response.Status, strings.TrimSpace(string(response.Body)))
@@ -526,6 +568,9 @@ func observePending(stages map[string]*Response, sent []*requestRecord) (bool, s
 	}
 	retained := map[string]string{}
 	for _, event := range pending.Events {
+		if only != "" && unverifiedClaims(event.EventToken)["eid"] != only {
+			continue
+		}
 		if _, repeated := retained[event.EventToken]; repeated {
 			return false, "a delivery is pending twice", nil
 		}

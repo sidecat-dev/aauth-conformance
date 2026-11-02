@@ -1,0 +1,14 @@
+{
+  "names": {
+    "supervised_person_server": "https://sps.aauth-LIB.test",
+    "supervisor": "https://ss.conformance.test",
+    "control": "https://control.aauth-LIB.test"
+  },
+  "trusted": ["https://foreign-ss.conformance.test"],
+  "roles": {
+    "supervision.person-server": {
+      "person_server": "https://sps.aauth-LIB.test",
+      "control": "https://control.aauth-LIB.test/supervision.person-server"
+    }
+  }
+}

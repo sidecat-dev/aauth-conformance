@@ -151,8 +151,9 @@ func observePSRequestProof(f Fixture, captured Captured, location, method string
 		}
 		id, _ := key.Params.Get("id")
 		dwk, _ := key.Params.Get("dwk")
-		kid, _ := key.Params.Get("kid")
-		if id != f.Person.Issuer || dwk != "aauth-person.json" || kid != f.Person.Kid {
+		named, _ := key.Params.Get("kid")
+		kid, _ := named.(string)
+		if _, known := f.Person.keys()[kid]; id != f.Person.Issuer || dwk != "aauth-person.json" || !known {
 			continue
 		}
 		value, _ = inputs.Get(label)
@@ -160,11 +161,13 @@ func observePSRequestProof(f Fixture, captured Captured, location, method string
 		if !ok || input.Params == nil {
 			continue
 		}
+		// A launcher signs at the fixed clock; a deployed PS within the skew.
 		created, _ := input.Params.Get("created")
-		if created != f.Now {
+		stamp, isInteger := created.(int64)
+		if !isInteger || !f.issuedNow(float64(stamp)) {
 			continue
 		}
-		observed := Observation{Created: f.Now}
+		observed := Observation{Created: stamp}
 		lines := []string{}
 		seen := map[string]bool{}
 		valid := true
@@ -210,8 +213,7 @@ func observePSRequestProof(f Fixture, captured Captured, location, method string
 			continue
 		}
 		raw, ok := signature.Value.([]byte)
-		observed.ValidProof = ok && valid &&
-			ed25519.Verify(seedKey(f.Person.Seed).Public().(ed25519.PublicKey), []byte(observed.Base), raw)
+		observed.ValidProof = ok && valid && f.Person.keys().verifyKid(kid, []byte(observed.Base), raw)
 		if observed.ValidProof {
 			return observed
 		}

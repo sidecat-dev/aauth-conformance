@@ -104,7 +104,7 @@ so does an all-unclaimed or all-unexercised run.
 
 A remote-mode report (see [REMOTE.md](REMOTE.md)) adds `"transport": "remote"`
 and names the deployed servers it tested under the implementation's `remote`,
-by party. Its claims default to the role's protocol and adapter-contract
+by party, with the `agent` and `control` it names. Its claims default to the role's protocol and adapter-contract
 clauses, as for a launcher. A scenario remote mode cannot exercise keeps its
 assertions, each `not_exercised` with the reason in `detail`.
 
