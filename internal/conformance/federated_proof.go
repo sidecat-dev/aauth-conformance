@@ -16,10 +16,19 @@ type AccessFixture struct {
 	Issuer string `json:"issuer"`
 	Seed   string `json:"seed_hex"`
 	Kid    string `json:"kid"`
+	// Published holds a deployed Access Server's keys; remote mode sets it.
+	Published keySet `json:"-"`
+}
+
+func (a AccessFixture) keys() keySet {
+	if a.Published != nil {
+		return a.Published
+	}
+	return fixtureKeys(a.Seed, a.Kid)
 }
 
 func observeFederatedAuth(f Fixture, compact string, parent map[string]any, agentExp int64) PersonObservation {
-	_, c, err := verifyJWT(compact, f.Access.Seed, f.Access.Kid, "aa-auth+jwt")
+	_, c, err := verifyJWTWith(compact, f.Access.keys(), "aa-auth+jwt")
 	o := PersonObservation{Claims: c}
 	if err != nil {
 		o.Error = err.Error()
@@ -36,9 +45,9 @@ func observeFederatedAuth(f Fixture, compact string, parent map[string]any, agen
 	iat, iatOK := c["iat"].(float64)
 	exp, expOK := c["exp"].(float64)
 	parentExp, parentOK := parent["exp"].(float64)
-	o.Lifetime = iatOK && expOK && parentOK && iat == float64(f.Now) &&
+	o.Lifetime = iatOK && expOK && parentOK && f.issuedNow(iat) &&
 		exp == float64(int64(exp)) && exp > float64(f.Now) &&
-		exp <= float64(min(f.Now+3600, agentExp)) && exp <= parentExp
+		exp <= float64(min(f.Now+f.Skew+3600, agentExp)) && exp <= parentExp
 	o.Scope = c["scope"] == "read"
 	for _, name := range []string{"mission_s256", "tenant", "agent", "parent_agent", "account"} {
 		if _, present := c[name]; present {
@@ -55,7 +64,7 @@ func observeFederatedAuth(f Fixture, compact string, parent map[string]any, agen
 }
 
 func observeFederatedResource(f Fixture, compact string, parent map[string]any) PersonObservation {
-	_, c, err := verifyJWT(compact, f.Person.ResourceSeed, f.Person.ResourceKid, "aa-resource+jwt")
+	_, c, err := verifyJWTWith(compact, f.Person.resourceKeys(), "aa-resource+jwt")
 	o := PersonObservation{Claims: c}
 	if err != nil {
 		o.Error = err.Error()
@@ -70,7 +79,7 @@ func observeFederatedResource(f Fixture, compact string, parent map[string]any) 
 	o.Key = c["agent_jkt"] == thumbprint(f.AgentSeed)
 	iat, iatOK := c["iat"].(float64)
 	exp, expOK := c["exp"].(float64)
-	o.Lifetime = iatOK && expOK && iat == float64(f.Now) &&
+	o.Lifetime = iatOK && expOK && f.issuedNow(iat) &&
 		exp == float64(int64(exp)) && exp > float64(f.Now)
 	o.Scope = c["scope"] == "read"
 	for _, name := range []string{"mission_s256", "tenant", "account"} {

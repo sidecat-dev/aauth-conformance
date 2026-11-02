@@ -28,7 +28,33 @@ type PersonFixture struct {
 	PermittedScopes []string `json:"permitted_scopes"`
 	ResourceSeed    string   `json:"resource_seed_hex"`
 	ResourceKid     string   `json:"resource_kid"`
+	// Published and ResourcePublished hold the keys a deployed Person Server
+	// or Resource publishes. Remote mode sets them; otherwise the fixture
+	// seeds are the signers.
+	Published         keySet `json:"-"`
+	ResourcePublished keySet `json:"-"`
 }
+
+func (p PersonFixture) keys() keySet {
+	if p.Published != nil {
+		return p.Published
+	}
+	return fixtureKeys(p.Seed, p.Kid)
+}
+func (p PersonFixture) resourceKeys() keySet {
+	if p.ResourcePublished != nil {
+		return p.ResourcePublished
+	}
+	return fixtureKeys(p.ResourceSeed, p.ResourceKid)
+}
+
+// keySet holds a signer's Ed25519 public keys by kid.
+type keySet map[string]ed25519.PublicKey
+
+func fixtureKeys(seed, kid string) keySet {
+	return keySet{kid: seedKey(seed).Public().(ed25519.PublicKey)}
+}
+
 type PersonSpec struct {
 	Mutation string `json:"mutation"`
 }
@@ -56,6 +82,12 @@ func mintJWT(seed, kid, typ string, claims map[string]any) (string, error) {
 	return signed + "." + base64.RawURLEncoding.EncodeToString(ed25519.Sign(seedKey(seed), []byte(signed))), nil
 }
 func verifyJWT(compact, seed, kid, typ string) (map[string]any, map[string]any, error) {
+	return verifyJWTWith(compact, fixtureKeys(seed, kid), typ)
+}
+
+// verifyJWTWith verifies an Ed25519 JWT of the given type under the key its
+// kid names in keys.
+func verifyJWTWith(compact string, keys keySet, typ string) (map[string]any, map[string]any, error) {
 	parts := strings.Split(compact, ".")
 	if len(parts) != 3 {
 		return nil, nil, fmt.Errorf("JWT needs three parts")
@@ -75,7 +107,9 @@ func verifyJWT(compact, seed, kid, typ string) (map[string]any, map[string]any, 
 	if e := json.Unmarshal(decoded[1], &claims); e != nil {
 		return nil, nil, e
 	}
-	if head["alg"] != "Ed25519" || head["typ"] != typ || head["kid"] != kid || !ed25519.Verify(seedKey(seed).Public().(ed25519.PublicKey), []byte(parts[0]+"."+parts[1]), decoded[2]) {
+	kid, _ := head["kid"].(string)
+	key, known := keys[kid]
+	if head["alg"] != "Ed25519" || head["typ"] != typ || !known || !ed25519.Verify(key, []byte(parts[0]+"."+parts[1]), decoded[2]) {
 		return head, claims, fmt.Errorf("JWT signature/alg/type/kid did not verify")
 	}
 	return head, claims, nil
@@ -186,7 +220,7 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 	if kind == "auth" {
 		typ = "aa-auth+jwt"
 	}
-	_, c, e := verifyJWT(compact, p.Seed, p.Kid, typ)
+	_, c, e := verifyJWTWith(compact, p.keys(), typ)
 	o := PersonObservation{Claims: c}
 	if e != nil {
 		o.Error = e.Error()
@@ -207,7 +241,7 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 	}
 	iat, iatOK := c["iat"].(float64)
 	exp, expOK := c["exp"].(float64)
-	ceiling := min(f.Now+3600, agentExp)
+	ceiling := min(f.Now+f.Skew+3600, agentExp)
 	if kind == "auth" {
 		if pe, ok := parent["exp"].(float64); ok {
 			ceiling = min(ceiling, int64(pe))
@@ -215,7 +249,7 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 			return o
 		}
 	}
-	o.Lifetime = iatOK && expOK && iat == float64(f.Now) && exp == float64(int64(exp)) && exp > float64(f.Now) && exp <= float64(ceiling)
+	o.Lifetime = iatOK && expOK && f.issuedNow(iat) && exp == float64(int64(exp)) && exp > float64(f.Now) && exp <= float64(ceiling)
 	_, hasScope := c["scope"]
 	_, hasAccount := c["account"]
 	o.NoAuthorization = !hasScope && !hasAccount
