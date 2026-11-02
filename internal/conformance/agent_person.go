@@ -23,7 +23,8 @@ import (
 // Person Server issues a fixture Person token for a valid Person token
 // request; the Resource accepts a retry presenting exactly that token. Both
 // publish their metadata, which an Agent may read first: the Person Server
-// the four members Person Server Metadata requires, the Resource its issuer.
+// the four members Person Server Metadata requires, the Resource its issuer,
+// unless the fixture's resource_metadata_unpublished has it publish none.
 type personFlow struct {
 	f        Fixture
 	job      AgentJob
@@ -108,20 +109,34 @@ func (p *personFlow) issuedToken() string {
 	return p.issued
 }
 
-// serveMetadata answers a GET for a published metadata document.
+// serveMetadata answers a GET for a metadata document: the document, or
+// 404 when it is nil because the party publishes none.
 func (p *personFlow) serveMetadata(w http.ResponseWriter, r *http.Request, path string, document map[string]string) bool {
 	if r.Method != http.MethodGet || r.URL.Path != path {
 		return false
 	}
 	c, _ := capturedRequest(r, 1024)
+	if document == nil {
+		p.record(metadataStage, c, http.StatusNotFound)
+		http.NotFound(w, r)
+		return true
+	}
 	p.record(metadataStage, c, http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(document)
 	return true
 }
 
+// resourceMetadata is the Resource's document, nil when it publishes none.
+func (p *personFlow) resourceMetadata() map[string]string {
+	if p.f.ResourceMetadataUnpublished {
+		return nil
+	}
+	return map[string]string{"issuer": p.f.Origin}
+}
+
 func (p *personFlow) serveResource(w http.ResponseWriter, r *http.Request) {
-	if p.serveMetadata(w, r, "/.well-known/aauth-resource.json", map[string]string{"issuer": p.f.Origin}) {
+	if p.serveMetadata(w, r, "/.well-known/aauth-resource.json", p.resourceMetadata()) {
 		return
 	}
 	c, err := capturedRequest(r, 1024)

@@ -81,7 +81,9 @@ Agent kinds (each clause must belong to the scenario's role):
 
 An Agent scenario with `request.endpoint: "person"` (path `fixture.person_path`)
 runs the person flow in ADAPTERS.md: the harness Resource asks for a Person
-token and the harness Person Server issues one. `token.ps: true`, allowed only
+token and the harness Person Server issues one. The optional
+`fixture.resource_metadata_unpublished: true` has that Resource publish no
+metadata document. `token.ps: true`, allowed only
 there, names the fixture Person Server in the Agent token's `ps` claim. Its assertions use only the
 boolean kinds `wire-person-request` (one valid signed Person token request
 naming this Resource) and `wire-person-token` (one retry presenting the issued

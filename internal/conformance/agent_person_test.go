@@ -20,7 +20,8 @@ import (
 
 // Catches a person flow graded on the controller's word: one Agent-token
 // request must fail both person assertions, and the full flow must pass,
-// also when the Agent reads both metadata documents first.
+// also when the Agent reads both metadata documents first, and when the
+// Resource publishes none and answers that read 404.
 func TestPersonFlowGradesThePersonRequestAndTheRetry(t *testing.T) {
 	suite, err := Load("../..")
 	if err != nil {
@@ -28,11 +29,20 @@ func TestPersonFlowGradesThePersonRequestAndTheRetry(t *testing.T) {
 	}
 	claims := append(Claims(suite, AgentRole), "agent.person-flow")
 	for _, test := range []struct {
-		mode      string
-		pass      bool
-		exchanges int
-	}{{"agent-person", true, 3}, {"agent-person-discovering", true, 5}, {"agent-valid", false, 1}} {
-		t.Run(test.mode, func(t *testing.T) {
+		name, mode     string
+		unpublished    bool
+		pass           bool
+		exchanges      int
+		resourceStatus int
+	}{
+		{"agent-person", "agent-person", false, true, 3, 0},
+		{"agent-person-discovering", "agent-person-discovering", false, true, 5, http.StatusOK},
+		{"resource-metadata-unpublished", "agent-person-discovering", true, true, 5, http.StatusNotFound},
+		{"agent-valid", "agent-valid", false, false, 1, 0},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			suite := suite
+			suite.Fixture.ResourceMetadataUnpublished = test.unpublished
 			t.Setenv("AAUTH_TEST_ADAPTER", test.mode)
 			targets := Targets{Version: 1, Role: AgentRole, Implementations: []Target{{ID: "test-agent", Revision: "test", Command: []string{os.Args[0], "-test.run=^TestAdapterProcess$"}, Claims: claims}}}
 			report, err := RunSuite(context.Background(), suite, targets, Options{StartupTimeout: time.Second, Timeout: time.Second})
@@ -51,6 +61,11 @@ func TestPersonFlowGradesThePersonRequestAndTheRetry(t *testing.T) {
 			for _, result := range flow.Results {
 				if (result.State == "pass") != test.pass {
 					t.Fatalf("%s graded %s: %s", result.Assertion, result.State, result.Detail)
+				}
+			}
+			for _, exchange := range flow.Exchanges {
+				if strings.HasSuffix(exchange.URL, "/.well-known/aauth-resource.json") && exchange.Response.Status != test.resourceStatus {
+					t.Fatalf("Resource metadata answered %d, want %d", exchange.Response.Status, test.resourceStatus)
 				}
 			}
 		})

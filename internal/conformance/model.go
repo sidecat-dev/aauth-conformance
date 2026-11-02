@@ -22,6 +22,11 @@ type Fixture struct {
 	AgentSeed  string         `json:"agent_seed_hex"`
 	Person     *PersonFixture `json:"person_server,omitempty"`
 	Access     *AccessFixture `json:"access_server,omitempty"`
+	// ResourceMetadataUnpublished makes the person flow's Resource publish
+	// no /.well-known/aauth-resource.json, as Core lets a Resource do
+	// (Resource Metadata); a fetch of it is answered 404. Absent, the
+	// Resource publishes its issuer.
+	ResourceMetadataUnpublished bool `json:"resource_metadata_unpublished,omitempty"`
 	// Extensions holds identities for extension roles, keyed by role family.
 	Extensions map[string]json.RawMessage `json:"extensions,omitempty"`
 	// Skew is how many seconds a server's issued-at time may differ from Now.
