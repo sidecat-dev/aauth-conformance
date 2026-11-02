@@ -1,0 +1,27 @@
+{
+  "names": {
+    "events_resource": "https://events.aauth-LIB.test",
+    "agent_provider": "https://ap.aauth-LIB.test",
+    "control": "https://control.aauth-LIB.test"
+  },
+  "trusted": ["https://other-resource.conformance.test"],
+  "roles": {
+    "events.subscription": {
+      "resource": "https://events.aauth-LIB.test/events/subscribe",
+      "control": "https://control.aauth-LIB.test/events.subscription"
+    },
+    "events.agent-provider": {
+      "agent_provider": "https://ap.aauth-LIB.test",
+      "agent": "aauth:agent@ap.aauth-LIB.test",
+      "control": "https://control.aauth-LIB.test/events.agent-provider"
+    },
+    "events.delivery": {
+      "resource": "https://events.aauth-LIB.test/events/subscribe",
+      "control": "https://control.aauth-LIB.test/events.delivery"
+    },
+    "events.agent": {
+      "agent": "aauth:agent@ap.aauth-LIB.test",
+      "control": "https://control.aauth-LIB.test/events.agent"
+    }
+  }
+}
