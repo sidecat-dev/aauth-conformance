@@ -62,7 +62,6 @@ struct Config {
 }
 
 /// What every role module shares.
-#[allow(dead_code)] // until every role module reads each member
 struct Env<'a> {
     c: &'a Config,
     keys: Discovery,
@@ -80,7 +79,6 @@ struct Route {
 }
 
 impl Route {
-    #[allow(dead_code)] // until a role module serves a route
     fn new(
         issuer: &str,
         prefix: &str,

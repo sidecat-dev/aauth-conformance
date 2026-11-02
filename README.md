@@ -126,9 +126,10 @@ build/aauth-conformance -remote deployment.json -out build/remote -tls-cert suit
 ```
 
 The suite plays the other parties and writes one report per role in the same
-format. It runs the Resource agent-identity, Person Server direct and
-four-party roles, and reports what it cannot exercise remotely as
-`not_exercised`, with the reason. [REMOTE.md](REMOTE.md) explains how to
+format. It runs the Resource, Person Server and four-party roles, the Agent
+Provider and the other Events roles, the supervision server, the R3 roles
+and the Signature-Key verifier, and reports what it cannot exercise remotely
+as `not_exercised`, with the reason. [REMOTE.md](REMOTE.md) explains how to
 prepare a deployment and what each role covers;
 [deployments/](deployments/) stands up aauth-go and aauth-rust that way.
 

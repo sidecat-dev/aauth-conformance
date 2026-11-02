@@ -2,37 +2,60 @@
 
 Remote mode runs the suite against AAuth servers you have deployed, over
 HTTPS, with no adapter. You name your servers by URL. The suite plays every
-other party itself: the Agent, the Agent Provider and, depending on the role,
-the Resource or the Person Server. It writes the same clause-tagged reports
-as a launcher run, so the counts compare directly.
+other party itself: the Agent, the Agent Provider, the Resource, the Person
+Server or the Access Server, whichever the role does not name. It writes the
+same clause-tagged reports as a launcher run, so the counts compare directly.
 
 ## What it runs
 
-| Suite role | Servers you name | Scenarios run |
-| --- | --- | ---: |
-| `resource.agent-identity` | `resource` | 6 of 6 |
-| `person-server.direct` | `person_server` | 11 of 12 |
-| `authorization.federated` | `resource`, `access_server`, optional `person_server` | 7 of 34 |
+| Suite role | What you name | Scenarios run | Without a control |
+| --- | --- | ---: | ---: |
+| `resource.agent-identity` | `resource` | 6 of 6 | 6 |
+| `person-server.direct` | `person_server` | 11 of 12 | 11 |
+| `authorization.federated` | `resource`, `access_server`, optional `person_server` | 7 of 34 | 7 |
+| `events.agent-provider` | `agent_provider`, `agent` | 17 of 17 | 0 |
+| `events.subscription` | `resource` (the subscription endpoint) | 11 of 11 | 8 |
+| `events.delivery` | `resource` (the subscription endpoint) | 1 of 1 | 0 |
+| `events.agent` | `agent`, `control` | 11 of 11 | 0 |
+| `supervision.server` | `supervision_server` | 14 of 14 | 12 |
+| `r3.resource` | `resource` (four-party), optional `three_party_resource` | 10 of 10 | 10 |
+| `r3.issuer` | `person_server` | 4 of 4 | 4 |
+| `r3.federated-issuer` | `person_server`, `access_server` | 3 of 3 | 3 |
+| `sigkey.verifier` | `resource` (the verifier) | 30 of 30 | 30 |
+
+"Scenarios run" counts the scenarios that run when you name every server
+and a control. The last column counts those that still run without a
+control. In `r3.resource`, scenario 147 needs `three_party_resource`, and
+the execution counts of 148 and 149 need the control.
+
+The other roles still need launchers. The Agent signer and the vector roles
+call library functions or a client signer. Deferred authorization,
+sub-agents, missions and `supervision.person-server` have no remote driver.
+
+### What is not exercised, and why
 
 A scenario that needs something only a launcher has is reported
 `not_exercised`, with the reason on each assertion. It is never counted as a
-failure or a pass:
+failure or a pass. The reasons:
 
-- **Person Server, expired presented token (19):** the suite would re-sign
-  your Person Server's token, which needs its private key.
-- **Four-party Budget scenarios (73-78):** they use the launcher's fixed
-  budget paths and `X-Fixture-*` cost headers.
-- **Four-party faults between your Person Server and Access Server (24-39):**
-  the suite cannot sit between them. In the two scenarios that do run with
-  your Person Server (22, 23), the `handoff` and `access` stages are not
-  observed.
-- **Four-party Resource-token faults (44-47, 49):** they re-sign your
-  Resource's challenge, which needs its private key.
-
-Without `person_server`, the four-party role runs only the five scenarios in
-which the suite is the Person Server (40-43, 48). The other roles still need
-launchers. They use host controls, library functions or a client signer, or
-remote mode has no driver for them yet.
+- **Re-signs a deployed server's token (19).** The expired presented token
+  scenario of `person-server.direct` needs your Person Server's private key.
+- **Re-signs the Resource's challenge (44-47, 49).** The four-party
+  Resource-token faults need your Resource's private key.
+- **Injects a fault between your Person Server and Access Server (24-39).**
+  The suite cannot sit between them.
+- **The Person Server's request to the Access Server is not observable.** In
+  the four-party scenarios that run with your Person Server (22, 23), the
+  `handoff` and `access` stages are not observed.
+- **Uses the launcher's budget paths and `X-Fixture-*` cost headers (73-78).**
+- **The deployment names no `person_server`.** Then the four-party role runs
+  only the five scenarios in which the suite is the Person Server (40-43, 48).
+- **Needs a host control, and the deployment names no control.** The reason
+  names the control path. See [Host controls](#host-controls).
+- **The deployment names no `three_party_resource`** (`r3.resource`, 147).
+- **The supervision server publishes no `jwks_uri`.** The draft makes
+  `jwks_uri` optional, and a server without one signs no decisions, so the
+  `ss-signed` assertions are not exercised.
 
 ## Prepare your deployment
 
@@ -40,44 +63,100 @@ remote mode has no driver for them yet.
 aauth-rust prepared this way, and a script that reproduces the remote run
 against both.
 
-**Trust the suite's parties.** Your servers must trust these issuers and
-discover their keys:
+**Trust the suite's parties.** The suite serves the metadata and JWKS of
+every party it plays over HTTPS, under its fixture names. These are the
+names that `aauth-conformance -harness-names` prints:
 
-| Issuer | Document | Trusted by |
+| Name | Plays | Your role trusts it when |
 | --- | --- | --- |
-| `https://ap.conformance.test` | `aauth-agent.json` | every role |
-| `https://resource.conformance.test` | `aauth-resource.json` | your direct Person Server |
-| `https://person.conformance.test` | `aauth-person.json` | your four-party Resource and Access Server |
+| `ap.conformance.test` | Agent Provider (`aauth-agent.json`, with an `event_endpoint`) | every role with an Agent |
+| `resource.conformance.test` | Resource (`aauth-resource.json`) | your Person Server, Access Server, Agent Provider, Agent and R3 issuers |
+| `person.conformance.test` | Person Server (`aauth-person.json`) | your four-party Resource and Access Server, Events Resource, supervision server and R3 Resources |
+| `access.conformance.test` | Access Server (`aauth-access.json`) | your four-party R3 Resource |
+| `other-resource.conformance.test` | a second Events Resource | your Agent Provider |
+| `other-ps.conformance.test` | a Person Server you must refuse | your supervision server |
+| `other.conformance.test` | a trusted server no R3 document entitles | your four-party R3 Resource |
+| `signer.conformance.test`, `keys.conformance.test` | the `jwks_uri` signer and a direct JWKS URL | your verifier |
+| `ap-mixed`, `ap-pq-only`, `signer-mixed`, `signer-pq-only` `.conformance.test` | the same parties with mixed or post-quantum-only key sets | your verifier |
 
-The suite serves their metadata and JWKS over HTTPS. Server identifiers carry
-no port, so your servers must reach these names on port 443 of the machine
-running the suite, through DNS or host entries. Give the suite a certificate
-for the three names that your servers trust.
+Server identifiers carry no port. Your servers must reach these names on
+port 443 of the machine running the suite, through DNS or host entries.
+Give the suite a certificate for all of them that your servers trust.
 
-**Publish your own keys.** The suite discovers each server's Ed25519 signing
-keys from its metadata (`aauth-person.json`, `aauth-access.json` or
-`aauth-resource.json`) and the JWKS that names. These are the documents the
-drafts already require. The suite's token checks support Ed25519 only. Its
-Agent sends person token and auth token requests to the
-`person_token_endpoint` and `auth_token_endpoint` your Person Server's
-metadata names.
+**Publish your own keys.** The suite discovers each server's signing keys
+from the metadata document its role publishes (`aauth-person.json`,
+`aauth-access.json`, `aauth-resource.json`, `aauth-agent.json` or
+`aauth-supervisor.json`) and the JWKS that names. These are the documents
+the drafts already require. Token, response and request signatures are
+checked with Ed25519 or ES256 (P-256) keys, each under its own algorithm. The
+suite reads endpoints from the same metadata: a Person Server's
+`person_token_endpoint` and `auth_token_endpoint`, an R3 Resource's
+`authorization_endpoint`, a supervision server's four endpoints and an Agent
+Provider's `event_endpoint`.
 
 **Follow the test profile.** Some expected answers depend on host policy.
 The clauses scoped `adapter-contract` grade that policy:
 
-- The agent-identity Resource admits the suite's Agent and answers 200 with
-  the JSON `{"sub": "<agent identifier>"}`.
-- The Person Server binds every request to the subject `directed-person-1`.
-  It grants only the `read` scope and refuses any other scope as a policy
-  denial.
-- The four-party Resource requires `read` and names your Access Server. It
-  admits `directed-person-1` from your Person Server and from
-  `https://person.conformance.test`, and answers with the same subject JSON.
-- The Access Server trusts both Person Servers and grants only `read`.
+- **Resources.** The agent-identity Resource admits the suite's Agent and
+  answers 200 with the JSON `{"sub": "<agent identifier>"}`. The four-party
+  Resource requires `read`, names your Access Server and admits
+  `directed-person-1` from your Person Server and from
+  `https://person.conformance.test`, with the same answer.
+- **Person and Access Servers.** The Person Server binds every request to the
+  subject `directed-person-1`. It grants only the `read` scope and refuses
+  any other scope as a policy denial. The Access Server trusts both Person
+  Servers and grants only `read`.
+- **Agent Provider.** It serves one Agent, the one the role names as `agent`,
+  whose signing key is the fixture's agent key. It trusts
+  `resource.conformance.test` and `other-resource.conformance.test`.
+- **Events Resource.** It trusts the suite's Agent Provider and Person
+  Server, admits any verified subscription, delivers only to trusted Agent
+  Providers, and publishes `aauth-resource.json` with a `jwks_uri`. Its
+  ticket URLs may use any path on its origin.
+- **Agent.** It trusts `resource.conformance.test` as an event signer.
+- **Supervision server.** It connects only `person.conformance.test` and
+  refuses `other-ps.conformance.test` with 403 and `unsupported_iss`. It
+  allows token and mission acts and the permission `fixture.allow`, and
+  defers `fixture.defer`. Pending `Location` URLs are on its own origin.
+- **R3 Resources.** Both offer the MCP tools `records.read`,
+  `records.export` and `records.delete` at `/op/{tool}` and accept
+  `directed-person-1` with `read`. The four-party one trusts
+  `access.conformance.test`, the suite Person Server and
+  `other.conformance.test`, and offers per-call authorization. The
+  three-party one trusts the suite Person Server.
+- **R3 issuers.** They trust the suite's Agent Provider and Resource, fetch
+  R3 documents only under `https://resource.conformance.test/r3/`, and grant
+  `records.read` and `records.export`.
+- **Signature-Key verifier.** It answers a verified request with 200. It
+  trusts the suite's Agent Provider and the signer, JWKS and variant names
+  above. Self-issued JWTs carry `typ` `conformance-self+jwt`.
 
 If your deployment does not follow the profile, list the clauses you want
 graded under the role's `claims`. Lifetimes are yours to choose, within the
 drafts' parent ceilings.
+
+### Host controls
+
+Some scenarios need the host to act in a way no protocol message asks for:
+an Agent Provider issuing a subscribe token (the Events draft leaves that to
+the AP), a Resource firing an event, an Agent checking an event token, or a
+supervision server resolving a deferred decision. A deployment that offers
+these test hooks names a `control` URL per role. The suite POSTs JSON to
+these paths under it, and treats every answer as host input, never protocol
+output:
+
+| Role | Path | Body | Answer |
+| --- | --- | --- | --- |
+| `events.agent-provider` | `/__fixture/subscribe` | `{"max_uses", "agent", "agent_jwk", "resource"}` | `{"token"}` |
+| `events.agent-provider` | `/__fixture/pending` | `{"agent"}` | `{"events": [{"event_token", "body"}]}` |
+| `events.subscription` | `/__fixture/ticket` | `{"person_token"}` | `{"url"}` |
+| `events.delivery` | `/__fixture/fire` | `{"agent_provider", "eid", "body"}` | `{"status"}` |
+| `events.agent` | `/__fixture/event` | `{"event_token", "body", "content_type"}` | `{"accepted", "error"}` |
+| `supervision.server` | `/__fixture/supervision` | `{"resolve": {"sdi", "verdict"}}` or `{"rate_limit": true}` | 200 |
+| `r3.resource` | `/__fixture/r3/executions` (GET) | none | execution counts by tool |
+
+A deployment without a control still runs every scenario that needs none.
+Do not expose controls on a production server.
 
 ## Name your servers
 
@@ -93,41 +172,72 @@ drafts' parent ceilings.
       "resource": "https://records.example/records",
       "person_server": "https://ps4.example",
       "access_server": "https://as.example"
-    }
+    },
+    "events.agent-provider": {
+      "agent_provider": "https://ap.example",
+      "agent": "aauth:agent@ap.example",
+      "control": "https://test-hooks.example/ap"
+    },
+    "supervision.server": {"supervision_server": "https://ss.example"}
   }
 }
 ```
 
-`resource` is the URL of a protected resource. The other servers are named by
-their issuer identifiers. Name only the roles you want to run. One server may
-appear in several roles, as long as it behaves as each role needs.
+| Member | Meaning |
+| --- | --- |
+| `resource`, `three_party_resource` | URL of a protected resource, or of the endpoint the role names. |
+| `person_server`, `access_server`, `agent_provider`, `supervision_server` | Issuer identifiers. |
+| `agent` | The agent identifier, `aauth:local@domain`, your Agent Provider serves for the suite's Agent. |
+| `control` | HTTPS URL under which the role's host controls are served. |
+| `claims` | Clauses to grade, if not the role's default. |
+
+Name only the roles you want to run. One server may appear in several
+roles, as long as it behaves as each role needs. A name the suite serves is
+refused.
 
 ## Run
 
 ```sh
 go build -o build/aauth-conformance ./cmd/aauth-conformance
+build/aauth-conformance -harness-names        # names for the suite's certificate
 build/aauth-conformance -remote deployment.json -out build/remote \
   -tls-cert suite.pem -tls-key suite.key
 ```
 
 | Flag | Default | Meaning |
 | --- | --- | --- |
-| `-listen` | `:443` | Address that serves the suite's parties. |
-| `-tls-cert`, `-tls-key` | none | PEM certificate and key for the suite's three names. |
+| `-listen` | `:443` | Address that serves the suite's own parties. |
+| `-tls-cert`, `-tls-key` | none | PEM certificate and key for the suite's names. |
 | `-ca` | system roots | PEM roots to trust for your servers. |
 | `-resolve` | DNS | `host:443=address` to connect to instead, like curl's `--resolve`. Repeatable. |
-| `-skew` | `5` | Seconds a server's issued-at time may differ from the suite's clock. |
+| `-skew` | `5` | Seconds a server's clock may differ from the suite's. |
 | `-out` | `build/remote` | Directory for `ROLE.json` and `ROLE.md`, one pair per role. |
+| `-harness-names` | off | Print the names the suite serves, one per line, and exit. |
 
 The exit codes are the same as a launcher run: 0 when every role passed, 1
 for a failed or incomplete role, 2 for invalid input. Each report records
 `"transport": "remote"` and names the servers it tested under the
 implementation's `remote`.
 
+## How remote grading differs
+
+- **Clocks.** Your servers read their own clocks. Issued-at and signed
+  `created` values from your servers may differ from the suite's clock by
+  `-skew` seconds. The suite signs with its own clock.
+- **Identities.** Where an expected value names a fixture identity your
+  deployment replaces, such as a supervision server's `issuer`, the suite
+  expects your server's identity instead.
+- **Agent Provider `event_endpoint`.** The suite grades the endpoint your
+  metadata publishes, which must be an HTTPS URL with no query or fragment,
+  and delivers there. A launcher is graded against the fixture's fixed path.
+- **Long-running servers.** A deployed server keeps state across scenarios.
+  The suite grades what each case adds: pending events for the case's own
+  event ID, and R3 execution counts read before and after the calls. The
+  verifier's key-set variants use their own names, so cached keys from
+  another case never apply.
+
 ## Limits
 
-- Your servers read their own clocks. Issued-at checks allow `-skew`
-  seconds; signed `created` values use the suite's clock.
 - TLS, discovery security, egress admission and key rotation are not graded.
-- A remote run exercises fewer scenarios than a launcher run of the same
-  role. Compare counts over the scenarios both run.
+- A remote run of the four-party role exercises fewer scenarios than a
+  launcher run. Compare counts over the scenarios both run.
