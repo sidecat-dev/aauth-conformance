@@ -48,7 +48,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if _, err = suite.ForRole(*role); err != nil {
+	if _, err = suite.ForRole(*role); err != nil && !generatedRoles[*role] {
 		return err
 	}
 	claims := conformance.Claims(suite, *role)
@@ -223,6 +223,10 @@ var rustRoleCrates = map[string][]string{
 // unavailableRoles declares a role an implementation has no native API for.
 // Its target carries the reason instead of a launcher and claims nothing.
 var unavailableRoles = map[string]map[string]string{}
+
+// generatedRoles are roles whose scenarios the built launchers generate, so
+// their launchers can be built before the first scenario exists.
+var generatedRoles = map[string]bool{}
 
 // unofferedClaims lists clauses an implementation's native API assigns to
 // host code, so a launcher-supplied component would decide them. They stay

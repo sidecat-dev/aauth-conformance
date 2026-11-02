@@ -1,0 +1,150 @@
+{
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "sigvec.self-jwt.es256",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "scheme",
+      "clause": "sigvec.self-jwt.es256",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "self-jwt"
+    }
+  ],
+  "given": "agent-identity",
+  "id": "sigvec.self-jwt-es256.rust",
+  "input": {
+    "source": {
+      "file": "vectors/signature-key/signature-key-vectors.json",
+      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
+      "index": 22
+    },
+    "vector": {
+      "id": "self-jwt-es256.rust",
+      "title": "self-jwt, ES256",
+      "category": 2,
+      "scheme": "self-jwt",
+      "alg": "ES256",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:VBorYNTpvlDWKb4n464IzAK2iaPa4Tl0TvPoKovdNMYnuMIHizkb+r6+W1BdSSjJ4Q2cY3YDMTit8o9rQ+ok/w==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "5b7addd22b96b85071a901984b067450b884d6d7e98402ad5ceff2ddad6c090b",
+      "signature_base_length": 559,
+      "signature_verifies": true,
+      "signing_key": "signer-es256",
+      "assertion": {
+        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ",
+        "header": {
+          "alg": "ES256",
+          "kid": "signer-es256",
+          "typ": "vector-self+jwt"
+        },
+        "payload": {
+          "aud": "https://resource.example",
+          "dwk": "aauth-resource.json",
+          "exp": 1800000300,
+          "iat": 1799999970,
+          "iss": "https://signer.example",
+          "jti": "self-jwt-es256"
+        },
+        "signed_by": "signer-es256"
+      },
+      "resolves": [
+        "https://signer.example/.well-known/aauth-resource.json",
+        "https://signer.example/.well-known/jwks.json"
+      ],
+      "expect": {
+        "outcome": "verify",
+        "basis": "a correctly signed request under this scheme verifies"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust"
+      }
+    },
+    "environment": {
+      "verifier": {
+        "resource": "https://resource.example/api/items",
+        "agent_provider": "https://agent-provider.example",
+        "self_jwt_typ": "vector-self+jwt",
+        "label": "sig",
+        "window_seconds": 60,
+        "schemes": [
+          "hwk",
+          "jwt",
+          "jkt-jwt",
+          "jwks_uri",
+          "jwks",
+          "self-jwt",
+          "x509",
+          "cached"
+        ],
+        "algorithms": [
+          "Ed25519",
+          "ES256",
+          "ES384",
+          "RS256",
+          "PS256"
+        ]
+      },
+      "documents": [
+        {
+          "url": "https://agent-provider.example/.well-known/aauth-agent.json",
+          "content_type": "application/json",
+          "body": "{\"issuer\":\"https://agent-provider.example\",\"jwks_uri\":\"https://agent-provider.example/.well-known/jwks.json\"}"
+        },
+        {
+          "url": "https://agent-provider.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"ap-ed25519\",\"kty\":\"OKP\",\"x\":\"9YIWN80tEjjl15PYCUMALnmQnFwualkJxWB9xKHb_tc\"}]}"
+        },
+        {
+          "url": "https://certs.example/x509-ed25519.pem",
+          "content_type": "application/pem-certificate-chain",
+          "body": "-----BEGIN CERTIFICATE-----\nMIIBRzCB+qADAgECAgECMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5\nIFRlc3QgVmVjdG9ycyBSb290MB4XDTI3MDExNDA4MDAwMFoXDTI4MDExNTA4MDAw\nMFowGTEXMBUGA1UEAxMOc2lnbmVyLmV4YW1wbGUwKjAFBgMrZXADIQAopB11rtRm\nquUBmuGFNTO79cMjEfBP9yq1d3v08oSOXqNWMFQwDgYDVR0PAQH/BAQDAgeAMBMG\nA1UdJQQMMAoGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU9xl1\nZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EAUePgKlSc6PuwbKPHBMH6L++k3Jpk\n+vyUK1ef0PhZYPQptFsBXs0EmFtsUgEbB6763doyD8FCGZzhvqhSswSOAQ==\n-----END CERTIFICATE-----\n"
+        },
+        {
+          "url": "https://certs.example/x509-es256.pem",
+          "content_type": "application/pem-certificate-chain",
+          "body": "-----BEGIN CERTIFICATE-----\nMIIBdzCCASmgAwIBAgIBAzAFBgMrZXAwKjEoMCYGA1UEAxMfU2lnbmF0dXJlLUtl\neSBUZXN0IFZlY3RvcnMgUm9vdDAeFw0yNzAxMTQwODAwMDBaFw0yODAxMTUwODAw\nMDBaMBkxFzAVBgNVBAMTDnNpZ25lci5leGFtcGxlMFkwEwYHKoZIzj0CAQYIKoZI\nzj0DAQcDQgAEooQulrtbZieXmZUQYIAUasssFpxOfc/YLagzXnXWtyRvUu6er8RC\nUIpAmTUUTNJ7b1iCKSc5CatjggAbPUV1zaNWMFQwDgYDVR0PAQH/BAQDAgeAMBMG\nA1UdJQQMMAoGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU9xl1\nZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EA7nTnFZIscBqIga3YCOtswhIVZrkG\njvu86fk2HO+461VPwe3KocWjasUwxqRgcUZlfiic3EHbcFWKwz5ZsU3KAg==\n-----END CERTIFICATE-----\n"
+        },
+        {
+          "url": "https://keys.example/signer.jwks",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"},{\"alg\":\"ES256\",\"crv\":\"P-256\",\"kid\":\"signer-es256\",\"kty\":\"EC\",\"x\":\"na6GJ2V2n70jCjzJF7H5rtXnUokY_90isxO3ny4iNLQ\",\"y\":\"5vt7nLlc92fzNn5baKytoofmPBukg5ikncT8hIWSQJs\"}]}"
+        },
+        {
+          "url": "https://signer.example/.well-known/aauth-resource.json",
+          "content_type": "application/json",
+          "body": "{\"issuer\":\"https://signer.example\",\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
+        },
+        {
+          "url": "https://signer.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"},{\"alg\":\"ES256\",\"crv\":\"P-256\",\"kid\":\"signer-es256\",\"kty\":\"EC\",\"x\":\"na6GJ2V2n70jCjzJF7H5rtXnUokY_90isxO3ny4iNLQ\",\"y\":\"5vt7nLlc92fzNn5baKytoofmPBukg5ikncT8hIWSQJs\"}]}"
+        }
+      ],
+      "x509": {
+        "trust_anchors_der_base64": [
+          "MIIBRzCB+qADAgECAgEBMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5IFRlc3QgVmVjdG9ycyBSb290MB4XDTI2MTIxNjA4MDAwMFoXDTM3MDExMjA4MDAwMFowKjEoMCYGA1UEAxMfU2lnbmF0dXJlLUtleSBUZXN0IFZlY3RvcnMgUm9vdDAqMAUGAytlcAMhAC1fS8gyIFdu2EjemO7sljJ3QH3RKffNd3+MlFw4vQEeo0UwQzAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQU9xl1ZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EA+scmME9B+zvrxgiyrB2sn9rl879hME4cnWhy0noV90hE8UeKgTKEC20PKbpe+KXhMKkCJephtlc1ac5pvK+lCA=="
+        ],
+        "crls_der_base64": [
+          "MIHSMIGFAgEBMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5IFRlc3QgVmVjdG9ycyBSb290Fw0yNzAxMTUwNzAwMDBaFw0yNzAxMjIwODAwMDBaoC8wLTAfBgNVHSMEGDAWgBT3GXVkj8aR1HoZdy3YKJ8S4nQJMzAKBgNVHRQEAwIBATAFBgMrZXADQQDwLqa0fp2PGPJYkGUzmUD89gFg+33kcNoMcJ2DwZxT1v6c1Hk/K7iWNh3cIySY1zLAN0AvUScKLIkVtm8h9aMO"
+        ]
+      }
+    }
+  },
+  "role_under_test": "vectors.signature-key",
+  "title": "Signature-Key vector self-jwt-es256.rust: self-jwt, ES256",
+  "version": 1
+}
