@@ -300,6 +300,9 @@ type RemoteRun struct {
 	Servers map[string]RemoteServer
 	Harness *Harness
 	Skew    int64
+	// supervisor is the supervision server the suite plays for a deployed
+	// Person Server (supervision.person-server), kept for the role's run.
+	supervisor *remotePSSupervisor
 }
 
 // RemoteServer is one deployed server as discovered: its metadata document
