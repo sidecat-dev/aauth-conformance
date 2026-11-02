@@ -765,7 +765,11 @@ to enrollment, refresh or sub-agent issuance, with the draft's line in its
 `section`. The draft's own guidance is `recommended`. The routes and bodies,
 which the draft leaves to each AP (lines 371 and 410), are
 `adapter-contract`. The single-key refresh is optional for an AP (line 150),
-so its clause is `out-of-slice`.
+so its clauses, for the AP and for the agent, are `out-of-slice`. The
+agent's refresh margin is a core SHOULD (line 1301) the draft applies (line
+291), so its clause is `recommended`. A target that claims none of a
+scenario's clauses does not run that scenario; its assertions are reported
+not claimed.
 
 `fixture.extensions.bootstrap` supplies the enrollment, refresh, single-key
 refresh and sub-agent paths, the self-hosted issue control path, the agent
@@ -778,7 +782,7 @@ fixture Person Server is the agent's configured `ps`.
 | Role | `input` | Stages |
 | --- | --- | --- |
 | `bootstrap.agent-provider` | `flow` and `mutation`: `refresh` (`none`, `unenrolled`, `jkt-iss`, `jkt-typ`, `jkt-signature`, `jkt-expired`, `proof-key`), `rotate`, `installs`, `single-key` (each `none`), `subagent` (`none`, `no-discriminator`, `nested`, `foreign-parent`, `expired-parent`) | `enroll`, `refresh`; `refresh-2` for `rotate`; `enroll-other`, `refresh-other` for `installs`; `subagent`, with `subagent-1` before it for `nested`. `foreign-parent` and `expired-parent` send only `subagent` |
-| `bootstrap.agent` | `operations`: `enroll` first, then `refresh` (at most twice), then optionally one `subagent` or `call` | the operation names, the second refresh `refresh-2` |
+| `bootstrap.agent` | `operations`: `enroll` first, then `refresh` (at most twice) or one `single-key`, then optionally one `subagent` or `call`; after a `refresh`, up to two `renew` operations last, with one `remaining` entry (seconds, above 0 and below the agent lifetime) per `renew` | the operation names, the second refresh `refresh-2`, the second renew `renew-2` |
 | `bootstrap.self-hosted` | up to six `issues`, each a top-level `agent` local name or a `parent` (1-based index of an earlier issue) with a `discriminator`, and a `key` (a fixture seed name, or `ap` for the published key); optional `metadata` | `issue-N`, then `metadata` and `jwks` |
 
 For the hosted AP the harness plays the agent. It enrolls a durable key with
@@ -798,10 +802,16 @@ fixture AP key signed whose `exp` has passed. A sub-agent request that has
 no parent token to send is a case error, not a refusal.
 
 For the agent the harness plays the AP and the Resource. The launcher's
-control receives `{"operation"}` jobs: `enroll`, `refresh`, `subagent` with
-`jwk` and `discriminator`, and `call` with `method`, `url` and `transport`.
-The harness AP verifies each request independently and issues fixture-key
-tokens bound to the delegated key, so later operations can proceed. Its
+control receives `{"operation"}` jobs: `enroll`, `refresh`, `single-key`,
+`subagent` with `jwk` and `discriminator`, `call` with `method`, `url` and
+`transport`, and `renew` with `now`. For a `renew` the harness moves its own
+clock to the current agent token's `exp` less the `remaining` entry and sends
+that time as `now`; the agent refreshes at that clock only when it judges the
+token inside the refresh margin (core line 1301, Bootstrap line 291). Only
+`renew` may follow a `renew`, because the clock has moved. The harness AP
+verifies each request independently at its clock and issues fixture-key
+tokens bound to the delegated key, or to the durable key for `single-key`,
+so later operations can proceed. Its
 answers carry `Cache-Control: no-store`. It ignores body members it does not
 grade, such as `evidence`. The
 control's answer is evidence only.
@@ -840,9 +850,17 @@ the property.
   checks the last issued token under `jwt`, signed by its key.
   `subagent-key` checks the body `jwk`. `durable-absent` checks a `jwt`
   request the durable key did not sign. `refreshed-token` checks a Resource
-  call that presents the last issued token and is signed by its key. Every
-  signature check requires `created` within 60 seconds of the fixture clock
-  and coverage of `@method`, `@authority`, `@path` and `signature-key`.
+  call that presents the last issued token and is signed by its key.
+  `single-key-proof` (stage `single-key`) is a POST to the single-key refresh
+  path signed under `hwk` by the enrolled durable key. `refresh-sent` (stages
+  `renew`, `renew-2`) is whether the agent sent a POST to the refresh path
+  during the operation; it grades both the refresh inside the margin and its
+  absence outside it. `margin-refresh` checks that request as a two-key
+  refresh anchored at the enrolled durable key, with an unexpired naming JWT
+  and a signature created at the moved clock. Every signature check requires
+  `created` within 60 seconds of the harness clock, which is the fixture
+  clock until a `renew` moves it, and coverage of `@method`, `@authority`,
+  `@path` and `signature-key`.
 - `bootstrap-jwks` (stage `jwks`): `ap-key` checks that the metadata
   `issuer` is the AP and the JWKS holds the AP key under its kid.
   `agent-keys-absent` checks that no agent key issued in the scenario is in

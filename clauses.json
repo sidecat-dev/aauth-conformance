@@ -2653,6 +2653,22 @@
       "scope": "recommended"
     },
     {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.refresh-margin",
+      "source": "core",
+      "section": "Expiry and the Refresh Margin, line 1301 (SHOULD), applied by Bootstrap Refresh Patterns, line 291: the agent refreshes its agent token when fewer than five minutes remain before its exp and not before, graded at 300 and 299 seconds left on the harness clock, with the refresh made at that clock",
+      "anchor": "refresh-margin",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.single-key",
+      "source": "bootstrap",
+      "section": "Single-Key Refresh, line 325: an agent of an AP using the single-durable pattern signs the refresh request under hwk with its enrolled durable key, covering the body (line 319), and then presents the token issued, which binds that same key. Optional (line 150); graded only for a target that claims it",
+      "anchor": "single-key-refresh",
+      "scope": "out-of-slice"
+    },
+    {
       "role": "bootstrap.self-hosted",
       "id": "bootstrap.self.metadata",
       "source": "core",

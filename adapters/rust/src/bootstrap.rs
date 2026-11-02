@@ -188,6 +188,8 @@ struct AgentJob {
     url: String,
     #[serde(default)]
     transport: String,
+    #[serde(default)]
+    now: Option<i64>,
 }
 
 /// The enrolling Agent: a `BootstrapClient` holding a durable key it
@@ -210,24 +212,43 @@ impl EnrollingAgent {
             .as_ref()
             .ok_or_else(|| "no Agent token yet: refresh first".into())
     }
-    fn run(&mut self, job: AgentJob) -> Result<u16, Failure> {
+    fn ps(&self) -> Option<&str> {
+        (!self.extension.person_server.is_empty()).then_some(self.extension.person_server.as_str())
+    }
+    /// A two-key refresh at `now`: the native client generates the ephemeral
+    /// key and verifies the token it gets back.
+    fn refresh(&mut self, now: i64) -> Result<u16, Failure> {
+        let pending = self.client.refresh_request(
+            &self.url(&self.extension.refresh_path),
+            self.ps(),
+            &serde_json::json!({}),
+            now,
+        )?;
+        let response = exchange(&self.config.ap_transport, pending.request())?;
+        let status = response.status().as_u16();
+        self.agent = Some(
+            self.client
+                .complete_refresh(pending, &response, &self.keys, now)?,
+        );
+        Ok(status)
+    }
+    fn run(&mut self, job: AgentJob) -> Result<serde_json::Value, Failure> {
         let now = self.config.now;
         let transport = self.config.ap_transport.clone();
-        match job.operation.as_str() {
+        let status = match job.operation.as_str() {
             "enroll" => {
                 let request = self.client.enrollment_request(
                     &self.url(&self.extension.enrollment_path),
                     &serde_json::json!({}),
                     now,
                 )?;
-                Ok(exchange(&transport, &request)?.status().as_u16())
+                exchange(&transport, &request)?.status().as_u16()
             }
-            "refresh" => {
-                let ps = (!self.extension.person_server.is_empty())
-                    .then_some(self.extension.person_server.as_str());
-                let pending = self.client.refresh_request(
-                    &self.url(&self.extension.refresh_path),
-                    ps,
+            "refresh" => self.refresh(now)?,
+            "single-key" => {
+                let pending = self.client.single_key_refresh_request(
+                    &self.url(&self.extension.single_key_refresh_path),
+                    self.ps(),
                     &serde_json::json!({}),
                     now,
                 )?;
@@ -237,7 +258,16 @@ impl EnrollingAgent {
                     self.client
                         .complete_refresh(pending, &response, &self.keys, now)?,
                 );
-                Ok(status)
+                status
+            }
+            // The native client decides at the job's clock whether the token
+            // is inside the refresh margin.
+            "renew" => {
+                let now = job.now.ok_or("renew job needs now")?;
+                if !self.client.needs_refresh(now) {
+                    return Ok(serde_json::json!({ "refreshed": false }));
+                }
+                self.refresh(now)?
             }
             "subagent" => {
                 let key = job.jwk.as_ref().ok_or("subagent job needs jwk")?;
@@ -247,7 +277,7 @@ impl EnrollingAgent {
                     job.discriminator.as_deref(),
                     now,
                 )?;
-                Ok(exchange(&transport, &request)?.status().as_u16())
+                exchange(&transport, &request)?.status().as_u16()
             }
             "call" => {
                 let mut request = http::Request::builder()
@@ -255,10 +285,11 @@ impl EnrollingAgent {
                     .uri(job.url.as_str())
                     .body(Vec::new())?;
                 self.current()?.sign(&mut request, now)?;
-                Ok(exchange(&job.transport, &request)?.status().as_u16())
+                exchange(&job.transport, &request)?.status().as_u16()
             }
-            other => Err(format!("unknown operation {other}").into()),
-        }
+            other => return Err(format!("unknown operation {other}").into()),
+        };
+        Ok(serde_json::json!({ "status": status }))
     }
 }
 
@@ -278,7 +309,7 @@ fn run_agent(config: Bootstrap, extension: Extension) -> Result<(), Failure> {
     };
     let server = announce("/control")?;
     for mut incoming in server.incoming_requests() {
-        let outcome = (|| -> Result<u16, Failure> {
+        let outcome = (|| -> Result<serde_json::Value, Failure> {
             let mut body = Vec::new();
             incoming.as_reader().take(16385).read_to_end(&mut body)?;
             if body.len() > 16384 {
@@ -287,7 +318,7 @@ fn run_agent(config: Bootstrap, extension: Extension) -> Result<(), Failure> {
             agent.run(serde_json::from_slice(&body)?)
         })();
         let response = match outcome {
-            Ok(status) => reply(200, serde_json::json!({ "status": status })),
+            Ok(answer) => reply(200, answer),
             Err(error) => reply(422, serde_json::json!({ "error": error.to_string() })),
         };
         respond(incoming, response)?;

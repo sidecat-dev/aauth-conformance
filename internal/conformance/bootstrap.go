@@ -98,6 +98,9 @@ type bootstrapProviderInput struct {
 }
 type bootstrapAgentInput struct {
 	Operations []string `json:"operations"`
+	// Remaining gives, per renew operation, the seconds left before the
+	// current agent token's exp at the clock the harness sets for it.
+	Remaining []int64 `json:"remaining,omitempty"`
 }
 type bootstrapIssue struct {
 	Agent         string `json:"agent,omitempty"`
@@ -141,10 +144,12 @@ var (
 	bootstrapTopLevelProperties = []string{"signature", "claims", "identifier", "top-level", "key", "ps", "lifetime"}
 	bootstrapSubagentProperties = []string{"signature", "claims", "identifier", "key", "subagent-identity", "subagent-claims"}
 	bootstrapAgentProperties    = map[string][]string{
-		"enroll":   {"hwk-proof", "body-coverage"},
-		"refresh":  {"naming-jwt", "durable-anchor", "ephemeral-proof", "naming-jti", "fresh-ephemeral", "body-coverage"},
-		"subagent": {"parent-proof", "subagent-key", "durable-absent", "body-coverage"},
-		"call":     {"refreshed-token"},
+		"enroll":     {"hwk-proof", "body-coverage"},
+		"refresh":    {"naming-jwt", "durable-anchor", "ephemeral-proof", "naming-jti", "fresh-ephemeral", "body-coverage"},
+		"single-key": {"single-key-proof", "body-coverage"},
+		"subagent":   {"parent-proof", "subagent-key", "durable-absent", "body-coverage"},
+		"call":       {"refreshed-token"},
+		"renew":      {"refresh-sent", "margin-refresh"},
 	}
 )
 
@@ -215,12 +220,15 @@ func validateBootstrapProvider(f Fixture, s Scenario) error {
 }
 
 // bootstrapAgentStages names each operation's stage: the second refresh is
-// refresh-2.
+// refresh-2 and the second renew renew-2. A renew follows a two-key refresh,
+// and only another renew may follow it, because it moves the harness clock.
 func bootstrapAgentStages(in bootstrapAgentInput) ([]string, error) {
 	stages := []string{}
-	refreshed := false
+	refreshed, renews := false, 0
 	for i, op := range in.Operations {
 		switch {
+		case renews > 0 && op != "renew":
+			return nil, fmt.Errorf("operation %d %q: only renew may follow a renew", i+1, op)
 		case op == "enroll" && i == 0:
 			stages = append(stages, "enroll")
 		case op == "refresh" && i > 0:
@@ -233,11 +241,20 @@ func bootstrapAgentStages(in bootstrapAgentInput) ([]string, error) {
 				stages = append(stages, "refresh")
 			}
 			refreshed = true
+		case op == "single-key" && i > 0 && !slices.Contains(stages, op):
+			stages = append(stages, op)
+			refreshed = true
 		case (op == "subagent" || op == "call") && refreshed && !slices.Contains(stages, op):
 			stages = append(stages, op)
+		case op == "renew" && slices.Contains(stages, "refresh") && renews < 2:
+			renews++
+			stages = append(stages, map[int]string{1: "renew", 2: "renew-2"}[renews])
 		default:
-			return nil, fmt.Errorf("operation %d %q: enroll first, refresh after it, subagent or call after a refresh, each once", i+1, op)
+			return nil, fmt.Errorf("operation %d %q: enroll first, refresh or single-key after it, subagent or call after a refresh, each once, and at most two renews last", i+1, op)
 		}
+	}
+	if renews != len(in.Remaining) {
+		return nil, fmt.Errorf("remaining needs one entry per renew")
 	}
 	return stages, nil
 }
@@ -247,7 +264,8 @@ func agentStageOperation(stage string) string {
 }
 
 func validateBootstrapAgent(f Fixture, s Scenario) error {
-	if _, err := bootstrapFixture(f); err != nil {
+	b, err := bootstrapFixture(f)
+	if err != nil {
 		return err
 	}
 	var in bootstrapAgentInput
@@ -257,6 +275,11 @@ func validateBootstrapAgent(f Fixture, s Scenario) error {
 	stages, err := bootstrapAgentStages(in)
 	if err != nil {
 		return fmt.Errorf("%s: %w", s.ID, err)
+	}
+	for _, left := range in.Remaining {
+		if left <= 0 || left >= b.AgentLifetime {
+			return fmt.Errorf("%s: each remaining is above 0 and below the agent lifetime", s.ID)
+		}
 	}
 	for _, a := range s.Assertions {
 		if a.Kind != "bootstrap-request" {
@@ -353,7 +376,9 @@ type bootstrapCase struct {
 
 // runBootstrapRole starts a fresh launcher per scenario, as the Events roles
 // do, and grades generic kinds against stage responses and role kinds from
-// the case's own results.
+// the case's own results. A scenario none of whose clauses a target claims
+// is not run for it: an unclaimed case cannot pass, and running it would only
+// exercise the launcher's refusal of an operation its library does not offer.
 func runBootstrapRole(ctx context.Context, s Suite, targets Targets, o Options, report Report, prepare func(Fixture, BootstrapFixture, Scenario) (bootstrapCase, error)) Report {
 	b, fixtureErr := bootstrapFixture(s.Fixture)
 	for _, target := range targets.Implementations {
@@ -362,13 +387,14 @@ func runBootstrapRole(ctx context.Context, s Suite, targets Targets, o Options, 
 			c := Case{ID: scenario.ID}
 			stages, own := map[string]*Response{}, map[string]Result{}
 			execution := ""
-			if target.Unavailable == "" {
+			offered := target.Unavailable == "" && slices.ContainsFunc(scenario.Assertions, func(a Assertion) bool { return slices.Contains(target.Claims, a.Clause) })
+			if offered {
 				stages, c.Exchanges, own, execution = runBootstrapCase(ctx, s.Fixture, b, fixtureErr, scenario, target, o, prepare)
 			}
 			c.Error = execution
 			for _, a := range scenario.Assertions {
-				if target.Unavailable != "" {
-					c.Results = append(c.Results, Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_claimed", Detail: target.Unavailable})
+				if !offered {
+					c.Results = append(c.Results, Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_claimed", Detail: sigkeyNotOffered(target)})
 					continue
 				}
 				c.Results = append(c.Results, Grade(a, target.Claims, execution, stages[a.Stage], func(a Assertion) Result {

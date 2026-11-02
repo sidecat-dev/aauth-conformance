@@ -81,7 +81,7 @@ func TestBootstrapScenariosLoadAndRefuseMalformedInput(t *testing.T) {
 			reached[a.Clause] = true
 		}
 	}
-	if counts[BootstrapProviderRole] != 15 || counts[BootstrapAgentRole] != 4 || counts[BootstrapSelfHostedRole] != 5 {
+	if counts[BootstrapProviderRole] != 15 || counts[BootstrapAgentRole] != 6 || counts[BootstrapSelfHostedRole] != 5 {
 		t.Fatalf("bootstrap scenario counts: %v", counts)
 	}
 	for _, c := range suite.Catalog.Clauses {
@@ -114,10 +114,23 @@ func TestBootstrapScenariosLoadAndRefuseMalformedInput(t *testing.T) {
 		}
 	}
 	agent := find("bootstrap-agent-refresh")
-	for _, ops := range []string{`["refresh"]`, `["enroll","call"]`, `["enroll","refresh","refresh","refresh"]`, `["enroll","refresh","subagent","subagent"]`} {
-		agent.Input = json.RawMessage(`{"operations":` + ops + `}`)
+	for _, input := range []string{
+		`{"operations":["refresh"]}`,
+		`{"operations":["enroll","call"]}`,
+		`{"operations":["enroll","refresh","refresh","refresh"]}`,
+		`{"operations":["enroll","refresh","subagent","subagent"]}`,
+		`{"operations":["enroll","single-key","single-key"]}`,
+		`{"operations":["enroll","single-key","renew"],"remaining":[10]}`,
+		`{"operations":["enroll","refresh","renew","call"],"remaining":[10]}`,
+		`{"operations":["enroll","refresh","renew","renew","renew"],"remaining":[10,9,8]}`,
+		`{"operations":["enroll","refresh","renew"]}`,
+		`{"operations":["enroll","refresh"],"remaining":[10]}`,
+		`{"operations":["enroll","refresh","renew"],"remaining":[3600]}`,
+		`{"operations":["enroll","refresh","renew"],"remaining":[0]}`,
+	} {
+		agent.Input = json.RawMessage(input)
 		if err := validateBootstrapAgent(suite.Fixture, agent); err == nil {
-			t.Errorf("operations %s accepted", ops)
+			t.Errorf("input %s accepted", input)
 		}
 	}
 	self := find("bootstrap-self-subagent")
@@ -317,8 +330,10 @@ func TestBootstrapSelfHostedScenariosAgainstReference(t *testing.T) {
 }
 
 // referenceAgent is a test Agent written to the adapter contract: it enrolls
-// a durable key, refreshes through jkt-jwt with a fresh ephemeral key, and
-// signs a sub-agent request or a Resource call with the issued token.
+// a durable key, refreshes through jkt-jwt with a fresh ephemeral key or
+// under hwk with the durable key, refreshes on renew when fewer than five
+// minutes remain at the job's clock, and signs a sub-agent request or a
+// Resource call with the issued token.
 type referenceAgent struct {
 	f           Fixture
 	b           BootstrapFixture
@@ -327,6 +342,7 @@ type referenceAgent struct {
 	ephemerals  int
 	key         string
 	token       string
+	exp         int64
 }
 
 func (a *referenceAgent) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -345,22 +361,61 @@ func (a *referenceAgent) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if a.fault == "no-digest" {
 		covered = eventsCovered(false)
 	}
+	clock := a.f
+	if now, ok := job["now"].(float64); ok {
+		clock.Now = int64(now)
+	}
+	keep := func(response Response) {
+		a.token, _ = issuedToken(&response)
+		exp, _ := unverifiedClaims(a.token)["exp"].(float64)
+		a.exp = int64(exp)
+	}
+	refresh := func(f Fixture) (Response, error) {
+		if a.fault != "reuse-ephemeral" || a.key == "" {
+			a.ephemerals++
+			a.key = strings.Repeat(fmt.Sprintf("%02x", 0x40+a.ephemerals), 32)
+		}
+		naming := namingJWT(f, durable, a.key, "", fmt.Sprintf("naming-%d", a.ephemerals), "none")
+		body, _ := json.Marshal(map[string]string{"ps": f.Person.Issuer})
+		response, err := send(a.apTransport)(signEventsRequest(f, "refresh", a.key, http.MethodPost, f.Issuer+a.b.RefreshPath, `sig=jkt-jwt;jwt="`+naming+`"`, body, covered))
+		if err == nil {
+			keep(response)
+		}
+		return response, err
+	}
 	var response Response
 	var err error
 	switch job["operation"] {
 	case "enroll":
 		response, err = send(a.apTransport)(signEventsRequest(a.f, "enroll", durable, http.MethodPost, a.f.Issuer+a.b.EnrollmentPath, sigkeyMember("sig", "hwk", sigkeyHWKParams(publicJWK(durable))...), []byte(`{}`), covered))
 	case "refresh":
-		if a.fault != "reuse-ephemeral" || a.key == "" {
-			a.ephemerals++
-			a.key = strings.Repeat(fmt.Sprintf("%02x", 0x40+a.ephemerals), 32)
+		response, err = refresh(a.f)
+	case "single-key":
+		a.key = durable
+		if a.fault == "single-key-other-key" {
+			a.key = strings.Repeat("51", 32)
 		}
-		naming := namingJWT(a.f, durable, a.key, "", fmt.Sprintf("naming-%d", a.ephemerals), "none")
 		body, _ := json.Marshal(map[string]string{"ps": a.f.Person.Issuer})
-		response, err = send(a.apTransport)(signEventsRequest(a.f, "refresh", a.key, http.MethodPost, a.f.Issuer+a.b.RefreshPath, `sig=jkt-jwt;jwt="`+naming+`"`, body, covered))
+		response, err = send(a.apTransport)(signEventsRequest(a.f, "single-key", a.key, http.MethodPost, a.f.Issuer+a.b.SingleKeyRefreshPath, sigkeyMember("sig", "hwk", sigkeyHWKParams(publicJWK(a.key))...), body, covered))
 		if err == nil {
-			a.token, _ = issuedToken(&response)
+			keep(response)
 		}
+	case "renew":
+		left := a.exp - clock.Now
+		due := left < 300
+		switch a.fault {
+		case "early-renew":
+			due = left <= 300
+		case "no-renew":
+			due = false
+		case "stale-clock":
+			clock = a.f
+		}
+		if !due {
+			writeJSON(w, 200, map[string]any{"refreshed": false})
+			return
+		}
+		response, err = refresh(clock)
 	case "subagent":
 		body, _ := json.Marshal(map[string]any{"jwk": job["jwk"], "discriminator": job["discriminator"]})
 		response, err = send(a.apTransport)(signEventsRequest(a.f, "subagent", a.key, http.MethodPost, a.f.Issuer+a.b.SubagentPath, `sig=jwt;jwt="`+a.token+`"`, body, covered))
@@ -395,7 +450,8 @@ func TestBootstrapAgentScenariosAgainstReferenceAgent(t *testing.T) {
 			t.Errorf("%s against the reference Agent: %v", s.ID, bad)
 		}
 	}
-	for fault, id := range map[string]string{"reuse-ephemeral": "bootstrap-agent-rotate", "no-digest": "bootstrap-agent-refresh"} {
+	for fault, id := range map[string]string{"reuse-ephemeral": "bootstrap-agent-rotate", "no-digest": "bootstrap-agent-refresh", "single-key-other-key": "bootstrap-agent-single-key",
+		"early-renew": "bootstrap-agent-refresh-margin", "no-renew": "bootstrap-agent-refresh-margin", "stale-clock": "bootstrap-agent-refresh-margin"} {
 		for _, s := range roleScenarios(suite, BootstrapAgentRole) {
 			if s.ID == id && len(failing(run(fault, s))) == 0 {
 				t.Errorf("fault %s passed %s", fault, id)
@@ -415,6 +471,42 @@ func TestBootstrapNamingJWTOracle(t *testing.T) {
 		if o := readNamingJWT(f, namingJWT(f, b.Seeds["durable"], b.Seeds["ephemeral"], b.Seeds["other_durable"], "n", mutation)); o.Valid {
 			t.Errorf("%s accepted", mutation)
 		}
+	}
+}
+
+// A target that claims none of a scenario's clauses is not run for it: the
+// single-key and refresh-margin scenarios report not claimed, with no
+// execution error, for a target that claims every other Agent clause.
+func TestBootstrapScenarioNotRunWithoutClaims(t *testing.T) {
+	suite, _ := bootstrapTestSuite(t)
+	claims := []string{}
+	for _, c := range suite.Catalog.Clauses {
+		if c.Role == BootstrapAgentRole && c.ID != "bootstrap.agent.single-key" && c.ID != "bootstrap.agent.refresh-margin" {
+			claims = append(claims, c.ID)
+		}
+	}
+	targets := Targets{Version: 1, Role: BootstrapAgentRole, Implementations: []Target{{ID: "partial", Revision: "test", Command: []string{"/nonexistent/bootstrap-launcher"}, Claims: claims}}}
+	report, err := RunSuite(context.Background(), suite, targets, Options{Timeout: time.Second})
+	if err != nil {
+		t.Fatal(err)
+	}
+	skipped := 0
+	for _, c := range report.Runs[0].Cases {
+		if c.ID != "bootstrap-agent-single-key" && c.ID != "bootstrap-agent-refresh-margin" {
+			if c.Error == "" {
+				t.Errorf("%s ran without its launcher", c.ID)
+			}
+			continue
+		}
+		skipped++
+		for _, r := range c.Results {
+			if r.State != "not_claimed" || c.Error != "" || !strings.Contains(r.Detail, "not run") {
+				t.Errorf("%s: %+v, error %q", c.ID, r, c.Error)
+			}
+		}
+	}
+	if skipped != 2 {
+		t.Fatalf("%d skipped scenarios", skipped)
 	}
 }
 

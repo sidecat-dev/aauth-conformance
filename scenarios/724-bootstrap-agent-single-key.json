@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "id": "bootstrap-agent-single-key",
+  "title": "The agent refreshes under hwk with its enrolled durable key and calls a Resource with the token issued",
+  "role_under_test": "bootstrap.agent",
+  "given": "agent-identity",
+  "input": {
+    "operations": [
+      "enroll",
+      "single-key",
+      "call"
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "single-key",
+      "id": "single-key-proof",
+      "clause": "bootstrap.agent.single-key",
+      "kind": "bootstrap-request",
+      "member": "single-key-proof",
+      "equals": true
+    },
+    {
+      "stage": "single-key",
+      "id": "single-key-body-coverage",
+      "clause": "bootstrap.agent.single-key",
+      "kind": "bootstrap-request",
+      "member": "body-coverage",
+      "equals": true
+    },
+    {
+      "stage": "call",
+      "id": "single-key-call",
+      "clause": "bootstrap.agent.single-key",
+      "kind": "bootstrap-request",
+      "member": "refreshed-token",
+      "equals": true
+    }
+  ]
+}

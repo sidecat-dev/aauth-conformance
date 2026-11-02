@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "id": "bootstrap-agent-refresh-margin",
+  "title": "The agent does not refresh with five minutes left and refreshes with fewer, at the harness clock",
+  "role_under_test": "bootstrap.agent",
+  "given": "agent-identity",
+  "input": {
+    "operations": [
+      "enroll",
+      "refresh",
+      "renew",
+      "renew"
+    ],
+    "remaining": [
+      300,
+      299
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "renew",
+      "id": "renew-outside-margin",
+      "clause": "bootstrap.agent.refresh-margin",
+      "kind": "bootstrap-request",
+      "member": "refresh-sent",
+      "equals": false
+    },
+    {
+      "stage": "renew-2",
+      "id": "renew-inside-margin",
+      "clause": "bootstrap.agent.refresh-margin",
+      "kind": "bootstrap-request",
+      "member": "refresh-sent",
+      "equals": true
+    },
+    {
+      "stage": "renew-2",
+      "id": "renew-at-clock",
+      "clause": "bootstrap.agent.refresh-margin",
+      "kind": "bootstrap-request",
+      "member": "margin-refresh",
+      "equals": true
+    }
+  ]
+}

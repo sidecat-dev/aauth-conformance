@@ -230,7 +230,11 @@ type bootstrapAgentState struct {
 // runBootstrapAgent drives the native bootstrap Agent. It generates its own
 // durable key and a fresh ephemeral key for every refresh; agent.
 // BootstrapClient enrolls and refreshes, and agent.Client requests sub-agent
-// tokens and calls Resources with the current token.
+// tokens and calls Resources with the current token. A BootstrapClient posts
+// a single-key refresh to its one refresh endpoint, so a second client with
+// the same durable key serves the single-key path. aauth-go has no
+// refresh-margin decision, so the renew operation is not offered (see
+// cmd/build-adapters/bootstrap.go).
 func runBootstrapAgent(config bootstrap, keys signaturekey.StaticKeyResolver) error {
 	extension, clock, err := bootstrapConfig(config)
 	if err != nil {
@@ -266,6 +270,18 @@ func runBootstrapAgent(config bootstrap, keys signaturekey.StaticKeyResolver) er
 		AgentProvider:      config.Issuer,
 		EnrollmentEndpoint: config.Issuer + extension.EnrollmentPath,
 		RefreshEndpoint:    config.Issuer + extension.RefreshPath,
+		DurableKey:         durable,
+		KeyResolver:        keys,
+		HTTPClient:         routes(nil),
+		Clock:              clock,
+	})
+	if err != nil {
+		return err
+	}
+	singleKey, err := agent.NewBootstrapClient(agent.BootstrapConfig{
+		AgentProvider:      config.Issuer,
+		EnrollmentEndpoint: config.Issuer + extension.EnrollmentPath,
+		RefreshEndpoint:    config.Issuer + extension.SingleKeyRefreshPath,
 		DurableKey:         durable,
 		KeyResolver:        keys,
 		HTTPClient:         routes(nil),
@@ -338,6 +354,20 @@ func runBootstrapAgent(config bootstrap, keys signaturekey.StaticKeyResolver) er
 				bootstrapRefuse(w, http.StatusUnprocessableEntity, err)
 				return
 			}
+		case "single-key":
+			state.mu.Lock()
+			identifier := state.agent
+			state.mu.Unlock()
+			refreshed, err := singleKey.RefreshSingleKey(ctx, agent.SingleKeyRefreshAgentTokenInput{
+				Agent: identifier, PersonServer: extension.PersonServer, Evidence: json.RawMessage(`{}`),
+			})
+			if err != nil {
+				bootstrapRefuse(w, http.StatusUnprocessableEntity, err)
+				return
+			}
+			state.mu.Lock()
+			state.token, state.key = refreshed.AgentToken, durable
+			state.mu.Unlock()
 		case "subagent":
 			parent, err := current(ctx, nil)
 			var child string

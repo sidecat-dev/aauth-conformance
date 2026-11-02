@@ -213,9 +213,10 @@ type agentArrival struct {
 }
 
 // bootstrapAP plays the Agent Provider for one bootstrap.agent scenario:
-// enrollment, two-key refresh and sub-agent issuance at the fixture paths,
-// and the Resource a refreshed agent calls. It issues fixture-key tokens to
-// requests that verify, and records every arrival for grading.
+// enrollment, two-key and single-key refresh and sub-agent issuance at the
+// fixture paths, and the Resource a refreshed agent calls. It issues
+// fixture-key tokens to requests that verify, and records every arrival for
+// grading. f.Now is the harness clock; a renew operation moves it.
 type bootstrapAP struct {
 	f        Fixture
 	b        BootstrapFixture
@@ -280,15 +281,16 @@ func (h *bootstrapAP) answer(path string, c Captured, signed signedRequest) (int
 		if h.durable == nil || !bytes.Equal(naming.durable, h.durable) {
 			return http.StatusNotFound, map[string]any{"error": "enrollment_not_found"}
 		}
-		var request map[string]any
-		json.Unmarshal(c.Body, &request)
-		claims := map[string]any{"iss": h.f.Issuer, "dwk": "aauth-agent.json", "sub": h.f.Subject, "jti": h.nextJTI(), "iat": h.f.Now, "exp": h.f.Now + h.b.AgentLifetime, "cnf": map[string]any{"jwk": naming.Claims["cnf"].(map[string]any)["jwk"]}}
-		if ps, ok := request["ps"].(string); ok && ps != "" {
-			claims["ps"] = ps
+		return h.issue(c, naming.Claims["cnf"].(map[string]any)["jwk"], naming.delegated)
+	case path == h.b.SingleKeyRefreshPath && c.Method == http.MethodPost:
+		key := signed.hwkKey()
+		if !signed.verifiedBy(h.f, key) {
+			return http.StatusUnauthorized, map[string]any{"error": "invalid_signature"}
 		}
-		h.token = mintJOSE(h.f.APSeed, map[string]any{"alg": "Ed25519", "typ": "aa-agent+jwt", "kid": h.f.Kid}, claims)
-		h.tokenKey = naming.delegated
-		return http.StatusOK, map[string]any{"agent_token": h.token}
+		if h.durable == nil || !bytes.Equal(key, h.durable) {
+			return http.StatusNotFound, map[string]any{"error": "enrollment_not_found"}
+		}
+		return h.issue(c, map[string]any{"kty": "OKP", "crv": "Ed25519", "x": signed.Params["x"], "alg": "Ed25519"}, key)
 	case path == h.b.SubagentPath && c.Method == http.MethodPost:
 		if signed.Scheme != "jwt" || h.token == "" || signed.Params["jwt"] != h.token || !signed.verifiedBy(h.f, h.tokenKey) {
 			return http.StatusUnauthorized, map[string]any{"error": "invalid_signature"}
@@ -318,6 +320,34 @@ func (h *bootstrapAP) answer(path string, c Captured, signed signedRequest) (int
 		return http.StatusOK, map[string]any{"sub": h.f.Subject}
 	}
 	return http.StatusNotFound, map[string]any{"error": "not_found"}
+}
+
+// issue answers a refresh with a top-level token at the harness clock, bound
+// to jwk, with the ps the body names, and keeps it as the agent's current
+// token.
+func (h *bootstrapAP) issue(c Captured, jwk any, key ed25519.PublicKey) (int, map[string]any) {
+	var request map[string]any
+	json.Unmarshal(c.Body, &request)
+	claims := map[string]any{"iss": h.f.Issuer, "dwk": "aauth-agent.json", "sub": h.f.Subject, "jti": h.nextJTI(), "iat": h.f.Now, "exp": h.f.Now + h.b.AgentLifetime, "cnf": map[string]any{"jwk": jwk}}
+	if ps, ok := request["ps"].(string); ok && ps != "" {
+		claims["ps"] = ps
+	}
+	h.token = mintJOSE(h.f.APSeed, map[string]any{"alg": "Ed25519", "typ": "aa-agent+jwt", "kid": h.f.Kid}, claims)
+	h.tokenKey = key
+	return http.StatusOK, map[string]any{"agent_token": h.token}
+}
+
+// renewClock moves the harness clock to left seconds before the current
+// token's exp and returns it.
+func (h *bootstrapAP) renewClock(left int64) (int64, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	exp, ok := unverifiedClaims(h.token)["exp"].(float64)
+	if h.token == "" || !ok {
+		return 0, fmt.Errorf("no agent token to renew: the refresh before it issued none")
+	}
+	h.f.Now = int64(exp) - left
+	return h.f.Now, nil
 }
 
 func (h *bootstrapAP) nextJTI() string {
@@ -365,7 +395,7 @@ func prepareBootstrapAgent(f Fixture, b BootstrapFixture, s Scenario) (bootstrap
 	return bootstrapCase{
 		config: func() Bootstrap {
 			config := Bootstrap{Version: 1, Role: BootstrapAgentRole, Now: f.Now, Issuer: f.Issuer, Resource: f.Origin + "/control", APTransport: apTransport}
-			config.Extension, _ = json.Marshal(bootstrapLauncher{EnrollmentPath: b.EnrollmentPath, RefreshPath: b.RefreshPath, SubagentPath: b.SubagentPath, PersonServer: f.Person.Issuer})
+			config.Extension, _ = json.Marshal(bootstrapLauncher{EnrollmentPath: b.EnrollmentPath, RefreshPath: b.RefreshPath, SingleKeyRefreshPath: b.SingleKeyRefreshPath, SubagentPath: b.SubagentPath, PersonServer: f.Person.Issuer})
 			return config
 		},
 		run: func(ctx context.Context, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
@@ -376,18 +406,28 @@ func prepareBootstrapAgent(f Fixture, b BootstrapFixture, s Scenario) (bootstrap
 }
 
 // bootstrapAgentCase sends each operation to the launcher's control and
-// grades the request it caused at the harness AP or Resource.
+// grades the request it caused at the harness AP or Resource. A renew job
+// carries the clock the harness moved to, as "now".
 func bootstrapAgentCase(ctx context.Context, f Fixture, b BootstrapFixture, s Scenario, h *bootstrapAP, resourceTransport string, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
 	var in bootstrapAgentInput
 	DecodeInput(s, &in)
 	stageNames, _ := bootstrapAgentStages(in)
 	stages, exchanges, own := map[string]*Response{}, []PersonExchange{}, map[string]Result{}
 	keys := map[string]ed25519.PublicKey{}
+	renews := 0
 	for i, op := range in.Operations {
 		stage := stageNames[i]
+		clock := f
 		h.setStage(stage)
 		job := map[string]any{"operation": op}
 		switch op {
+		case "renew":
+			now, err := h.renewClock(in.Remaining[renews])
+			if err != nil {
+				return stages, exchanges, own, err
+			}
+			renews++
+			clock.Now, job["now"] = now, now
 		case "subagent":
 			job["jwk"], job["discriminator"] = publicJWK(b.Seeds["subagent"]), b.Discriminator
 		case "call":
@@ -419,7 +459,7 @@ func bootstrapAgentCase(ctx context.Context, f Fixture, b BootstrapFixture, s Sc
 		if found {
 			exchanges = append(exchanges, PersonExchange{Stage: stage, Method: arrival.Captured.Method, URL: arrival.Captured.URL, Headers: arrival.Captured.Headers, Body: arrival.Captured.Body, SignatureBase: arrival.Signed.Base, Response: &Response{Status: arrival.Status}})
 		}
-		properties, detail := observeAgentStage(f, b, op, arrival, found, keys, token, tokenKey)
+		properties, detail := observeAgentStage(clock, b, op, arrival, found, keys, token, tokenKey)
 		for _, a := range s.Assertions {
 			if a.Stage == stage {
 				result := CompareResult(a, properties[a.Member], detail[a.Member])
@@ -432,8 +472,9 @@ func bootstrapAgentCase(ctx context.Context, f Fixture, b BootstrapFixture, s Sc
 }
 
 // observeAgentStage reads the properties of the request one operation
-// caused. keys keeps the durable key from enrollment and each refresh's
-// delegated key; token is the agent token the harness issued last.
+// caused, at the harness clock f.Now. keys keeps the durable key from
+// enrollment and each refresh's delegated key; token is the agent token the
+// harness issued last.
 func observeAgentStage(f Fixture, b BootstrapFixture, op string, a agentArrival, found bool, keys map[string]ed25519.PublicKey, token string, tokenKey ed25519.PublicKey) (map[string]bool, map[string]string) {
 	properties, detail := map[string]bool{}, map[string]string{}
 	if !found {
@@ -470,6 +511,15 @@ func observeAgentStage(f Fixture, b BootstrapFixture, op string, a agentArrival,
 		}
 		set("fresh-ephemeral", fresh, "the delegated key repeats the durable key or an earlier ephemeral key")
 		keys[fmt.Sprintf("ephemeral-%d", len(keys))] = naming.delegated
+	case "single-key":
+		set("single-key-proof", c.Method == http.MethodPost && a.Path == b.SingleKeyRefreshPath && signed.Scheme == "hwk" && keys["durable"] != nil && bytes.Equal(signed.hwkKey(), keys["durable"]) && signed.verifiedBy(f, keys["durable"]),
+			"a POST to the single-key refresh path signed under hwk by the enrolled durable key")
+	case "renew":
+		sent := c.Method == http.MethodPost && a.Path == b.RefreshPath
+		set("refresh-sent", sent, "the request was not a POST to the refresh path")
+		naming := readNamingJWT(f, signed.Params["jwt"])
+		set("margin-refresh", sent && signed.Scheme == "jkt-jwt" && naming.Valid && keys["durable"] != nil && bytes.Equal(naming.durable, keys["durable"]) && signed.verifiedBy(f, naming.delegated),
+			"a two-key refresh anchored at the enrolled durable key, its naming JWT unexpired and its signature created at the harness clock: "+naming.Error)
 	case "subagent":
 		set("parent-proof", c.Method == http.MethodPost && a.Path == b.SubagentPath && signed.Scheme == "jwt" && token != "" && signed.Params["jwt"] == token && signed.verifiedBy(f, tokenKey), "jwt scheme with the agent token issued at the last refresh, signed by its cnf key")
 		var body map[string]any

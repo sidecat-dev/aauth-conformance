@@ -761,12 +761,16 @@ per role, the paths it serves. Clocks are fixed at the bootstrap `now`.
   answers, unchanged.
 - `bootstrap.agent` announces `/control` and configures the native agent's
   bootstrap client with the AP at the bootstrap `issuer`, reached at
-  `ap_transport`, the three paths and `person_server` as its `ps`. The agent
+  `ap_transport`, the four paths and `person_server` as its `ps`. The agent
   generates its own keys. Each control job runs one native operation and
-  answers 200 when it ran: `enroll`, `refresh` (two-key), `subagent` (sends
-  the job's `jwk` and `discriminator` with the agent's current token), and
-  `call` (a signed request to `url` through `transport` with the current
-  token). Requests keep the logical Host. The control answer is not graded.
+  answers 200 when it ran: `enroll`, `refresh` (two-key), `single-key` (a
+  refresh under `hwk` with the durable key at `single_key_refresh_path`),
+  `subagent` (sends the job's `jwk` and `discriminator` with the agent's
+  current token), `call` (a signed request to `url` through `transport` with
+  the current token), and `renew`. A `renew` job carries `now`, a Unix time:
+  at that clock the native agent decides whether its token is inside the
+  refresh margin and, only if it is, refreshes (two-key) at that clock.
+  Requests keep the logical Host. The control answer is not graded.
 - `bootstrap.self-hosted` announces `/.well-known/aauth-agent.json`, serves
   the native self-hosted AP's metadata and JWKS, and routes `issue_path` to
   the token-issuing process. `{"agent", "jwk", "ps"}` self-issues a
