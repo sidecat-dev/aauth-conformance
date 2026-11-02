@@ -1,0 +1,18 @@
+{
+  "names": {
+    "identity_resource": "https://api.aauth-LIB.test",
+    "direct_person_server": "https://person.aauth-LIB.test",
+    "federated_resource": "https://records.aauth-LIB.test",
+    "federated_person_server": "https://ps.aauth-LIB.test",
+    "access_server": "https://access.aauth-LIB.test"
+  },
+  "roles": {
+    "resource.agent-identity": {"resource": "https://api.aauth-LIB.test/whoami"},
+    "person-server.direct": {"person_server": "https://person.aauth-LIB.test"},
+    "authorization.federated": {
+      "resource": "https://records.aauth-LIB.test/records",
+      "person_server": "https://ps.aauth-LIB.test",
+      "access_server": "https://access.aauth-LIB.test"
+    }
+  }
+}
