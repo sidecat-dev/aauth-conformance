@@ -132,7 +132,7 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 			po = observePersonJWT(f, *f.Person, person, "person", nil, agentExp)
 		} else {
 			personBody, _ := json.Marshal(map[string]string{"resource": f.Origin})
-			personResponse, err := send("person", "POST", f.Person.Issuer+"/person", agentToken, personBody)
+			personResponse, err := send("person", "POST", f.Person.personURL(), agentToken, personBody)
 			if err != nil {
 				return err
 			}
@@ -204,7 +204,7 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 			})
 		}
 		tokenBody, _ := json.Marshal(map[string]string{"resource_token": resource, "presented_token": person})
-		tokenResponse, err := send("token", "POST", f.Person.Issuer+"/token", agentToken, tokenBody)
+		tokenResponse, err := send("token", "POST", f.Person.tokenURL(), agentToken, tokenBody)
 		if err != nil {
 			return err
 		}
@@ -420,7 +420,7 @@ func presentBudgetCap(
 			"resource_token": resource, "presented_token": person, "agent_token": agentToken,
 		})
 		tokenBody, _ := json.Marshal(map[string]string{"resource_token": resource, "presented_token": person})
-		secondToken, err = send("second-token", "POST", f.Person.Issuer+"/token", agentToken, tokenBody, nil)
+		secondToken, err = send("second-token", "POST", f.Person.tokenURL(), agentToken, tokenBody, nil)
 		if err != nil {
 			return err
 		}

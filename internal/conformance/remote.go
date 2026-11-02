@@ -225,7 +225,7 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 	target := Target{ID: d.ID, Revision: d.Revision, Claims: claims, Remote: r.servers()}
 	report := Report{Version: 1, Role: role, Transport: "remote", SuiteSHA256: s.Digest, Clock: time.Now().Unix(), Catalog: s.Catalog}
 	run := Run{Target: target}
-	published, discoveryError := discoverRemote(ctx, r, options.Timeout)
+	published, endpoints, discoveryError := discoverRemote(ctx, r, options.Timeout)
 	if discoveryError != nil {
 		run.Error = discoveryError.Error()
 	}
@@ -242,7 +242,7 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 			run.Cases = append(run.Cases, failedCase(scenario, target, discoveryError))
 			continue
 		}
-		f := r.fixture(s.Fixture, scenario, published, options.Skew)
+		f := r.fixture(s.Fixture, scenario, published, endpoints, options.Skew)
 		c := driver.run(ctx, f, scenario, target, Options{Timeout: options.Timeout})
 		if driver.unobserved != nil {
 			stages, why := driver.unobserved(scenario)
@@ -258,10 +258,18 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 	return report
 }
 
-// discoverRemote fetches the signing keys each named server publishes.
-func discoverRemote(ctx context.Context, r RemoteRole, timeout time.Duration) (map[string]keySet, error) {
+// personEndpoints are the endpoints a deployed Person Server's metadata
+// advertises, where the suite's Agent sends its requests.
+type personEndpoints struct {
+	person, token string
+}
+
+// discoverRemote fetches the signing keys each named server publishes, and
+// the Person Server's endpoints.
+func discoverRemote(ctx context.Context, r RemoteRole, timeout time.Duration) (map[string]keySet, personEndpoints, error) {
 	documents := map[string]string{partyPerson: "aauth-person.json", partyAccess: "aauth-access.json"}
 	published := map[string]keySet{}
+	endpoints := personEndpoints{}
 	for party, value := range r.servers() {
 		issuer, document := value, documents[party]
 		if party == partyResource {
@@ -270,19 +278,33 @@ func discoverRemote(ctx context.Context, r RemoteRole, timeout time.Duration) (m
 			}
 			issuer, document = resourceIdentifier(value), "aauth-resource.json"
 		}
-		keys, err := publishedKeys(ctx, issuer, document, timeout)
+		keys, metadata, err := publishedKeys(ctx, issuer, document, timeout)
 		if err != nil {
-			return nil, fmt.Errorf("discovering %s keys: %w", party, err)
+			return nil, endpoints, fmt.Errorf("discovering %s keys: %w", party, err)
 		}
 		published[party] = keys
+		if party == partyPerson {
+			endpoints.person, endpoints.token = metadata["person_token_endpoint"], metadata["auth_token_endpoint"]
+			if !endpointURL(endpoints.person) || !endpointURL(endpoints.token) {
+				return nil, endpoints, fmt.Errorf("%s/.well-known/%s: person_token_endpoint and auth_token_endpoint must be HTTPS URLs with no query or fragment", issuer, document)
+			}
+		}
 	}
-	return published, nil
+	return published, endpoints, nil
+}
+
+// endpointURL applies the metadata rule for endpoint values: the https
+// scheme, and no query string or fragment.
+func endpointURL(value string) bool {
+	u, err := url.Parse(value)
+	return err == nil && u.Scheme == "https" && u.Host != "" && u.RawQuery == "" && !u.ForceQuery && u.Fragment == "" && !strings.Contains(value, "#")
 }
 
 // fixture rebases the suite fixture onto the deployment for one scenario: the
-// clock is now, and each named server replaces the fixture identity and keys
-// of its role. Parties the suite plays keep their fixture identities.
-func (r RemoteRole) fixture(base Fixture, s Scenario, published map[string]keySet, skew int64) Fixture {
+// clock is now, and each named server replaces the fixture identity, keys
+// and endpoints of its role. Parties the suite plays keep their fixture
+// identities.
+func (r RemoteRole) fixture(base Fixture, s Scenario, published map[string]keySet, endpoints personEndpoints, skew int64) Fixture {
 	f := base
 	f.Now, f.Skew = time.Now().Unix(), skew
 	if base.Person != nil {
@@ -303,6 +325,7 @@ func (r RemoteRole) fixture(base Fixture, s Scenario, published map[string]keySe
 	harnessPS := s.Federated != nil && s.Federated.HarnessPS
 	if r.PersonServer != "" && f.Person != nil && !harnessPS {
 		f.Person.Issuer, f.Person.Published = r.PersonServer, published[partyPerson]
+		f.Person.PersonEndpoint, f.Person.TokenEndpoint = endpoints.person, endpoints.token
 	}
 	if r.AccessServer != "" && f.Access != nil {
 		f.Access.Issuer, f.Access.Published = r.AccessServer, published[partyAccess]
