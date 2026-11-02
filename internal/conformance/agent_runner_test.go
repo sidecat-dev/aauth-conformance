@@ -54,8 +54,8 @@ func TestAgentRunnerGradesReceivedProofsNotControllerPromises(t *testing.T) {
 
 // Test-process fixture only; real implementation launchers use their SUT signer.
 func runAgentTestProcess(config Bootstrap, mode string) {
-	if mode == "agent-person" {
-		runPersonAgentTestProcess(config)
+	if mode == "agent-person" || mode == "agent-person-discovering" {
+		runPersonAgentTestProcess(config, mode == "agent-person-discovering")
 		return
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

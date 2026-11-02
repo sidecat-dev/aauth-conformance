@@ -21,7 +21,9 @@ import (
 // (protocol, Person Token Required and Person Token Endpoint). The Resource
 // answers a valid Agent-token request with requirement=person-token; the
 // Person Server issues a fixture Person token for a valid Person token
-// request; the Resource accepts a retry presenting exactly that token.
+// request; the Resource accepts a retry presenting exactly that token. Both
+// publish their metadata, which an Agent may read first: the Person Server
+// the four members Person Server Metadata requires, the Resource its issuer.
 type personFlow struct {
 	f        Fixture
 	job      AgentJob
@@ -41,6 +43,9 @@ type personArrival struct {
 // personEndpoint is the request endpoint value that selects the fixture's
 // person_path.
 const personEndpoint = "person"
+
+// metadataStage marks a metadata fetch: kept as evidence, never graded.
+const metadataStage = "metadata"
 
 // withPersonTrust names the fixture Person Server and its public key, for a
 // launcher that verifies Person tokens it does not issue.
@@ -103,7 +108,22 @@ func (p *personFlow) issuedToken() string {
 	return p.issued
 }
 
+// serveMetadata answers a GET for a published metadata document.
+func (p *personFlow) serveMetadata(w http.ResponseWriter, r *http.Request, path string, document map[string]string) bool {
+	if r.Method != http.MethodGet || r.URL.Path != path {
+		return false
+	}
+	c, _ := capturedRequest(r, 1024)
+	p.record(metadataStage, c, http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(document)
+	return true
+}
+
 func (p *personFlow) serveResource(w http.ResponseWriter, r *http.Request) {
+	if p.serveMetadata(w, r, "/.well-known/aauth-resource.json", map[string]string{"issuer": p.f.Origin}) {
+		return
+	}
 	c, err := capturedRequest(r, 1024)
 	w.Header().Set("Content-Type", "application/json")
 	status := http.StatusUnauthorized
@@ -123,6 +143,13 @@ func (p *personFlow) serveResource(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *personFlow) servePerson(w http.ResponseWriter, r *http.Request) {
+	person := p.f.Person
+	if p.serveMetadata(w, r, "/.well-known/aauth-person.json", map[string]string{
+		"issuer": person.Issuer, "jwks_uri": person.Issuer + "/.well-known/jwks.json",
+		"auth_token_endpoint": person.tokenURL(), "person_token_endpoint": person.personURL(),
+	}) {
+		return
+	}
 	c, err := capturedRequest(r, 16384)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil || !p.validRequest(c) {
@@ -132,7 +159,6 @@ func (p *personFlow) servePerson(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, `{"error":"invalid_signature"}`)
 		return
 	}
-	person := p.f.Person
 	exp := min(p.f.Now+person.Lifetime, p.agentExp)
 	token, err := mintJWT(person.Seed, person.Kid, "aa-person+jwt", map[string]any{
 		"iss": person.Issuer, "dwk": "aauth-person.json", "aud": p.f.Origin, "sub": person.Subject,
@@ -200,9 +226,10 @@ func (p *personFlow) check(a Assertion) Result {
 	json.Unmarshal(a.Equals, &expected)
 	var requests, retries []personArrival
 	for _, arrival := range p.arrivals() {
-		if arrival.stage == "person" {
+		switch {
+		case arrival.stage == "person":
 			requests = append(requests, arrival)
-		} else if arrival.status == http.StatusOK {
+		case arrival.stage == "resource" && arrival.status == http.StatusOK:
 			retries = append(retries, arrival)
 		}
 	}

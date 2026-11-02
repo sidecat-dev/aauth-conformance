@@ -68,8 +68,9 @@ request signed with a fixture Person token for this origin succeeds with
 out-of-slice `core.person-token-required`, claimed only by an implementation
 listed in `cmd/build-adapters/adopted.go`. Rust uses `PersonIdentityResource`,
 `authorize` and `PersonDecision::into_result`, with the Person Server's keys
-from `TrustedIssuerKeys::from_documents`. The Go launcher configures no such
-endpoint, so its answers there are recorded only.
+from `TrustedIssuerKeys::from_documents`. Go uses `resource.NewPersonIdentity`
+and `PersonPrincipalFromContext`, with the Person Server's key in a
+`StaticKeyResolver`.
 
 ## Agent signing role
 
@@ -114,7 +115,11 @@ explicit profile.
 For the person-endpoint scenario the Agent token names the fixture Person
 Server in `ps`, and the control JSON adds `person_token_endpoint`,
 the fixture Person Server's logical `person_token_endpoint`, and
-`person_transport`, its loopback address. The harness Resource answers a valid
+`person_transport`, its loopback address. The harness Person Server publishes
+`/.well-known/aauth-person.json` with the four members Person Server Metadata
+requires, and the harness Resource publishes `/.well-known/aauth-resource.json`
+with its issuer; a metadata fetch is kept as an exchange and not graded. The
+harness Resource answers a valid
 Agent-token request with `401` and `requirement=person-token`; the harness
 Person Server answers a valid Person token request with `200`
 `{"person_token":...,"expires_in":...}`; the harness Resource accepts a retry
@@ -130,7 +135,10 @@ it claims `agent.person-flow` and recorded otherwise. Its control response,
 one that refuses to fetch the fixture's Person Server metadata, is graded by
 what reached the harness, not counted as an execution error. Rust uses `Requirement::from_headers`, `Agent::person_request`,
 `Agent::verify_person_delivery` and `Agent::with_token`; the launcher only
-moves bytes between them.
+moves bytes between them. Go uses `aauth.ParsePersonTokenRequirement`,
+`agent.Client.PersonToken`, which reads the Person Server's metadata, and
+`agent.Client.Begin`, which reads the Resource's; its host transport routes
+each logical origin to its loopback address.
 
 Rust uses `Agent::new` and `Agent::sign`, then a small host TCP transport serializes
 the signed `http::Request`. Rust's Agent API supplies signing rather than an HTTP
@@ -425,22 +433,18 @@ the Agent Provider crate.
   (`agent.Client.AcceptEvent`; `aauth_rust_agent::verify_event`), answering
   `{"accepted"}` with the native error text on refusal.
 
-aauth-go leaves some Events duties to host stores by its API contract. Its
+aauth-go's API contract gives some Events duties to its stores: the
 `agentprovider.EventInboxStore` compares a delivery's Resource and Agent with
-the subscription and counts uses, so `events.ap.resource-match`,
-`events.ap.audience`, `events.ap.max-uses` and `events.ap.remaining-uses` are
-not claimed for aauth-go: a launcher store would decide them. Its
-`EventInboxReader` holds the retained bytes the AP hands to the Agent, so
-`events.ap.unchanged` is not claimed either; `POST /__fixture/pending` calls
-native `PendingEvents` (Rust: `EventStore::pending` on the library's
-`MemoryEventStore`) and answers `{"events":[{"event_token","body"}]}`.
-`resource.ProtectedSubscriptionStore` consumes a ticket on commit, so
-`events.sub.ticket-single-use` is not claimed for aauth-go. The Go launcher's
-stores follow those contracts so the native handlers can run; the protected
-store does not compare thumbprints, leaving that refusal to the handler. The
-Go Agent store returns a context for every `eid`: context lookup and
-deduplication are not graded. aauth-rust's stores are its own
-(`MemorySubscriptionStore`, `MemoryEventStore`).
+the subscription, counts uses and retains the bytes its `EventInboxReader`
+hands to the Agent, and `resource.ProtectedSubscriptionStore` consumes a
+ticket on commit. The Go launcher uses the library's own in-memory stores,
+`testutil.NewEventInboxStore` and `testutil.NewProtectedEventStore`, so those
+decisions are aauth-go's and every Events clause is claimed for it.
+`POST /__fixture/pending` calls native `PendingEvents` (Rust:
+`EventStore::pending` on the library's `MemoryEventStore`) and answers
+`{"events":[{"event_token","body"}]}`. The Go Agent store returns a context
+for every `eid`: context lookup and deduplication are not graded. aauth-rust's
+stores are its own (`MemorySubscriptionStore`, `MemoryEventStore`).
 
 ## R3
 
@@ -630,7 +634,8 @@ launcher, since its documents differ.
 The verifier is the native Resource with its further schemes enabled; its
 responses are returned unchanged. The 200 echo of the verified scheme is
 adapter contract. Go uses `resource.NewAgentIdentity` with
-`FurtherSchemesConfig` (hwk, jkt-jwt, jwks_uri, jwks) and a native
+`FurtherSchemesConfig` (hwk, jkt-jwt, self-jwt with the extension's
+`self_jwt_typ` as `SelfJWTType`, jwks_uri, jwks) and a native
 `signaturekey.HTTPKeyResolver` for Agent Provider, jwks_uri and jwks keys: the
 resolver fetches, parses and selects keys itself; the host supplies only an
 egress admitter for the fixture origins and a transport that maps them to
@@ -708,8 +713,9 @@ the verified scheme or a refusal with `Signature-Error`. aauth-go builds
 jwks_uri, jwks, x509, cached), a fresh `AssertionCache` and a native
 `HTTPKeyResolver` whose transport serves the documents from memory; the
 host's x509 callback returns the chain from the documents with the trust
-anchors and CRLs. No aauth-go Resource accepts self-jwt, so a self-jwt
-member goes to `PrepareRequest` and `VerifySelfJWT`, and a refusal is a 401
+anchors and CRLs. A self-jwt member goes straight to `PrepareRequest` and
+`VerifySelfJWT`, the verifier the Resource's self-jwt further scheme calls,
+and a refusal is a 401
 whose `Signature-Error` is `FormatError(NormalizeError(err))`. aauth-rust
 builds `AgentIdentityResource` with every further scheme; for a
 `Decision::OtherScheme` the host passes the document bytes to the

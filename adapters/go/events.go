@@ -2,8 +2,11 @@ package main
 
 // Events roles: the native Resource registration surface, the native Agent
 // Provider inbox and the native Agent event check. This file supplies host
-// trust snapshots, fixed clocks, in-memory stores and fixture controls; every
-// subscribe-token, event-token and proof decision belongs to aauth-go.
+// trust snapshots, fixed clocks and fixture controls; every subscribe-token,
+// event-token and proof decision belongs to aauth-go, and so do the Resource
+// and Agent Provider stores (testutil.NewProtectedEventStore and
+// testutil.NewEventInboxStore), which consume tickets, compare deliveries with
+// the subscription, count uses and retain the delivered bytes.
 
 import (
 	"context"
@@ -18,17 +21,16 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
 	aauth "gitlab.com/sidecat-dev/aauth-go"
 	"gitlab.com/sidecat-dev/aauth-go/agent"
 	"gitlab.com/sidecat-dev/aauth-go/agentprovider"
-	"gitlab.com/sidecat-dev/aauth-go/events"
 	"gitlab.com/sidecat-dev/aauth-go/jose"
 	"gitlab.com/sidecat-dev/aauth-go/resource"
 	"gitlab.com/sidecat-dev/aauth-go/signaturekey"
+	"gitlab.com/sidecat-dev/aauth-go/testutil"
 )
 
 func init() {
@@ -156,8 +158,8 @@ func eventsSequence(prefix string) func() string {
 }
 
 // runEventsSubscription serves the native public and protected registration
-// handlers. The subscribe-token, ticket-binding and proof checks are native;
-// the in-memory store only retains records and marks a consumed ticket.
+// handlers. The subscribe-token, ticket-binding and proof checks are native,
+// and so is the store that consumes a ticket on its one registration.
 func runEventsSubscription(config bootstrap, keys signaturekey.StaticKeyResolver) error {
 	extension, clock, err := eventsConfig(config)
 	if err != nil {
@@ -210,7 +212,7 @@ func runEventsSubscription(config bootstrap, keys signaturekey.StaticKeyResolver
 	service, err := resource.NewEventService(resource.EventServiceConfig{
 		Issuer: issuer, SigningKey: key, KeyResolver: keys, Clock: clock,
 		SubscriptionEndpoint: issuer + extension.SubscriptionPath,
-		Store:                newEventsResourceStore(),
+		Store:                testutil.NewProtectedEventStore(),
 		RegisterPublic:       allow,
 		Protected: &resource.ProtectedSubscriptionConfig{
 			EndpointPrefix: issuer + extension.TicketPath, NewTicketID: eventsSequence("ticket-"),
@@ -287,88 +289,6 @@ func runEventsSubscription(config bootstrap, keys signaturekey.StaticKeyResolver
 	return eventsServe(extension.SubscriptionPath, mux)
 }
 
-// eventsResourceStore follows resource.ProtectedSubscriptionStore. It does not
-// compare ticket thumbprints: the native handler compares them after Load, so
-// a binding refusal is the library's. Marking a ticket used on commit is the
-// store's contract duty, so single use is not graded for aauth-go.
-type eventsResourceStore struct {
-	mu      sync.Mutex
-	records map[resource.EventSubscriptionRef]resource.EventSubscription
-	tickets map[string]resource.ProtectedSubscriptionTicket
-}
-
-func newEventsResourceStore() *eventsResourceStore {
-	return &eventsResourceStore{records: map[resource.EventSubscriptionRef]resource.EventSubscription{}, tickets: map[string]resource.ProtectedSubscriptionTicket{}}
-}
-
-func (store *eventsResourceStore) Commit(_ context.Context, record resource.EventSubscription) (resource.EventSubscription, error) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	return store.commit(record)
-}
-
-func (store *eventsResourceStore) commit(record resource.EventSubscription) (resource.EventSubscription, error) {
-	ref := resource.EventSubscriptionRef{AgentProvider: record.AgentProvider, EventID: record.EventID}
-	if retained, ok := store.records[ref]; ok {
-		if retained.RegistrationSHA256 == record.RegistrationSHA256 {
-			return retained, nil
-		}
-		return resource.EventSubscription{}, resource.ErrEventSubscriptionConflict
-	}
-	record.Parameters = append([]byte(nil), record.Parameters...)
-	store.records[ref] = record
-	return record, nil
-}
-
-func (store *eventsResourceStore) Load(_ context.Context, ref resource.EventSubscriptionRef) (resource.EventSubscription, error) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	record, ok := store.records[ref]
-	if !ok {
-		return resource.EventSubscription{}, resource.ErrEventSubscriptionNotFound
-	}
-	return record, nil
-}
-
-func (store *eventsResourceStore) CreateProtectedSubscriptionTicket(_ context.Context, ticket resource.ProtectedSubscriptionTicket) error {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	if _, ok := store.tickets[ticket.ID]; ok {
-		return resource.ErrProtectedSubscriptionConflict
-	}
-	store.tickets[ticket.ID] = ticket
-	return nil
-}
-
-func (store *eventsResourceStore) LoadProtectedSubscriptionTicket(_ context.Context, id, _ string, at time.Time) (resource.ProtectedSubscriptionTicket, error) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	ticket, ok := store.tickets[id]
-	if !ok {
-		return resource.ProtectedSubscriptionTicket{}, resource.ErrProtectedSubscriptionNotFound
-	}
-	if ticket.UsedAt.IsZero() && !at.Before(ticket.ExpiresAt) {
-		return resource.ProtectedSubscriptionTicket{}, resource.ErrProtectedSubscriptionExpired
-	}
-	return ticket, nil
-}
-
-func (store *eventsResourceStore) CommitProtectedSubscription(_ context.Context, ticket resource.ProtectedSubscriptionTicket, record resource.EventSubscription) (resource.EventSubscription, error) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	retained, ok := store.tickets[ticket.ID]
-	if !ok || !retained.UsedAt.IsZero() {
-		return resource.EventSubscription{}, resource.ErrProtectedSubscriptionConflict
-	}
-	committed, err := store.commit(record)
-	if err != nil {
-		return committed, err
-	}
-	retained.UsedAt, retained.RegistrationSHA256 = record.RegisteredAt, record.RegistrationSHA256
-	store.tickets[ticket.ID] = retained
-	return committed, nil
-}
-
 // runEventsProvider serves the native Agent Provider: metadata, JWKS and the
 // event endpoint, plus a control that calls native subscribe-token issuance.
 func runEventsProvider(config bootstrap, _ signaturekey.StaticKeyResolver) error {
@@ -396,7 +316,7 @@ func runEventsProvider(config bootstrap, _ signaturekey.StaticKeyResolver) error
 		Issuer: config.Issuer, SigningKey: key, Clock: clock, NewID: eventsSequence("agent-token-"),
 		Events: &agentprovider.EventsConfig{
 			EventEndpoint: extension.EventEndpoint, NewEventID: eventsSequence("evt-"),
-			KeyResolver: resourceKeys, Store: newEventsInboxStore(),
+			KeyResolver: resourceKeys, Store: testutil.NewEventInboxStore(),
 		},
 	})
 	if err != nil {
@@ -435,72 +355,6 @@ func runEventsProvider(config bootstrap, _ signaturekey.StaticKeyResolver) error
 		eventsReply(w, http.StatusOK, map[string]any{"events": list})
 	})
 	return eventsServe(endpoint.EscapedPath(), mux)
-}
-
-// eventsInboxStore follows agentprovider.EventInboxStore and
-// EventInboxReader, which assign the subscription's Resource and Agent
-// comparisons, the use count and the retained bytes to the host store. Those
-// duties are therefore not graded for aauth-go.
-type eventsInboxStore struct {
-	mu            sync.Mutex
-	subscriptions map[string]agentprovider.EventSubscription
-	accepted      map[events.DeliveryFingerprint]agentprovider.EventAcceptance
-	uses          map[string]int64
-	pending       map[string][]agentprovider.EventDelivery
-}
-
-func newEventsInboxStore() *eventsInboxStore {
-	return &eventsInboxStore{subscriptions: map[string]agentprovider.EventSubscription{}, accepted: map[events.DeliveryFingerprint]agentprovider.EventAcceptance{}, uses: map[string]int64{}, pending: map[string][]agentprovider.EventDelivery{}}
-}
-
-func (store *eventsInboxStore) PendingEvents(_ context.Context, agent string) ([]agentprovider.EventDelivery, error) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	return append([]agentprovider.EventDelivery(nil), store.pending[agent]...), nil
-}
-
-func (store *eventsInboxStore) AcknowledgeEvent(context.Context, string, events.DeliveryFingerprint) error {
-	return nil
-}
-
-func (store *eventsInboxStore) CommitSubscription(_ context.Context, record agentprovider.EventSubscription) error {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	if retained, ok := store.subscriptions[record.EventID]; ok && retained.TokenSHA256 != record.TokenSHA256 {
-		return agentprovider.ErrEventDeliveryConflict
-	}
-	store.subscriptions[record.EventID] = record
-	return nil
-}
-
-func (store *eventsInboxStore) AcceptEvent(_ context.Context, delivery agentprovider.EventDelivery) (agentprovider.EventAcceptance, error) {
-	store.mu.Lock()
-	defer store.mu.Unlock()
-	subscription, ok := store.subscriptions[delivery.EventID]
-	switch {
-	case !ok:
-		return agentprovider.EventAcceptance{}, agentprovider.ErrEventSubscriptionNotFound
-	case subscription.Resource != delivery.Resource:
-		return agentprovider.EventAcceptance{}, agentprovider.ErrEventResourceMismatch
-	case subscription.Agent != delivery.Agent:
-		return agentprovider.EventAcceptance{}, agentprovider.ErrEventAgentMismatch
-	}
-	if accepted, ok := store.accepted[delivery.Fingerprint]; ok {
-		accepted.Duplicate = true
-		return accepted, nil
-	}
-	if subscription.MaxUses > 0 && store.uses[delivery.EventID] >= subscription.MaxUses {
-		return agentprovider.EventAcceptance{}, agentprovider.ErrEventUsesExceeded
-	}
-	store.uses[delivery.EventID]++
-	accepted := agentprovider.EventAcceptance{MaximumUses: subscription.MaxUses}
-	if subscription.MaxUses > 0 {
-		accepted.RemainingUses = subscription.MaxUses - store.uses[delivery.EventID]
-	}
-	store.accepted[delivery.Fingerprint] = accepted
-	delivery.Payload = append([]byte(nil), delivery.Payload...)
-	store.pending[delivery.Agent] = append(store.pending[delivery.Agent], delivery)
-	return accepted, nil
 }
 
 // runEventsAgent hands one AP-delivered event token and body to the native

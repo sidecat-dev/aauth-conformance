@@ -19,7 +19,8 @@ import (
 )
 
 // Catches a person flow graded on the controller's word: one Agent-token
-// request must fail both person assertions, and the full flow must pass.
+// request must fail both person assertions, and the full flow must pass,
+// also when the Agent reads both metadata documents first.
 func TestPersonFlowGradesThePersonRequestAndTheRetry(t *testing.T) {
 	suite, err := Load("../..")
 	if err != nil {
@@ -30,7 +31,7 @@ func TestPersonFlowGradesThePersonRequestAndTheRetry(t *testing.T) {
 		mode      string
 		pass      bool
 		exchanges int
-	}{{"agent-person", true, 3}, {"agent-valid", false, 1}} {
+	}{{"agent-person", true, 3}, {"agent-person-discovering", true, 5}, {"agent-valid", false, 1}} {
 		t.Run(test.mode, func(t *testing.T) {
 			t.Setenv("AAUTH_TEST_ADAPTER", test.mode)
 			targets := Targets{Version: 1, Role: AgentRole, Implementations: []Target{{ID: "test-agent", Revision: "test", Command: []string{os.Args[0], "-test.run=^TestAdapterProcess$"}, Claims: claims}}}
@@ -83,7 +84,9 @@ func TestPersonEndpointRequestPresentsAPersonToken(t *testing.T) {
 
 // Test-process Agent that follows requirement=person-token through the
 // harness Person Server; real launchers use their implementation's Agent.
-func runPersonAgentTestProcess(config Bootstrap) {
+// A discovering Agent reads the Person Server's and the Resource's metadata
+// first and posts to the person_token_endpoint the metadata names.
+func runPersonAgentTestProcess(config Bootstrap, discovering bool) {
 	sign := func(request *http.Request, token string, body []byte) {
 		request.Header.Set("Signature-Key", `sig=jwt;jwt="`+token+`"`)
 		components := []string{"@method", "@authority", "@path"}
@@ -145,6 +148,21 @@ func runPersonAgentTestProcess(config Bootstrap) {
 		response, err := call(job.Token)
 		if err == nil && response.Header.Get("AAuth-Requirement") == "requirement=person-token" && job.PersonTokenEndpoint != "" {
 			target, _ := url.Parse(job.URL)
+			if discovering {
+				var metadata struct {
+					PersonTokenEndpoint string `json:"person_token_endpoint"`
+				}
+				request, _ := http.NewRequest("GET", config.PersonServer+"/.well-known/aauth-person.json", nil)
+				if _, answer, err := send(request, job.PersonTransport); err != nil || json.Unmarshal(answer, &metadata) != nil || metadata.PersonTokenEndpoint != job.PersonTokenEndpoint {
+					http.Error(w, "Person Server metadata", 502)
+					return
+				}
+				request, _ = http.NewRequest("GET", target.Scheme+"://"+target.Host+"/.well-known/aauth-resource.json", nil)
+				if _, _, err := send(request, job.Transport); err != nil {
+					http.Error(w, "Resource metadata", 502)
+					return
+				}
+			}
 			body, _ := json.Marshal(map[string]string{"resource": target.Scheme + "://" + target.Host})
 			request, _ := http.NewRequest("POST", job.PersonTokenEndpoint, bytes.NewReader(body))
 			request.Header.Set("Content-Type", "application/json")

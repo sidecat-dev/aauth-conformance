@@ -27,8 +27,8 @@ import (
 
 // Signature-Key test vectors: aauth-go signs a vector's request with its
 // native signer, and verifies a vector with its native Resource (further
-// schemes enabled) or, for self-jwt, which no Resource accepts, with
-// PreparedRequest.VerifySelfJWT. Documents are served from memory to the
+// schemes enabled) or, for self-jwt, with PreparedRequest.VerifySelfJWT, the
+// verifier the Resource's self-jwt further scheme calls. Documents are served from memory to the
 // native HTTP key resolver, which fetches, parses and selects keys itself.
 func init() {
 	extensionLaunchers["vectors.signature-key"] = func(config bootstrap, _ signaturekey.StaticKeyResolver) error {
@@ -324,7 +324,7 @@ func sigvecVerify(job sigvecJob) (*httptest.ResponseRecorder, error) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(value)
 	}
-	// No aauth-go Resource accepts self-jwt; its own verifier is called.
+	// A self-jwt member goes straight to its native verifier.
 	if credential, err := signaturekey.ParseCredentialForLabel(request.Header.Values("Signature-Key"), env.Verifier.Label); err == nil && credential.Scheme() == signaturekey.SchemeSelfJWT {
 		prepared, err := signaturekey.PrepareRequest(request, clock, signaturekey.VerifyOptions{
 			AcceptedSchemes: []signaturekey.Scheme{signaturekey.SchemeSelfJWT}, SignatureLabel: env.Verifier.Label,

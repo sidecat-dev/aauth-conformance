@@ -118,7 +118,7 @@ func vectorHandle(in vectorInput) (map[string]any, error) {
 		if err := json.Unmarshal(in.JWK, &key); err != nil {
 			return map[string]any{"accepted": false, "error": err.Error()}, nil
 		}
-		thumbprint, err := key.Thumbprint()
+		thumbprint, err := key.RFC7638Thumbprint()
 		if err != nil {
 			return map[string]any{"accepted": false, "error": err.Error()}, nil
 		}

@@ -104,9 +104,10 @@ func runSigkeyVerifier(config bootstrap, _ signaturekey.StaticKeyResolver) error
 			echo(w, map[string]string{"scheme": "jwt", "sub": principal.Agent})
 		}),
 		FurtherSchemes: &resource.FurtherSchemesConfig{
-			Schemes:    []signaturekey.Scheme{signaturekey.SchemeHWK, signaturekey.SchemeJKTJWT, signaturekey.SchemeJWKSURI, signaturekey.SchemeJWKS},
-			Algorithms: ext.Algorithms,
-			JWKS:       resolver,
+			Schemes:     []signaturekey.Scheme{signaturekey.SchemeHWK, signaturekey.SchemeJKTJWT, signaturekey.SchemeSelfJWT, signaturekey.SchemeJWKSURI, signaturekey.SchemeJWKS},
+			SelfJWTType: ext.SelfJWTTyp,
+			Algorithms:  ext.Algorithms,
+			JWKS:        resolver,
 			Protected: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				signer, ok := resource.SignerFromContext(r.Context())
 				if !ok {

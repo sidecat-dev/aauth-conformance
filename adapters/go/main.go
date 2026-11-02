@@ -6,6 +6,7 @@ import (
 	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -55,6 +56,10 @@ type bootstrap struct {
 	Role                     string               `json:"role"`
 	AgentSeed                string               `json:"agent_seed_hex"`
 	Subject                  string               `json:"subject"`
+	// PersonJWK is the fixture Person Server's public key, kid PersonKid, and
+	// PersonResource the Resource endpoint that requires a Person token.
+	PersonJWK      json.RawMessage `json:"person_jwk"`
+	PersonResource string          `json:"person_resource"`
 	// Extension is an extension role's own launcher configuration.
 	Extension json.RawMessage `json:"extension"`
 }
@@ -174,24 +179,75 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	routes := map[string]http.Handler{origin.Path: sut.Handler()}
+	if config.PersonResource != "" {
+		path, handler, err := personResource(config)
+		if err != nil {
+			return err
+		}
+		routes[path] = handler
+	}
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return err
 	}
 	defer listener.Close()
 	bridge := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != origin.Path {
+		handler, ok := routes[r.URL.Path]
+		if !ok {
 			http.NotFound(w, r)
 			return
 		}
 		r.URL.Scheme = "https"
 		r.URL.Host = r.Host
-		sut.Handler().ServeHTTP(w, r)
+		handler.ServeHTTP(w, r)
 	})
 	if err = json.NewEncoder(os.Stdout).Encode(map[string]any{"version": 1, "url": "http://" + listener.Addr().String() + origin.Path}); err != nil {
 		return err
 	}
 	return (&http.Server{Handler: bridge, ReadHeaderTimeout: 5 * time.Second}).Serve(listener)
+}
+
+// personResource serves the endpoint that requires a Person token with the
+// native person-identity Resource, which trusts the fixture Person Server's
+// key as a host that trusts that Person Server configures it.
+func personResource(config bootstrap) (string, http.Handler, error) {
+	endpoint, err := url.Parse(config.PersonResource)
+	if err != nil {
+		return "", nil, err
+	}
+	keys, err := personServerKeys(config)
+	if err != nil {
+		return "", nil, err
+	}
+	sut, err := resource.NewPersonIdentity(resource.PersonIdentityConfig{
+		Issuer: endpoint.Scheme + "://" + endpoint.Host, KeyResolver: keys, Clock: aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() }),
+		ResolvePerson: func(context.Context, resource.PersonIdentity, resource.PersonContext) error { return nil },
+		Protected: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			principal, ok := resource.PersonPrincipalFromContext(r.Context())
+			if !ok {
+				http.Error(w, "missing verified person", 500)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"sub": principal.Subject})
+		}),
+	})
+	if err != nil {
+		return "", nil, err
+	}
+	return endpoint.Path, sut.Handler(), nil
+}
+
+// personServerKeys is the fixture Person Server's public key from the
+// bootstrap.
+func personServerKeys(config bootstrap) (signaturekey.StaticKeyResolver, error) {
+	var key jose.JWK
+	if err := json.Unmarshal(config.PersonJWK, &key); err != nil {
+		return nil, fmt.Errorf("fixture Person Server key: %w", err)
+	}
+	key.Kid = config.PersonKid
+	return signaturekey.StaticKeyResolver{{Issuer: config.PersonServer, DiscoveryDocument: aauth.PersonDiscoveryDocument, KeyID: config.PersonKid}: key}, nil
 }
 
 // Three native roles share only the launcher's physical listener. Logical
@@ -573,6 +629,17 @@ func runAgent(config bootstrap, keys signaturekey.StaticKeyResolver) error {
 	if err != nil {
 		return err
 	}
+	// The Agent verifies Person tokens from the fixture Person Server, which
+	// its Agent token may name.
+	if len(config.PersonJWK) > 0 {
+		personKeys, err := personServerKeys(config)
+		if err != nil {
+			return err
+		}
+		for reference, jwk := range personKeys {
+			keys[reference] = jwk
+		}
+	}
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var job struct {
 			Method    string            `json:"method"`
@@ -580,14 +647,12 @@ func runAgent(config bootstrap, keys signaturekey.StaticKeyResolver) error {
 			Headers   map[string]string `json:"headers"`
 			Token     string            `json:"token"`
 			Transport string            `json:"transport"`
+			// PersonTransport is the loopback address of the Person Server
+			// the Agent token names, when the Resource requires a Person token.
+			PersonTransport string `json:"person_transport"`
 		}
 		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16384)).Decode(&job); err != nil {
 			http.Error(w, err.Error(), 400)
-			return
-		}
-		physical, err := url.Parse(job.Transport)
-		if err != nil || physical.Scheme != "http" || !net.ParseIP(physical.Hostname()).IsLoopback() {
-			http.Error(w, "loopback transport required", 400)
 			return
 		}
 		request, err := http.NewRequestWithContext(r.Context(), job.Method, job.URL, nil)
@@ -598,11 +663,31 @@ func runAgent(config bootstrap, keys signaturekey.StaticKeyResolver) error {
 		for name, value := range job.Headers {
 			request.Header.Set(name, value)
 		}
+		// Each logical origin the Agent reaches maps to one loopback peer.
+		physical := map[string]*url.URL{}
+		if physical[request.URL.Host], err = loopbackTransport(job.Transport); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		if job.PersonTransport != "" {
+			personServer, err := url.Parse(config.PersonServer)
+			if err != nil {
+				http.Error(w, err.Error(), 400)
+				return
+			}
+			if physical[personServer.Host], err = loopbackTransport(job.PersonTransport); err != nil {
+				http.Error(w, err.Error(), 400)
+				return
+			}
+		}
 		transport := &http.Transport{Proxy: nil, DisableKeepAlives: true}
 		defer transport.CloseIdleConnections()
 		client, err := agent.New(r.Context(), agent.Config{Identifier: config.Subject, SigningKey: key, AgentToken: job.Token, KeyResolver: keys, Clock: aauth.ClockFunc(func() time.Time { return time.Unix(config.Now, 0).UTC() }), HTTPClient: &http.Client{Timeout: 5 * time.Second, Transport: roundTripFunc(func(signed *http.Request) (*http.Response, error) {
-			mapped := mapPhysicalRequest(signed, physical)
-			return transport.RoundTrip(mapped)
+			target := physical[signed.URL.Host]
+			if target == nil {
+				return nil, fmt.Errorf("no fixture transport for %s", signed.URL.Host)
+			}
+			return transport.RoundTrip(mapPhysicalRequest(signed, target))
 		})}})
 		if err != nil {
 			http.Error(w, err.Error(), 422)
@@ -612,6 +697,14 @@ func runAgent(config bootstrap, keys signaturekey.StaticKeyResolver) error {
 		if err != nil {
 			http.Error(w, err.Error(), 422)
 			return
+		}
+		if job.PersonTransport != "" && response.StatusCode == http.StatusUnauthorized &&
+			aauth.ParsePersonTokenRequirement(response.Header.Values("AAuth-Requirement")) == nil {
+			response.Body.Close()
+			if response, err = retryWithPersonToken(r.Context(), client, config.PersonServer, request); err != nil {
+				http.Error(w, err.Error(), 422)
+				return
+			}
 		}
 		defer response.Body.Close()
 		if _, err = io.Copy(io.Discard, io.LimitReader(response.Body, 65537)); err != nil {
@@ -630,6 +723,38 @@ func runAgent(config bootstrap, keys signaturekey.StaticKeyResolver) error {
 		return err
 	}
 	return (&http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second}).Serve(listener)
+}
+
+// retryWithPersonToken answers a Resource's requirement=person-token: the
+// native Agent asks the Person Server its Agent token names for a Person
+// token for the Resource, verifies it, and repeats the request with it.
+func retryWithPersonToken(ctx context.Context, client *agent.Client, personServer string, request *http.Request) (*http.Response, error) {
+	result, err := client.PersonToken(ctx, agent.PersonTokenRequest{PersonServer: personServer, Resource: request.URL.Scheme + "://" + request.URL.Host})
+	if err != nil {
+		return nil, err
+	}
+	token, ok := result.Token()
+	if !ok {
+		return nil, errors.New("the Person Server deferred the Person token")
+	}
+	call, err := client.Begin(ctx, agent.InitialCall{Request: request, PersonToken: token})
+	if err != nil {
+		return nil, err
+	}
+	response, ok := call.Response()
+	if !ok {
+		return nil, errors.New("the Resource answered the Person token with an authorization requirement")
+	}
+	return response, nil
+}
+
+// loopbackTransport parses a runner-owned plain-HTTP loopback address.
+func loopbackTransport(address string) (*url.URL, error) {
+	physical, err := url.Parse(address)
+	if err != nil || physical.Scheme != "http" || !net.ParseIP(physical.Hostname()).IsLoopback() {
+		return nil, errors.New("loopback transport required")
+	}
+	return physical, nil
 }
 
 // Substitute only the socket destination. Preserve explicit SUT Host output.

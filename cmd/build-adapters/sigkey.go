@@ -17,9 +17,6 @@ func init() {
 // their scenarios are not run for it.
 func init() {
 	unofferedClaims[conformance.SigkeyVerifierRole] = map[string][]string{
-		// resource.FurtherSchemesConfig takes hwk, jkt-jwt, jwks_uri, jwks, x509
-		// and cached; signaturekey.VerifySelfJWT is not reachable from a Resource.
-		"aauth-go": {"sigkey.v.self-jwt"},
 		// The module verifies jwt (VerifyAndExtractAgent) and jwks_uri
 		// (VerifyServerRequest) at a Resource; hwk and jkt-jwt are verified only
 		// inside its Agent Provider, and jwks and self-jwt not at all.

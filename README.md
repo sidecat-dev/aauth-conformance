@@ -420,9 +420,8 @@ go run ./cmd/aauth-conformance -targets build/events-ap/targets.json -report bui
 ```
 
 Use `events.subscription`, `events.delivery` or `events.agent` the same way.
-The slice has 40 scenarios. Clauses an implementation's API leaves to host stores are not
-claimed for it (see [ADAPTERS.md](ADAPTERS.md#events-roles)); they report as
-not claimed, never as passes. AsyncAPI documents, egress admission and the
+The slice has 40 scenarios. Duties an implementation's API gives to its stores
+are graded on the stores it ships (see [ADAPTERS.md](ADAPTERS.md#events-roles)). AsyncAPI documents, egress admission and the
 AP-to-Agent transport are outside these roles.
 
 ## R3
