@@ -219,12 +219,14 @@ func runBootstrapSelfHosted(config bootstrap) error {
 }
 
 // bootstrapAgentState is what the native Agent holds between control jobs:
-// its assigned identifier and its current Agent token and ephemeral key.
+// its assigned identifier and its current Agent token, the token's verified
+// claims and its key.
 type bootstrapAgentState struct {
-	mu    sync.Mutex
-	agent string
-	token string
-	key   jose.SigningKey
+	mu     sync.Mutex
+	agent  string
+	token  string
+	claims aauth.AgentTokenClaims
+	key    jose.SigningKey
 }
 
 // runBootstrapAgent drives the native bootstrap Agent. It generates its own
@@ -232,14 +234,18 @@ type bootstrapAgentState struct {
 // BootstrapClient enrolls and refreshes, and agent.Client requests sub-agent
 // tokens and calls Resources with the current token. A BootstrapClient posts
 // a single-key refresh to its one refresh endpoint, so a second client with
-// the same durable key serves the single-key path. aauth-go has no
-// refresh-margin decision, so the renew operation is not offered (see
-// cmd/build-adapters/bootstrap.go).
+// the same durable key serves the single-key path. Its clock starts at the
+// bootstrap now; a renew job moves it to the job's now, where
+// BootstrapClient.NeedsRefresh decides whether the token is inside the
+// refresh margin and, only if it is, the Agent refreshes (two-key).
 func runBootstrapAgent(config bootstrap, keys signaturekey.StaticKeyResolver) error {
-	extension, clock, err := bootstrapConfig(config)
+	extension, _, err := bootstrapConfig(config)
 	if err != nil {
 		return err
 	}
+	var at atomic.Int64
+	at.Store(config.Now)
+	clock := aauth.ClockFunc(func() time.Time { return time.Unix(at.Load(), 0).UTC() })
 	apTransport, err := loopbackTransport(config.APTransport)
 	if err != nil {
 		return err
@@ -301,6 +307,33 @@ func runBootstrapAgent(config bootstrap, keys signaturekey.StaticKeyResolver) er
 		}
 		return agent.New(ctx, agent.Config{Identifier: identifier, SigningKey: key, AgentToken: token, KeyResolver: keys, HTTPClient: routes(extra), Clock: clock})
 	}
+	// refresh is one native two-key refresh at the Agent's clock with a fresh
+	// ephemeral key.
+	refresh := func(ctx context.Context) error {
+		state.mu.Lock()
+		identifier := state.agent
+		state.mu.Unlock()
+		ephemeral, err := bootstrapGeneratedKey("ephemeral")
+		if err != nil {
+			return err
+		}
+		jti, err := bootstrapRandom()
+		if err != nil {
+			return err
+		}
+		now := clock.Now()
+		refreshed, err := client.Refresh(ctx, agent.RefreshAgentTokenInput{
+			Agent: identifier, PersonServer: extension.PersonServer, Evidence: json.RawMessage(`{}`),
+			SigningKey: ephemeral, DelegationJTI: jti, DelegationIssuedAt: now, DelegationExpiresAt: now.Add(5 * time.Minute),
+		})
+		if err != nil {
+			return err
+		}
+		state.mu.Lock()
+		state.token, state.claims, state.key = refreshed.AgentToken, refreshed.Claims, ephemeral
+		state.mu.Unlock()
+		return nil
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /control", func(w http.ResponseWriter, r *http.Request) {
 		var job struct {
@@ -310,6 +343,7 @@ func runBootstrapAgent(config bootstrap, keys signaturekey.StaticKeyResolver) er
 			Method        string   `json:"method"`
 			URL           string   `json:"url"`
 			Transport     string   `json:"transport"`
+			Now           *int64   `json:"now"`
 		}
 		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 65536)).Decode(&job); err != nil {
 			bootstrapRefuse(w, http.StatusBadRequest, err)
@@ -329,31 +363,33 @@ func runBootstrapAgent(config bootstrap, keys signaturekey.StaticKeyResolver) er
 			state.mu.Unlock()
 			answer["agent"] = enrolled.Agent
 		case "refresh":
-			state.mu.Lock()
-			identifier := state.agent
-			state.mu.Unlock()
-			ephemeral, err := bootstrapGeneratedKey("ephemeral")
-			if err == nil {
-				var jti string
-				jti, err = bootstrapRandom()
-				now := clock.Now()
-				var refreshed agent.RefreshAgentTokenResult
-				if err == nil {
-					refreshed, err = client.Refresh(ctx, agent.RefreshAgentTokenInput{
-						Agent: identifier, PersonServer: extension.PersonServer, Evidence: json.RawMessage(`{}`),
-						SigningKey: ephemeral, DelegationJTI: jti, DelegationIssuedAt: now, DelegationExpiresAt: now.Add(5 * time.Minute),
-					})
-				}
-				if err == nil {
-					state.mu.Lock()
-					state.token, state.key = refreshed.AgentToken, ephemeral
-					state.mu.Unlock()
-				}
-			}
-			if err != nil {
+			if err := refresh(ctx); err != nil {
 				bootstrapRefuse(w, http.StatusUnprocessableEntity, err)
 				return
 			}
+		case "renew":
+			// The native client decides at the job's clock whether the
+			// token is inside the refresh margin.
+			if job.Now == nil {
+				bootstrapRefuse(w, http.StatusBadRequest, errors.New("renew job needs now"))
+				return
+			}
+			at.Store(*job.Now)
+			state.mu.Lock()
+			held, claims := state.token, state.claims
+			state.mu.Unlock()
+			if held == "" {
+				bootstrapRefuse(w, http.StatusUnprocessableEntity, errors.New("no Agent token yet: refresh first"))
+				return
+			}
+			due := client.NeedsRefresh(claims)
+			if due {
+				if err := refresh(ctx); err != nil {
+					bootstrapRefuse(w, http.StatusUnprocessableEntity, err)
+					return
+				}
+			}
+			answer["refreshed"] = due
 		case "single-key":
 			state.mu.Lock()
 			identifier := state.agent
@@ -366,7 +402,7 @@ func runBootstrapAgent(config bootstrap, keys signaturekey.StaticKeyResolver) er
 				return
 			}
 			state.mu.Lock()
-			state.token, state.key = refreshed.AgentToken, durable
+			state.token, state.claims, state.key = refreshed.AgentToken, refreshed.Claims, durable
 			state.mu.Unlock()
 		case "subagent":
 			parent, err := current(ctx, nil)

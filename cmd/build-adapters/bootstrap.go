@@ -23,13 +23,12 @@ import "gitlab.com/sidecat-dev/aauth-conformance/internal/conformance"
 // BootstrapClient::single_key_refresh_request), so both claim
 // bootstrap.agent.single-key.
 //
-// The refresh margin (core line 1301, Bootstrap line 291) is aauth-rust's
-// BootstrapClient::needs_refresh with REFRESH_MARGIN. aauth-go has no
-// refresh-margin decision: its BootstrapClient performs one exchange when
-// called and "does not discover endpoints, retry, or mutate an authenticated
-// Client", and no aauth-go API says when a token is due. A launcher-coded
-// margin would grade the launcher, not the library, so aauth-go leaves
-// bootstrap.agent.refresh-margin unclaimed until it has that decision.
+// The refresh margin (core line 1301, Bootstrap line 291) is the library's
+// decision in both: aauth-go's BootstrapClient.NeedsRefresh with
+// agent.RefreshMargin, and aauth-rust's BootstrapClient::needs_refresh with
+// REFRESH_MARGIN. Each launcher's renew asks it at the job's clock and
+// refreshes only when it says yes, so both claim
+// bootstrap.agent.refresh-margin, a recommended clause.
 func init() {
 	for _, role := range []string{conformance.BootstrapProviderRole, conformance.BootstrapAgentRole, conformance.BootstrapSelfHostedRole} {
 		goRoleSources[role] = []string{"bootstrap.go"}
@@ -45,8 +44,4 @@ func init() {
 		"aauth-go":   {"bootstrap.agent.single-key"},
 		"aauth-rust": {"bootstrap.agent.single-key"},
 	}
-	if unofferedClaims[conformance.BootstrapAgentRole] == nil {
-		unofferedClaims[conformance.BootstrapAgentRole] = map[string][]string{}
-	}
-	unofferedClaims[conformance.BootstrapAgentRole]["aauth-go"] = []string{"bootstrap.agent.refresh-margin"}
 }

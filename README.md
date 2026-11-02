@@ -595,9 +595,9 @@ aauth-go (`adapters/go/bootstrap.go`) and aauth-rust
 (`adapters/rust/src/bootstrap.rs`, feature `bootstrap`) each have a launcher
 for all three roles. Both also claim the out-of-slice single-key refresh, on
 the AP and on the agent, which each library implements natively. The agent's
-refresh margin (core line 1301, Bootstrap line 291) is graded for aauth-rust
-only: aauth-go has no refresh-margin decision, so it leaves that clause
-unclaimed.
+refresh margin (core line 1301, Bootstrap line 291) is graded for both: each
+library's bootstrap client decides when a token is due, and the launcher
+refreshes only when it says so.
 
 ```sh
 go run ./cmd/build-adapters -role bootstrap.agent-provider -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -claim-recommended -out build/bootstrap-ap
