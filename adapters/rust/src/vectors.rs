@@ -8,7 +8,7 @@ use aauth_rust_core::{
     metadata_jwks_uri, validate_agent_identifier, validate_server_identifier,
 };
 use aauth_rust_jose::Jwk;
-use aauth_rust_signature_key::{KeyMaterial, PreparedRequest, signature_error_code};
+use aauth_rust_signature_key::{KeyMaterial, PreparedRequest, parse_signature_error};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
@@ -82,7 +82,6 @@ struct Input {
 
 enum Answer {
     Result(Value),
-    NotOffered(String),
 }
 
 pub fn run(_config: Bootstrap) -> Result<(), Failure> {
@@ -99,7 +98,6 @@ pub fn run(_config: Bootstrap) -> Result<(), Failure> {
         let (status, value) = match serde_json::from_slice::<Input>(&body) {
             Ok(input) => match handle(&input) {
                 Ok(Answer::Result(value)) => (200, value),
-                Ok(Answer::NotOffered(reason)) => (501, json!({"not_offered": reason})),
                 Err(error) => (422, json!({"error": error.to_string()})),
             },
             Err(error) => (400, json!({"error": error.to_string()})),
@@ -153,23 +151,19 @@ fn handle(input: &Input) -> Result<Answer, Failure> {
                 Err(error) => refused_with_code(error.code(), error),
             }
         }
-        "signature-error" => match signature_error_code(&input.header) {
-            // aauth-rust reads the error token only.
-            Ok(code) => json!({"accepted": true, "code": code, "unoffered": ["required_input"]}),
+        "signature-error" => match parse_signature_error(&input.header) {
+            Ok(error) => match error.required_input {
+                Some(required) => {
+                    json!({"accepted": true, "code": error.code, "required_input": required})
+                }
+                None => json!({"accepted": true, "code": error.code}),
+            },
             Err(error) => refused_with_code(error.code(), error),
         },
         "requirement" => requirement(input)?,
         "signature-key" => signature_key(input)?,
         "jwt" => jwt(input),
-        "http-signature" => {
-            if !input.required_components.is_empty() {
-                return Ok(Answer::NotOffered(
-                    "PreparedRequest takes no server-required components beyond its own profile"
-                        .into(),
-                ));
-            }
-            http_signature(input)?
-        }
+        "http-signature" => http_signature(input)?,
         other => return Err(format!("unknown vector kind {other}").into()),
     };
     Ok(Answer::Result(value))
@@ -305,9 +299,10 @@ fn jwt(input: &Input) -> Value {
 }
 
 /// Verify the request with the vector's public key under the AAuth agent
-/// profile, the given clock and window. aauth-rust always requires covered
-/// Content-Digest and Content-Type on a body carrying Content-Type, which
-/// covers the vectors' PS-endpoint case.
+/// profile, the given clock and window, and the components the vector's
+/// server requires. aauth-rust always requires covered Content-Digest and
+/// Content-Type on a body carrying Content-Type, which covers the vectors'
+/// PS-endpoint case.
 fn http_signature(input: &Input) -> Result<Value, Failure> {
     let request = build_request(&input.request)?;
     let key: Jwk = match serde_json::from_value(input.key.clone()) {
@@ -316,12 +311,18 @@ fn http_signature(input: &Input) -> Result<Value, Failure> {
             return Ok(json!({"accepted": false, "stage": "key", "error": error.to_string()}));
         }
     };
-    let prepared = match PreparedRequest::prepare_with_schemes(
+    let required: Vec<&str> = input
+        .required_components
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let prepared = match PreparedRequest::prepare_with_components(
         &request,
         &input.label,
         input.now,
         input.window,
         &["jwt"],
+        &required,
     ) {
         Ok(prepared) => prepared,
         Err(error) => return Ok(refused_with_code(error.code(), error)),

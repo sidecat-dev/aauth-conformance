@@ -11,11 +11,6 @@ func init() {
 	rustRoleFeatures[role] = "sigkey-vectors"
 	rustRoleCrates[role] = []string{"aauth-rust-signature-key"}
 	generatedRoles[role] = true
-	unofferedClaims[role] = map[string][]string{
-		// aauth-rust keeps jkt-jwt at Ed25519, for the identity key and the
-		// delegated request key (its ACCEPTED_SIGNATURE_ALGS documentation).
-		"aauth-rust": {"sigvec.jkt-jwt.es256"},
-	}
 	if unavailableRoles[role] == nil {
 		unavailableRoles[role] = map[string]string{}
 	}

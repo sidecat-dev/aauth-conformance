@@ -477,8 +477,10 @@ approval POST as the Person Server (`jwks_uri`, covered digest and type) with
 not install an issuance record, `install` reads that document with
 `Store::read_mission_audit` and installs it with
 `MemoryStore::install_approved_mission` for the fixture person, as the crate
-leaves to the host. The native approval takes no expiry, so `expires_in` is
-reported as not offered. The launcher never terminates a mission itself.
+leaves to the host. An `expires_in` control is kept for the next approval,
+which carries `expires_at` (that many seconds after the fixture clock, RFC
+3339), as the native approval takes it from aauth-rust 0.1.0-alpha.20. The
+launcher never terminates a mission itself.
 
 `mission.resource` runs the four-party bundle (Go `runFederatedServers`,
 Rust `federation::run`); its federation transport refuses every request
@@ -633,11 +635,11 @@ anything itself.
 | server-identifier | `ValidateServerIdentifier` | `validate_server_identifier` | `ValidateServerIdentifier` |
 | jwk-thumbprint | `jose.JWK.Thumbprint` | `Jwk::thumbprint` | `JWK.Thumbprint` |
 | metadata | `events.DecodeAgentProviderMetadata` for `aauth-agent.json` only; the others are not offered | `metadata_jwks_uri` | decode into the role's type, then `Validate` |
-| signature-error | `signaturekey.ParseError` | `signature_error_code` (no `required_input`) | `ParseSignatureError` |
+| signature-error | `signaturekey.ParseError` | `parse_signature_error` | `ParseSignatureError` |
 | requirement | `ParseRequirement`, then `ParseAuthTokenRequirement` or `ParseInteractionRequirement` | Agent `Requirement::parse`; deferred values through `PendingResponse::parse` on the 202 framing | `ParseRequirement` |
 | signature-key | `signaturekey.PrepareRequest` with default (jwt-only) options | `PreparedRequest::prepare_with_schemes(..., &["jwt"])` | `ParseSignatureKey` |
 | jwt | `VerifyAgentToken`, `VerifyPersonToken`, `VerifyResourceToken`, `VerifyAuthToken` with a `StaticKeyResolver` | `AgentToken`, `PersonToken`, `ResourceToken`, `AuthToken` `parse` then `verify` with `TrustedIssuerKeys::from_documents` | `VerifyAgentToken` (agent-token lifetime ceiling lifted, as the module's own vector test does), `VerifyPersonToken`, `VerifyAuthToken`; no standalone resource-token verifier is exported |
-| http-signature | `PrepareRequest` then `Verify`; `require_body_coverage` adds content-digest and content-type to the required components | `prepare_with_schemes` then `verify`; required components beyond its profile are not offered | `VerifyRequestWithOptions` |
+| http-signature | `PrepareRequest` then `Verify`; `require_body_coverage` adds content-digest and content-type to the required components | `prepare_with_components` with the vector's required components, then `verify` | `VerifyRequestWithOptions` |
 
 The Go launcher is `adapters/go/vectors.go`, the Rust launcher
 `adapters/rust/src/vectors.rs` (feature `vectors`, with the Signature-Key

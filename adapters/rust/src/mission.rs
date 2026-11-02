@@ -110,6 +110,8 @@ fn run_mission_server(config: Bootstrap) -> Result<(), Failure> {
         auth_lifetime: config.auth_lifetime,
     };
     let offset = Arc::new(AtomicI64::new(0));
+    // The expiry the host was told to set at the person's next approval.
+    let expires_in = AtomicI64::new(0);
     let clock_offset = offset.clone();
     let now = config.now;
     let clock = move || now + clock_offset.load(Ordering::SeqCst);
@@ -148,21 +150,26 @@ fn run_mission_server(config: Bootstrap) -> Result<(), Failure> {
                     offset.store(seconds, Ordering::SeqCst);
                 }
                 let mut reply = serde_json::Map::new();
-                if control.expires_in.is_some() {
-                    // The native approval mints the blob without expires_at.
-                    reply.insert(
-                        "expires_in".into(),
-                        "not offered by the native approval".into(),
-                    );
+                if let Some(seconds) = control.expires_in {
+                    if !(1..=3600).contains(&seconds) {
+                        return Err("expires_in out of range".into());
+                    }
+                    expires_in.store(seconds, Ordering::SeqCst);
                 }
                 if let Some(location) = control.approve {
                     // The person's approval: a POST signed as this Person
-                    // Server under jwks_uri, as the native approval requires.
+                    // Server under jwks_uri, as the native approval requires,
+                    // with the expiry the host was told to set.
+                    let mut decision = serde_json::json!({"decision": "approve"});
+                    let seconds = expires_in.load(Ordering::SeqCst);
+                    if seconds > 0 {
+                        decision["expires_at"] = rfc3339(clock() + seconds).into();
+                    }
                     let mut approval = Request::builder()
                         .method("POST")
                         .uri(format!("{location}/approval"))
                         .header("content-type", "application/json")
-                        .body(br#"{"decision":"approve"}"#.to_vec())?;
+                        .body(serde_json::to_vec(&decision)?)?;
                     sign_request(
                         &mut approval,
                         &approver,
@@ -231,4 +238,26 @@ fn run_mission_server(config: Bootstrap) -> Result<(), Failure> {
         incoming.respond(wire)?;
     }
     Ok(())
+}
+
+/// Unix seconds as an RFC 3339 UTC time, such as `2026-11-02T08:30:00Z`.
+fn rfc3339(unix: i64) -> String {
+    let days = unix.div_euclid(86_400);
+    let seconds = unix.rem_euclid(86_400);
+    // Civil date from days since 1970-01-01 (proleptic Gregorian).
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = yoe + era * 400 + i64::from(month <= 2);
+    format!(
+        "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
+        seconds / 3600,
+        seconds % 3600 / 60,
+        seconds % 60
+    )
 }
