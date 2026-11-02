@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "id": "agent-person-flow-unpublished-metadata",
+  "title": "The Agent completes the person flow at a Resource that publishes no metadata",
+  "role_under_test": "agent.signing",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300,
+    "ps": true
+  },
+  "request": {
+    "method": "GET",
+    "path": "/profile",
+    "endpoint": "person",
+    "resource_metadata_unpublished": true,
+    "proof": "sut",
+    "headers": {}
+  },
+  "assertions": [
+    {
+      "id": "person-request",
+      "clause": "agent.resource-metadata-unpublished",
+      "kind": "wire-person-request",
+      "equals": true
+    },
+    {
+      "id": "retry",
+      "clause": "agent.resource-metadata-unpublished",
+      "kind": "wire-person-token",
+      "equals": true
+    }
+  ]
+}

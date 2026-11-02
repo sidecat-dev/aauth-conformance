@@ -184,6 +184,9 @@ func (s Suite) validate() error {
 		if scenario.Token.PS && !(person && scenario.Role == AgentRole) {
 			return fmt.Errorf("token.ps is for the Agent person-endpoint scenario")
 		}
+		if req.ResourceMetadataUnpublished && !(person && scenario.Role == AgentRole) {
+			return fmt.Errorf("request.resource_metadata_unpublished is for the Agent person-endpoint scenario")
+		}
 		if req.Endpoint != "" && (!person || f.PersonPath == "" || req.Path != f.PersonPath || scenario.Role != ResourceRole && scenario.Role != AgentRole) {
 			return fmt.Errorf("endpoint %q needs the fixture person_path in a Resource or Agent request", req.Endpoint)
 		}

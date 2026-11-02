@@ -159,6 +159,14 @@
       "role": "agent.signing"
     },
     {
+      "id": "agent.resource-metadata-unpublished",
+      "source": "core",
+      "section": "Resource Metadata: the person flow at a Resource that publishes none (outside signing slice)",
+      "anchor": "resource-metadata",
+      "scope": "out-of-slice",
+      "role": "agent.signing"
+    },
+    {
       "id": "ps.person-endpoint",
       "source": "core",
       "section": "Person Token Endpoint: signed POST and successful person-token response",

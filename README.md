@@ -1,12 +1,12 @@
 # AAuth conformance scenarios
 
 Run the same wire scenarios against different AAuth implementations. The suite
-has 367 scenarios and 1,486 assertions in 21 roles:
+has 372 scenarios and 1,498 assertions in 21 roles:
 
 | Role | Scenario files | Scenarios | Assertions | Draft |
 | --- | --- | ---: | ---: | --- |
-| `resource.agent-identity` | 01-06 | 6 | 17 | protocol, Signature-Key |
-| `agent.signing` | 07-09 | 3 | 16 | protocol |
+| `resource.agent-identity` | 01-06, 600-602 | 9 | 25 | protocol, Signature-Key |
+| `agent.signing` | 07-09, 603-604 | 5 | 20 | protocol |
 | `person-server.direct` | 10-21 | 12 | 109 | protocol |
 | `authorization.federated` | 22-49, 73-78 | 34 | 398 | protocol, Budgets |
 | `authorization.deferred` | 50-54 | 5 | 88 | protocol |

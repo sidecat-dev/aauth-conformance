@@ -118,11 +118,12 @@ the fixture Person Server's logical `person_token_endpoint`, and
 `person_transport`, its loopback address. The harness Person Server publishes
 `/.well-known/aauth-person.json` with the four members Person Server Metadata
 requires, and the harness Resource publishes `/.well-known/aauth-resource.json`
-with its issuer; a metadata fetch is kept as an exchange and not graded. With
-`"resource_metadata_unpublished": true` in `fixture.json` the harness Resource
-publishes none, as Core lets a Resource do (Resource Metadata), and answers
-that fetch `404`; the flow is graded the same way. The shipped fixture leaves
-it absent. The
+with its issuer; a metadata fetch is kept as an exchange and not graded. In a
+scenario with `"resource_metadata_unpublished": true` in its `request`, such as
+`agent-person-flow-unpublished-metadata`, the harness Resource publishes none,
+as Core lets a Resource do (Resource Metadata, line 2101), and answers that
+fetch `404`; the flow is graded the same way, under the clause
+`agent.resource-metadata-unpublished`. The
 harness Resource answers a valid
 Agent-token request with `401` and `requirement=person-token`; the harness
 Person Server answers a valid Person token request with `200`

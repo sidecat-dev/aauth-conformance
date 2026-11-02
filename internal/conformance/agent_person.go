@@ -24,15 +24,17 @@ import (
 // request; the Resource accepts a retry presenting exactly that token. Both
 // publish their metadata, which an Agent may read first: the Person Server
 // the four members Person Server Metadata requires, the Resource its issuer,
-// unless the fixture's resource_metadata_unpublished has it publish none.
+// unless the scenario's request.resource_metadata_unpublished has it publish
+// none.
 type personFlow struct {
-	f        Fixture
-	job      AgentJob
-	agentExp int64
-	mu       sync.Mutex
-	arrived  []personArrival
-	issued   string
-	close    func()
+	f           Fixture
+	job         AgentJob
+	agentExp    int64
+	unpublished bool
+	mu          sync.Mutex
+	arrived     []personArrival
+	issued      string
+	close       func()
 }
 
 type personArrival struct {
@@ -57,7 +59,7 @@ func (b *Bootstrap) withPersonTrust(f Fixture) {
 	b.PersonServer, b.PersonKid, b.PersonJWK = f.Person.Issuer, f.Person.Kid, publicJWK(f.Person.Seed)
 }
 
-func startPersonFlow(f Fixture, job AgentJob, agentExp int64) (*personFlow, AgentJob, error) {
+func startPersonFlow(f Fixture, job AgentJob, agentExp int64, unpublished bool) (*personFlow, AgentJob, error) {
 	resource, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return nil, job, err
@@ -70,7 +72,7 @@ func startPersonFlow(f Fixture, job AgentJob, agentExp int64) (*personFlow, Agen
 	job.Transport = "http://" + resource.Addr().String()
 	job.PersonTokenEndpoint = f.Person.personURL()
 	job.PersonTransport = "http://" + person.Addr().String()
-	p := &personFlow{f: f, job: job, agentExp: agentExp}
+	p := &personFlow{f: f, job: job, agentExp: agentExp, unpublished: unpublished}
 	servers := []*http.Server{
 		{Handler: http.HandlerFunc(p.serveResource), ReadHeaderTimeout: 3 * time.Second},
 		{Handler: http.HandlerFunc(p.servePerson), ReadHeaderTimeout: 3 * time.Second},
@@ -129,7 +131,7 @@ func (p *personFlow) serveMetadata(w http.ResponseWriter, r *http.Request, path 
 
 // resourceMetadata is the Resource's document, nil when it publishes none.
 func (p *personFlow) resourceMetadata() map[string]string {
-	if p.f.ResourceMetadataUnpublished {
+	if p.unpublished {
 		return nil
 	}
 	return map[string]string{"issuer": p.f.Origin}
@@ -297,7 +299,7 @@ func runPersonFlowCase(ctx context.Context, f Fixture, scenario Scenario, target
 	job := AgentJob{Method: scenario.Request.Method, URL: f.Origin + scenario.Request.Path, Headers: scenario.Request.Headers, Token: token}
 	var flow *personFlow
 	if executionError == nil {
-		flow, job, executionError = startPersonFlow(f, job, f.Now+scenario.Token.EXPOffset)
+		flow, job, executionError = startPersonFlow(f, job, f.Now+scenario.Token.EXPOffset, scenario.Request.ResourceMetadataUnpublished)
 	}
 	c.SigningInput = &job
 	if startError != nil {

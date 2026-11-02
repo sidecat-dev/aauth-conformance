@@ -20,53 +20,62 @@ import (
 
 // Catches a person flow graded on the controller's word: one Agent-token
 // request must fail both person assertions, and the full flow must pass,
-// also when the Agent reads both metadata documents first, and when the
-// Resource publishes none and answers that read 404.
+// also when the Agent reads both metadata documents first. The scenario whose
+// Resource publishes no metadata answers that read 404 and grades the same.
 func TestPersonFlowGradesThePersonRequestAndTheRetry(t *testing.T) {
 	suite, err := Load("../..")
 	if err != nil {
 		t.Fatal(err)
 	}
-	claims := append(Claims(suite, AgentRole), "agent.person-flow")
+	claims := append(Claims(suite, AgentRole), "agent.person-flow", "agent.resource-metadata-unpublished")
+	cases := map[string]bool{"agent-person-flow": false, "agent-person-flow-unpublished-metadata": true}
 	for _, test := range []struct {
-		name, mode     string
-		unpublished    bool
-		pass           bool
-		exchanges      int
-		resourceStatus int
+		mode      string
+		pass      bool
+		exchanges int
+		// published and unpublished are the statuses the Resource metadata
+		// read gets in each scenario; 0 when the Agent makes none.
+		published, unpublished int
 	}{
-		{"agent-person", "agent-person", false, true, 3, 0},
-		{"agent-person-discovering", "agent-person-discovering", false, true, 5, http.StatusOK},
-		{"resource-metadata-unpublished", "agent-person-discovering", true, true, 5, http.StatusNotFound},
-		{"agent-valid", "agent-valid", false, false, 1, 0},
+		{"agent-person", true, 3, 0, 0},
+		{"agent-person-discovering", true, 5, http.StatusOK, http.StatusNotFound},
+		{"agent-valid", false, 1, 0, 0},
 	} {
-		t.Run(test.name, func(t *testing.T) {
-			suite := suite
-			suite.Fixture.ResourceMetadataUnpublished = test.unpublished
+		t.Run(test.mode, func(t *testing.T) {
 			t.Setenv("AAUTH_TEST_ADAPTER", test.mode)
 			targets := Targets{Version: 1, Role: AgentRole, Implementations: []Target{{ID: "test-agent", Revision: "test", Command: []string{os.Args[0], "-test.run=^TestAdapterProcess$"}, Claims: claims}}}
 			report, err := RunSuite(context.Background(), suite, targets, Options{StartupTimeout: time.Second, Timeout: time.Second})
 			if err != nil {
 				t.Fatal(err)
 			}
-			var flow *Case
+			seen := 0
 			for i := range report.Runs[0].Cases {
-				if report.Runs[0].Cases[i].ID == "agent-person-flow" {
-					flow = &report.Runs[0].Cases[i]
+				flow := &report.Runs[0].Cases[i]
+				unpublished, ok := cases[flow.ID]
+				if !ok {
+					continue
+				}
+				seen++
+				if flow.Error != "" || len(flow.Results) != 2 || len(flow.Exchanges) != test.exchanges {
+					t.Fatalf("%s case: %+v", flow.ID, flow)
+				}
+				for _, result := range flow.Results {
+					if (result.State == "pass") != test.pass {
+						t.Fatalf("%s %s graded %s: %s", flow.ID, result.Assertion, result.State, result.Detail)
+					}
+				}
+				want := test.published
+				if unpublished {
+					want = test.unpublished
+				}
+				for _, exchange := range flow.Exchanges {
+					if strings.HasSuffix(exchange.URL, "/.well-known/aauth-resource.json") && exchange.Response.Status != want {
+						t.Fatalf("%s: Resource metadata answered %d, want %d", flow.ID, exchange.Response.Status, want)
+					}
 				}
 			}
-			if flow == nil || flow.Error != "" || len(flow.Results) != 2 || len(flow.Exchanges) != test.exchanges {
-				t.Fatalf("person flow case: %+v", flow)
-			}
-			for _, result := range flow.Results {
-				if (result.State == "pass") != test.pass {
-					t.Fatalf("%s graded %s: %s", result.Assertion, result.State, result.Detail)
-				}
-			}
-			for _, exchange := range flow.Exchanges {
-				if strings.HasSuffix(exchange.URL, "/.well-known/aauth-resource.json") && exchange.Response.Status != test.resourceStatus {
-					t.Fatalf("Resource metadata answered %d, want %d", exchange.Response.Status, test.resourceStatus)
-				}
+			if seen != len(cases) {
+				t.Fatalf("person flow cases = %d, want %d", seen, len(cases))
 			}
 		})
 	}

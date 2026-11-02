@@ -7,12 +7,14 @@ import "gitlab.com/sidecat-dev/aauth-conformance/internal/conformance"
 // and Agent::verify_person_delivery obtain the Person token an agent retries
 // with, Jwk::rfc7638_thumbprint takes a key without alg, and its token and
 // signature verifiers settle the four unsettled vector readings
-// (INTERPRETATIONS.md in aauth-rust).
+// (INTERPRETATIONS.md in aauth-rust). Its Agent reads no Resource metadata, so
+// the person flow runs the same at a Resource that publishes none.
 //
 // aauth-go implements them too: resource.NewPersonIdentity answers
 // requirement=person-token, agent.Client.PersonToken obtains the Person token
 // from the Person Server its Agent token names and agent.Client.Begin retries
-// with it, jose.JWK.RFC7638Thumbprint takes a key without alg, and its token
+// with it, reading a 404 for the Resource's metadata as a Resource that
+// publishes none, jose.JWK.RFC7638Thumbprint takes a key without alg, and its token
 // and signature verifiers accept a one-element aud array (INTERPRETATIONS.md
 // in aauth-go), refuse a token without iat and a person token with scope, and
 // check Content-Digest against the body.
@@ -22,8 +24,8 @@ func init() {
 		"aauth-go":   {"core.person-token-required"},
 	}
 	adoptedClaims[conformance.AgentRole] = map[string][]string{
-		"aauth-rust": {"agent.person-flow"},
-		"aauth-go":   {"agent.person-flow"},
+		"aauth-rust": {"agent.person-flow", "agent.resource-metadata-unpublished"},
+		"aauth-go":   {"agent.person-flow", "agent.resource-metadata-unpublished"},
 	}
 	vectors := []string{"vector.jwk-thumbprint.no-alg", "vector.jwt.aud-array", "vector.jwt.iat-absent", "vector.jwt.person-scope", "vector.http-sig.body-digest"}
 	adoptedClaims[conformance.VectorsRole] = map[string][]string{
