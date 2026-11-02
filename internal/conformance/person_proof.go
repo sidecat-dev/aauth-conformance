@@ -33,6 +33,24 @@ type PersonFixture struct {
 	// seeds are the signers.
 	Published         keySet `json:"-"`
 	ResourcePublished keySet `json:"-"`
+	// PersonEndpoint and TokenEndpoint are a deployed Person Server's
+	// person_token_endpoint and auth_token_endpoint. Remote mode sets them
+	// from its metadata; otherwise the fixture Person Server's paths apply.
+	PersonEndpoint string `json:"-"`
+	TokenEndpoint  string `json:"-"`
+}
+
+func (p PersonFixture) personURL() string {
+	if p.PersonEndpoint != "" {
+		return p.PersonEndpoint
+	}
+	return p.Issuer + "/person"
+}
+func (p PersonFixture) tokenURL() string {
+	if p.TokenEndpoint != "" {
+		return p.TokenEndpoint
+	}
+	return p.Issuer + "/token"
 }
 
 func (p PersonFixture) keys() keySet {
@@ -127,10 +145,10 @@ func buildPersonExchange(f Fixture, p PersonFixture, s Scenario, stage, person s
 		exp = 45
 	}
 	agent, _ := mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", map[string]any{"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": f.Subject, "jti": s.ID + "-agent", "iat": f.Now + s.Token.IATOffset, "exp": f.Now + exp, "ps": p.Issuer, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}})
-	path := "/person"
+	endpoint := p.personURL()
 	body := map[string]any{"resource": f.Origin}
 	if stage == "token" {
-		path = "/token"
+		endpoint = p.tokenURL()
 		resource := map[string]any{"iss": f.Origin, "dwk": "aauth-resource.json", "aud": p.Issuer, "ps": p.Issuer, "sub": claims["sub"], "presented_jti": claims["jti"], "agent_jkt": thumbprint(f.AgentSeed), "jti": s.ID + "-resource", "iat": f.Now - 1, "exp": f.Now + 120, "scope": "read"}
 		switch s.Person.Mutation {
 		case "wrong-aud":
@@ -161,7 +179,7 @@ func buildPersonExchange(f Fixture, p PersonFixture, s Scenario, stage, person s
 		body = map[string]any{"resource_token": token, "presented_token": person}
 	}
 	encoded, _ := json.Marshal(body)
-	req, e := http.NewRequest("POST", p.Issuer+path, bytes.NewReader(encoded))
+	req, e := http.NewRequest("POST", endpoint, bytes.NewReader(encoded))
 	if e != nil {
 		return nil, nil, e
 	}

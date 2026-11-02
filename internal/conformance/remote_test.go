@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -92,7 +93,8 @@ func TestRemoteFixtureRebasesOnlyDeployedRoles(t *testing.T) {
 	r := RemoteRole{Resource: "https://records.example/v1/records", PersonServer: "https://ps.example", AccessServer: "https://as.example"}
 	published := map[string]keySet{partyPerson: {"p": nil}, partyAccess: {"a": nil}, partyResource: {"r": nil}}
 	native := Scenario{Federated: &FederatedSpec{Mutation: "none"}}
-	f := r.fixture(suite.Fixture, native, published, 3)
+	endpoints := personEndpoints{person: "https://ps.example/v1/person", token: "https://ps.example/v1/token"}
+	f := r.fixture(suite.Fixture, native, published, endpoints, 3)
 	if f.Origin != "https://records.example" || f.Path != "/v1/records" || f.Person.Issuer != "https://ps.example" || f.Access.Issuer != "https://as.example" || f.Issuer != suite.Fixture.Issuer {
 		t.Fatalf("identities %s %s %s %s %s", f.Origin, f.Path, f.Person.Issuer, f.Access.Issuer, f.Issuer)
 	}
@@ -102,8 +104,11 @@ func TestRemoteFixtureRebasesOnlyDeployedRoles(t *testing.T) {
 	if !person || !resource || !access || f.Skew != 3 || time.Now().Unix()-f.Now > 1 {
 		t.Fatalf("keys or clock not rebased: %+v", f)
 	}
-	harness := r.fixture(suite.Fixture, Scenario{Federated: &FederatedSpec{Mutation: "none", HarnessPS: true}}, published, 3)
-	if harness.Person.Issuer != suite.Fixture.Person.Issuer || harness.Person.Published != nil {
+	if f.Person.personURL() != endpoints.person || f.Person.tokenURL() != endpoints.token {
+		t.Fatalf("endpoints not rebased: %s %s", f.Person.personURL(), f.Person.tokenURL())
+	}
+	harness := r.fixture(suite.Fixture, Scenario{Federated: &FederatedSpec{Mutation: "none", HarnessPS: true}}, published, endpoints, 3)
+	if harness.Person.Issuer != suite.Fixture.Person.Issuer || harness.Person.Published != nil || harness.Person.personURL() != suite.Fixture.Person.Issuer+"/person" {
 		t.Fatalf("harness Person Server rebased: %+v", harness.Person)
 	}
 	if suite.Fixture.Person.Issuer == "https://ps.example" || suite.Fixture.Access.Published != nil {
@@ -148,15 +153,49 @@ func TestHarnessDocumentsAreDiscoverableOverTLS(t *testing.T) {
 	suite := loadSuite(t)
 	network := testServer(t, HarnessHandler(suite.Fixture), "ap.conformance.test", "person.conformance.test", "resource.conformance.test")
 	ctx := WithNetwork(context.Background(), network)
-	keys, err := publishedKeys(ctx, suite.Fixture.Person.Issuer, "aauth-person.json", time.Second)
+	keys, _, err := publishedKeys(ctx, suite.Fixture.Person.Issuer, "aauth-person.json", time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !keys["ps-1"].Equal(fixtureKeys(suite.Fixture.Person.Seed, "ps-1")["ps-1"]) || len(keys) != 1 {
 		t.Fatalf("%v", keys)
 	}
-	if _, err := publishedKeys(ctx, suite.Fixture.Origin, "aauth-agent.json", time.Second); err == nil {
+	if _, _, err := publishedKeys(ctx, suite.Fixture.Origin, "aauth-agent.json", time.Second); err == nil {
 		t.Fatal("Resource name served Agent Provider metadata")
+	}
+}
+
+// Catches remote mode posting to fixed paths instead of the endpoints a
+// deployed Person Server advertises, or accepting metadata without them.
+func TestRemotePersonServerEndpointsComeFromMetadata(t *testing.T) {
+	suite := loadSuite(t)
+	jwks := map[string]any{"keys": []any{map[string]any{"kty": "OKP", "crv": "Ed25519", "kid": "k1", "x": publicJWK(suite.Fixture.Person.Seed)["x"]}}}
+	metadata := map[string]any{"issuer": "https://ps.example", "jwks_uri": "https://ps.example/jwks",
+		"person_token_endpoint": "https://ps.example/person-token", "auth_token_endpoint": "https://ps.example/v1/token"}
+	serve := func(document map[string]any) *Network {
+		return testServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body := document
+			if r.URL.Path == "/jwks" {
+				body = jwks
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(body)
+		}), "ps.example")
+	}
+	r := RemoteRole{PersonServer: "https://ps.example"}
+	_, endpoints, err := discoverRemote(WithNetwork(context.Background(), serve(metadata)), r, time.Second)
+	if err != nil || endpoints.person != "https://ps.example/person-token" || endpoints.token != "https://ps.example/v1/token" {
+		t.Fatalf("%+v %v", endpoints, err)
+	}
+	for _, missing := range []string{"person_token_endpoint", "auth_token_endpoint"} {
+		partial := map[string]any{}
+		for name, value := range metadata {
+			partial[name] = value
+		}
+		delete(partial, missing)
+		if _, _, err := discoverRemote(WithNetwork(context.Background(), serve(partial)), r, time.Second); err == nil {
+			t.Fatalf("accepted metadata without %s", missing)
+		}
 	}
 }
 

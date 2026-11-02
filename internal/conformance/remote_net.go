@@ -98,23 +98,27 @@ func HarnessHandler(f Fixture) http.Handler {
 }
 
 // publishedKeys discovers a deployed server's Ed25519 signing keys: its
-// metadata at issuer/.well-known/document, then the JWKS that names.
-func publishedKeys(ctx context.Context, issuer, document string, timeout time.Duration) (keySet, error) {
-	var metadata struct {
-		Issuer  string `json:"issuer"`
-		JWKSURI string `json:"jwks_uri"`
+// metadata at issuer/.well-known/document, then the JWKS that names. It
+// returns the metadata document's string members too.
+func publishedKeys(ctx context.Context, issuer, document string, timeout time.Duration) (keySet, map[string]string, error) {
+	var raw map[string]any
+	if err := fetchJSON(ctx, issuer+"/.well-known/"+document, timeout, &raw); err != nil {
+		return nil, nil, err
 	}
-	if err := fetchJSON(ctx, issuer+"/.well-known/"+document, timeout, &metadata); err != nil {
-		return nil, err
+	metadata := map[string]string{}
+	for name, value := range raw {
+		if text, ok := value.(string); ok {
+			metadata[name] = text
+		}
 	}
-	if metadata.Issuer != issuer || metadata.JWKSURI == "" {
-		return nil, fmt.Errorf("%s/.well-known/%s: issuer must be %s and jwks_uri present", issuer, document, issuer)
+	if metadata["issuer"] != issuer || metadata["jwks_uri"] == "" {
+		return nil, nil, fmt.Errorf("%s/.well-known/%s: issuer must be %s and jwks_uri present", issuer, document, issuer)
 	}
 	var jwks struct {
 		Keys []map[string]any `json:"keys"`
 	}
-	if err := fetchJSON(ctx, metadata.JWKSURI, timeout, &jwks); err != nil {
-		return nil, err
+	if err := fetchJSON(ctx, metadata["jwks_uri"], timeout, &jwks); err != nil {
+		return nil, nil, err
 	}
 	keys := keySet{}
 	for _, key := range jwks.Keys {
@@ -126,9 +130,9 @@ func publishedKeys(ctx context.Context, issuer, document string, timeout time.Du
 		}
 	}
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("%s publishes no Ed25519 key with a kid", metadata.JWKSURI)
+		return nil, nil, fmt.Errorf("%s publishes no Ed25519 key with a kid", metadata["jwks_uri"])
 	}
-	return keys, nil
+	return keys, metadata, nil
 }
 
 func fetchJSON(ctx context.Context, target string, timeout time.Duration, v any) error {

@@ -57,7 +57,10 @@ for the three names that your servers trust.
 **Publish your own keys.** The suite discovers each server's Ed25519 signing
 keys from its metadata (`aauth-person.json`, `aauth-access.json` or
 `aauth-resource.json`) and the JWKS that names. These are the documents the
-drafts already require. The suite's token checks support Ed25519 only.
+drafts already require. The suite's token checks support Ed25519 only. Its
+Agent sends person token and auth token requests to the
+`person_token_endpoint` and `auth_token_endpoint` your Person Server's
+metadata names.
 
 **Follow the test profile.** Some expected answers depend on host policy.
 The clauses scoped `adapter-contract` grade that policy:
