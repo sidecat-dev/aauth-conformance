@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "id": "aauth-protocol",
+  "revision": "aauth-protocol 0.2.0, aauth-person-server 0.1.0",
+  "roles": {
+    "resource.agent-identity": {
+      "resource": "https://api.aauth-protocol.test/whoami"
+    },
+    "person-server.direct": {
+      "person_server": "https://person.aauth-protocol.test",
+      "claims": [
+        "ps.person-endpoint",
+        "ps.person-structure",
+        "ps.person-lifetime",
+        "ps.person-no-authorization",
+        "ps.auth-endpoint",
+        "ps.resource-verification",
+        "ps.auth-structure",
+        "ps.auth-lifetime",
+        "ps.common-verification",
+        "ps.errors",
+        "ps.proof-verification",
+        "ps.body-integrity",
+        "ps.host-scope-policy"
+      ]
+    }
+  }
+}

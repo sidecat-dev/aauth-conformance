@@ -7,8 +7,13 @@ own:
 
 - [aauth-go](aauth-go/) serves aauth-go's native roles.
 - [aauth-rust](aauth-rust/) serves aauth-rust's native roles.
+- [aauth-protocol](aauth-protocol/) serves the community `aauth-protocol`
+  and `aauth-person-server` crates: an agent-identity Resource and a direct
+  Person Server, under `https://api.aauth-protocol.test` and
+  `https://person.aauth-protocol.test`. Its README says what the deployment
+  adds to them.
 
-Both start the same five roles under their own names, with a signing key
+aauth-go and aauth-rust start the same five roles under their own names, with a signing key
 generated at start. They discover every other party's keys over HTTPS, and
 trust only the suite's parties and each other. Their policy follows the
 remote mode test profile.
@@ -29,11 +34,12 @@ State is kept in memory and is lost when a server stops.
 deployments/run-remote.sh /path/to/aauth-go /path/to/aauth-rust build/remote-run
 ```
 
-The script builds the suite runner and both deployments against the two
-checkouts. It makes a throwaway test CA and certificates, starts both
-deployments on loopback ports and runs remote mode against each. The reports
-are written to `build/remote-run/remote-aauth-go/` and
-`build/remote-run/remote-aauth-rust/`.
+The script builds the suite runner, the two library deployments against the
+two checkouts, and the aauth-protocol deployment from its pinned crates. It
+makes a throwaway test CA and certificates, starts the deployments on
+loopback ports and runs remote mode against each. The reports are written to
+`build/remote-run/remote-aauth-go/`, `build/remote-run/remote-aauth-rust/`
+and `build/remote-run/remote-aauth-protocol/`.
 
 It needs Go 1.25 or later, rustup and openssl. Every name is routed to its
 loopback port by the suite's `-resolve` flags and each deployment's
@@ -41,7 +47,7 @@ loopback port by the suite's `-resolve` flags and each deployment's
 
 ## Configuration
 
-Each deployment reads one JSON file:
+The aauth-go and aauth-rust deployments read one JSON file:
 
 | Member | Meaning |
 | --- | --- |
