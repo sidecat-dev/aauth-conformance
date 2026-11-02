@@ -38,7 +38,23 @@ type SupervisionFixture struct {
 	OtherPS SupervisionPeer      `json:"other_person_server"`
 	Foreign SupervisionPeer      `json:"foreign_supervisor"`
 	Mission SupervisionMissionFx `json:"mission"`
+	// Published and Endpoints describe a deployed supervision server in
+	// remote mode: the keys its JWKS publishes (empty when it publishes no
+	// jwks_uri) and the endpoints its metadata names. Otherwise the fixture
+	// seed signs and the endpoints are the issuer's fixed paths.
+	Published keySet            `json:"-"`
+	Endpoints map[string]string `json:"-"`
 }
+
+// endpoint is the URL of a supervision endpoint: connect, mission,
+// decision or event.
+func (s SupervisionFixture) endpoint(name string) string {
+	if s.Endpoints != nil {
+		return s.Endpoints[name+"_endpoint"]
+	}
+	return s.Issuer + "/" + name
+}
+
 type SupervisionPeer struct {
 	Issuer string `json:"issuer"`
 	Seed   string `json:"seed_hex"`
@@ -260,6 +276,15 @@ func responseComponent(item httpsfv.Item, status int, response http.Header, requ
 // ObserveResponseSignature verifies a response signature under the jwks_uri
 // key identified by its Signature-Key member, with the public key of seed.
 func ObserveResponseSignature(r Response, request Captured, seed string) ResponseSignature {
+	public := seedKey(seed).Public().(ed25519.PublicKey)
+	return observeResponseSignature(r, request, func(_ string, base, signature []byte) bool {
+		return ed25519.Verify(public, base, signature)
+	}, "response signature does not verify under the fixture key")
+}
+
+// observeResponseSignature verifies a response signature with verify, given
+// the kid its Signature-Key member names.
+func observeResponseSignature(r Response, request Captured, verify func(kid string, base, signature []byte) bool, failure string) ResponseSignature {
 	observed := ResponseSignature{}
 	if digest, ok := responseDigestMatches(r.Header, r.Body); ok {
 		observed.Digest = digest
@@ -328,11 +353,11 @@ func ObserveResponseSignature(r Response, request Captured, seed string) Respons
 			observed.Error = "no Signature for the label"
 			continue
 		}
-		observed.Verified = ed25519.Verify(seedKey(seed).Public().(ed25519.PublicKey), []byte(observed.Base), raw)
+		observed.Verified = verify(observed.Kid, []byte(observed.Base), raw)
 		if observed.Verified {
 			return observed
 		}
-		observed.Error = "response signature does not verify under the fixture key"
+		observed.Error = failure
 	}
 	if observed.Error == "" {
 		observed.Error = "no jwks_uri Signature-Key member"
@@ -360,10 +385,23 @@ func responseDigestMatches(header http.Header, body []byte) (bool, bool) {
 // supervisor fixture: jwks_uri naming its issuer and aauth-supervisor.json,
 // a verifying signature over at least @status, content-type and
 // content-digest, and a Content-Digest of the actual body.
+//
+// For a deployed server (Published set) the key is the published one the
+// kid names, verified under its own algorithm.
 func signedDecision(s SupervisionFixture, r Response, request Captured) (bool, ResponseSignature) {
-	observed := ObserveResponseSignature(r, request, s.Seed)
+	var observed ResponseSignature
+	kidOK := func(kid string) bool { return kid == s.Kid }
+	if s.Published != nil {
+		observed = observeResponseSignature(r, request, func(kid string, base, signature []byte) bool {
+			alg, _ := s.Published[kid]["alg"].(string)
+			return s.Published.verify(kid, alg, base, signature)
+		}, "response signature does not verify under a key the supervision server publishes")
+		kidOK = func(kid string) bool { _, known := s.Published[kid]; return known }
+	} else {
+		observed = ObserveResponseSignature(r, request, s.Seed)
+	}
 	media, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
-	ok := observed.Verified && observed.Digest && observed.ID == s.Issuer && observed.Dwk == "aauth-supervisor.json" && observed.Kid == s.Kid && media == "application/json"
+	ok := observed.Verified && observed.Digest && observed.ID == s.Issuer && observed.Dwk == "aauth-supervisor.json" && kidOK(observed.Kid) && media == "application/json"
 	for _, required := range []string{"@status", "content-type", "content-digest"} {
 		ok = ok && slices.Contains(observed.Covered, required)
 	}

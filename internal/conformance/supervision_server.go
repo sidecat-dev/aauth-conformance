@@ -198,7 +198,13 @@ func runSupervisionServerCase(ctx context.Context, f Fixture, ss SupervisionFixt
 		trail = append(trail, record)
 		if len(step.Control) > 0 {
 			record.Control = step.Control
-			response, err := supervisionControl(ctx, physical, step.Control, options.Timeout)
+			var response Response
+			var err error
+			if remote := remoteFrom(ctx); remote != nil {
+				response, err = remoteSupervisionControl(ctx, remote, step.Control, options.Timeout)
+			} else {
+				response, err = supervisionControl(ctx, physical, step.Control, options.Timeout)
+			}
 			switch {
 			case err != nil:
 				executionError = step.Stage + ": " + err.Error()
@@ -331,9 +337,12 @@ func buildSupervisionStep(f Fixture, ss SupervisionFixture, step SupervisionStep
 			method = "GET"
 		}
 	case step.Endpoint == "mission/$s256":
-		target = ss.Issuer + "/mission/" + values["$s256"].(string)
+		target = ss.endpoint("mission") + "/" + values["$s256"].(string)
 	default:
-		target = ss.Issuer + "/" + step.Endpoint
+		target = ss.endpoint(step.Endpoint)
+	}
+	if target == "" || target == "/"+values["$s256"].(string) {
+		return nil, nil, fmt.Errorf("the supervision server's metadata names no %s_endpoint", strings.TrimSuffix(step.Endpoint, "/$s256"))
 	}
 	if method == "" {
 		method = "POST"
