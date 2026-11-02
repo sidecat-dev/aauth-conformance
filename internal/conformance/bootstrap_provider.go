@@ -35,6 +35,10 @@ func runBootstrapProvider(ctx context.Context, s Suite, targets Targets, o Optio
 	})
 }
 
+// bootstrapEnrollmentBody carries the AP-defined evidence slot (Bootstrap
+// line 106) empty: host policy in every launcher approves enrollment.
+var bootstrapEnrollmentBody = []byte(`{"evidence":{}}`)
+
 // hwkRequest is a POST signed under hwk by seed, covering the JSON body.
 func hwkRequest(f Fixture, stage, seed, target string, body []byte) (*requestRecord, error) {
 	return signEventsRequest(f, stage, seed, http.MethodPost, target, sigkeyMember("sig", "hwk", sigkeyHWKParams(publicJWK(seed))...), body, eventsCovered(true))
@@ -73,7 +77,7 @@ func flipSignature(compact string) string {
 // refreshRequest is a two-key refresh: the naming JWT under jkt-jwt and an
 // HTTP signature by signer (the ephemeral key, unless a mutation changes it).
 func refreshRequest(f Fixture, b BootstrapFixture, stage, naming, signer string) (*requestRecord, error) {
-	body, _ := json.Marshal(map[string]string{"ps": f.Person.Issuer})
+	body, _ := json.Marshal(map[string]any{"ps": f.Person.Issuer, "evidence": map[string]any{}})
 	return signEventsRequest(f, stage, signer, http.MethodPost, f.Issuer+b.RefreshPath, `sig=jkt-jwt;jwt="`+naming+`"`, body, eventsCovered(true))
 }
 
@@ -108,7 +112,7 @@ func bootstrapProviderCase(ctx context.Context, f Fixture, b BootstrapFixture, s
 		return stages[record.stage], nil
 	}
 	enroll := func(stage, durable string) error {
-		_, err := send(hwkRequest(f, stage, durable, f.Issuer+b.EnrollmentPath, []byte(`{}`)))
+		_, err := send(hwkRequest(f, stage, durable, f.Issuer+b.EnrollmentPath, bootstrapEnrollmentBody))
 		return err
 	}
 	// refresh sends a two-key refresh and grades the token it returns.
@@ -167,7 +171,7 @@ func bootstrapProviderCase(ctx context.Context, f Fixture, b BootstrapFixture, s
 		if err := enroll("enroll", seed["durable"]); err != nil {
 			return stages, exchanges, own, err
 		}
-		body, _ := json.Marshal(map[string]string{"ps": f.Person.Issuer})
+		body, _ := json.Marshal(map[string]any{"ps": f.Person.Issuer, "evidence": map[string]any{}})
 		r, err := send(hwkRequest(f, "refresh", seed["durable"], f.Issuer+b.SingleKeyRefreshPath, body))
 		if err != nil {
 			return stages, exchanges, own, err

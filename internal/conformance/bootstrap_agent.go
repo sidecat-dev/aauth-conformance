@@ -258,6 +258,7 @@ func (h *bootstrapAP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if status == http.StatusUnauthorized {
 		w.Header().Set("Signature-Error", "error=invalid_signature")
 	}
+	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, status, body)
 }
 

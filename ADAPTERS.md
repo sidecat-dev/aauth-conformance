@@ -752,7 +752,7 @@ per role, the paths it serves. Clocks are fixed at the bootstrap `now`.
   serves the native hosted AP on one listener: metadata and JWKS, and the
   native handlers at `enrollment_path`, `refresh_path`,
   `single_key_refresh_path` and `subagent_path`. Host policy approves every
-  enrollment, assigns each durable key its own identifier, issues
+  enrollment and refresh whatever its empty `evidence`, assigns each durable key its own identifier, issues
   `agent_lifetime` tokens with the `ps` the refresh body names, and approves
   sub-agents of a top-level agent. Enrollment answers any 2xx. Refresh and
   sub-agent issuance answer `200 {"agent_token"}`. Refusals are the native

@@ -782,10 +782,11 @@ fixture Person Server is the agent's configured `ps`.
 | `bootstrap.self-hosted` | up to six `issues`, each a top-level `agent` local name or a `parent` (1-based index of an earlier issue) with a `discriminator`, and a `key` (a fixture seed name, or `ap` for the published key); optional `metadata` | `issue-N`, then `metadata` and `jwks` |
 
 For the hosted AP the harness plays the agent. It enrolls a durable key with
-an `hwk`-signed `POST {}`, then refreshes with `jkt-jwt`: a `jkt-s256+jwt`
+an `hwk`-signed `POST {"evidence": {}}`, then refreshes with `jkt-jwt`: a `jkt-s256+jwt`
 naming JWT signed by the durable key, `iss` its JWK Thumbprint URI, `cnf.jwk`
 the ephemeral key and a `jti`, in a request signed by the ephemeral key with
-body `{"ps": <fixture PS>}`. A single-key refresh is the same body signed
+body `{"ps": <fixture PS>, "evidence": {}}`. The `evidence` member is the slot
+for whatever the AP requires (Bootstrap line 106), empty here. A single-key refresh is the same body signed
 under `hwk` by the durable key. A sub-agent request presents the parent's
 token under `jwt`, signed by its key, with body `{"jwk", "discriminator"}`,
 the draft's example members. Every request covers `content-type` and
@@ -800,7 +801,9 @@ For the agent the harness plays the AP and the Resource. The launcher's
 control receives `{"operation"}` jobs: `enroll`, `refresh`, `subagent` with
 `jwk` and `discriminator`, and `call` with `method`, `url` and `transport`.
 The harness AP verifies each request independently and issues fixture-key
-tokens bound to the delegated key, so later operations can proceed. The
+tokens bound to the delegated key, so later operations can proceed. Its
+answers carry `Cache-Control: no-store`. It ignores body members it does not
+grade, such as `evidence`. The
 control's answer is evidence only.
 
 For the self-hosted AP the harness posts each issue to the launcher's issue
