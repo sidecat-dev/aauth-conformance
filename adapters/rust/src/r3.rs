@@ -1,21 +1,25 @@
-//! R3 launchers: a native Resource with class R3, and a native three-party
-//! Person Server issuing R3 Auth tokens. Trust and policy are fixed host
-//! configuration; no token, proof or R3 document is parsed, minted or
-//! repaired here.
+//! R3 launchers: a native Resource with class R3, a native three-party
+//! Person Server issuing R3 Auth tokens, and, in `federated`, a native
+//! Person Server and Access Server where the Access Server issues them. Trust
+//! and policy are fixed host configuration; no token, proof or R3 document is
+//! parsed, minted or repaired here.
+#[cfg(feature = "r3-federated")]
+#[path = "r3_federated.rs"]
+mod federated;
 use super::{Bootstrap, FixturePolicy, PersonKeys, fetch, person_request};
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAuthToken,
 };
 use aauth_rust_jose::{Jwk, SigningKey};
 use aauth_rust_person_server::{
-    Config as PersonConfig, MemoryStore, PersonServer, PolicyError, R3AuthorizationRequest,
-    R3Decision, R3IssuerConfig,
+    BoxedR3Policy, Config as PersonConfig, MemoryStore, PersonServer, PolicyError,
+    R3AuthorizationRequest, R3Decision, R3IssuerConfig,
 };
 use aauth_rust_r3::{
-    DefinitionRegistry, Display, FetchBody, FetchLimits, FetchResponse, FetchTransport,
-    GrantedOperations, IssuanceError, IssuanceRecord, IssuanceStore, McpCodec, Operation,
-    Parameter, Parameters, PresentedParameter, ProposalDisplay, ToolsListPage, ToolsListSnapshot,
-    standard_registry,
+    DefinitionRegistry, Display, Document, FetchBody, FetchEgress, FetchLimits, FetchResponse,
+    FetchTransport, GrantedOperations, IssuanceError, IssuanceRecord, IssuanceStore, McpCodec,
+    Operation, Parameter, Parameters, PresentedParameter, ProposalDisplay, ToolsListPage,
+    ToolsListSnapshot, standard_registry,
 };
 use aauth_rust_resource::{
     AuthDecision, PsAuthorizationConfig, PsAuthorizationResource, R3CallDescription, R3CallResult,
@@ -55,6 +59,8 @@ struct Extension {
     auth_lifetime: i64,
     permitted_scopes: Vec<String>,
     access_server: String,
+    #[serde(default)]
+    access_seed_hex: String,
     access_kid: String,
     access_jwk: serde_json::Value,
     other_server: String,
@@ -68,13 +74,18 @@ struct Extension {
 
 pub(super) fn run(config: Bootstrap) -> Result<(), Failure> {
     let extension: Extension = serde_json::from_value(config.extension.clone())?;
-    if config.role == "r3.issuer" {
-        return run_issuer(&config, extension);
+    match config.role.as_str() {
+        "r3.issuer" => run_issuer(&config, extension),
+        #[cfg(feature = "r3-federated")]
+        "r3.federated-issuer" => federated::run(&config, extension),
+        #[cfg(not(feature = "r3-federated"))]
+        "r3.federated-issuer" => Err("rebuild this launcher with the r3-federated feature".into()),
+        _ => run_resource(&config, extension),
     }
-    run_resource(&config, extension)
 }
 
 /// Trusted snapshots of the AP and of each server role this launcher admits.
+#[derive(Clone)]
 struct R3Keys {
     ap: AgentProviderKeys,
     roles: Vec<(String, String, TrustedIssuerKeys)>,
@@ -639,6 +650,65 @@ fn unavailable<E>(_: E) -> PolicyError {
     PolicyError::Unavailable
 }
 
+/// Admits only R3 documents under the harness Resource's `/r3/` path.
+fn r3_egress(resource_issuer: &str) -> Box<dyn FetchEgress> {
+    let prefix = format!("{resource_issuer}/r3/");
+    Box::new(move |uri: &str, _deadline: Instant| -> io::Result<()> {
+        if uri.starts_with(&prefix) {
+            Ok(())
+        } else {
+            Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "R3 document endpoint is not admitted",
+            ))
+        }
+    })
+}
+
+/// Every operation of the document whose tool the fixture lists as grantable.
+fn grantable_operations(
+    document: &Document,
+    grantable: &[String],
+) -> Result<GrantedOperations, Failure> {
+    let mut chosen = Vec::new();
+    for operation in document.operation_set().operations()? {
+        let value: serde_json::Value = serde_json::from_slice(&operation.json()?)?;
+        if value["tool"]
+            .as_str()
+            .is_some_and(|tool| grantable.iter().any(|g| g == tool))
+        {
+            chosen.push(operation);
+        }
+    }
+    Ok(GrantedOperations::new(&McpCodec::vocabulary()?, &chosen)?)
+}
+
+/// Fixed host consent: the requested permitted scopes, and every document
+/// operation the fixture lists as grantable.
+fn person_consent(x: &Extension) -> BoxedR3Policy {
+    let permitted = x.permitted_scopes.clone();
+    let grantable = x.grantable.clone();
+    let lifetime = x.auth_lifetime;
+    Box::new(
+        move |request: &R3AuthorizationRequest<'_>| -> Result<R3Decision, PolicyError> {
+            if request
+                .core
+                .scopes
+                .iter()
+                .any(|scope| !permitted.contains(scope))
+            {
+                return Err(PolicyError::Denied);
+            }
+            Ok(R3Decision {
+                granted: grantable_operations(request.document, &grantable).map_err(unavailable)?,
+                per_call: None,
+                scopes: request.core.scopes.clone(),
+                lifetime,
+            })
+        },
+    )
+}
+
 fn run_issuer(config: &Bootstrap, x: Extension) -> Result<(), Failure> {
     let resource_issuer = origin(&config.resource)?;
     let (_, _, resource) = trusted(
@@ -653,10 +723,6 @@ fn run_issuer(config: &Bootstrap, x: Extension) -> Result<(), Failure> {
         signing_key(&x.person_seed_hex)?,
     );
     person_config.person_lifetime = x.person_lifetime;
-    let permitted = x.permitted_scopes.clone();
-    let grantable = x.grantable.clone();
-    let lifetime = x.auth_lifetime;
-    let prefix = format!("{resource_issuer}/r3/");
     let sequence = AtomicU64::new(0);
     let now = config.now;
     let sut = PersonServer::new(
@@ -676,59 +742,13 @@ fn run_issuer(config: &Bootstrap, x: Extension) -> Result<(), Failure> {
     )?
     .with_r3(R3IssuerConfig {
         registry: standard_registry()?,
-        egress: Box::new(move |uri: &str, _deadline: Instant| -> io::Result<()> {
-            if uri.starts_with(&prefix) {
-                Ok(())
-            } else {
-                Err(io::Error::new(
-                    io::ErrorKind::PermissionDenied,
-                    "R3 document endpoint is not admitted",
-                ))
-            }
-        }),
+        egress: r3_egress(&resource_issuer),
         transport: Box::new(RelayFetch {
             origin: resource_issuer.clone(),
             physical: x.r3_transport.clone(),
         }),
         limits: FetchLimits::default(),
-        // Fixed host consent: the requested permitted scopes, and every
-        // document operation the fixture lists as grantable.
-        policy: Box::new(
-            move |request: &R3AuthorizationRequest<'_>| -> Result<R3Decision, PolicyError> {
-                if request
-                    .core
-                    .scopes
-                    .iter()
-                    .any(|scope| !permitted.contains(scope))
-                {
-                    return Err(PolicyError::Denied);
-                }
-                let mut chosen = Vec::new();
-                for operation in request
-                    .document
-                    .operation_set()
-                    .operations()
-                    .map_err(unavailable)?
-                {
-                    let value: serde_json::Value =
-                        serde_json::from_slice(&operation.json().map_err(unavailable)?)
-                            .map_err(unavailable)?;
-                    if value["tool"]
-                        .as_str()
-                        .is_some_and(|tool| grantable.iter().any(|g| g == tool))
-                    {
-                        chosen.push(operation);
-                    }
-                }
-                let vocabulary = McpCodec::vocabulary().map_err(unavailable)?;
-                Ok(R3Decision {
-                    granted: GrantedOperations::new(&vocabulary, &chosen).map_err(unavailable)?,
-                    per_call: None,
-                    scopes: request.core.scopes.clone(),
-                    lifetime,
-                })
-            },
-        ),
+        policy: person_consent(&x),
         audit: Arc::new(MemoryAudit::default()),
     })?;
     let server = listen(config)?;

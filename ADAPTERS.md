@@ -493,8 +493,12 @@ For `r3.federated-issuer` the Go launcher hosts `accessserver.New` with
 listener routed by Host. One HTTP client sends the PS's AS requests to that
 listener and both servers' R3 fetches to `r3_transport`. The AS policy grants
 requested permitted scopes and the document's `grantable` operations; the PS
-consents. aauth-rust's Access Server issues no R3 Auth tokens, so the build
-helper declares the Rust target unavailable for this role.
+consents. The Rust launcher, built with the `r3-federated` feature and the
+`aauth-rust-access-server` crate, runs `AccessServer::new(...).with_r3(...)`
+and `PersonServer::new(...).with_federation(...).with_r3(...)`. The PS's
+signed AS request reaches the AS in the same process unchanged, and both
+servers' R3 fetches go to `r3_transport`, changing only the socket. Its
+policies are the Go launcher's.
 
 ## Mission roles
 

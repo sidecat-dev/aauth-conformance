@@ -36,8 +36,8 @@ follows the remote mode test profile. `LIB` below is `go` or `rust`.
 | `https://verifier.aauth-LIB.test` | Signature-Key verifier Resource at `/verify` | `sigkey.verifier` |
 | `https://control.aauth-LIB.test` | Host controls, under one path per suite role | every role with a control |
 
-aauth-rust's Access Server offers no R3 issuance, so the aauth-rust
-deployment does not serve `r3.federated-issuer`. State is kept in memory
+The aauth-rust deployment does not serve `r3.federated-issuer`; the
+aauth-rust adapter launcher offers that role. State is kept in memory
 and is lost when a server stops. The host controls are test hooks for the
 suite, not part of any library.
 
