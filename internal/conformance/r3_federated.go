@@ -3,7 +3,6 @@ package conformance
 import (
 	"bytes"
 	"context"
-	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -119,21 +118,22 @@ func (d *r3SignerDocuments) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // r3ServerProof independently verifies one GET signed as a server in its own
-// right: a jwks_uri member naming issuer, document and kid, created at the
-// fixture clock, covering the base components, Ed25519 under seed.
-func r3ServerProof(f Fixture, captured Captured, uri, issuer, document, kid, seed string) bool {
+// right: a jwks_uri member naming issuer, document and one of keys' kids,
+// created at the fixture clock (within the skew for a deployed server),
+// covering the base components, under that key.
+func r3ServerProof(f Fixture, captured Captured, uri, issuer, document string, keys keySet) bool {
 	target, err := url.Parse(captured.URL)
 	if err != nil || captured.Method != "GET" || captured.URL != uri {
 		return false
 	}
-	keys, e1 := httpsfv.UnmarshalDictionary(captured.Headers.Values("Signature-Key"))
+	members, e1 := httpsfv.UnmarshalDictionary(captured.Headers.Values("Signature-Key"))
 	inputs, e2 := httpsfv.UnmarshalDictionary(captured.Headers.Values("Signature-Input"))
 	signatures, e3 := httpsfv.UnmarshalDictionary(captured.Headers.Values("Signature"))
 	if e1 != nil || e2 != nil || e3 != nil {
 		return false
 	}
-	for _, label := range keys.Names() {
-		member, _ := keys.Get(label)
+	for _, label := range members.Names() {
+		member, _ := members.Get(label)
 		key, ok := member.(httpsfv.Item)
 		if !ok || key.Value != httpsfv.Token("jwks_uri") || key.Params == nil {
 			continue
@@ -141,7 +141,8 @@ func r3ServerProof(f Fixture, captured Captured, uri, issuer, document, kid, see
 		id, _ := key.Params.Get("id")
 		dwk, _ := key.Params.Get("dwk")
 		named, _ := key.Params.Get("kid")
-		if id != issuer || dwk != document || named != kid {
+		kid, _ := named.(string)
+		if _, known := keys[kid]; id != issuer || dwk != document || !known {
 			continue
 		}
 		member, _ = inputs.Get(label)
@@ -149,7 +150,8 @@ func r3ServerProof(f Fixture, captured Captured, uri, issuer, document, kid, see
 		if !ok || input.Params == nil {
 			continue
 		}
-		if created, _ := input.Params.Get("created"); created != f.Now {
+		created, _ := input.Params.Get("created")
+		if stamp, isInteger := created.(int64); !isInteger || !f.issuedNow(float64(stamp)) {
 			continue
 		}
 		lines, seen, valid := []string{}, map[string]bool{}, true
@@ -186,7 +188,7 @@ func r3ServerProof(f Fixture, captured Captured, uri, issuer, document, kid, see
 			continue
 		}
 		base := strings.Join(append(lines, `"@signature-params": `+params), "\n")
-		if ed25519.Verify(seedKey(seed).Public().(ed25519.PublicKey), []byte(base), raw) {
+		if keys.verifyKid(kid, []byte(base), raw) {
 			return true
 		}
 	}
@@ -194,15 +196,15 @@ func r3ServerProof(f Fixture, captured Captured, uri, issuer, document, kid, see
 }
 
 // observeR3IssuedToken verifies an R3 Auth token from the named issuer:
-// Ed25519 under its key, typ aa-auth+jwt, its iss and discovery document,
+// under one of its keys, typ aa-auth+jwt, its iss and discovery document,
 // the PS in ps, the Resource in aud, the Resource token's r3_uri/r3_s256,
 // and r3_granted in the vocabulary with operations from the document.
-func observeR3IssuedToken(f Fixture, response Response, issuer, document, seed, kid, uri, digest string, operations []any, vocabulary string) R3TokenObservation {
+func observeR3IssuedToken(f Fixture, response Response, issuer, document string, keys keySet, uri, digest string, operations []any, vocabulary string) R3TokenObservation {
 	compact, err := responseToken(response, "auth_token")
 	if err != nil {
 		return R3TokenObservation{Error: err.Error()}
 	}
-	_, claims, err := verifyJWT(compact, seed, kid, "aa-auth+jwt")
+	_, claims, err := verifyJWTWith(compact, keys, "aa-auth+jwt")
 	if err != nil {
 		return R3TokenObservation{Claims: claims, Error: err.Error()}
 	}
@@ -291,7 +293,7 @@ func runR3FederatedCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario,
 		}
 		credential := `sig=jwt;jwt="` + agent + `"`
 		personBody, _ := json.Marshal(map[string]string{"resource": f.Origin})
-		request, base, err := signedFixtureRequest(f, f.AgentSeed, "POST", p.Issuer+"/person", credential, personBody)
+		request, base, err := signedFixtureRequest(f, f.AgentSeed, "POST", p.personURL(), credential, personBody)
 		if err != nil {
 			return err
 		}
@@ -303,7 +305,7 @@ func runR3FederatedCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario,
 		if err != nil {
 			return err
 		}
-		_, personClaims, err := verifyJWT(person, p.Seed, p.Kid, "aa-person+jwt")
+		_, personClaims, err := verifyJWTWith(person, p.keys(), "aa-person+jwt")
 		if err != nil {
 			return fmt.Errorf("cannot advance from an unverifiable Person token: %w", err)
 		}
@@ -317,7 +319,7 @@ func runR3FederatedCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario,
 		}
 		evidence.Resource = resource
 		tokenBody, _ := json.Marshal(map[string]string{"resource_token": resource, "presented_token": person})
-		request, base, err = signedFixtureRequest(f, f.AgentSeed, "POST", p.Issuer+"/token", credential, tokenBody)
+		request, base, err = signedFixtureRequest(f, f.AgentSeed, "POST", p.tokenURL(), credential, tokenBody)
 		if err != nil {
 			return err
 		}
@@ -325,7 +327,7 @@ func runR3FederatedCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario,
 		if err != nil {
 			return err
 		}
-		evidence.AuthToken = observeR3IssuedToken(f, tokenResponse, a.Issuer, "aauth-access.json", a.Seed, a.Kid, uri, digest, operations, r.Vocabulary)
+		evidence.AuthToken = observeR3IssuedToken(f, tokenResponse, a.Issuer, "aauth-access.json", a.keys(), uri, digest, operations, r.Vocabulary)
 		return nil
 	}
 	if err := execute(); err != nil {
@@ -337,10 +339,13 @@ func runR3FederatedCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario,
 	c.Evidence = evidence
 	// Requests are attributed by the server id they name; one that names
 	// neither the AS nor the PS fails both proofs.
-	type signer struct{ issuer, document, kid, seed string }
+	type signer struct {
+		issuer, document string
+		keys             keySet
+	}
 	signers := map[string]signer{
-		"fetch-access": {a.Issuer, "aauth-access.json", a.Kid, a.Seed},
-		"fetch-person": {p.Issuer, "aauth-person.json", p.Kid, p.Seed},
+		"fetch-access": {a.Issuer, "aauth-access.json", a.keys()},
+		"fetch-person": {p.Issuer, "aauth-person.json", p.keys()},
 	}
 	unattributed := false
 	for _, fetch := range evidence.Fetches {
@@ -379,7 +384,7 @@ func runR3FederatedCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario,
 				}
 				proved := !unattributed
 				for _, fetch := range mine {
-					proved = proved && r3ServerProof(f, fetch, uri, who.issuer, who.document, who.kid, who.seed)
+					proved = proved && r3ServerProof(f, fetch, uri, who.issuer, who.document, who.keys)
 				}
 				return CompareResult(a, proved, "")
 			case "r3-auth-token":

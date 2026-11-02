@@ -8,10 +8,15 @@ publish = false
 # library links to the aauth-rust checkout being deployed; see README.md.
 [dependencies]
 aauth-rust-access-server = { path = "library/crates/aauth-rust-access-server" }
+aauth-rust-agent = { path = "library/crates/aauth-rust-agent" }
+aauth-rust-agent-provider = { path = "library/crates/aauth-rust-agent-provider" }
 aauth-rust-core = { path = "library/crates/aauth-rust-core" }
 aauth-rust-jose = { path = "library/crates/aauth-rust-jose" }
 aauth-rust-person-server = { path = "library/crates/aauth-rust-person-server" }
+aauth-rust-r3 = { path = "library/crates/aauth-rust-r3" }
 aauth-rust-resource = { path = "library/crates/aauth-rust-resource" }
+aauth-rust-signature-key = { path = "library/crates/aauth-rust-signature-key" }
+aauth-rust-supervision-server = { path = "library/crates/aauth-rust-supervision-server" }
 http = "1"
 httparse = "1"
 rustls = { version = "0.23", default-features = false, features = ["std", "ring", "tls12"] }

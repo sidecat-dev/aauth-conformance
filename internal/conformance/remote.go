@@ -1,7 +1,9 @@
 package conformance
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"slices"
@@ -23,9 +25,22 @@ type Deployment struct {
 // RemoteRole names one suite role's deployed servers. Resource is the URL of
 // a protected resource; the servers are named by their issuer identifiers.
 type RemoteRole struct {
-	Resource     string `json:"resource,omitempty"`
-	PersonServer string `json:"person_server,omitempty"`
-	AccessServer string `json:"access_server,omitempty"`
+	Resource string `json:"resource,omitempty"`
+	// ThreePartyResource is a second protected resource URL, for a role
+	// whose scenarios need a Resource of each topology (r3.resource).
+	ThreePartyResource string `json:"three_party_resource,omitempty"`
+	PersonServer       string `json:"person_server,omitempty"`
+	AccessServer       string `json:"access_server,omitempty"`
+	AgentProvider      string `json:"agent_provider,omitempty"`
+	SupervisionServer  string `json:"supervision_server,omitempty"`
+	// Agent is the agent identifier a deployed Agent Provider serves for the
+	// suite's Agent, which holds the fixture's agent key.
+	Agent string `json:"agent,omitempty"`
+	// Control is the HTTPS URL under which the deployment serves the host
+	// controls launchers serve (ADAPTERS.md), such as /__fixture/fire. It is
+	// a test hook, not protocol; scenarios that need one are not exercised
+	// without it.
+	Control string `json:"control,omitempty"`
 	// Claims narrows the graded clauses. Empty claims the role's protocol
 	// and test-profile clauses, as build-adapters does for a launcher.
 	Claims []string `json:"claims,omitempty"`
@@ -42,28 +57,64 @@ type RemoteOptions struct {
 type remoteDriver struct {
 	// requires lists the servers the role cannot run without.
 	requires []string
+	// discover names, per named server, the metadata document the role
+	// reads from it and whether it verifies that server's signatures.
+	discover map[string]remoteDocument
+	// parties lists suite-played parties, beyond the fixture's Agent
+	// Provider, Resource and Person Server, a deployment discovers.
+	parties func(Fixture) []harnessParty
 	// gap says why a scenario cannot be exercised remotely, or "".
 	gap func(Scenario, RemoteRole) string
 	// unobserved lists stages a remote run cannot see, and why.
 	unobserved func(Scenario) ([]string, string)
-	run        func(context.Context, Fixture, Scenario, Target, Options) Case
+	// fixture rebases the suite fixture for one case. Without it the
+	// Resource, Person Server and Access Server the deployment names
+	// replace the fixture's (RemoteRole.fixture).
+	fixture func(base Fixture, s Scenario, r *RemoteRun) Fixture
+	// run executes one case; the context carries the RemoteRun.
+	run func(context.Context, Fixture, Scenario, Target, Options) Case
+}
+
+// remoteDocument is a metadata document remote mode fetches from a named
+// server. With Keys the role verifies the server's signatures, so the
+// document must name a jwks_uri with a usable key; without, keys are read
+// when the document names a jwks_uri.
+type remoteDocument struct {
+	Name string
+	Keys bool
 }
 
 const (
-	partyResource = "resource"
-	partyPerson   = "person_server"
-	partyAccess   = "access_server"
+	partyResource    = "resource"
+	partyThreeParty  = "three_party_resource"
+	partyPerson      = "person_server"
+	partyAccess      = "access_server"
+	partyProvider    = "agent_provider"
+	partySupervision = "supervision_server"
+	partyAgent       = "agent"
+	partyControl     = "control"
 )
 
-var remoteDrivers = map[string]remoteDriver{
-	ResourceRole: {
+var remoteDrivers = map[string]remoteDriver{}
+
+// registerRemote adds a role's remote driver; role files call it from init.
+func registerRemote(role string, d remoteDriver) {
+	if _, exists := remoteDrivers[role]; exists || d.run == nil {
+		panic("invalid or duplicate remote driver " + role)
+	}
+	remoteDrivers[role] = d
+}
+
+func init() {
+	registerRemote(ResourceRole, remoteDriver{
 		requires: []string{partyResource},
 		run: func(ctx context.Context, f Fixture, s Scenario, t Target, o Options) Case {
 			return runResourceCase(ctx, f, s, t, "", o, nil)
 		},
-	},
-	PersonServerRole: {
+	})
+	registerRemote(PersonServerRole, remoteDriver{
 		requires: []string{partyPerson},
+		discover: map[string]remoteDocument{partyPerson: {"aauth-person.json", true}},
 		gap: func(s Scenario, _ RemoteRole) string {
 			if s.Person.Mutation == "expired-presented" {
 				return "re-signs the Person Server's own token, which needs its private key"
@@ -73,9 +124,10 @@ var remoteDrivers = map[string]remoteDriver{
 		run: func(ctx context.Context, f Fixture, s Scenario, t Target, o Options) Case {
 			return runPersonCase(ctx, f, s, t, "", o, nil)
 		},
-	},
-	FederatedRole: {
+	})
+	registerRemote(FederatedRole, remoteDriver{
 		requires: []string{partyResource, partyAccess},
+		discover: map[string]remoteDocument{partyResource: {"aauth-resource.json", true}, partyPerson: {"aauth-person.json", true}, partyAccess: {"aauth-access.json", true}},
 		gap:      federatedGap,
 		unobserved: func(s Scenario) ([]string, string) {
 			if s.Federated.HarnessPS {
@@ -86,7 +138,7 @@ var remoteDrivers = map[string]remoteDriver{
 		run: func(ctx context.Context, f Fixture, s Scenario, t Target, o Options) Case {
 			return runFederatedCase(ctx, f, s, t, "", o, nil, nil)
 		},
-	},
+	})
 }
 
 func federatedGap(s Scenario, r RemoteRole) string {
@@ -123,8 +175,8 @@ func ValidateDeployment(d Deployment, s Suite) error {
 		return fmt.Errorf("deployment needs version 1, id, revision and at least one role")
 	}
 	harness := map[string]bool{}
-	for _, party := range harnessParties(s.Fixture) {
-		harness[party.issuer] = true
+	for _, name := range HarnessNames(s.Fixture) {
+		harness[name] = true
 	}
 	for role, r := range d.Roles {
 		driver, ok := remoteDrivers[role]
@@ -139,14 +191,28 @@ func ValidateDeployment(d Deployment, s Suite) error {
 		}
 		for party, value := range servers {
 			identifier := value
-			if party == partyResource {
+			switch party {
+			case partyResource, partyThreeParty:
 				identifier = resourceIdentifier(value)
 				if !resourceURL(value) {
 					return fmt.Errorf("%s resource %q must be an HTTPS URL with a path and no port, query or fragment", role, value)
 				}
+			case partyControl:
+				identifier = resourceIdentifier(value)
+				if !endpointURL(value) {
+					return fmt.Errorf("%s control %q must be an HTTPS URL with no query or fragment", role, value)
+				}
+			case partyAgent:
+				if !agentIdentifier(value) {
+					return fmt.Errorf("%s agent %q must be an agent identifier, aauth:local@domain", role, value)
+				}
+				continue
 			}
-			if !serverIdentifier(identifier) || harness[identifier] {
-				return fmt.Errorf("%s %s %q must be an HTTPS server identifier not used by the suite", role, party, value)
+			if u, err := url.Parse(identifier); err != nil || harness[u.Hostname()] {
+				return fmt.Errorf("%s %s %q must not use a name the suite serves", role, party, value)
+			}
+			if party != partyControl && !serverIdentifier(identifier) {
+				return fmt.Errorf("%s %s %q must be an HTTPS server identifier", role, party, value)
 			}
 		}
 		known := Claims(s, role)
@@ -160,14 +226,24 @@ func ValidateDeployment(d Deployment, s Suite) error {
 	return nil
 }
 
+// servers lists what the role names, by party: its servers, and the agent
+// and control when it names them.
 func (r RemoteRole) servers() map[string]string {
 	servers := map[string]string{}
-	for party, value := range map[string]string{partyResource: r.Resource, partyPerson: r.PersonServer, partyAccess: r.AccessServer} {
+	for party, value := range map[string]string{partyResource: r.Resource, partyThreeParty: r.ThreePartyResource, partyPerson: r.PersonServer, partyAccess: r.AccessServer,
+		partyProvider: r.AgentProvider, partySupervision: r.SupervisionServer, partyAgent: r.Agent, partyControl: r.Control} {
 		if value != "" {
 			servers[party] = value
 		}
 	}
 	return servers
+}
+
+// agentIdentifier applies the protocol's agent identifier shape: aauth:,
+// a local part, @ and a lowercase domain.
+func agentIdentifier(value string) bool {
+	local, domain, ok := strings.Cut(strings.TrimPrefix(value, "aauth:"), "@")
+	return ok && strings.HasPrefix(value, "aauth:") && local != "" && domain != "" && domain == strings.ToLower(domain) && !strings.ContainsAny(value, " /?#")
 }
 
 // serverIdentifier applies the protocol's Server Identifiers rules.
@@ -216,6 +292,64 @@ func RunRemote(ctx context.Context, s Suite, d Deployment, options RemoteOptions
 	return reports, nil
 }
 
+// RemoteRun is what a remote driver knows about the deployment during one
+// role's run: the role as named, each discovered server and the harness that
+// serves the suite's parties. Its context carries it to the driver.
+type RemoteRun struct {
+	Role    RemoteRole
+	Servers map[string]RemoteServer
+	Harness *Harness
+	Skew    int64
+	// supervisor is the supervision server the suite plays for a deployed
+	// Person Server (supervision.person-server), kept for the role's run.
+	supervisor *remotePSSupervisor
+}
+
+// RemoteServer is one deployed server as discovered: its metadata document
+// and the signing keys its JWKS publishes.
+type RemoteServer struct {
+	Issuer   string
+	Metadata map[string]any
+	Keys     keySet
+}
+
+// Endpoint returns a string member of the server's metadata.
+func (s RemoteServer) Endpoint(member string) string {
+	value, _ := s.Metadata[member].(string)
+	return value
+}
+
+// ControlURL returns the URL of a host-control path under the deployment's
+// control, or "" when it names none.
+func (r *RemoteRun) ControlURL(path string) string {
+	if r.Role.Control == "" {
+		return ""
+	}
+	return strings.TrimSuffix(r.Role.Control, "/") + path
+}
+
+// controlGap is the reason a scenario that needs host controls is not
+// exercised when the deployment names no control.
+func controlGap(r RemoteRole, paths ...string) string {
+	if r.Control != "" || len(paths) == 0 {
+		return ""
+	}
+	return "needs the host control " + strings.Join(paths, " and ") + ", and the deployment names no control"
+}
+
+type remoteKey struct{}
+
+func withRemote(ctx context.Context, r *RemoteRun) context.Context {
+	return context.WithValue(ctx, remoteKey{}, r)
+}
+
+// remoteFrom returns the remote run a driver's case belongs to, or nil for
+// a launcher run.
+func remoteFrom(ctx context.Context) *RemoteRun {
+	r, _ := ctx.Value(remoteKey{}).(*RemoteRun)
+	return r
+}
+
 func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, options RemoteOptions) Report {
 	r, driver := d.Roles[role], remoteDrivers[role]
 	claims := r.Claims
@@ -225,9 +359,19 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 	target := Target{ID: d.ID, Revision: d.Revision, Claims: claims, Remote: r.servers()}
 	report := Report{Version: 1, Role: role, Transport: "remote", SuiteSHA256: s.Digest, Clock: time.Now().Unix(), Catalog: s.Catalog}
 	run := Run{Target: target}
-	published, endpoints, discoveryError := discoverRemote(ctx, r, options.Timeout)
+	servers, endpoints, discoveryError := discoverRemote(ctx, r, driver.discover, options.Timeout)
 	if discoveryError != nil {
 		run.Error = discoveryError.Error()
+	}
+	harness := harnessFrom(ctx)
+	if harness == nil {
+		harness = NewHarness(s.Fixture)
+	}
+	remote := &RemoteRun{Role: r, Servers: servers, Harness: harness, Skew: options.Skew}
+	ctx = withRemote(ctx, remote)
+	published := map[string]keySet{}
+	for party, server := range servers {
+		published[party] = server.Keys
 	}
 	for _, scenario := range s.Scenarios {
 		reason := ""
@@ -242,7 +386,12 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 			run.Cases = append(run.Cases, failedCase(scenario, target, discoveryError))
 			continue
 		}
-		f := r.fixture(s.Fixture, scenario, published, endpoints, options.Skew)
+		var f Fixture
+		if driver.fixture != nil {
+			f = driver.fixture(s.Fixture, scenario, remote)
+		} else {
+			f = r.fixture(s.Fixture, scenario, published, endpoints, options.Skew)
+		}
 		c := driver.run(ctx, f, scenario, target, Options{Timeout: options.Timeout})
 		if driver.unobserved != nil {
 			stages, why := driver.unobserved(scenario)
@@ -264,33 +413,34 @@ type personEndpoints struct {
 	person, token string
 }
 
-// discoverRemote fetches the signing keys each named server publishes, and
-// the Person Server's endpoints.
-func discoverRemote(ctx context.Context, r RemoteRole, timeout time.Duration) (map[string]keySet, personEndpoints, error) {
-	documents := map[string]string{partyPerson: "aauth-person.json", partyAccess: "aauth-access.json"}
-	published := map[string]keySet{}
+// discoverRemote fetches the metadata and signing keys of each named server
+// the role reads, and a Person Server's endpoints.
+func discoverRemote(ctx context.Context, r RemoteRole, documents map[string]remoteDocument, timeout time.Duration) (map[string]RemoteServer, personEndpoints, error) {
+	servers := map[string]RemoteServer{}
 	endpoints := personEndpoints{}
 	for party, value := range r.servers() {
-		issuer, document := value, documents[party]
-		if party == partyResource {
-			if r.AccessServer == "" {
-				continue // An agent-identity Resource signs nothing the suite checks.
-			}
-			issuer, document = resourceIdentifier(value), "aauth-resource.json"
+		document, read := documents[party]
+		if !read {
+			continue
 		}
-		keys, metadata, err := publishedKeys(ctx, issuer, document, timeout)
+		issuer := value
+		if party == partyResource || party == partyThreeParty {
+			issuer = resourceIdentifier(value)
+		}
+		keys, metadata, err := publishedKeys(ctx, issuer, document.Name, timeout, !document.Keys)
 		if err != nil {
 			return nil, endpoints, fmt.Errorf("discovering %s keys: %w", party, err)
 		}
-		published[party] = keys
-		if party == partyPerson {
-			endpoints.person, endpoints.token = metadata["person_token_endpoint"], metadata["auth_token_endpoint"]
+		servers[party] = RemoteServer{Issuer: issuer, Metadata: metadata, Keys: keys}
+		if party == partyPerson && document.Name == "aauth-person.json" {
+			endpoints.person, _ = metadata["person_token_endpoint"].(string)
+			endpoints.token, _ = metadata["auth_token_endpoint"].(string)
 			if !endpointURL(endpoints.person) || !endpointURL(endpoints.token) {
-				return nil, endpoints, fmt.Errorf("%s/.well-known/%s: person_token_endpoint and auth_token_endpoint must be HTTPS URLs with no query or fragment", issuer, document)
+				return nil, endpoints, fmt.Errorf("%s/.well-known/%s: person_token_endpoint and auth_token_endpoint must be HTTPS URLs with no query or fragment", issuer, document.Name)
 			}
 		}
 	}
-	return published, endpoints, nil
+	return servers, endpoints, nil
 }
 
 // endpointURL applies the metadata rule for endpoint values: the https
@@ -365,4 +515,44 @@ func markUnobserved(c *Case, s Scenario, stages []string, reason string) {
 			c.Results[i] = Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_exercised", Detail: reason}
 		}
 	}
+}
+
+// rebaseExpected returns the scenario with each expected value that names a
+// fixture identity the deployment replaced rewritten to the deployed one, so
+// an assertion such as "issuer equals the Supervision Server" grades the
+// server under test. Strings are replaced only when they match exactly.
+func rebaseExpected(s Scenario, replace map[string]string) Scenario {
+	var rewrite func(any) any
+	rewrite = func(value any) any {
+		switch v := value.(type) {
+		case string:
+			if deployed, ok := replace[v]; ok {
+				return deployed
+			}
+		case []any:
+			out := make([]any, len(v))
+			for i, item := range v {
+				out[i] = rewrite(item)
+			}
+			return out
+		case map[string]any:
+			out := map[string]any{}
+			for name, item := range v {
+				out[name] = rewrite(item)
+			}
+			return out
+		}
+		return value
+	}
+	s.Assertions = slices.Clone(s.Assertions)
+	for i, a := range s.Assertions {
+		var expected any
+		if json.Unmarshal(a.Equals, &expected) != nil {
+			continue
+		}
+		if b, err := json.Marshal(rewrite(expected)); err == nil && !bytes.Equal(b, a.Equals) {
+			s.Assertions[i].Equals = b
+		}
+	}
+	return s
 }

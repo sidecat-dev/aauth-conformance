@@ -1,0 +1,76 @@
+{
+  "names": {
+    "events_resource": "https://events.aauth-LIB.test",
+    "agent_provider": "https://ap.aauth-LIB.test",
+    "control": "https://control.aauth-LIB.test"
+  },
+  "trusted": [
+    "https://other-resource.conformance.test"
+  ],
+  "roles": {
+    "events.subscription": {
+      "resource": "https://events.aauth-LIB.test/events/subscribe",
+      "control": "https://control.aauth-LIB.test/events.subscription"
+    },
+    "events.agent-provider": {
+      "agent_provider": "https://ap.aauth-LIB.test",
+      "agent": "aauth:agent@ap.aauth-LIB.test",
+      "control": "https://control.aauth-LIB.test/events.agent-provider"
+    },
+    "events.delivery": {
+      "resource": "https://events.aauth-LIB.test/events/subscribe",
+      "control": "https://control.aauth-LIB.test/events.delivery"
+    },
+    "events.agent": {
+      "agent": "aauth:agent@ap.aauth-LIB.test",
+      "control": "https://control.aauth-LIB.test/events.agent"
+    }
+  },
+  "roles_by_lib": {
+    "go": {
+      "events.agent-provider": {
+        "agent_provider": "https://ap.aauth-go.test",
+        "agent": "aauth:agent@ap.aauth-go.test",
+        "control": "https://control.aauth-go.test/events.agent-provider",
+        "claims": [
+          "events.ap.metadata",
+          "events.ap.subscribe-token",
+          "events.ap.validation",
+          "events.ap.typ",
+          "events.ap.cnf-absent",
+          "events.ap.same-key",
+          "events.ap.body-s256",
+          "events.ap.coverage",
+          "events.ap.unknown-eid",
+          "events.ap.accepted",
+          "events.ap.expired-code",
+          "events.ap.jwt-code",
+          "events.ap.input-code",
+          "events.ap.signature-code",
+          "events.ap.unknown-key",
+          "events.ap.control",
+          "events.ap.problem-type"
+        ]
+      },
+      "events.subscription": {
+        "resource": "https://events.aauth-go.test/events/subscribe",
+        "control": "https://control.aauth-go.test/events.subscription",
+        "claims": [
+          "events.sub.verification",
+          "events.sub.aud",
+          "events.sub.exp",
+          "events.sub.typ-dwk",
+          "events.sub.cnf",
+          "events.sub.eid",
+          "events.sub.expired-code",
+          "events.sub.jwt-code",
+          "events.sub.signature-code",
+          "events.sub.ticket-bound",
+          "events.sub.registered",
+          "events.sub.ticket-issued",
+          "events.sub.problem-type"
+        ]
+      }
+    }
+  }
+}

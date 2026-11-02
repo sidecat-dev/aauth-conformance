@@ -171,19 +171,19 @@ func TestR3ServerProofVerifiesTheNamedServer(t *testing.T) {
 		return Captured{Method: request.Method, URL: request.URL.String(), Headers: request.Header}
 	}
 	a, p := *f.Access, *f.Person
-	if !r3ServerProof(f, capture("access"), uri, a.Issuer, "aauth-access.json", a.Kid, a.Seed) {
+	if !r3ServerProof(f, capture("access"), uri, a.Issuer, "aauth-access.json", fixtureKeys(a.Seed, a.Kid)) {
 		t.Fatal("valid AS fetch proof refused")
 	}
-	if !r3ServerProof(f, capture("person"), uri, p.Issuer, "aauth-person.json", p.Kid, p.Seed) {
+	if !r3ServerProof(f, capture("person"), uri, p.Issuer, "aauth-person.json", fixtureKeys(p.Seed, p.Kid)) {
 		t.Fatal("valid PS fetch proof refused")
 	}
-	if r3ServerProof(f, capture("access"), uri, p.Issuer, "aauth-person.json", p.Kid, p.Seed) {
+	if r3ServerProof(f, capture("access"), uri, p.Issuer, "aauth-person.json", fixtureKeys(p.Seed, p.Kid)) {
 		t.Fatal("AS proof accepted as the PS")
 	}
-	if r3ServerProof(f, capture("tampered"), uri, a.Issuer, "aauth-access.json", a.Kid, a.Seed) {
+	if r3ServerProof(f, capture("tampered"), uri, a.Issuer, "aauth-access.json", fixtureKeys(a.Seed, a.Kid)) {
 		t.Fatal("tampered proof accepted")
 	}
-	if r3ServerProof(f, capture("access"), f.Origin+"/r3/c.y", a.Issuer, "aauth-access.json", a.Kid, a.Seed) {
+	if r3ServerProof(f, capture("access"), f.Origin+"/r3/c.y", a.Issuer, "aauth-access.json", fixtureKeys(a.Seed, a.Kid)) {
 		t.Fatal("proof for another URI accepted")
 	}
 	if got := r3RequestSigner(capture("other").Headers); got != r.Other.Issuer {

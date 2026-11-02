@@ -121,6 +121,14 @@ func (h *harnessSupervisor) reset(input SupervisionPSInput) {
 	defer h.mu.Unlock()
 	h.input, h.requests, h.acts, h.pending = input, nil, 0, map[string]string{}
 }
+
+// rebase points the harness at one case's fixture: its clock, which dates
+// signed decisions, and the Person Server whose proofs it checks.
+func (h *harnessSupervisor) rebase(f Fixture) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.fixture = f
+}
 func (h *harnessSupervisor) snapshot() []SSRequest {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -339,7 +347,15 @@ func runSupervisionPersonServers(ctx context.Context, s Suite, targets Targets, 
 			harness.reset(input)
 			config := Bootstrap{Version: 1, Role: SupervisionPersonServerRole, Now: s.Fixture.Now, Issuer: s.Fixture.Issuer, Resource: p.Issuer + "/person", APTransport: ap, PersonServer: p.Issuer, PersonSeed: p.Seed, PersonKid: p.Kid, PersonSubject: p.Subject, PersonLifetime: p.Lifetime, AuthLifetime: p.AuthLifetime, PermittedScopes: p.PermittedScopes, ResourceKid: p.ResourceKid, ResourceJWK: publicJWK(p.ResourceSeed), Extension: extension}
 			ready, stop, startError := startAdapter(ctx, target, config, options)
-			c := runSupervisionPSCase(ctx, s.Fixture, ss, scenario, input, target, ready.URL, options, startError, harness)
+			physical := strings.TrimSuffix(ready.URL, "/person")
+			reach := supervisionPSReach{
+				physical: physical,
+				mission:  p.Issuer + "/mission",
+				control: func(ctx context.Context, body string, _ string) (Response, error) {
+					return supervisionControl(ctx, physical, json.RawMessage(body), options.Timeout)
+				},
+			}
+			c := runSupervisionPSCase(ctx, s.Fixture, ss, scenario, input, target, reach, options, startError, harness)
 			if stop != nil {
 				stop()
 			}
@@ -350,10 +366,22 @@ func runSupervisionPersonServers(ctx context.Context, s Suite, targets Targets, 
 	return report
 }
 
-func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture, scenario Scenario, input SupervisionPSInput, target Target, ready string, options Options, startError error, harness *harnessSupervisor) Case {
+// supervisionPSReach is how a case reaches the Person Server under test:
+// the physical address its requests are sent to ("" for a deployed server
+// reached by name), its mission endpoint, and its host control, which is
+// given the control body and the held act's pending URL. graded, when set,
+// chooses the supervisor requests the case is graded on.
+type supervisionPSReach struct {
+	physical string
+	mission  string
+	control  func(ctx context.Context, body, pending string) (Response, error)
+	graded   func([]SSRequest) []SSRequest
+}
+
+func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture, scenario Scenario, input SupervisionPSInput, target Target, reach supervisionPSReach, options Options, startError error, harness *harnessSupervisor) Case {
 	c := Case{ID: scenario.ID}
 	p := *f.Person
-	physical := strings.TrimSuffix(ready, "/person")
+	physical := reach.physical
 	agent, _ := mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", map[string]any{"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": f.Subject, "jti": scenario.ID + "-agent", "iat": f.Now - 10, "exp": f.Now + 600, "ps": p.Issuer, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}})
 	credential := `sig=jwt;jwt="` + agent + `"`
 	exchanges := []*SupervisionPSExchange{}
@@ -384,13 +412,18 @@ func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture,
 		stages[stage] = exchange
 		return exchange
 	}
-	control := func(stage string, body string) {
+	control := func(stage string, body, pending string) {
 		exchange := &SupervisionPSExchange{Stage: stage}
 		exchanges = append(exchanges, exchange)
 		if executionError != "" {
 			return
 		}
-		response, err := supervisionControl(ctx, physical, json.RawMessage(body), options.Timeout)
+		if reach.control == nil {
+			executionError = stage + ": the deployment names no control"
+			exchange.Error = executionError
+			return
+		}
+		response, err := reach.control(ctx, body, pending)
 		if err == nil && response.Status != http.StatusOK {
 			err = fmt.Errorf("host control answered %d: %s", response.Status, strings.TrimSpace(string(response.Body)))
 		}
@@ -404,13 +437,13 @@ func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture,
 	}
 	personBody, _ := json.Marshal(map[string]any{"resource": f.Origin})
 	actStage := "person"
-	person := send("person", "POST", p.Issuer+"/person", personBody)
+	person := send("person", "POST", p.personURL(), personBody)
 	if input.Act == "mission_proposal" && executionError == "" {
 		if person.Response.Status != http.StatusOK {
 			executionError = fmt.Sprintf("person: prerequisite person token answered %d", person.Response.Status)
 		} else {
 			body, _ := json.Marshal(map[string]any{"description": supervisionPSProposal})
-			send("mission", "POST", p.Issuer+"/mission", body)
+			send("mission", "POST", reach.mission, body)
 			actStage = "mission"
 		}
 	}
@@ -418,22 +451,27 @@ func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture,
 		token, err := responseToken(*person.Response, "person_token")
 		var claims map[string]any
 		if err == nil {
-			_, claims, err = verifyJWT(token, p.Seed, p.Kid, "aa-person+jwt")
+			_, claims, err = verifyJWTWith(token, p.keys(), "aa-person+jwt")
 		}
 		if err != nil {
 			executionError = "person: prerequisite person token: " + err.Error()
 		} else {
 			resource, _ := mintJWT(p.ResourceSeed, p.ResourceKid, "aa-resource+jwt", map[string]any{"iss": f.Origin, "dwk": "aauth-resource.json", "aud": p.Issuer, "ps": p.Issuer, "sub": claims["sub"], "presented_jti": claims["jti"], "agent_jkt": thumbprint(f.AgentSeed), "jti": scenario.ID + "-resource", "iat": f.Now - 1, "exp": f.Now + 120, "scope": "read"})
 			body, _ := json.Marshal(map[string]any{"resource_token": resource, "presented_token": token})
-			send("token", "POST", p.Issuer+"/token", body)
+			send("token", "POST", p.tokenURL(), body)
 			actStage = "token"
 		}
 	}
+	// The held act's pending URL, which a deployed server's control is told.
+	held := ""
+	if pending := stages[actStage]; pending != nil && pending.Response != nil {
+		held, _ = pendingLocation(*pending.Response, p.Issuer)
+	}
 	switch input.Decision {
 	case "ask", "server-error":
-		control("resolve", `{"resolve":"allow"}`)
+		control("resolve", `{"resolve":"allow"}`, held)
 	case "defer":
-		control("advance", `{"advance":true}`)
+		control("advance", `{"advance":true}`, held)
 	}
 	if slices.Contains([]string{"ask", "server-error", "defer"}, input.Decision) && executionError == "" {
 		if pending := stages[actStage]; pending != nil && pending.Response != nil {
@@ -446,10 +484,15 @@ func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture,
 		}
 	}
 	if input.SecondAct {
-		send("person-again", "POST", p.Issuer+"/person", personBody)
+		send("person-again", "POST", p.personURL(), personBody)
 	}
-	control("deliver", `{"deliver":true}`)
+	if reach.control != nil {
+		control("deliver", `{"deliver":true}`, "")
+	}
 	observed := harness.snapshot()
+	if reach.graded != nil {
+		observed = reach.graded(observed)
+	}
 	tokenName := "person_token"
 	tokenType := "aa-person+jwt"
 	if input.Act == "auth_token" {
@@ -512,7 +555,7 @@ func checkSupervisionPS(a Assertion, f Fixture, input SupervisionPSInput, exchan
 		token, err := responseToken(*exchange.Response, name)
 		var claims map[string]any
 		if err == nil {
-			_, claims, err = verifyJWT(token, p.Seed, p.Kid, typ)
+			_, claims, err = verifyJWTWith(token, p.keys(), typ)
 		}
 		if a.Kind == "ps-credential" {
 			detail := ""

@@ -3,7 +3,6 @@ package conformance
 import (
 	"bytes"
 	"context"
-	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -41,6 +40,35 @@ func (inbox *eventsInbox) deliveries() []Captured {
 	return slices.Clone(inbox.captured)
 }
 
+// receive captures one delivery and accepts it, with remaining_uses while
+// the subscription has a use limit.
+func (inbox *eventsInbox) receive(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method", http.StatusMethodNotAllowed)
+		return
+	}
+	body, err := io.ReadAll(io.LimitReader(r.Body, 65537))
+	if err != nil || len(body) > 65536 {
+		http.Error(w, "body", http.StatusBadRequest)
+		return
+	}
+	inbox.mu.Lock()
+	inbox.captured = append(inbox.captured, Captured{Method: r.Method, URL: "https://" + r.Host + r.URL.RequestURI(), Headers: r.Header.Clone(), Body: body})
+	reply := []byte{}
+	if inbox.remaining > 0 {
+		inbox.remaining--
+		reply, _ = json.Marshal(map[string]int64{"remaining_uses": inbox.remaining})
+	}
+	inbox.mu.Unlock()
+	w.Header().Set("Cache-Control", "no-store")
+	if len(reply) > 0 {
+		w.Header().Set("Content-Type", "application/json")
+	}
+	w.Header().Set("Content-Length", fmt.Sprint(len(reply)))
+	w.WriteHeader(http.StatusAccepted)
+	w.Write(reply)
+}
+
 func startEventsInbox(f Fixture, e EventsFixture) (string, *eventsInbox, func(), error) {
 	inbox := &eventsInbox{}
 	endpoint, _ := url.Parse(e.EventEndpoint)
@@ -56,28 +84,7 @@ func startEventsInbox(f Fixture, e EventsFixture) (string, *eventsInbox, func(),
 			w.Write(body)
 		})
 	}
-	mux.HandleFunc("POST "+endpoint.EscapedPath(), func(w http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(io.LimitReader(r.Body, 65537))
-		if err != nil || len(body) > 65536 {
-			http.Error(w, "body", http.StatusBadRequest)
-			return
-		}
-		inbox.mu.Lock()
-		inbox.captured = append(inbox.captured, Captured{Method: r.Method, URL: "https://" + r.Host + r.URL.RequestURI(), Headers: r.Header.Clone(), Body: body})
-		reply := []byte{}
-		if inbox.remaining > 0 {
-			inbox.remaining--
-			reply, _ = json.Marshal(map[string]int64{"remaining_uses": inbox.remaining})
-		}
-		inbox.mu.Unlock()
-		w.Header().Set("Cache-Control", "no-store")
-		if len(reply) > 0 {
-			w.Header().Set("Content-Type", "application/json")
-		}
-		w.Header().Set("Content-Length", fmt.Sprint(len(reply)))
-		w.WriteHeader(http.StatusAccepted)
-		w.Write(reply)
-	})
+	mux.HandleFunc("POST "+endpoint.EscapedPath(), inbox.receive)
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return "", nil, nil, err
@@ -98,7 +105,7 @@ type eventsDeliveryObservation struct {
 }
 
 // observeEventsDelivery reads a delivery with independent Structured Field,
-// SHA-256 and Ed25519 code: the self-jwt event token under the Resource key,
+// SHA-256 and signature code: the self-jwt event token under the Resource key,
 // its claims against the subscription, coverage and the HTTP proof.
 func observeEventsDelivery(f Fixture, e EventsFixture, c Captured, eid string) eventsDeliveryObservation {
 	o := eventsDeliveryObservation{Properties: map[string]bool{}}
@@ -124,7 +131,8 @@ func observeEventsDelivery(f Fixture, e EventsFixture, c Captured, eid string) e
 	}
 	value, _ := item.Params.Get("jwt")
 	token, _ := value.(string)
-	_, claims, err := verifyJWT(token, e.Resource.Seed, e.Resource.Kid, "aa-event+jwt")
+	resourceKeys := e.Resource.keys()
+	head, claims, err := verifyJWTWith(token, resourceKeys, "aa-event+jwt")
 	o.Claims = claims
 	if err != nil {
 		o.Claims = unverifiedClaims(token)
@@ -206,7 +214,16 @@ func observeEventsDelivery(f Fixture, e EventsFixture, c Captured, eid string) e
 	member, _ = signatures.Get(label)
 	if signature, ok := member.(httpsfv.Item); ok {
 		if raw, ok := signature.Value.([]byte); ok {
-			o.Properties["proof"] = ed25519.Verify(seedKey(e.Resource.Seed).Public().(ed25519.PublicKey), []byte(o.Base), raw)
+			// self-jwt: the key that signs the event token signs the request.
+			// A deployed Resource's is the published key the token's kid names.
+			var key map[string]any
+			if e.Resource.Published != nil {
+				kid, _ := head["kid"].(string)
+				key = resourceKeys[kid]
+			} else {
+				key = publicJWK(e.Resource.Seed)
+			}
+			o.Properties["proof"] = SigvecVerifyJWK(key, []byte(o.Base), raw)
 		}
 	}
 	return o
@@ -235,59 +252,65 @@ func runEventsDelivery(ctx context.Context, s Suite, targets Targets, o Options,
 		func(f Fixture, e EventsFixture, _ map[string]string) eventsLauncher {
 			return eventsLauncher{Resource: &e.Resource, SubscriptionPath: e.SubscriptionPath, TicketPath: e.TicketPath, AgentProviders: []AgentProviderTrust{{Issuer: f.Issuer, Transport: transport}}}
 		},
-		func(ctx context.Context, f Fixture, e EventsFixture, s Scenario, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
-			stages, exchanges, own := map[string]*Response{}, []PersonExchange{}, map[string]Result{}
-			if inboxErr != nil {
-				return stages, exchanges, own, inboxErr
-			}
-			var in eventsDeliveryRoleInput
-			DecodeInput(s, &in)
-			inbox.reset(in.MaxUses)
-			eid := "evt-" + s.ID
-			token, err := eventsSubscribeTokenWithUses(f, e, eid, s.ID, in.MaxUses)
+		eventsDeliveryCase(inbox, inboxErr))
+}
+
+// eventsDeliveryCase registers a subscription at the Resource, has its host
+// fire events, and reads each delivery the inbox captured.
+func eventsDeliveryCase(inbox *eventsInbox, inboxErr error) eventsCase {
+	return func(ctx context.Context, f Fixture, e EventsFixture, s Scenario, ready Ready, o Options) (map[string]*Response, []PersonExchange, map[string]Result, error) {
+		stages, exchanges, own := map[string]*Response{}, []PersonExchange{}, map[string]Result{}
+		if inboxErr != nil {
+			return stages, exchanges, own, inboxErr
+		}
+		var in eventsDeliveryRoleInput
+		DecodeInput(s, &in)
+		inbox.reset(in.MaxUses)
+		eid := "evt-" + s.ID
+		token, err := eventsSubscribeTokenWithUses(f, e, eid, s.ID, in.MaxUses)
+		if err != nil {
+			return stages, exchanges, own, err
+		}
+		registration, err := signEventsRequest(f, "registration", f.AgentSeed, http.MethodPost, e.Resource.Issuer+e.SubscriptionPath, `sig=jwt;jwt="`+token+`"`, eventsRegistration, eventsCovered(true))
+		if err != nil {
+			return stages, exchanges, own, err
+		}
+		if err := eventsExchange(ctx, registration, ready, o, stages, &exchanges); err != nil {
+			return stages, exchanges, own, err
+		}
+		observations := []eventsDeliveryObservation{}
+		for i, body := range in.Fires {
+			control, err := controlRequest(fmt.Sprintf("fire-%d", i+1), eventsControlURL(ctx, e.Resource.Issuer, "/__fixture/fire"), map[string]any{"agent_provider": f.Issuer, "eid": eid, "body": body})
 			if err != nil {
 				return stages, exchanges, own, err
 			}
-			registration, err := signEventsRequest(f, "registration", f.AgentSeed, http.MethodPost, e.Resource.Issuer+e.SubscriptionPath, `sig=jwt;jwt="`+token+`"`, eventsRegistration, eventsCovered(true))
-			if err != nil {
+			if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
 				return stages, exchanges, own, err
 			}
-			if err := eventsExchange(ctx, registration, ready, o, stages, &exchanges); err != nil {
-				return stages, exchanges, own, err
+			captured := inbox.deliveries()
+			if len(captured) != i+1 {
+				return stages, exchanges, own, fmt.Errorf("fire %d: the inbox captured %d deliveries", i+1, len(captured))
 			}
-			observations := []eventsDeliveryObservation{}
-			for i, body := range in.Fires {
-				control, err := controlRequest(fmt.Sprintf("fire-%d", i+1), e.Resource.Issuer+"/__fixture/fire", map[string]any{"agent_provider": f.Issuer, "eid": eid, "body": body})
-				if err != nil {
-					return stages, exchanges, own, err
-				}
-				if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
-					return stages, exchanges, own, err
-				}
-				captured := inbox.deliveries()
-				if len(captured) != i+1 {
-					return stages, exchanges, own, fmt.Errorf("fire %d: the inbox captured %d deliveries", i+1, len(captured))
-				}
-				if (len(captured[i].Body) > 0) != body {
-					return stages, exchanges, own, fmt.Errorf("fire %d: delivery body presence differs from the requested event", i+1)
-				}
-				observation := observeEventsDelivery(f, e, captured[i], eid)
-				observations = append(observations, observation)
-				exchanges = append(exchanges, PersonExchange{Stage: fmt.Sprintf("delivery-%d", i+1), Method: captured[i].Method, URL: captured[i].URL, Headers: captured[i].Headers, Body: captured[i].Body, SignatureBase: observation.Base, Error: observation.Error})
+			if (len(captured[i].Body) > 0) != body {
+				return stages, exchanges, own, fmt.Errorf("fire %d: delivery body presence differs from the requested event", i+1)
 			}
-			for _, a := range s.Assertions {
-				if a.Kind != "events-delivery" {
-					continue
-				}
-				var n int
-				fmt.Sscanf(a.Stage, "delivery-%d", &n)
-				observation := observations[n-1]
-				result := CompareResult(a, observation.Properties[a.Member], observation.Error)
-				result.Actual = observation
-				own[a.ID] = result
+			observation := observeEventsDelivery(f, e, captured[i], eid)
+			observations = append(observations, observation)
+			exchanges = append(exchanges, PersonExchange{Stage: fmt.Sprintf("delivery-%d", i+1), Method: captured[i].Method, URL: captured[i].URL, Headers: captured[i].Headers, Body: captured[i].Body, SignatureBase: observation.Base, Error: observation.Error})
+		}
+		for _, a := range s.Assertions {
+			if a.Kind != "events-delivery" {
+				continue
 			}
-			return stages, exchanges, own, nil
-		})
+			var n int
+			fmt.Sscanf(a.Stage, "delivery-%d", &n)
+			observation := observations[n-1]
+			result := CompareResult(a, observation.Properties[a.Member], observation.Error)
+			result.Actual = observation
+			own[a.ID] = result
+		}
+		return stages, exchanges, own, nil
+	}
 }
 
 func eventsSubscribeTokenWithUses(f Fixture, e EventsFixture, eid, jti string, maxUses int64) (string, error) {

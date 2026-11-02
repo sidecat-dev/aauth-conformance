@@ -50,7 +50,30 @@ type config struct {
 	AgentProviders []string `json:"agent_providers"`
 	PersonServers  []string `json:"person_servers"`
 	Resources      []string `json:"resources"`
+	// Names holds the names of the further roles other files serve, by the
+	// key each file documents; "control" is the host-control origin.
+	Names map[string]string `json:"names"`
+	// Trusted lists further suite parties whose keys the resolver admits.
+	Trusted []string `json:"trusted"`
 }
+
+// env is what every role builder shares.
+type env struct {
+	c      config
+	keys   signaturekey.KeyResolver
+	client *http.Client
+	clock  aauth.Clock
+	newID  func() string
+	// key generates a signing key with the given kid.
+	key func(kid string) jose.SigningKey
+	// controls is served at Names["control"]; each role mounts its host
+	// controls under its own path prefix.
+	controls *http.ServeMux
+}
+
+// extensions are the role builders other files register from init. Each
+// returns its handlers by issuer, or none when its names are not configured.
+var extensions []func(env) (map[string]http.Handler, error)
 
 const (
 	subject        = "directed-person-1"
@@ -81,7 +104,11 @@ func run(path string) error {
 	}
 	trusted := append(slices.Clone(c.AgentProviders), c.PersonServers...)
 	trusted = append(trusted, c.Resources...)
+	trusted = append(trusted, c.Trusted...)
 	trusted = append(trusted, c.DirectPerson, c.FederatedResource, c.FederatedPerson, c.AccessServer)
+	for _, name := range c.Names {
+		trusted = append(trusted, strings.TrimSuffix(name, "/"))
+	}
 	keys, err := signaturekey.NewHTTPKeyResolver(signaturekey.HTTPKeyResolverConfig{
 		Client: client, Clock: aauth.SystemClock{}, TransportEnforcesEgress: true,
 		Admit: func(_ context.Context, endpoint string) error {
@@ -133,6 +160,32 @@ func roles(c config, keys signaturekey.KeyResolver, client *http.Client) (map[st
 		}
 		return signing
 	}
+	shared := env{c: c, keys: keys, client: client, clock: clock, newID: newID, key: key, controls: http.NewServeMux()}
+	handlers, err := coreRoles(shared)
+	if err != nil {
+		return nil, err
+	}
+	for _, extension := range extensions {
+		more, err := extension(shared)
+		if err != nil {
+			return nil, err
+		}
+		for issuer, handler := range more {
+			if handlers[issuer] != nil {
+				return nil, fmt.Errorf("two roles named %s", issuer)
+			}
+			handlers[issuer] = handler
+		}
+	}
+	if control := c.Names["control"]; control != "" {
+		handlers[control] = shared.controls
+	}
+	return handlers, nil
+}
+
+// coreRoles builds the Resource, Person Server and Access Server roles.
+func coreRoles(e env) (map[string]http.Handler, error) {
+	c, keys, client, clock, newID, key := e.c, e.keys, e.client, e.clock, e.newID, e.key
 	bind := func(context.Context, personserver.PersonTokenRequest) (personserver.Person, error) {
 		return personserver.Person{Subject: subject, Lifetime: personLifetime}, nil
 	}
