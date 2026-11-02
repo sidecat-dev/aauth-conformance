@@ -27,6 +27,10 @@ has 367 scenarios and 1,486 assertions in 21 roles:
 | `vectors.library` | 400-493 | 94 | 105 | community test vectors |
 | `vectors.signature-key` | 500-555 | 56 | 111 | Signature-Key test vectors |
 
+[CONFORMANCE-MAP.md](CONFORMANCE-MAP.md) describes `conformance-map.edn`, which
+lists each keyword sentence of the pinned drafts with the clauses, scenarios
+and library states that reach it.
+
 Each role is a separate run: `build-adapters -role ROLE` builds the launchers
 and the runner grades that role's scenarios. The six original roles are:
 
