@@ -8,6 +8,8 @@ publish = false
 # library links to the aauth-rust checkout being deployed; see README.md.
 [dependencies]
 aauth-rust-access-server = { path = "library/crates/aauth-rust-access-server" }
+aauth-rust-agent = { path = "library/crates/aauth-rust-agent" }
+aauth-rust-agent-provider = { path = "library/crates/aauth-rust-agent-provider" }
 aauth-rust-core = { path = "library/crates/aauth-rust-core" }
 aauth-rust-jose = { path = "library/crates/aauth-rust-jose" }
 aauth-rust-person-server = { path = "library/crates/aauth-rust-person-server" }

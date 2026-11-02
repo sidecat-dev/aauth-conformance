@@ -17,6 +17,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "aauth-rust-agent"
+version = "0.1.0-alpha.19"
+dependencies = [
+ "aauth-rust-budgets",
+ "aauth-rust-core",
+ "aauth-rust-jose",
+ "aauth-rust-r3",
+ "aauth-rust-signature-key",
+ "http",
+ "serde_json",
+ "sfv",
+ "thiserror",
+]
+
+[[package]]
+name = "aauth-rust-agent-provider"
+version = "0.1.0-alpha.19"
+dependencies = [
+ "aauth-rust-core",
+ "aauth-rust-jose",
+ "aauth-rust-signature-key",
+ "http",
+ "serde_json",
+]
+
+[[package]]
 name = "aauth-rust-budgets"
 version = "0.1.0-alpha.19"
 dependencies = [
@@ -50,6 +76,8 @@ name = "aauth-rust-deployment"
 version = "0.1.0"
 dependencies = [
  "aauth-rust-access-server",
+ "aauth-rust-agent",
+ "aauth-rust-agent-provider",
  "aauth-rust-core",
  "aauth-rust-jose",
  "aauth-rust-person-server",
