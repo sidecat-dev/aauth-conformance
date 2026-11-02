@@ -81,6 +81,7 @@ dependencies = [
  "aauth-rust-core",
  "aauth-rust-jose",
  "aauth-rust-person-server",
+ "aauth-rust-r3",
  "aauth-rust-resource",
  "aauth-rust-signature-key",
  "aauth-rust-supervision-server",

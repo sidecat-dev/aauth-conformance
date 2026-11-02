@@ -7,10 +7,12 @@
 # Usage: deployments/run-remote.sh /path/to/aauth-go /path/to/aauth-rust OUT
 #
 # deployments/roles/*.json say what the aauth-go and aauth-rust deployments
-# serve: "names" are server names (LIB stands for go or rust), "trusted" the
-# further suite parties they trust, and "roles" the deployment file's roles;
-# "roles_by_lib" (by go or rust) replaces a role for one library only, such as
-# narrower claims for a scheme that library does not offer.
+# serve: "names" are server names (LIB stands for go or rust; a name outside
+# aauth-LIB names a suite party), "trusted" the further suite parties they
+# trust, and "roles" the deployment file's roles. Optional: "libraries", the
+# deployments the file applies to (default both), and "roles_by_lib" (by go
+# or rust), which replaces a role for one library only, such as narrower
+# claims where that library leaves a duty to its host.
 # Optional environment: LIBS (default "go rust protocol") picks the
 # deployments; REMOTE_ROLES (space-separated) keeps only those suite roles;
 # CARGO_TARGET is a reusable Cargo target directory.
@@ -46,20 +48,18 @@ cd "$work"
 SUITE=127.0.0.1:18443
 declare -A PORT=([go]=127.0.0.1:18444 [rust]=127.0.0.1:18445 [protocol]=127.0.0.1:18446)
 suite_names=$(./aauth-conformance -suite "$suite" -harness-names | tr '\n' ' ')
-# One merged description of what the library deployments serve.
-jq -s '{names: (map(.names // {}) | add), trusted: (map(.trusted // []) | add | unique), roles: (map(.roles // {}) | add),
-  roles_by_lib: (map(.roles_by_lib // {}) | reduce .[] as $by ({}; . * $by))}' \
-  "$here"/roles/*.json > roles.json
-if [ -n "${REMOTE_ROLES:-}" ]; then
-  jq --arg keep "$REMOTE_ROLES" 'def kept: with_entries(select(.key as $k | $keep | split(" ") | index($k)));
-    .roles |= kept | .roles_by_lib |= map_values(kept)' roles.json > kept.json
-  mv kept.json roles.json
-fi
-for_lib() { sed "s/aauth-LIB\./aauth-$1./g; s/LIB/$1/g" roles.json; }
+# One merged description of what a library deployment serves.
+for_lib() {
+  jq -s --arg lib "$1" --arg keep "${REMOTE_ROLES:-}" 'map(select((.libraries // [$lib]) | index($lib)))
+    | {names: (map(.names // {}) | add), trusted: (map(.trusted // []) | add | unique),
+       roles: ((map(.roles // {}) | add) + (map(.roles_by_lib[$lib] // {}) | add))}
+    | if $keep == "" then . else .roles |= with_entries(select(.key as $k | $keep | split(" ") | index($k))) end' \
+    "$here"/roles/*.json | sed "s/aauth-LIB\./aauth-$1./g; s/LIB/$1/g"
+}
 names() {
   case $1 in
   protocol) echo "api.aauth-protocol.test person.aauth-protocol.test" ;;
-  *) for_lib "$1" | jq -r '.names[]' | sed 's#^https://##; s#[/:].*##' | sort -u | tr '\n' ' ' ;;
+  *) for_lib "$1" | jq -r '.names[]' | sed 's#^https://##; s#[/:].*##' | grep -F "aauth-$1." | sort -u | tr '\n' ' ' ;;
   esac
 }
 
@@ -93,8 +93,7 @@ for lib in go rust; do
       agent_providers: ["https://ap.conformance.test"], person_servers: ["https://person.conformance.test"],
       resources: ["https://resource.conformance.test"], names: .names, trusted: .trusted}' > "$lib-server.json"
   for_lib $lib | jq --arg id "aauth-$lib" --arg revision "$(revision "$source")" \
---arg lib "$lib" \
-    '{version: 1, id: $id, revision: $revision, roles: (.roles + (.roles_by_lib[$lib] // {}))}' > "deployment-$lib.json"
+    '{version: 1, id: $id, revision: $revision, roles: .roles}' > "deployment-$lib.json"
 done
 if wanted protocol; then
   jq -n --arg listen "${PORT[protocol]}" --arg work "$work" --argjson resolve "$(resolve protocol)" '

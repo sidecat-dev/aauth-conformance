@@ -286,8 +286,8 @@ type R3TokenObservation struct {
 	Error  string         `json:"error,omitempty"`
 }
 
-// observeR3ResourceToken verifies the native Resource token: Ed25519 under the
-// fixture Resource key, typ aa-resource+jwt, the Resource as issuer, the
+// observeR3ResourceToken verifies the native Resource token: under the
+// Resource's key (the fixture's, or the one a deployed Resource publishes), typ aa-resource+jwt, the Resource as issuer, the
 // topology's Auth-token issuer as audience, and both R3 claims present
 // (Resource Token Extensions).
 func observeR3ResourceToken(f Fixture, response Response, audience string) R3TokenObservation {
@@ -295,7 +295,7 @@ func observeR3ResourceToken(f Fixture, response Response, audience string) R3Tok
 	if err != nil {
 		return R3TokenObservation{Error: err.Error()}
 	}
-	_, claims, err := verifyJWT(compact, f.Person.ResourceSeed, f.Person.ResourceKid, "aa-resource+jwt")
+	_, claims, err := verifyJWTWith(compact, f.Person.resourceKeys(), "aa-resource+jwt")
 	if err != nil {
 		return R3TokenObservation{Claims: claims, Error: err.Error()}
 	}
@@ -383,8 +383,8 @@ func r3Vocabularies(response Response, vocabulary string) (map[string]any, bool)
 	return advertised, present
 }
 
-// observeR3AuthToken verifies the native PS-issued Auth token: Ed25519 under
-// the fixture PS key, typ aa-auth+jwt, PS issuer and ps, Resource audience,
+// observeR3AuthToken verifies the native PS-issued Auth token: under the PS
+// key (the fixture's, or the one a deployed PS publishes), typ aa-auth+jwt, PS issuer and ps, Resource audience,
 // r3_uri and r3_s256 equal to the Resource token's, and r3_granted naming the
 // vocabulary with operations drawn from the document (Issuer Processing step 6).
 func observeR3AuthToken(f Fixture, response Response, resourceURI, resourceDigest string, document []any, vocabulary string) R3TokenObservation {
@@ -392,7 +392,7 @@ func observeR3AuthToken(f Fixture, response Response, resourceURI, resourceDiges
 	if err != nil {
 		return R3TokenObservation{Error: err.Error()}
 	}
-	_, claims, err := verifyJWT(compact, f.Person.Seed, f.Person.Kid, "aa-auth+jwt")
+	_, claims, err := verifyJWTWith(compact, f.Person.keys(), "aa-auth+jwt")
 	if err != nil {
 		return R3TokenObservation{Claims: claims, Error: err.Error()}
 	}
