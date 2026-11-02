@@ -1946,7 +1946,7 @@
       "role": "vectors.library",
       "id": "vector.jwk-thumbprint.no-alg",
       "source": "core",
-      "section": "Not graded: protocol line 2169 requires every AAuth key to carry alg, so the drafts fix no thumbprint duty for this alg-less JWK; the vector's RFC 7638 value is recorded only",
+      "section": "Graded only for a target that claims it: protocol line 2169 requires every AAuth key to carry alg, so the drafts fix no thumbprint duty for this alg-less JWK; the vector's RFC 7638 value is recorded only",
       "anchor": "signature-algorithms",
       "scope": "out-of-slice"
     },
@@ -2042,7 +2042,7 @@
       "role": "vectors.library",
       "id": "vector.jwt.aud-array",
       "source": "core",
-      "section": "Not graded: these tokens carry aud as a one-element JSON array. The drafts define aud as one URL (lines 742, 850, 867) and verify per RFC 7519 (line 2313), whose aud may be an array, without settling whether the array form must be accepted",
+      "section": "Graded only for a target that claims it: these tokens carry aud as a one-element JSON array. The drafts define aud as one URL (lines 742, 850, 867) and verify per RFC 7519 (line 2313), whose aud may be an array, without settling whether the array form must be accepted",
       "anchor": "common-verification",
       "scope": "out-of-slice"
     },
@@ -2090,7 +2090,7 @@
       "role": "vectors.library",
       "id": "vector.jwt.iat-absent",
       "source": "core",
-      "section": "Not graded: Common JWT Claims line 2307 makes iat REQUIRED but 'not a validity check', and no verification step refuses a token without it",
+      "section": "Graded only for a target that claims it: Common JWT Claims line 2307 makes iat REQUIRED but 'not a validity check', and no verification step refuses a token without it",
       "anchor": "common-claims",
       "scope": "out-of-slice"
     },
@@ -2098,7 +2098,7 @@
       "role": "vectors.library",
       "id": "vector.jwt.person-scope",
       "source": "core",
-      "section": "Not graded: Person Token Structure line 898 says a person token MUST NOT contain scope, binding the issuer; Person Token Verification (lines 913-918) names no refusal for it",
+      "section": "Graded only for a target that claims it: Person Token Structure line 898 says a person token MUST NOT contain scope, binding the issuer; Person Token Verification (lines 913-918) names no refusal for it",
       "anchor": "person-token-structure",
       "scope": "out-of-slice"
     },
@@ -2138,7 +2138,7 @@
       "role": "vectors.library",
       "id": "vector.http-sig.body-digest",
       "source": "core",
-      "section": "Not graded: the drafts require content-digest coverage (line 2211) but no pinned MUST requires checking the Content-Digest value against the body bytes, so the vector's refusal of a changed body is recorded only",
+      "section": "Graded only for a target that claims it: the drafts require content-digest coverage (line 2211) but no pinned MUST requires checking the Content-Digest value against the body bytes, so the vector's refusal of a changed body is recorded only",
       "anchor": "covered-components",
       "scope": "out-of-slice"
     },

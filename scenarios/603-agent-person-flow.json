@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "id": "agent-person-flow",
+  "title": "The Agent obtains a Person token from its Person Server and retries with it",
+  "role_under_test": "agent.signing",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300,
+    "ps": true
+  },
+  "request": {
+    "method": "GET",
+    "path": "/profile",
+    "endpoint": "person",
+    "proof": "sut",
+    "headers": {}
+  },
+  "assertions": [
+    {
+      "id": "person-request",
+      "clause": "agent.person-flow",
+      "kind": "wire-person-request",
+      "equals": true
+    },
+    {
+      "id": "retry",
+      "clause": "agent.person-flow",
+      "kind": "wire-person-token",
+      "equals": true
+    }
+  ]
+}

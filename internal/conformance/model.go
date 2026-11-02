@@ -7,18 +7,21 @@ import (
 )
 
 type Fixture struct {
-	Version   int            `json:"version"`
-	ID        string         `json:"id"`
-	Now       int64          `json:"now"`
-	Issuer    string         `json:"issuer"`
-	Origin    string         `json:"origin"`
-	Path      string         `json:"path"`
-	Kid       string         `json:"kid"`
-	Subject   string         `json:"subject"`
-	APSeed    string         `json:"ap_seed_hex"`
-	AgentSeed string         `json:"agent_seed_hex"`
-	Person    *PersonFixture `json:"person_server,omitempty"`
-	Access    *AccessFixture `json:"access_server,omitempty"`
+	Version int    `json:"version"`
+	ID      string `json:"id"`
+	Now     int64  `json:"now"`
+	Issuer  string `json:"issuer"`
+	Origin  string `json:"origin"`
+	Path    string `json:"path"`
+	// PersonPath is a second Resource endpoint, one that requires the
+	// person's identity (protocol, Person Token Required).
+	PersonPath string         `json:"person_path,omitempty"`
+	Kid        string         `json:"kid"`
+	Subject    string         `json:"subject"`
+	APSeed     string         `json:"ap_seed_hex"`
+	AgentSeed  string         `json:"agent_seed_hex"`
+	Person     *PersonFixture `json:"person_server,omitempty"`
+	Access     *AccessFixture `json:"access_server,omitempty"`
 	// Extensions holds identities for extension roles, keyed by role family.
 	Extensions map[string]json.RawMessage `json:"extensions,omitempty"`
 	// Skew is how many seconds a server's issued-at time may differ from Now.
@@ -42,6 +45,8 @@ func (f Fixture) signedExpiry(claims map[string]any, expiresIn int64) bool {
 type TokenSpec struct {
 	IATOffset int64 `json:"iat_offset"`
 	EXPOffset int64 `json:"exp_offset"`
+	// PS names the fixture Person Server in the Agent token's ps claim.
+	PS bool `json:"ps,omitempty"`
 }
 type RequestSpec struct {
 	Headers       map[string]string `json:"headers,omitempty"`
@@ -51,6 +56,9 @@ type RequestSpec struct {
 	CreatedOffset int64             `json:"created_offset"`
 	Covered       []string          `json:"covered"`
 	Tamper        bool              `json:"tamper_signature"`
+	// Endpoint "person" selects the fixture's person_path, the endpoint
+	// that requires a Person token; empty selects the fixture path.
+	Endpoint string `json:"endpoint,omitempty"`
 }
 type Scenario struct {
 	Subagent  *SubagentSpec  `json:"subagent,omitempty"`
@@ -137,14 +145,19 @@ type Bootstrap struct {
 	PermittedScopes          []string             `json:"permitted_scopes,omitempty"`
 	ResourceKid              string               `json:"resource_kid,omitempty"`
 	ResourceJWK              map[string]any       `json:"resource_jwk,omitempty"`
-	Role                     string               `json:"role,omitempty"`
-	AgentSeed                string               `json:"agent_seed_hex,omitempty"`
-	Subject                  string               `json:"subject,omitempty"`
-	Version                  int                  `json:"version"`
-	Now                      int64                `json:"now"`
-	Issuer                   string               `json:"issuer"`
-	Resource                 string               `json:"resource"`
-	APTransport              string               `json:"ap_transport"`
+	// PersonJWK is the public key of the fixture Person Server, kid
+	// PersonKid, for a role that verifies Person tokens it does not issue.
+	PersonJWK map[string]any `json:"person_jwk,omitempty"`
+	// PersonResource is the Resource endpoint that requires a Person token.
+	PersonResource string `json:"person_resource,omitempty"`
+	Role           string `json:"role,omitempty"`
+	AgentSeed      string `json:"agent_seed_hex,omitempty"`
+	Subject        string `json:"subject,omitempty"`
+	Version        int    `json:"version"`
+	Now            int64  `json:"now"`
+	Issuer         string `json:"issuer"`
+	Resource       string `json:"resource"`
+	APTransport    string `json:"ap_transport"`
 	// Extension carries an extension role's launcher configuration.
 	Extension json.RawMessage `json:"extension,omitempty"`
 }

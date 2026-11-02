@@ -219,7 +219,7 @@ func TestRunRemoteReachesDeployedResourceOverTLS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(reports) != 1 || reports[0].Transport != "remote" || len(reports[0].Runs[0].Cases) != 6 || reports[0].Runs[0].Target.Remote["resource"] != d.Roles[ResourceRole].Resource {
+	if len(reports) != 1 || reports[0].Transport != "remote" || len(reports[0].Runs[0].Cases) != 9 || reports[0].Runs[0].Target.Remote["resource"] != d.Roles[ResourceRole].Resource {
 		t.Fatalf("%+v", reports)
 	}
 	if len(hosts) != 1 || !hosts["api.example/v1/whoami"] {

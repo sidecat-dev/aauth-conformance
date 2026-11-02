@@ -95,6 +95,9 @@ func (s Suite) validate() error {
 	if !strings.HasPrefix(f.Path, "/") || strings.ContainsAny(f.Path, "?#\r\n") {
 		return fmt.Errorf("invalid fixture path")
 	}
+	if f.PersonPath != "" && (!strings.HasPrefix(f.PersonPath, "/") || strings.ContainsAny(f.PersonPath, "?#\r\n") || f.PersonPath == f.Path || f.Person == nil) {
+		return fmt.Errorf("invalid fixture person_path: a second path, with a Person Server")
+	}
 	if s.Catalog.Version != 1 || len(s.Catalog.Clauses) == 0 {
 		return fmt.Errorf("invalid catalog")
 	}
@@ -177,7 +180,14 @@ func (s Suite) validate() error {
 		if req.CreatedOffset < -86400 || req.CreatedOffset > 86400 || scenario.Token.IATOffset < -86400 || scenario.Token.IATOffset > 86400 || scenario.Token.EXPOffset < -86400 || scenario.Token.EXPOffset > 86400 {
 			return fmt.Errorf("unsupported request profile in %s", scenario.ID)
 		}
-		if scenario.Role == ResourceRole && (req.Method != "GET" || req.Path != f.Path || !slices.Contains([]string{"unsigned", "jwt"}, req.Proof) || len(req.Headers) > 0) {
+		person := req.Endpoint == personEndpoint
+		if scenario.Token.PS && !(person && scenario.Role == AgentRole) {
+			return fmt.Errorf("token.ps is for the Agent person-endpoint scenario")
+		}
+		if req.Endpoint != "" && (!person || f.PersonPath == "" || req.Path != f.PersonPath || scenario.Role != ResourceRole && scenario.Role != AgentRole) {
+			return fmt.Errorf("endpoint %q needs the fixture person_path in a Resource or Agent request", req.Endpoint)
+		}
+		if scenario.Role == ResourceRole && (req.Method != "GET" || !person && req.Path != f.Path || !slices.Contains([]string{"unsigned", "jwt"}, req.Proof) && !(person && req.Proof == "person") || len(req.Headers) > 0) {
 			return fmt.Errorf("invalid Resource request")
 		}
 		if scenario.Role == AgentRole {
@@ -200,8 +210,11 @@ func (s Suite) validate() error {
 		}
 		assertions := map[string]bool{}
 		for _, a := range scenario.Assertions {
-			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-token-present", "status-class", "sfv-strings", "sfv-string-set", "sfv-integer", "sfv-trailer-integer", "sfv-trailer-if-present", "sfv-absent", "sfv-trailer-absent", "json-member", "json-path", "usage-delta", "header-equals", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded", "fed-budget", "fed-consumed", "fed-consumed-if-present", "deferred-pending", "deferred-proof", "deferred-forwarded", "deferred-stable", "subagent-jwt", "subagent-proof", "subagent-forwarded", "subagent-refused", "subagent-pending", "subagent-no-token", "subagent-cancelled"}, a.Kind) || !json.Valid(a.Equals) {
+			if a.ID == "" || assertions[a.ID] || (!clauses[a.Clause] || clauseRoles[a.Clause] != scenario.Role) || !slices.Contains([]string{"status", "sfv-token", "sfv-token-present", "status-class", "sfv-strings", "sfv-string-set", "sfv-integer", "sfv-trailer-integer", "sfv-trailer-if-present", "sfv-absent", "sfv-trailer-absent", "json-member", "json-path", "usage-delta", "header-equals", "problem-if-present", "wire-preserved", "wire-proof", "wire-token", "wire-created", "wire-covers", "wire-person-request", "wire-person-token", "ps-no-token", "ps-jwt", "ps-jwt-subject", "ps-jwt-signature", "ps-jwt-identity", "ps-jwt-key", "ps-jwt-lifetime", "ps-jwt-scope", "ps-jwt-no-authorization", "fed-challenge", "fed-ps-proof", "fed-forwarded", "fed-budget", "fed-consumed", "fed-consumed-if-present", "deferred-pending", "deferred-proof", "deferred-forwarded", "deferred-stable", "subagent-jwt", "subagent-proof", "subagent-forwarded", "subagent-refused", "subagent-pending", "subagent-no-token", "subagent-cancelled"}, a.Kind) || !json.Valid(a.Equals) {
 				return fmt.Errorf("invalid assertion %s/%s (clause %q)", scenario.ID, a.ID, a.Clause)
+			}
+			if scenario.Role == AgentRole && (req.Endpoint == personEndpoint) != strings.HasPrefix(a.Kind, "wire-person-") {
+				return fmt.Errorf("wire-person kinds grade exactly the Agent person-endpoint scenarios")
 			}
 			if (scenario.Role == AgentRole) != strings.HasPrefix(a.Kind, "wire-") || strings.HasPrefix(a.Kind, "ps-") && scenario.Role != PersonServerRole && scenario.Role != FederatedRole && scenario.Role != DeferredRole || strings.HasPrefix(a.Kind, "fed-") && scenario.Role != FederatedRole || strings.HasPrefix(a.Kind, "subagent-") && scenario.Role != SubagentRole {
 				return fmt.Errorf("assertion kind does not match role")
@@ -243,7 +256,7 @@ func (s Suite) validate() error {
 			assertions[a.ID] = true
 			var value any
 			json.Unmarshal(a.Equals, &value)
-			if slices.Contains([]string{"wire-preserved", "wire-proof", "wire-token"}, a.Kind) {
+			if slices.Contains([]string{"wire-preserved", "wire-proof", "wire-token", "wire-person-request", "wire-person-token"}, a.Kind) {
 				if _, ok := value.(bool); !ok {
 					return fmt.Errorf("Agent boolean assertion required")
 				}

@@ -208,6 +208,10 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 	for _, target := range targets.Implementations {
 		run := Run{Target: target}
 		config := Bootstrap{Version: 1, Now: s.Fixture.Now, Issuer: s.Fixture.Issuer, Resource: s.Fixture.Origin + s.Fixture.Path, APTransport: ap}
+		config.withPersonTrust(s.Fixture)
+		if s.Fixture.PersonPath != "" {
+			config.PersonResource = s.Fixture.Origin + s.Fixture.PersonPath
+		}
 		ready, stop, startError := startAdapter(ctx, target, config, options)
 		if startError != nil {
 			run.Error = startError.Error()

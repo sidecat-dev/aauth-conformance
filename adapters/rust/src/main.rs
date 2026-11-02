@@ -17,6 +17,8 @@ mod sigkey_vectors;
 mod supervision;
 #[cfg(feature = "vectors")]
 mod vectors;
+use aauth_rust_agent::Requirement;
+use aauth_rust_core::VerifiedPersonToken;
 use aauth_rust_core::{
     AgentKeyResolver, AgentProviderKeys, TokenError, TrustedIssuerKeys, VerifiedAgentToken,
 };
@@ -24,7 +26,7 @@ use aauth_rust_person_server::{
     AuthorizationRequest, Config as PersonConfig, Grant, MemoryStore, Person, PersonRequest,
     PersonServer, Policy, PolicyError,
 };
-use aauth_rust_resource::AgentIdentityResource;
+use aauth_rust_resource::{AgentIdentityResource, PersonIdentityResource};
 use http::Request;
 use serde::Deserialize;
 use std::{
@@ -88,6 +90,12 @@ struct Bootstrap {
     resource_kid: String,
     #[serde(default)]
     resource_jwk: serde_json::Value,
+    /// The fixture Person Server's public key, kid `person_kid`.
+    #[serde(default)]
+    person_jwk: serde_json::Value,
+    /// The Resource endpoint that requires a Person token.
+    #[serde(default)]
+    person_resource: String,
     /// An extension role's own launcher configuration.
     #[serde(default)]
     #[allow(dead_code)]
@@ -233,6 +241,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         keys,
         |_: &VerifiedAgentToken, _: &Request<Vec<u8>>| true,
     )?;
+    // The second endpoint serves on the person's identity alone.
+    let person = if config.person_resource.is_empty() {
+        None
+    } else {
+        Some(PersonIdentityResource::new(
+            &config.person_resource,
+            person_server_keys(&config)?,
+            |_: &VerifiedPersonToken, _: &Request<Vec<u8>>| true,
+        )?)
+    };
+    let person_path = config
+        .person_resource
+        .parse::<http::Uri>()
+        .map(|uri| uri.path().to_owned())
+        .unwrap_or_default();
     let server = tiny_http::Server::http("127.0.0.1:0").map_err(|e| e.to_string())?;
     let address = server.server_addr().to_ip().ok_or("expected IP listener")?;
     let target: http::Uri = config.resource.parse()?;
@@ -263,12 +286,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             continue;
         }
         let request = request.body(body)?;
-        let response = match resource.authorize(&request, config.now).into_result() {
-            Ok((token, ())) => http::Response::builder()
+        let subject = match &person {
+            Some(person) if request.uri().path() == person_path => person
+                .authorize(&request, config.now)
+                .into_result()
+                .map(|(token, ())| token.claims().sub.clone()),
+            _ => resource
+                .authorize(&request, config.now)
+                .into_result()
+                .map(|(token, ())| token.claims().sub.clone()),
+        };
+        let response = match subject {
+            Ok(sub) => http::Response::builder()
                 .header("content-type", "application/json")
-                .body(serde_json::to_vec(
-                    &serde_json::json!({"sub":token.claims().sub}),
-                )?)?,
+                .body(serde_json::to_vec(&serde_json::json!({ "sub": sub }))?)?,
             Err(response) => *response,
         };
         let mut wire = tiny_http::Response::from_data(response.body().clone())
@@ -325,6 +356,25 @@ impl Policy for FixturePolicy {
             lifetime: self.auth_lifetime,
         })
     }
+}
+
+// The fixture Person Server's keys, as a host that trusts it configures them.
+fn person_server_keys(config: &Bootstrap) -> Result<TrustedIssuerKeys, Box<dyn std::error::Error>> {
+    let metadata = serde_json::to_vec(&serde_json::json!({
+        "issuer": config.person_server,
+        "jwks_uri": format!("{}/.well-known/jwks.json", config.person_server)
+    }))?;
+    let mut key = config.person_jwk.clone();
+    key.as_object_mut()
+        .ok_or("Person Server JWK must be an object")?
+        .insert("kid".into(), config.person_kid.clone().into());
+    let jwks = serde_json::to_vec(&serde_json::json!({ "keys": [key] }))?;
+    Ok(TrustedIssuerKeys::from_documents(
+        &config.person_server,
+        "aauth-person.json",
+        &metadata,
+        &jwks,
+    )?)
 }
 
 // Preserve actual received Host, method, path, headers and body. Logical HTTPS
@@ -440,12 +490,28 @@ struct AgentJob {
     headers: std::collections::BTreeMap<String, String>,
     token: String,
     transport: String,
+    /// Where to ask for a Person token when the Resource requires one.
+    #[serde(default)]
+    person_token_endpoint: String,
+    #[serde(default)]
+    person_transport: String,
 }
 
-fn send_signed(base: &str, request: &Request<Vec<u8>>) -> Result<u16, Box<dyn std::error::Error>> {
+fn send_signed(
+    base: &str,
+    request: &Request<Vec<u8>>,
+) -> Result<http::Response<Vec<u8>>, Box<dyn std::error::Error>> {
     if !request.body().is_empty() {
         return Err("bodyless profile: SUT added a body after signing".into());
     }
+    exchange(base, request)
+}
+
+// Send exact signed bytes to a loopback peer and read its bounded response.
+fn exchange(
+    base: &str,
+    request: &Request<Vec<u8>>,
+) -> Result<http::Response<Vec<u8>>, Box<dyn std::error::Error>> {
     let address: SocketAddr = base
         .strip_prefix("http://")
         .ok_or("expected HTTP loopback")?
@@ -460,26 +526,96 @@ fn send_signed(base: &str, request: &Request<Vec<u8>>) -> Result<u16, Box<dyn st
     let host = request.uri().authority().ok_or("missing authority")?;
     write!(
         socket,
-        "{} {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\nContent-Length: 0\r\n",
+        "{} {} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\nContent-Length: {}\r\n",
         request.method(),
         path,
-        host
+        host,
+        request.body().len()
     )?;
     for (name, value) in request.headers() {
         write!(socket, "{}: {}\r\n", name, value.to_str()?)?;
     }
     write!(socket, "\r\n")?;
+    socket.write_all(request.body())?;
     let mut bytes = Vec::new();
     socket.take(65537).read_to_end(&mut bytes)?;
     if bytes.len() > 65536 {
         return Err("peer response too large".into());
     }
     let mut headers = [httparse::EMPTY_HEADER; 32];
-    let mut response = httparse::Response::new(&mut headers);
-    if !response.parse(&bytes)?.is_complete() {
-        return Err("incomplete response".into());
+    let mut parsed = httparse::Response::new(&mut headers);
+    let offset = match parsed.parse(&bytes)? {
+        httparse::Status::Complete(offset) => offset,
+        httparse::Status::Partial => return Err("incomplete response".into()),
+    };
+    let mut response =
+        http::Response::builder().status(parsed.code.ok_or("missing response status")?);
+    for header in parsed.headers.iter() {
+        if header.name.eq_ignore_ascii_case("transfer-encoding") {
+            return Err("peer response must not be chunked".into());
+        }
+        response = response.header(header.name, header.value);
     }
-    response.code.ok_or("missing response status".into())
+    Ok(response.body(bytes[offset..].to_vec())?)
+}
+
+// One Agent job: sign and send it, and when the Resource requires a Person
+// token, ask the Person Server for one, check it and retry with it.
+fn run_job(
+    config: &Bootstrap,
+    seed: [u8; 32],
+    job: AgentJob,
+) -> Result<u16, Box<dyn std::error::Error>> {
+    let agent = aauth_rust_agent::Agent::new(
+        aauth_rust_jose::SigningKey::from_seed(seed),
+        job.token.clone(),
+    )?;
+    let build = || -> Result<Request<Vec<u8>>, Box<dyn std::error::Error>> {
+        let mut builder = Request::builder()
+            .method(job.method.as_str())
+            .uri(job.url.as_str());
+        for (name, value) in &job.headers {
+            builder = builder.header(name, value);
+        }
+        Ok(builder.body(Vec::new())?)
+    };
+    let mut request = build()?;
+    agent.sign(&mut request, config.now)?;
+    let response = send_signed(&job.transport, &request)?;
+    if job.person_token_endpoint.is_empty()
+        || !matches!(
+            Requirement::from_headers(response.headers()),
+            Ok(Some(Requirement::PersonToken))
+        )
+    {
+        return Ok(response.status().as_u16());
+    }
+    let target: http::Uri = job.url.parse()?;
+    let resource = format!(
+        "{}://{}",
+        target.scheme_str().ok_or("missing Resource scheme")?,
+        target.authority().ok_or("missing Resource authority")?
+    );
+    let ask = agent.person_request(&job.person_token_endpoint, &resource, config.now)?;
+    let answer = exchange(&job.person_transport, &ask)?;
+    if answer.status() != 200 {
+        return Ok(answer.status().as_u16());
+    }
+    let answer: serde_json::Value = serde_json::from_slice(answer.body())?;
+    let compact = answer["person_token"]
+        .as_str()
+        .ok_or("the Person Server answered without person_token")?;
+    agent.verify_person_delivery(
+        compact,
+        &resource,
+        &config.person_server,
+        &person_server_keys(config)?,
+        config.now,
+    )?;
+    let person = agent.with_token(compact.to_owned())?;
+    let mut retry = build()?;
+    person.sign(&mut retry, config.now)?;
+    Ok(send_signed(&job.transport, &retry)?.status().as_u16())
 }
 
 fn run_agent(config: Bootstrap) -> Result<(), Box<dyn std::error::Error>> {
@@ -505,19 +641,7 @@ fn run_agent(config: Bootstrap) -> Result<(), Box<dyn std::error::Error>> {
                 return Err("control body limit".into());
             }
             let job: AgentJob = serde_json::from_slice(&body)?;
-            let agent = aauth_rust_agent::Agent::new(
-                aauth_rust_jose::SigningKey::from_seed(seed),
-                job.token,
-            )?;
-            let mut builder = Request::builder()
-                .method(job.method.as_str())
-                .uri(job.url.as_str());
-            for (name, value) in job.headers {
-                builder = builder.header(name, value);
-            }
-            let mut request = builder.body(Vec::new())?;
-            agent.sign(&mut request, config.now)?;
-            send_signed(&job.transport, &request)
+            run_job(&config, seed, job)
         })();
         let (status, body) = match operation {
             Ok(status) => (200, serde_json::json!({"status":status})),

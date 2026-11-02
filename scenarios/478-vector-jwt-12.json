@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "vector.jwt.12",
-  "title": "Community vector jwt #12: iat absent is rejected (recorded, not graded: the drafts name no verifier refusal)",
+  "title": "Community vector jwt #12: iat absent is rejected (graded only for a target that claims it: the drafts name no verifier refusal)",
   "role_under_test": "vectors.library",
   "given": "agent-identity",
   "input": {

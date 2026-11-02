@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "vector.jwt.14",
-  "title": "Community vector jwt #14: person token carrying scope is rejected (recorded, not graded: the drafts name no verifier refusal)",
+  "title": "Community vector jwt #14: person token carrying scope is rejected (graded only for a target that claims it: the drafts name no verifier refusal)",
   "role_under_test": "vectors.library",
   "given": "agent-identity",
   "input": {

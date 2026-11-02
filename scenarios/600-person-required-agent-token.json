@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "id": "person-required-agent-token",
+  "title": "An endpoint that requires the person's identity answers a valid Agent token with requirement=person-token",
+  "role_under_test": "resource.agent-identity",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300
+  },
+  "request": {
+    "method": "GET",
+    "path": "/profile",
+    "endpoint": "person",
+    "proof": "jwt",
+    "created_offset": 0,
+    "covered": [
+      "@method",
+      "@authority",
+      "@path",
+      "signature-key"
+    ],
+    "tamper_signature": false
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "core.person-token-required",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "requirement",
+      "clause": "core.person-token-required",
+      "kind": "sfv-token",
+      "equals": "person-token",
+      "header": "AAuth-Requirement",
+      "member": "requirement"
+    },
+    {
+      "id": "no-parameters",
+      "clause": "core.person-token-required",
+      "kind": "header-equals",
+      "equals": "requirement=person-token",
+      "header": "AAuth-Requirement"
+    }
+  ]
+}

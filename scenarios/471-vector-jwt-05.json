@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "vector.jwt.05",
-  "title": "Community vector jwt #5: auth token (AS-issued) (recorded, not graded: aud is a one-element array; the drafts define aud as one URL and verify per RFC 7519 without settling the array form)",
+  "title": "Community vector jwt #5: auth token (AS-issued) (graded only for a target that claims it: aud is a one-element array; the drafts define aud as one URL and verify per RFC 7519 without settling the array form)",
   "role_under_test": "vectors.library",
   "given": "agent-identity",
   "input": {

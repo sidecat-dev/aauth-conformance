@@ -55,6 +55,22 @@ or releases. TLS and general discovery tests need a separate slice and clauses.
 Child exit codes after the final exchange are not assessed. Remaining child
 processes are terminated; this slice reports startup and HTTP execution errors.
 
+### The endpoint that requires a Person token
+
+The bootstrap also names the fixture Person Server (`person_server`,
+`person_kid` and its public `person_jwk`) and `person_resource`, the logical
+URL of a second endpoint on the same origin (`fixture.person_path`). A
+launcher whose implementation serves on the person's identity serves that
+endpoint on the same listener: an unsigned request or one signed with an
+Agent token is answered by the SUT with `requirement=person-token`, and a
+request signed with a fixture Person token for this origin succeeds with
+`{"sub":"<person's directed subject>"}`. These scenarios grade the
+out-of-slice `core.person-token-required`, claimed only by an implementation
+listed in `cmd/build-adapters/adopted.go`. Rust uses `PersonIdentityResource`,
+`authorize` and `PersonDecision::into_result`, with the Person Server's keys
+from `TrustedIssuerKeys::from_documents`. The Go launcher configures no such
+endpoint, so its answers there are recorded only.
+
 ## Agent signing role
 
 The stdin bootstrap adds `role: "agent.signing"`, `agent_seed_hex` (the public
@@ -94,6 +110,27 @@ only physical scheme/host after signing. The SUT manages query/Authorization
 coverage automatically; Go's additional-component argument accepts HTTP field
 names and must not be given `@query`. No metadata request is needed for this
 explicit profile.
+
+For the person-endpoint scenario the Agent token names the fixture Person
+Server in `ps`, and the control JSON adds `person_token_endpoint`,
+the fixture Person Server's logical `person_token_endpoint`, and
+`person_transport`, its loopback address. The harness Resource answers a valid
+Agent-token request with `401` and `requirement=person-token`; the harness
+Person Server answers a valid Person token request with `200`
+`{"person_token":...,"expires_in":...}`; the harness Resource accepts a retry
+presenting exactly that token. `wire-person-request` grades the Person token
+request: one signed POST with the job's Agent token, covering
+`content-type` and `content-digest` by the actual body's digest, whose JSON
+`resource` is the Resource's origin. `wire-person-token` grades one retry to
+the job's method and URL that presents the issued Person token under a valid
+signature by the Agent key. Every request is kept as a case exchange. A
+launcher that sends only the first request gets both assertions failed when
+it claims `agent.person-flow` and recorded otherwise. Its control response,
+200 or not, is evidence only: an Agent that stops short of the flow, such as
+one that refuses to fetch the fixture's Person Server metadata, is graded by
+what reached the harness, not counted as an execution error. Rust uses `Requirement::from_headers`, `Agent::person_request`,
+`Agent::verify_person_delivery` and `Agent::with_token`; the launcher only
+moves bytes between them.
 
 Rust uses `Agent::new` and `Agent::sign`, then a small host TCP transport serializes
 the signed `http::Request`. Rust's Agent API supplies signing rather than an HTTP

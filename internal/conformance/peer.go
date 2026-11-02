@@ -20,7 +20,14 @@ func publicJWK(seed string) map[string]any {
 }
 func MintToken(f Fixture, spec TokenSpec, id string) (string, error) {
 	head, _ := json.Marshal(map[string]any{"alg": "Ed25519", "typ": "aa-agent+jwt", "kid": f.Kid})
-	payload, err := json.Marshal(map[string]any{"iss": f.Issuer, "sub": f.Subject, "dwk": "aauth-agent.json", "jti": id, "iat": f.Now + spec.IATOffset, "exp": f.Now + spec.EXPOffset, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}})
+	claims := map[string]any{"iss": f.Issuer, "sub": f.Subject, "dwk": "aauth-agent.json", "jti": id, "iat": f.Now + spec.IATOffset, "exp": f.Now + spec.EXPOffset, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}}
+	if spec.PS {
+		if f.Person == nil {
+			return "", fmt.Errorf("the fixture names no Person Server")
+		}
+		claims["ps"] = f.Person.Issuer
+	}
+	payload, err := json.Marshal(claims)
 	if err != nil {
 		return "", err
 	}
@@ -28,20 +35,41 @@ func MintToken(f Fixture, spec TokenSpec, id string) (string, error) {
 	signature := ed25519.Sign(seedKey(f.APSeed), []byte(signed))
 	return signed + "." + base64.RawURLEncoding.EncodeToString(signature), nil
 }
+
+// MintPersonToken is the fixture Person Server's Person token for the
+// fixture Resource, confirming the Agent key, with the spec's lifetime.
+func MintPersonToken(f Fixture, spec TokenSpec, id string) (string, error) {
+	if f.Person == nil {
+		return "", fmt.Errorf("the fixture names no Person Server")
+	}
+	return mintJWT(f.Person.Seed, f.Person.Kid, "aa-person+jwt", map[string]any{
+		"iss": f.Person.Issuer, "dwk": "aauth-person.json", "aud": f.Origin, "sub": f.Person.Subject,
+		"jti": id, "iat": f.Now + spec.IATOffset, "exp": f.Now + spec.EXPOffset, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)},
+	})
+}
+
 func BuildRequest(f Fixture, s Scenario) (*http.Request, []byte, error) {
 	// Validation holds the request path to the fixture's; remote mode
 	// rebases the fixture path onto the deployed Resource.
-	request, err := http.NewRequest(s.Request.Method, f.Origin+f.Path, nil)
+	path := f.Path
+	if s.Request.Endpoint == personEndpoint {
+		path = f.PersonPath
+	}
+	request, err := http.NewRequest(s.Request.Method, f.Origin+path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
-	if s.Request.Proof == "unsigned" {
+	var token string
+	switch s.Request.Proof {
+	case "unsigned":
 		return request, nil, nil
-	}
-	if s.Request.Proof != "jwt" {
+	case "jwt":
+		token, err = MintToken(f, s.Token, s.ID)
+	case "person":
+		token, err = MintPersonToken(f, s.Token, s.ID)
+	default:
 		return nil, nil, fmt.Errorf("unknown proof %q", s.Request.Proof)
 	}
-	token, err := MintToken(f, s.Token, s.ID)
 	if err != nil {
 		return nil, nil, err
 	}

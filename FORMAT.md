@@ -42,6 +42,13 @@ a component creates a valid signature over deliberately incomplete coverage.
 `tamper_signature: true` flips a signature byte after signing. Only physical
 loopback addresses differ between targets; logical requests/JWTs/proofs are identical.
 
+`request.endpoint: "person"` selects `fixture.person_path` instead, an endpoint
+that requires the person's identity; `path` must equal it. There `proof` may
+also be `person`: a fixture Person Server Person token (`aa-person+jwt`, `aud`
+the fixture origin, `sub` the fixture person subject, `cnf` the Agent key, the
+`token` offsets) signed like `jwt`. Remote mode does not exercise these
+scenarios, since a deployment names one Resource endpoint.
+
 For `agent.signing`, method is GET or POST, path is an origin-relative path with
 optional query, `proof` is `sut`, and optional `headers` accepts Authorization.
 Bodies are empty, `created_offset` is zero, and the Agent receives a valid fixture
@@ -72,6 +79,14 @@ Agent kinds (each clause must belong to the scenario's role):
 | `wire-created` | Signature-Input `created` equals the configured Unix-second clock. |
 | `wire-covers` | Listed component Strings are covered; order may differ and additional supported fields may be present. |
 
+An Agent scenario with `request.endpoint: "person"` (path `fixture.person_path`)
+runs the person flow in ADAPTERS.md: the harness Resource asks for a Person
+token and the harness Person Server issues one. `token.ps: true`, allowed only
+there, names the fixture Person Server in the Agent token's `ps` claim. Its assertions use only the
+boolean kinds `wire-person-request` (one valid signed Person token request
+naming this Resource) and `wire-person-token` (one retry presenting the issued
+token under a valid Agent-key signature); other Agent scenarios cannot use them.
+
 The Agent oracle supports only Ed25519 JWT credentials, bodyless requests,
 `@method`, `@authority`, `@path`, `@query`, `signature-key` and `authorization`,
 without component parameters. Header values use RFC 9421 field canonicalization
@@ -88,7 +103,7 @@ covers all files, so adding another role changes it. Each entry has
 unique `id`, `revision`, executable `command` array and explicit `claims` of known
 clause IDs. Commands execute directly without a shell; relative commands resolve
 from the runner's working directory. The helper declares the selected role's
-protocol and adapter-contract clauses; `-claim-recommended` adds the SHOULD-level `recommended` clauses, which are otherwise reported `not_claimed`. Edit the manifest to narrow claims. Reports retain declared provenance.
+protocol and adapter-contract clauses; `-claim-recommended` adds the SHOULD-level `recommended` clauses, which are otherwise reported `not_claimed`. It also claims the `out-of-slice` clauses `cmd/build-adapters/adopted.go` lists for that implementation. Edit the manifest to narrow claims. Reports retain declared provenance.
 
 Unclaimed assertions are `not_claimed`. Claimed assertions are `pass`, `fail`,
 `error` (transport/startup) or `not_exercised` (conditional representation absent).
@@ -693,13 +708,18 @@ Expectations come from the drafts, not from the vectors. Where they differ:
 | Signature-Error `params` keeping an unknown member's value | not graded | the draft only requires ignoring it (line 951) |
 | `sig="jwt";jwt="x"` and `sig=jwt` without `jwt`: `invalid_signature` | refusal only | protocol step 5 (line 2248) points to `invalid_key`, signature-key line 1018 ("malformed") to `invalid_signature` |
 | ES256 tokens, request keys and thumbprints accepted | `recommended` clauses | ES256 is a SHOULD (protocol line 2166) |
-| a changed body with the original Content-Digest refused | `out-of-slice`, recorded | no pinned MUST checks the digest against the body |
-| a JWT without `iat` refused; a person token carrying `scope` refused | `out-of-slice`, recorded | lines 2307 and 898 bind the issuer; no verification step names the refusal |
-| thumbprint of a JWK without `alg` | `out-of-slice`, recorded | every AAuth key carries `alg` (line 2170) |
-| resource, auth and person tokens whose `aud` is a one-element array verify | `out-of-slice`, recorded | the drafts define `aud` as one URL (lines 742, 850, 867) and verify per RFC 7519 (line 2313), whose `aud` may be an array; the array form is not settled |
+| a changed body with the original Content-Digest refused | `out-of-slice`, graded only when claimed | no pinned MUST checks the digest against the body |
+| a JWT without `iat` refused; a person token carrying `scope` refused | `out-of-slice`, graded only when claimed | lines 2307 and 898 bind the issuer; no verification step names the refusal |
+| thumbprint of a JWK without `alg` | `out-of-slice`, graded only when claimed | every AAuth key carries `alg` (line 2170) |
+| resource, auth and person tokens whose `aud` is a one-element array verify | `out-of-slice`, graded only when claimed | the drafts define `aud` as one URL (lines 742, 850, 867) and verify per RFC 7519 (line 2313), whose `aud` may be an array; the array form is not settled |
 | `sig1=hwk;..., sig=jwt;jwt="...";cache` yields the token | no `unsupported_scheme` (`vector-result-not`) | the vector's JWT carries `cache` without `jti`, which signature-key line 538 forbids, so acceptance is not fixed; the unselected `hwk` member still must not cause a refusal (line 157) |
 | agent-identifier `name`, `discriminator`, `domain` | not graded | parsed fields are an API choice; validity is graded |
 | metadata documents round-trip through Go types | accepted | the verifier-side check (line 1981) and REQUIRED members |
+
+An `out-of-slice` clause is graded only for a target that claims it.
+`build-adapters` claims one for an implementation whose native API settles
+it (`cmd/build-adapters/adopted.go`); for every other target its assertions
+are `not_claimed` and the case result is recorded as evidence.
 
 The missing-member case (`sig1=jwt;...` with signature label `sig`) is graded
 `invalid_signature`, settled by the draft text in the

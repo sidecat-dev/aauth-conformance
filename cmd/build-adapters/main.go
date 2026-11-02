@@ -176,7 +176,7 @@ func run() error {
 			}
 		}
 		fmt.Printf("Built %s at %s\n", item.id, rev)
-		targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: rev, Command: []string{binary}, Claims: offeredClaims(claims, unofferedClaims[*role][item.id])})
+		targets.Implementations = append(targets.Implementations, conformance.Target{ID: item.id, Revision: rev, Command: []string{binary}, Claims: append(offeredClaims(claims, unofferedClaims[*role][item.id]), adoptedClaims[*role][item.id]...)})
 	}
 	b, err := json.MarshalIndent(targets, "", "  ")
 	if err != nil {
@@ -232,6 +232,12 @@ var generatedRoles = map[string]bool{}
 // host code, so a launcher-supplied component would decide them. They stay
 // unclaimed for that implementation and are reported as not offered.
 var unofferedClaims = map[string]map[string][]string{}
+
+// adoptedClaims lists out-of-slice clauses an implementation's native API
+// implements. The helper claims no out-of-slice clause by default, since the
+// drafts leave each one optional or unsettled; an implementation listed here
+// claims these, so their assertions are graded for it.
+var adoptedClaims = map[string]map[string][]string{}
 
 func offeredClaims(claims, unoffered []string) []string {
 	offered := []string{}

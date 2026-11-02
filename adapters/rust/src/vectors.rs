@@ -132,7 +132,7 @@ fn handle(input: &Input) -> Result<Answer, Failure> {
             Err(error) => refused(error),
         },
         "jwk-thumbprint" => match serde_json::from_value::<Jwk>(input.jwk.clone()) {
-            Ok(key) => match key.thumbprint() {
+            Ok(key) => match key.rfc7638_thumbprint() {
                 Ok(thumbprint) => json!({"accepted": true, "thumbprint": thumbprint}),
                 Err(error) => refused(error),
             },

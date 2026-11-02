@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "id": "person-required-person-token",
+  "title": "The endpoint serves the retry that presents a Person token for this Resource",
+  "role_under_test": "resource.agent-identity",
+  "given": "agent-identity",
+  "token": {
+    "iat_offset": -10,
+    "exp_offset": 300
+  },
+  "request": {
+    "method": "GET",
+    "path": "/profile",
+    "endpoint": "person",
+    "proof": "person",
+    "created_offset": 0,
+    "covered": [
+      "@method",
+      "@authority",
+      "@path",
+      "signature-key"
+    ],
+    "tamper_signature": false
+  },
+  "assertions": [
+    {
+      "id": "status",
+      "clause": "core.person-token-required",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "subject",
+      "clause": "core.person-token-required",
+      "kind": "json-member",
+      "equals": "directed-person-1",
+      "member": "sub"
+    }
+  ]
+}

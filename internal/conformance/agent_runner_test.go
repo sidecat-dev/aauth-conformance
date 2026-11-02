@@ -29,7 +29,7 @@ func TestAgentRunnerGradesReceivedProofsNotControllerPromises(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(report.Runs[0].Cases) != 3 {
+			if len(report.Runs[0].Cases) != 4 {
 				t.Fatal("role cases mixed")
 			}
 			if mode == "agent-valid" {
@@ -54,6 +54,10 @@ func TestAgentRunnerGradesReceivedProofsNotControllerPromises(t *testing.T) {
 
 // Test-process fixture only; real implementation launchers use their SUT signer.
 func runAgentTestProcess(config Bootstrap, mode string) {
+	if mode == "agent-person" {
+		runPersonAgentTestProcess(config)
+		return
+	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var job AgentJob
 		if json.NewDecoder(r.Body).Decode(&job) != nil {

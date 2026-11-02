@@ -59,7 +59,7 @@ func TestRunnerPreservesRealHTTPFailureAndStartupErrors(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if report.Success() || len(report.Runs) != 1 || len(report.Runs[0].Cases) != 6 {
+			if report.Success() || len(report.Runs) != 1 || len(report.Runs[0].Cases) != 9 {
 				t.Fatalf("false green: %+v", report)
 			}
 			if mode == "respond" {

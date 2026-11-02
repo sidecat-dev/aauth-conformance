@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "vector.http-signature.05",
-  "title": "Community vector http-signature #5: tampered body fails (recorded, not graded: no pinned MUST checks the digest against the body)",
+  "title": "Community vector http-signature #5: tampered body fails (graded only for a target that claims it: no pinned MUST checks the digest against the body)",
   "role_under_test": "vectors.library",
   "given": "agent-identity",
   "input": {

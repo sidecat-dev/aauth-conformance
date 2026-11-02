@@ -108,6 +108,12 @@ func registerRemote(role string, d remoteDriver) {
 func init() {
 	registerRemote(ResourceRole, remoteDriver{
 		requires: []string{partyResource},
+		gap: func(s Scenario, _ RemoteRole) string {
+			if s.Request.Endpoint == personEndpoint {
+				return "a deployment names one Resource endpoint, not a second one that requires a Person token"
+			}
+			return ""
+		},
 		run: func(ctx context.Context, f Fixture, s Scenario, t Target, o Options) Case {
 			return runResourceCase(ctx, f, s, t, "", o, nil)
 		},

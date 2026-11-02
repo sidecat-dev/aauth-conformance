@@ -1,7 +1,7 @@
 {
   "version": 1,
   "id": "vector.jwt.06",
-  "title": "Community vector jwt #6: person token (recorded, not graded: aud is a one-element array; the drafts define aud as one URL and verify per RFC 7519 without settling the array form)",
+  "title": "Community vector jwt #6: person token (graded only for a target that claims it: aud is a one-element array; the drafts define aud as one URL and verify per RFC 7519 without settling the array form)",
   "role_under_test": "vectors.library",
   "given": "agent-identity",
   "input": {

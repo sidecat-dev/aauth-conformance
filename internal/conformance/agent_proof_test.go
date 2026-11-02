@@ -71,7 +71,7 @@ func TestAgentAndResourceRolesSelectSeparateClaimsAndCases(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(agent.Scenarios) != 3 || len(resource.Scenarios) != 6 {
+	if len(agent.Scenarios) != 4 || len(resource.Scenarios) != 9 {
 		t.Fatal("role mixing")
 	}
 	for _, c := range agent.Catalog.Clauses {

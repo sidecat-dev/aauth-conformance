@@ -5,6 +5,7 @@
   "issuer": "https://ap.conformance.test",
   "origin": "https://resource.conformance.test",
   "path": "/whoami",
+  "person_path": "/profile",
   "kid": "ap-1",
   "subject": "aauth:Agent@ap.conformance.test",
   "ap_seed_hex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",

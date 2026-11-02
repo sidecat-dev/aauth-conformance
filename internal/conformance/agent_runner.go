@@ -65,11 +65,16 @@ func runAgents(ctx context.Context, s Suite, targets Targets, options Options, a
 			continue
 		}
 		config := Bootstrap{Version: 1, Role: AgentRole, Now: s.Fixture.Now, Issuer: s.Fixture.Issuer, Resource: s.Fixture.Origin + s.Fixture.Path, APTransport: ap, AgentSeed: s.Fixture.AgentSeed, Subject: s.Fixture.Subject}
+		config.withPersonTrust(s.Fixture)
 		ready, stop, startError := startAdapter(ctx, target, config, options)
 		if startError != nil {
 			run.Error = startError.Error()
 		}
 		for _, scenario := range s.Scenarios {
+			if scenario.Request.Endpoint == personEndpoint {
+				run.Cases = append(run.Cases, runPersonFlowCase(ctx, s.Fixture, scenario, target, ready.URL, options, startError))
+				continue
+			}
 			c := Case{ID: scenario.ID}
 			token, issueError := MintToken(s.Fixture, scenario.Token, scenario.ID)
 			job := AgentJob{Method: scenario.Request.Method, URL: s.Fixture.Origin + scenario.Request.Path, Headers: scenario.Request.Headers, Token: token, Transport: transport}

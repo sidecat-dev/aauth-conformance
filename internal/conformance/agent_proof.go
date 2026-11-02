@@ -20,6 +20,10 @@ type AgentJob struct {
 	Headers   map[string]string `json:"headers"`
 	Token     string            `json:"token"`
 	Transport string            `json:"transport"`
+	// PersonTokenEndpoint and PersonTransport name the Person Server the
+	// Agent asks when the Resource requires a Person token.
+	PersonTokenEndpoint string `json:"person_token_endpoint,omitempty"`
+	PersonTransport     string `json:"person_transport,omitempty"`
 }
 type Captured struct {
 	Method  string
@@ -38,6 +42,12 @@ type Observation struct {
 // ObserveAgent verifies received bytes without calling either implementation.
 // It is a deliberately limited oracle for this suite's Ed25519/bodyless profile.
 func ObserveAgent(f Fixture, c Captured) Observation {
+	return observeAgentKey(f, c, func(token string) bool { return validFixtureToken(f, token) })
+}
+
+// observeAgentKey verifies a signature by the fixture Agent key under a jwt
+// credential that credential accepts.
+func observeAgentKey(f Fixture, c Captured, credential func(string) bool) Observation {
 	failed := Observation{}
 	keys, e := httpsfv.UnmarshalDictionary(c.Headers.Values("Signature-Key"))
 	if e != nil {
@@ -70,7 +80,7 @@ func ObserveAgent(f Fixture, c Captured) Observation {
 		if !ok {
 			continue
 		}
-		observed := Observation{Token: token, ValidToken: validFixtureToken(f, token)}
+		observed := Observation{Token: token, ValidToken: credential(token)}
 		member, _ = inputs.Get(label)
 		input, ok := member.(httpsfv.InnerList)
 		if !ok || input.Params == nil {
@@ -106,7 +116,7 @@ func ObserveAgent(f Fixture, c Captured) Observation {
 				}
 			case "@query":
 				value = "?" + target.RawQuery
-			case "signature-key", "authorization":
+			case "signature-key", "authorization", "content-type", "content-digest":
 				value = canonicalField(c.Headers, component)
 			default:
 				valid = false
