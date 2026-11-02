@@ -54,6 +54,7 @@ dependencies = [
  "aauth-rust-jose",
  "aauth-rust-person-server",
  "aauth-rust-resource",
+ "aauth-rust-signature-key",
  "http",
  "httparse",
  "rustls",

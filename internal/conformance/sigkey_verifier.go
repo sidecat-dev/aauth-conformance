@@ -326,22 +326,28 @@ func runSigkeyVerifier(ctx context.Context, s Suite, targets Targets, o Options,
 					response, execution = sigkeyVerifierCase(ctx, s.Fixture, k, scenario, target, ap, o, &c)
 				}
 			}
-			c.Error = execution
-			c.Response = response
-			for _, a := range scenario.Assertions {
-				if !offered {
-					c.Results = append(c.Results, Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_claimed", Detail: sigkeyNotOffered(target)})
-					continue
-				}
-				c.Results = append(c.Results, Grade(a, target.Claims, execution, response, func(a Assertion) Result {
-					return sigkeyCheckPQ(a, response)
-				}))
-			}
-			run.Cases = append(run.Cases, c)
+			run.Cases = append(run.Cases, sigkeyGrade(c, scenario, target, offered, response, execution))
 		}
 		report.Runs = append(report.Runs, run)
 	}
 	return report
+}
+
+// sigkeyGrade grades one verifier case from the response it observed, in
+// launcher and remote mode alike.
+func sigkeyGrade(c Case, scenario Scenario, target Target, offered bool, response *Response, execution string) Case {
+	c.Error = execution
+	c.Response = response
+	for _, a := range scenario.Assertions {
+		if !offered {
+			c.Results = append(c.Results, Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_claimed", Detail: sigkeyNotOffered(target)})
+			continue
+		}
+		c.Results = append(c.Results, Grade(a, target.Claims, execution, response, func(a Assertion) Result {
+			return sigkeyCheckPQ(a, response)
+		}))
+	}
+	return c
 }
 
 func sigkeyVerifierCase(ctx context.Context, f Fixture, k SigkeyFixture, s Scenario, target Target, ap string, o Options, c *Case) (*Response, string) {
