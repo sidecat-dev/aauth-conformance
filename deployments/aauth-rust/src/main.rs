@@ -4,7 +4,11 @@
 //! start; it discovers every other party's keys over HTTPS from the parties it
 //! trusts. Policy follows the suite's test profile: one directed person, the
 //! read scope only, 60-second Person and 180-second Auth tokens.
+mod events;
 mod https;
+mod r3;
+mod sigkey;
+mod supervision;
 
 use aauth_rust_access_server::{
     AccessServer, AuthorizationRequest as AccessRequest, Config as AccessConfig, Decision,
@@ -48,6 +52,46 @@ struct Config {
     agent_providers: Vec<String>,
     person_servers: Vec<String>,
     resources: Vec<String>,
+    /// Names of the further roles the other modules serve, by the key each
+    /// module documents; "control" is the host-control origin.
+    #[serde(default)]
+    names: BTreeMap<String, String>,
+    /// Further suite parties whose keys the resolver admits.
+    #[serde(default)]
+    trusted: Vec<String>,
+}
+
+/// What every role module shares.
+#[allow(dead_code)] // until every role module reads each member
+struct Env<'a> {
+    c: &'a Config,
+    keys: Discovery,
+    client: Arc<Client>,
+}
+
+type Handler = Box<dyn Fn(Request<Vec<u8>>) -> Response<Vec<u8>> + Send + Sync>;
+
+/// One route a role module serves: requests to `host` whose path starts
+/// with `prefix`. The longest matching prefix wins.
+struct Route {
+    host: String,
+    prefix: String,
+    handler: Handler,
+}
+
+impl Route {
+    #[allow(dead_code)] // until a role module serves a route
+    fn new(
+        issuer: &str,
+        prefix: &str,
+        handler: impl Fn(Request<Vec<u8>>) -> Response<Vec<u8>> + Send + Sync + 'static,
+    ) -> Self {
+        Route {
+            host: host(issuer).trim_end_matches('/').to_owned(),
+            prefix: prefix.to_owned(),
+            handler: Box::new(handler),
+        }
+    }
 }
 
 const SUBJECT: &str = "directed-person-1";
@@ -182,6 +226,8 @@ fn main() -> Result<(), Failure> {
     let mut trusted = c.agent_providers.clone();
     trusted.extend(people.iter().cloned());
     trusted.extend(c.resources.iter().cloned());
+    trusted.extend(c.trusted.iter().cloned());
+    trusted.extend(c.names.values().map(|name| name.trim_end_matches('/').to_owned()));
     trusted.extend([
         c.direct_person_server.clone(),
         c.federated_resource.clone(),
@@ -192,6 +238,16 @@ fn main() -> Result<(), Failure> {
         client: client.clone(),
         cache: Arc::default(),
     };
+    let env = Env {
+        c: &c,
+        keys: keys.clone(),
+        client: client.clone(),
+    };
+    let mut routes = Vec::new();
+    routes.extend(events::routes(&env)?);
+    routes.extend(supervision::routes(&env)?);
+    routes.extend(r3::routes(&env)?);
+    routes.extend(sigkey::routes(&env)?);
 
     let identity = AgentIdentityResource::new(
         &format!("{}/whoami", c.identity_resource),
@@ -295,7 +351,11 @@ fn main() -> Result<(), Failure> {
                     Err(response) => *response,
                 },
             },
-            _ => json(404, Vec::new()),
+            _ => routes
+                .iter()
+                .filter(|route| route.host == name && request.uri().path().starts_with(&route.prefix))
+                .max_by_key(|route| route.prefix.len())
+                .map_or_else(|| json(404, Vec::new()), |route| (route.handler)(request)),
         }
     })
 }
