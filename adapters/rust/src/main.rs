@@ -11,6 +11,8 @@ mod mission;
 mod r3;
 #[cfg(feature = "sigkey")]
 mod sigkey;
+#[cfg(feature = "sigkey-vectors")]
+mod sigkey_vectors;
 #[cfg(feature = "supervision")]
 mod supervision;
 #[cfg(feature = "vectors")]
@@ -205,6 +207,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         #[cfg(not(feature = "sigkey"))]
         return Err("rebuild this launcher for the sigkey roles".into());
+    }
+    if config.role == "vectors.signature-key" {
+        #[cfg(feature = "sigkey-vectors")]
+        return sigkey_vectors::run(config);
+        #[cfg(not(feature = "sigkey-vectors"))]
+        return Err("rebuild this launcher for vectors.signature-key".into());
     }
     if config.role == "vectors.library" {
         #[cfg(feature = "vectors")]

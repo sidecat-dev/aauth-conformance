@@ -1,0 +1,137 @@
+{
+  "assertions": [
+    {
+      "id": "refused",
+      "clause": "sigvec.reject.unknown-kid",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "id": "error",
+      "clause": "sigvec.reject.unknown-kid",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "unknown_key"
+    }
+  ],
+  "given": "agent-identity",
+  "id": "sigvec.reject-jwks-uri-unknown-kid",
+  "input": {
+    "source": {
+      "file": "vectors/signature-key/signature-key-vectors.json",
+      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
+      "index": 48
+    },
+    "vector": {
+      "id": "reject-jwks-uri-unknown-kid",
+      "title": "jwks_uri naming a kid the JWKS does not hold",
+      "category": 3,
+      "scheme": "jwks_uri",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:SkhZBcrfxmn3W1ue7q8unOx1jfQHw76QfBXpFjlkDPZDt1FFeFEmHafbtFDevQr36GX4D7L1eFkyYffG4dLsDw==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-absent\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-absent\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "448504dcbef14a95d397cc9bb24aa83e1621419ea7ebe18d2536ab0c99da0b52",
+      "signature_base_length": 258,
+      "signing_key": "signer-ed25519",
+      "resolves": [
+        "https://signer.example/.well-known/aauth-resource.json",
+        "https://signer.example/.well-known/jwks.json"
+      ],
+      "expect": {
+        "outcome": "reject",
+        "error": "unknown_key",
+        "basis": "signature-key line 1054 and protocol Verification step 5: unknown_key"
+      },
+      "provenance": {
+        "signed_by": "aauth-go",
+        "reproduced_by": [
+          "aauth-rust"
+        ]
+      }
+    },
+    "environment": {
+      "verifier": {
+        "resource": "https://resource.example/api/items",
+        "agent_provider": "https://agent-provider.example",
+        "self_jwt_typ": "vector-self+jwt",
+        "label": "sig",
+        "window_seconds": 60,
+        "schemes": [
+          "hwk",
+          "jwt",
+          "jkt-jwt",
+          "jwks_uri",
+          "jwks",
+          "self-jwt",
+          "x509",
+          "cached"
+        ],
+        "algorithms": [
+          "Ed25519",
+          "ES256",
+          "ES384",
+          "RS256",
+          "PS256"
+        ]
+      },
+      "documents": [
+        {
+          "url": "https://agent-provider.example/.well-known/aauth-agent.json",
+          "content_type": "application/json",
+          "body": "{\"issuer\":\"https://agent-provider.example\",\"jwks_uri\":\"https://agent-provider.example/.well-known/jwks.json\"}"
+        },
+        {
+          "url": "https://agent-provider.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"ap-ed25519\",\"kty\":\"OKP\",\"x\":\"9YIWN80tEjjl15PYCUMALnmQnFwualkJxWB9xKHb_tc\"}]}"
+        },
+        {
+          "url": "https://certs.example/x509-ed25519.pem",
+          "content_type": "application/pem-certificate-chain",
+          "body": "-----BEGIN CERTIFICATE-----\nMIIBRzCB+qADAgECAgECMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5\nIFRlc3QgVmVjdG9ycyBSb290MB4XDTI3MDExNDA4MDAwMFoXDTI4MDExNTA4MDAw\nMFowGTEXMBUGA1UEAxMOc2lnbmVyLmV4YW1wbGUwKjAFBgMrZXADIQAopB11rtRm\nquUBmuGFNTO79cMjEfBP9yq1d3v08oSOXqNWMFQwDgYDVR0PAQH/BAQDAgeAMBMG\nA1UdJQQMMAoGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU9xl1\nZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EAUePgKlSc6PuwbKPHBMH6L++k3Jpk\n+vyUK1ef0PhZYPQptFsBXs0EmFtsUgEbB6763doyD8FCGZzhvqhSswSOAQ==\n-----END CERTIFICATE-----\n"
+        },
+        {
+          "url": "https://certs.example/x509-es256.pem",
+          "content_type": "application/pem-certificate-chain",
+          "body": "-----BEGIN CERTIFICATE-----\nMIIBdzCCASmgAwIBAgIBAzAFBgMrZXAwKjEoMCYGA1UEAxMfU2lnbmF0dXJlLUtl\neSBUZXN0IFZlY3RvcnMgUm9vdDAeFw0yNzAxMTQwODAwMDBaFw0yODAxMTUwODAw\nMDBaMBkxFzAVBgNVBAMTDnNpZ25lci5leGFtcGxlMFkwEwYHKoZIzj0CAQYIKoZI\nzj0DAQcDQgAEooQulrtbZieXmZUQYIAUasssFpxOfc/YLagzXnXWtyRvUu6er8RC\nUIpAmTUUTNJ7b1iCKSc5CatjggAbPUV1zaNWMFQwDgYDVR0PAQH/BAQDAgeAMBMG\nA1UdJQQMMAoGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU9xl1\nZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EA7nTnFZIscBqIga3YCOtswhIVZrkG\njvu86fk2HO+461VPwe3KocWjasUwxqRgcUZlfiic3EHbcFWKwz5ZsU3KAg==\n-----END CERTIFICATE-----\n"
+        },
+        {
+          "url": "https://keys.example/signer.jwks",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"},{\"alg\":\"ES256\",\"crv\":\"P-256\",\"kid\":\"signer-es256\",\"kty\":\"EC\",\"x\":\"na6GJ2V2n70jCjzJF7H5rtXnUokY_90isxO3ny4iNLQ\",\"y\":\"5vt7nLlc92fzNn5baKytoofmPBukg5ikncT8hIWSQJs\"}]}"
+        },
+        {
+          "url": "https://signer.example/.well-known/aauth-resource.json",
+          "content_type": "application/json",
+          "body": "{\"issuer\":\"https://signer.example\",\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
+        },
+        {
+          "url": "https://signer.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"},{\"alg\":\"ES256\",\"crv\":\"P-256\",\"kid\":\"signer-es256\",\"kty\":\"EC\",\"x\":\"na6GJ2V2n70jCjzJF7H5rtXnUokY_90isxO3ny4iNLQ\",\"y\":\"5vt7nLlc92fzNn5baKytoofmPBukg5ikncT8hIWSQJs\"}]}"
+        }
+      ],
+      "x509": {
+        "trust_anchors_der_base64": [
+          "MIIBRzCB+qADAgECAgEBMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5IFRlc3QgVmVjdG9ycyBSb290MB4XDTI2MTIxNjA4MDAwMFoXDTM3MDExMjA4MDAwMFowKjEoMCYGA1UEAxMfU2lnbmF0dXJlLUtleSBUZXN0IFZlY3RvcnMgUm9vdDAqMAUGAytlcAMhAC1fS8gyIFdu2EjemO7sljJ3QH3RKffNd3+MlFw4vQEeo0UwQzAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQU9xl1ZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EA+scmME9B+zvrxgiyrB2sn9rl879hME4cnWhy0noV90hE8UeKgTKEC20PKbpe+KXhMKkCJephtlc1ac5pvK+lCA=="
+        ],
+        "crls_der_base64": [
+          "MIHSMIGFAgEBMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5IFRlc3QgVmVjdG9ycyBSb290Fw0yNzAxMTUwNzAwMDBaFw0yNzAxMjIwODAwMDBaoC8wLTAfBgNVHSMEGDAWgBT3GXVkj8aR1HoZdy3YKJ8S4nQJMzAKBgNVHRQEAwIBATAFBgMrZXADQQDwLqa0fp2PGPJYkGUzmUD89gFg+33kcNoMcJ2DwZxT1v6c1Hk/K7iWNh3cIySY1zLAN0AvUScKLIkVtm8h9aMO"
+        ]
+      }
+    }
+  },
+  "role_under_test": "vectors.signature-key",
+  "title": "Signature-Key vector reject-jwks-uri-unknown-kid: jwks_uri naming a kid the JWKS does not hold",
+  "version": 1
+}

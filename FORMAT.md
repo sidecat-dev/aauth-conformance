@@ -698,3 +698,30 @@ Expectations come from the drafts, not from the vectors. Where they differ:
 The missing-member case (`sig1=jwt;...` with signature label `sig`) is graded
 `invalid_signature`, settled by the draft text in the
 `vector.sigkey.missing-member` clause.
+
+## Signature-Key vectors profile
+
+`role_under_test: "vectors.signature-key"` grades the vectors of
+[`vectors/signature-key/`](vectors/signature-key/README.md), one scenario
+per vector (`scenarios/5xx-sigvec-*.json`, numbered from 500 in file
+order). `input` holds `source` (`file`, its `sha256`, the vector `index`),
+the `vector` exactly as the file carries it and the `environment` it is
+evaluated in: the file's verifier configuration, its documents with the
+vector's own replacing those at the same URL, and the x509 trust. A unit
+test checks every embedded vector and environment against the file. The
+fixture is unused apart from the Agent Provider the Go launcher reads at
+start-up.
+
+The runner sends the received request (the vector's request with its
+`signed` fields), the vector's `now` and the environment to the launcher,
+which answers with its native verifier's response. Generic kinds grade it:
+a `verify` vector expects status 200 and the verified `scheme` in the echo;
+a `reject` vector expects 401 and the `Signature-Error` code, or any
+`Signature-Error` when the drafts fix none; a `verify-or-reject` vector
+uses `sigkey-pq`. Clauses are per scheme and algorithm (`sigvec.*`) and per
+refusal (`sigvec.reject.*`); the ES256 clauses are `recommended`, as ES256
+is a SHOULD.
+
+`cmd/sigkey-vectors` generates the file, its scenarios and `APPENDIX.md`
+with the same launchers (`-write`), or re-signs every vector and reports
+any difference from the published bytes (`-check`).

@@ -642,3 +642,45 @@ anything itself.
 The Go launcher is `adapters/go/vectors.go`, the Rust launcher
 `adapters/rust/src/vectors.rs` (feature `vectors`, with the Signature-Key
 crate), and the community launcher `adapters/community-go/vectors.go`.
+
+## Signature-Key vectors role
+
+`role: "vectors.signature-key"` announces the path of the bootstrap
+`resource` (`/signature-key`). The runner POSTs one JSON job at a time and
+the launcher answers with its library's own result. It decides nothing
+itself.
+
+A `sign` job carries the request before signing, `created`, an optional
+`nonce` and one or more `signatures`: a label, the private key (Ed25519
+`seed_hex` or `pkcs8_base64` with `alg`), the scheme and the member's
+parameters. The launcher signs with its native signer at `created` and
+answers 200 `{"headers":{...}}` with every header field of the signed
+request, 501 `{"not_offered":"..."}` when the library has no API for the
+job, or 422 `{"error":"..."}` when the library refuses to sign. aauth-go
+uses `SignRequests` with the matching `Credential` constructor; it has no
+way to present a cache identifier it was not issued. aauth-rust uses
+`sign_requests` with the matching `KeyMaterial`; it takes no `nonce`.
+
+A `verify` job carries the received request, `now` and the environment:
+the verifier configuration, the documents and the x509 trust. The launcher
+answers with its native verifier's HTTP response unchanged, a 200 echo of
+the verified scheme or a refusal with `Signature-Error`. aauth-go builds
+`resource.NewAgentIdentity` with every further scheme (hwk, jkt-jwt,
+jwks_uri, jwks, x509, cached), a fresh `AssertionCache` and a native
+`HTTPKeyResolver` whose transport serves the documents from memory; the
+host's x509 callback returns the chain from the documents with the trust
+anchors and CRLs. No aauth-go Resource accepts self-jwt, so a self-jwt
+member goes to `PrepareRequest` and `VerifySelfJWT`, and a refusal is a 401
+whose `Signature-Error` is `FormatError(NormalizeError(err))`. aauth-rust
+builds `AgentIdentityResource` with every further scheme; for a
+`Decision::OtherScheme` the host passes the document bytes to the
+`PreparedRequest` method the member calls for (`verify`,
+`TrustedIssuerKeys::from_documents`, `verify_jwks`, `verify_self_jwt`,
+`verify_jkt_jwt`, `verify_x509`, `verify_cached` with an empty
+`AssertionCache`) and answers failures with the crate's own
+`Decision::SignatureFailure` mapping. As in the sigkey roles, aauth-rust
+leaves selecting a direct jwks kid to the host.
+
+The Go launcher is `adapters/go/sigkey_vectors.go`, the Rust launcher
+`adapters/rust/src/sigkey_vectors.rs` (feature `sigkey-vectors`). The
+community module has no launcher for this role.

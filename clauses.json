@@ -2141,6 +2141,286 @@
       "section": "Not graded: the drafts require content-digest coverage (line 2211) but no pinned MUST requires checking the Content-Digest value against the body bytes, so the vector's refusal of a changed body is recorded only",
       "anchor": "covered-components",
       "scope": "out-of-slice"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.hwk",
+      "source": "key",
+      "section": "Header Web Key (hwk), lines 241-297, with Ed25519 (protocol line 2166: every party MUST support Ed25519): the vector's request verifies under the inline key",
+      "anchor": "header-web-key-hwk",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.hwk.es256",
+      "source": "core",
+      "section": "Signature Algorithms, protocol line 2166: every party SHOULD support ES256 (recommended, claimed only with -claim-recommended); an hwk P-256 key",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.hwk.es384",
+      "source": "key",
+      "section": "Algorithm Determination line 225 and hwk EC keys lines 260-276: an ES384 hwk key verifies (claimed where the verifier implements ES384)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.hwk.rs256",
+      "source": "key",
+      "section": "Algorithm Determination line 225 and hwk RSA keys lines 277-288: an RS256 hwk key verifies (claimed where the verifier implements RS256)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.hwk.ps256",
+      "source": "key",
+      "section": "Algorithm Determination line 225 and hwk RSA keys lines 277-288: a PS256 hwk key verifies (claimed where the verifier implements PS256)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jwt",
+      "source": "key",
+      "section": "JWT Confirmation Key (jwt), lines 530-611, with an AAuth agent token (protocol Keying Material): the cnf.jwk verifies the request",
+      "anchor": "jwt-confirmation-key-jwt",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jwt.es256",
+      "source": "core",
+      "section": "Signature Algorithms, protocol line 2166: every party SHOULD support ES256 (recommended, claimed only with -claim-recommended); an agent token whose cnf.jwk is P-256",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jwt.cache",
+      "source": "key",
+      "section": "jwt cache parameter, line 538: a bare Boolean, covered by the signature, on a JWT with jti; requesting a cache identifier does not change verification",
+      "anchor": "jwt-confirmation-key-jwt",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jwks-uri",
+      "source": "key",
+      "section": "JWKS URI Discovery (jwks_uri), lines 446-480: fetch {id}/.well-known/{dwk}, check issuer, fetch jwks_uri, select kid",
+      "anchor": "jwks-uri-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jwks-uri.es256",
+      "source": "core",
+      "section": "Signature Algorithms, protocol line 2166: every party SHOULD support ES256 (recommended, claimed only with -claim-recommended); a jwks_uri key",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jwks",
+      "source": "key",
+      "section": "Direct JWKS (jwks), lines 490-525: fetch url, parse the JWKS, select kid (claimed where the verifier implements jwks)",
+      "anchor": "jwks-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jwks.es256",
+      "source": "core",
+      "section": "Signature Algorithms, protocol line 2166: every party SHOULD support ES256 (recommended, claimed only with -claim-recommended); a direct jwks key",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.self-jwt",
+      "source": "key",
+      "section": "Self-Issued JWT (self-jwt), lines 613-660: the issuer's discovered key verifies the JWT and the request (claimed where the verifier implements self-jwt)",
+      "anchor": "self-issued-jwt-self-jwt",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.self-jwt.es256",
+      "source": "core",
+      "section": "Signature Algorithms, protocol line 2166: every party SHOULD support ES256 (recommended, claimed only with -claim-recommended); a self-jwt signed with a P-256 key",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jkt-jwt",
+      "source": "key",
+      "section": "JKT JWT Self-Issued Key Delegation (jkt-jwt), lines 305-432: implementations MUST support jkt-s256+jwt (line 331); the verification procedure, lines 410-432",
+      "anchor": "jkt-jwt-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.jkt-jwt.es256",
+      "source": "core",
+      "section": "Signature Algorithms, protocol line 2166: every party SHOULD support ES256 (recommended, claimed only with -claim-recommended); a jkt-jwt with a P-256 identity key (the draft's own example, lines 372-406) or a P-256 delegated key",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.x509",
+      "source": "key",
+      "section": "X.509 Certificates (x509), lines 697-741: validate the chain to a trusted root, check revocation, compare x5t, verify with the end-entity key (claimed where the verifier implements x509)",
+      "anchor": "x509-certificates-x509",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.x509.es256",
+      "source": "core",
+      "section": "Signature Algorithms, protocol line 2166: every party SHOULD support ES256 (recommended, claimed only with -claim-recommended); an x509 P-256 end-entity key",
+      "anchor": "signature-algorithms",
+      "scope": "recommended"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.mixed-jwks",
+      "source": "key",
+      "section": "Algorithm Determination, line 235: MUST select the member matching kid and MUST NOT fail because an unselected member (here ML-DSA-44, kty AKP) names a kty or alg the verifier does not implement",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.pq-only",
+      "source": "key",
+      "section": "Algorithm Determination, line 233, and protocol Verification step 6 (line 2249): a verifier that does not implement the AKP key type MUST reject it with unsupported_algorithm and MUST NOT fail in an undefined manner; a verifier implementing ML-DSA-44 verifies",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.uncovered",
+      "source": "key",
+      "section": "Signature-Key Integrity, line 1301: verifiers MUST reject requests where signature-key is not covered; protocol Verification step 2 (line 2245): invalid_input",
+      "anchor": "signature-key-integrity",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.hwk-kid",
+      "source": "key",
+      "section": "Header Web Key constraints, line 295: the kid parameter MUST NOT be used (no code is fixed; any failure is a 401 with Signature-Error, protocol line 2242)",
+      "anchor": "header-web-key-hwk",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.alg",
+      "source": "core",
+      "section": "Verification (Server) step 6, line 2249, with signature-key lines 203, 211 and 227: unsupported_algorithm when alg is absent or polymorphic, for an hwk key, a cnf.jwk or a resolved JWKS key",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.kty-crv",
+      "source": "core",
+      "section": "Verification (Server) step 6, line 2249, and signature-key line 229: invalid_key when kty or crv disagrees with alg",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.symmetric",
+      "source": "key",
+      "section": "Algorithm Determination, line 217: a verifier MUST reject a scheme conveying a symmetric (oct, HS256) key (no code is fixed; 401 with Signature-Error)",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.unknown-scheme",
+      "source": "key",
+      "section": "Unknown schemes, line 155, and protocol Verification step 4 (line 2247): unsupported_scheme",
+      "anchor": "signature-key-http-request-header",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.signature",
+      "source": "core",
+      "section": "Verification (Server) step 7, line 2250: invalid_signature for a signature that does not verify, and signature-key lines 179, 187 and 1018 for a verified label without a Signature-Key member",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.window",
+      "source": "core",
+      "section": "Verification (Server) step 3, line 2246, and signature-key lines 1106 and 1114: created further ahead than the window is clock_skew, older is invalid_signature",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.jwt-expired",
+      "source": "key",
+      "section": "expired_jwt, line 1084, and protocol Verification step 5 (line 2248)",
+      "anchor": "expired_jwt",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.jwt-exp",
+      "source": "key",
+      "section": "JWT Confirmation Key (jwt), line 552: the JWT MUST contain exp; protocol Verification step 5 (line 2248): invalid_jwt",
+      "anchor": "jwt-confirmation-key-jwt",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.unknown-kid",
+      "source": "key",
+      "section": "unknown_key, line 1054 (jwks_uri, jwks and self-jwt), and protocol Verification step 5 (line 2248)",
+      "anchor": "unknown_key",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.issuer",
+      "source": "key",
+      "section": "JWKS URI discovery, lines 462-464: issuer_missing when the metadata has no issuer, issuer_mismatch when it is not the id",
+      "anchor": "jwks-uri-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.self-jwt-cnf",
+      "source": "key",
+      "section": "Self-Issued JWT, lines 629 and 651: a self-jwt MUST NOT contain cnf; invalid_jwt (line 1078)",
+      "anchor": "self-issued-jwt-self-jwt",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.jkt-iss",
+      "source": "key",
+      "section": "JKT JWT, lines 339 and 424: iss MUST equal the JWK Thumbprint URI of the header jwk; invalid_jwt (line 1078)",
+      "anchor": "jkt-jwt-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.reject.cache-miss",
+      "source": "key",
+      "section": "cache_miss, lines 1008-1014: a cache identifier that does not resolve is cache_miss",
+      "anchor": "cache_miss",
+      "scope": "protocol"
     }
   ]
 }

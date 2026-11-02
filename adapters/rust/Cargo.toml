@@ -15,6 +15,7 @@ mission = ["federation"]
 supervision = []
 sigkey = []
 vectors = []
+sigkey-vectors = []
 
 [dependencies]
 aauth-rust-jose = "=0.1.0-alpha.2"
