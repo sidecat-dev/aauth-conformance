@@ -1675,7 +1675,7 @@
       "role": "sigkey.verifier",
       "source": "key",
       "section": "Self-Issued JWT (self-jwt), lines 613-660: the issuer's discovered key verifies the JWT and the HTTP signature (claimed where the verifier implements self-jwt)",
-      "anchor": "self-jwt",
+      "anchor": "self-issued-jwt-self-jwt",
       "scope": "protocol"
     },
     {
@@ -1899,7 +1899,7 @@
       "role": "sigkey.signer",
       "source": "key",
       "section": "Self-Issued JWT (self-jwt), line 619: jwt REQUIRED; the discovered issuer key signs the request; Integrity line 1289",
-      "anchor": "self-jwt",
+      "anchor": "self-issued-jwt-self-jwt",
       "scope": "protocol"
     },
     {
