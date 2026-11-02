@@ -15,7 +15,8 @@
 # claims where that library leaves a duty to its host.
 # Optional environment: LIBS (default "go rust protocol") picks the
 # deployments; REMOTE_ROLES (space-separated) keeps only those suite roles;
-# CARGO_TARGET is a reusable Cargo target directory.
+# CARGO_TARGET is a reusable Cargo target directory; NO_CONTROL=1 names no
+# host controls, so the scenarios that need one are reported not exercised.
 #
 # Everything runs on loopback. A test CA made here signs a certificate for
 # the suite's party names and one for each deployment's names; every name is
@@ -50,10 +51,11 @@ declare -A PORT=([go]=127.0.0.1:18444 [rust]=127.0.0.1:18445 [protocol]=127.0.0.
 suite_names=$(./aauth-conformance -suite "$suite" -harness-names | tr '\n' ' ')
 # One merged description of what a library deployment serves.
 for_lib() {
-  jq -s --arg lib "$1" --arg keep "${REMOTE_ROLES:-}" 'map(select((.libraries // [$lib]) | index($lib)))
+  jq -s --arg lib "$1" --arg keep "${REMOTE_ROLES:-}" --arg nocontrol "${NO_CONTROL:-}" 'map(select((.libraries // [$lib]) | index($lib)))
     | {names: (map(.names // {}) | add), trusted: (map(.trusted // []) | add | unique),
        roles: ((map(.roles // {}) | add) + (map(.roles_by_lib[$lib] // {}) | add))}
-    | if $keep == "" then . else .roles |= with_entries(select(.key as $k | $keep | split(" ") | index($k))) end' \
+    | if $keep == "" then . else .roles |= with_entries(select(.key as $k | $keep | split(" ") | index($k))) end
+    | if $nocontrol == "1" then .roles |= map_values(del(.control)) else . end' \
     "$here"/roles/*.json | sed "s/aauth-LIB\./aauth-$1./g; s/LIB/$1/g"
 }
 names() {
