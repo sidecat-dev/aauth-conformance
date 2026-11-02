@@ -36,6 +36,12 @@
       "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
       "sha256": "9fd44f899e06bf2a1e903459799cccdd8c6365b5eb5fa1efe2ed5b23b1a6d1a3",
       "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-supervision.md"
+    },
+    {
+      "id": "bootstrap",
+      "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
+      "sha256": "40ca9d052e942a78ef01a827a23bd0149d34a58f626e750949f3ddcd2601b82c",
+      "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-bootstrap.md"
     }
   ],
   "clauses": [
@@ -2428,6 +2434,286 @@
       "source": "key",
       "section": "cache_miss, lines 1008-1014: a cache identifier that does not resolve is cache_miss",
       "anchor": "cache_miss",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.enrollment",
+      "source": "bootstrap",
+      "section": "Web App Enrollment step 3, line 410, and Mobile App Enrollment step 4, line 420: the AP accepts an enrollment POST signed by the new durable key under hwk. The draft defines no route or body (lines 410 and 371); this suite fixes both",
+      "anchor": "web-app-enrollment",
+      "scope": "adapter-contract"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.refresh",
+      "source": "bootstrap",
+      "section": "Two-Key Refresh steps 1-4, lines 297-300: a jkt-jwt refresh from an enrolled durable key returns a new agent token. The route, the body and the agent_token response member are this suite's",
+      "anchor": "two-key-refresh",
+      "scope": "adapter-contract"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.token-structure",
+      "source": "core",
+      "section": "Agent Token Structure, lines 512-520, as Bootstrap shows at lines 263-285: typ aa-agent+jwt signed by the AP key its kid names, iss the AP, dwk aauth-agent.json, jti, iat, exp after iat, and no parent_agent on a top-level token",
+      "anchor": "agent-token-structure",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.identifier",
+      "source": "core",
+      "section": "Agent Identifiers, lines 488-490, cited by Bootstrap line 253: sub is aauth:local@domain with domain the AP, a local part of A-Za-z0-9 - _ + . up to 255 characters, and no + for a top-level agent",
+      "anchor": "agent-identifiers",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.key-binding",
+      "source": "core",
+      "section": "Agent Token Structure line 516 (cnf.jwk is the agent's public key), applied by Bootstrap Two-Key Refresh step 4, line 300: the new token's cnf.jwk is the ephemeral key the naming JWT delegated to",
+      "anchor": "agent-token-structure",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.ps",
+      "source": "bootstrap",
+      "section": "Web App Enrollment step 6, line 413: ps is the agent's configured person server. This suite configures it in the refresh body",
+      "anchor": "web-app-enrollment",
+      "scope": "adapter-contract"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.stable-subject",
+      "source": "core",
+      "section": "Agent Identifiers line 506 and Agent Token Structure line 520 (stated without a BCP 14 keyword): the identifier is stable across key rotations; Bootstrap Per-Install Identity, line 259: sub is stable across ephemeral rotations",
+      "anchor": "agent-identifiers",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.per-install",
+      "source": "bootstrap",
+      "section": "Per-Install Identity, line 257: each install's durable key is the basis for one agent identity, so a second durable key gets its own identifier",
+      "anchor": "per-install-identity",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.lifetime",
+      "source": "bootstrap",
+      "section": "Refresh Patterns, lines 289-291, and core Agent Token Structure line 517 (SHOULD NOT exceed 24 hours): a lifetime above the five-minute refresh margin and at most 24 hours",
+      "anchor": "refresh-patterns",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.single-key",
+      "source": "bootstrap",
+      "section": "Single-Key Refresh, line 325: an AP using the single-durable pattern refreshes on an hwk signature by the durable key and binds cnf.jwk to it. Optional (line 150); graded only for a target that claims it",
+      "anchor": "single-key-refresh",
+      "scope": "out-of-slice"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.naming-jwt",
+      "source": "key",
+      "section": "JKT JWT, lines 331-345 and verification steps 2-9, lines 414-428: typ jkt-s256+jwt, iss the JWK Thumbprint URI of the header jwk, a JWT signature by that key, and an unexpired exp; Bootstrap step 4, line 300. A naming JWT that fails gets no agent token",
+      "anchor": "jkt-jwt-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.request-proof",
+      "source": "key",
+      "section": "JKT JWT verification steps 10-11, lines 430-432, and Bootstrap step 4, line 300: the HTTP signature verifies with the delegated cnf.jwk. A request signed by another key gets no agent token",
+      "anchor": "jkt-jwt-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.enrolled-key",
+      "source": "bootstrap",
+      "section": "Two-Key Refresh step 4, line 300: the AP looks up the enrollment by the durable key's thumbprint, so a durable key that never enrolled gets no agent token",
+      "anchor": "two-key-refresh",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.subagent",
+      "source": "bootstrap",
+      "section": "Sub-Agents Under a Hosted AP, lines 374-377, and the example at lines 380-395: a parent's request with the sub-agent jwk and a discriminator returns its agent token. The draft defines no endpoint (line 371); the route and agent_token member are this suite's",
+      "anchor": "sub-agents-under-a-hosted-ap",
+      "scope": "adapter-contract"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.subagent-identity",
+      "source": "core",
+      "section": "Sub-Agent Identity, lines 1894-1897, and Agent Identifiers line 490, applied by Bootstrap line 376: iss equals the parent's, parent_agent names the parent, the local part is the parent's, +, and a non-empty discriminator, and cnf.jwk is the sub-agent's key",
+      "anchor": "sub-agent-identity",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.subagent-claims",
+      "source": "bootstrap",
+      "section": "Sub-Agents Under a Hosted AP step 4, line 376: ps copied from the parent's token, exp no later than the parent's, and the parent's discriminator when it offered one",
+      "anchor": "sub-agents-under-a-hosted-ap",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.single-level",
+      "source": "core",
+      "section": "Single-Level Depth, line 1918: an AP MUST NOT issue a sub-agent token whose parent is itself a sub-agent; Bootstrap step 3, line 375",
+      "anchor": "single-level-depth",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.parent-token",
+      "source": "core",
+      "section": "Agent Token Verification, lines 539-543, applied by Bootstrap step 3, line 375: a parent token another AP signed, or one past its exp, gets no sub-agent token",
+      "anchor": "agent-token-verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.enrollment",
+      "source": "bootstrap",
+      "section": "Web App Enrollment step 3, line 410: the agent posts its durable public key, signed by that key under hwk. The route is this suite's",
+      "anchor": "web-app-enrollment",
+      "scope": "adapter-contract"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.naming-jwt",
+      "source": "key",
+      "section": "JKT JWT, lines 323-345 and 412-428, and Bootstrap step 2, line 298: Signature-Key jkt-jwt carrying a JWT with typ jkt-s256+jwt, the durable key as header jwk, iss its JWK Thumbprint URI, iat, an unexpired exp and cnf.jwk, signed by the header key",
+      "anchor": "jkt-jwt-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.ephemeral-proof",
+      "source": "key",
+      "section": "JKT JWT verification step 11, line 432, and Bootstrap step 3, line 299: the refresh request is signed by the delegated cnf.jwk at the current time, covering the components of core Covered Components, line 2204",
+      "anchor": "jkt-jwt-scheme",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.durable-anchor",
+      "source": "bootstrap",
+      "section": "Per-Platform Key Handling, lines 142 and 148, and Two-Key Refresh step 2, line 298: the naming JWT is signed by the durable key that enrolled",
+      "anchor": "per-platform-keys",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.fresh-ephemeral",
+      "source": "bootstrap",
+      "section": "Two-Key Refresh step 1, line 297, and Terminology line 143: each refresh delegates to a freshly generated ephemeral key, neither the durable key nor an earlier ephemeral key",
+      "anchor": "two-key-refresh",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.naming-jti",
+      "source": "bootstrap",
+      "section": "Two-Key Refresh, line 321: the naming JWT carries a jti for replay protection",
+      "anchor": "two-key-refresh",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.body-coverage",
+      "source": "bootstrap",
+      "section": "Two-Key Refresh, line 319: a request with a body to an AP endpoint (enrollment, refresh, sub-agent issuance) covers content-digest and content-type, with a digest of the actual body",
+      "anchor": "two-key-refresh",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.refreshed-token",
+      "source": "core",
+      "section": "Agent Token Verification step 1, line 541, with Bootstrap step 5, line 301: after a refresh the agent presents the new agent token and signs with its cnf.jwk",
+      "anchor": "agent-token-verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.agent",
+      "id": "bootstrap.agent.subagent-request",
+      "source": "bootstrap",
+      "section": "Sub-Agents Under a Hosted AP steps 1-2, lines 373-374, and line 398: the parent signs with its current ephemeral key, presents its own agent token under jwt, carries the sub-agent's public key in the body, and does not involve its durable key",
+      "anchor": "sub-agents-under-a-hosted-ap",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.self-hosted",
+      "id": "bootstrap.self.metadata",
+      "source": "core",
+      "section": "Agent Provider Metadata, lines 2025-2026 (issuer and jwks_uri REQUIRED), applied by Bootstrap Self-Hosted Agents line 180 and Self-Hosted Enrollment line 428: the JWKS at jwks_uri holds the AP signing key",
+      "anchor": "agent-provider-metadata",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.self-hosted",
+      "id": "bootstrap.self.issue",
+      "source": "bootstrap",
+      "section": "Self-Hosted Enrollment step 3, line 429, and Self-Hosted Refresh, line 333: the token-issuing process self-issues agent tokens. The draft defines no interface; this suite asks through a host control",
+      "anchor": "self-hosted-enrollment",
+      "scope": "adapter-contract"
+    },
+    {
+      "role": "bootstrap.self-hosted",
+      "id": "bootstrap.self.token-structure",
+      "source": "core",
+      "section": "Agent Token Structure, lines 512-520, applied by Bootstrap Self-Hosted Agents line 182: the token verifies against the published key, with iss, dwk, jti, iat, exp after iat, cnf.jwk the requested key and ps as configured",
+      "anchor": "agent-token-structure",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.self-hosted",
+      "id": "bootstrap.self.identifier",
+      "source": "core",
+      "section": "Agent Identifiers, lines 488-490: sub is aauth:local@domain with the self-hosted domain, valid local characters, and no + for a top-level agent",
+      "anchor": "agent-identifiers",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.self-hosted",
+      "id": "bootstrap.self.many-agents",
+      "source": "bootstrap",
+      "section": "Many Agents, One Operator, lines 190-192: one published AP key signs every token; each agent gets its own sub and cnf key; agent keys are not in the JWKS",
+      "anchor": "many-agents-one-operator",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.self-hosted",
+      "id": "bootstrap.self.subagent-identity",
+      "source": "core",
+      "section": "Sub-Agent Identity, lines 1894-1897, applied by Bootstrap Self-Hosted Sub-Agents, lines 362-363: iss equals the parent's, parent_agent names the parent, the local part is the parent's, +, and a non-empty discriminator, and cnf.jwk is the sub-agent's key",
+      "anchor": "sub-agent-identity",
+      "scope": "protocol"
+    },
+    {
+      "role": "bootstrap.self-hosted",
+      "id": "bootstrap.self.subagent-claims",
+      "source": "bootstrap",
+      "section": "Self-Hosted Sub-Agents, lines 362-365: the operator's discriminator, ps copied from the parent, and exp not after the parent's",
+      "anchor": "self-hosted-sub-agents",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.self-hosted",
+      "id": "bootstrap.self.single-level",
+      "source": "core",
+      "section": "Single-Level Depth, line 1918, and Bootstrap Self-Hosted Sub-Agents line 363: the issuing process refuses a sub-agent whose parent is itself a sub-agent",
+      "anchor": "single-level-depth",
       "scope": "protocol"
     }
   ]

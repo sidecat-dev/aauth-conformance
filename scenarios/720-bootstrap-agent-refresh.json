@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "id": "bootstrap-agent-refresh",
+  "title": "The agent enrolls its durable key under hwk and refreshes with a jkt-jwt naming JWT and an ephemeral-key signature",
+  "role_under_test": "bootstrap.agent",
+  "given": "agent-identity",
+  "input": {
+    "operations": [
+      "enroll",
+      "refresh"
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-hwk-proof",
+      "clause": "bootstrap.agent.enrollment",
+      "kind": "bootstrap-request",
+      "member": "hwk-proof",
+      "equals": true
+    },
+    {
+      "stage": "enroll",
+      "id": "enroll-body-coverage",
+      "clause": "bootstrap.agent.body-coverage",
+      "kind": "bootstrap-request",
+      "member": "body-coverage",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "refresh-naming-jwt",
+      "clause": "bootstrap.agent.naming-jwt",
+      "kind": "bootstrap-request",
+      "member": "naming-jwt",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "refresh-ephemeral-proof",
+      "clause": "bootstrap.agent.ephemeral-proof",
+      "kind": "bootstrap-request",
+      "member": "ephemeral-proof",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "refresh-durable-anchor",
+      "clause": "bootstrap.agent.durable-anchor",
+      "kind": "bootstrap-request",
+      "member": "durable-anchor",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "refresh-naming-jti",
+      "clause": "bootstrap.agent.naming-jti",
+      "kind": "bootstrap-request",
+      "member": "naming-jti",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "refresh-fresh-ephemeral",
+      "clause": "bootstrap.agent.fresh-ephemeral",
+      "kind": "bootstrap-request",
+      "member": "fresh-ephemeral",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "refresh-body-coverage",
+      "clause": "bootstrap.agent.body-coverage",
+      "kind": "bootstrap-request",
+      "member": "body-coverage",
+      "equals": true
+    }
+  ]
+}

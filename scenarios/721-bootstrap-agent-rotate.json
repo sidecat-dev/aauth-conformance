@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "id": "bootstrap-agent-rotate",
+  "title": "A second refresh names a new ephemeral key under the same durable key",
+  "role_under_test": "bootstrap.agent",
+  "given": "agent-identity",
+  "input": {
+    "operations": [
+      "enroll",
+      "refresh",
+      "refresh"
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "refresh-2",
+      "id": "second-naming-jwt",
+      "clause": "bootstrap.agent.naming-jwt",
+      "kind": "bootstrap-request",
+      "member": "naming-jwt",
+      "equals": true
+    },
+    {
+      "stage": "refresh-2",
+      "id": "second-ephemeral-proof",
+      "clause": "bootstrap.agent.ephemeral-proof",
+      "kind": "bootstrap-request",
+      "member": "ephemeral-proof",
+      "equals": true
+    },
+    {
+      "stage": "refresh-2",
+      "id": "second-durable-anchor",
+      "clause": "bootstrap.agent.durable-anchor",
+      "kind": "bootstrap-request",
+      "member": "durable-anchor",
+      "equals": true
+    },
+    {
+      "stage": "refresh-2",
+      "id": "second-fresh-ephemeral",
+      "clause": "bootstrap.agent.fresh-ephemeral",
+      "kind": "bootstrap-request",
+      "member": "fresh-ephemeral",
+      "equals": true
+    }
+  ]
+}

@@ -734,3 +734,48 @@ leaves selecting a direct jwks kid to the host.
 The Go launcher is `adapters/go/sigkey_vectors.go`, the Rust launcher
 `adapters/rust/src/sigkey_vectors.rs` (feature `sigkey-vectors`). The
 community module has no launcher for this role.
+
+## Bootstrap roles
+
+No launcher exists yet for either library. `cmd/build-adapters/bootstrap.go`
+reports aauth-go and aauth-rust not offered for all three roles, with the
+reason, so a full run grades every assertion `not_claimed`. This section is
+the contract a launcher meets. The Bootstrap draft defines no routes or
+bodies (lines 371 and 410), so the paths come from
+`fixture.extensions.bootstrap` and the bodies are fixed below.
+
+The bootstrap `extension` object carries the fixture AP seed and kid
+(`ap_seed_hex`, `ap_kid`), the agent token lifetime (`agent_lifetime`) and,
+per role, the paths it serves. Clocks are fixed at the bootstrap `now`.
+
+- `bootstrap.agent-provider` announces `/.well-known/aauth-agent.json` and
+  serves the native hosted AP on one listener: metadata and JWKS, and the
+  native handlers at `enrollment_path`, `refresh_path`,
+  `single_key_refresh_path` and `subagent_path`. Host policy approves every
+  enrollment, assigns each durable key its own identifier, issues
+  `agent_lifetime` tokens with the `ps` the refresh body names, and approves
+  sub-agents of a top-level agent. Enrollment answers any 2xx. Refresh and
+  sub-agent issuance answer `200 {"agent_token"}`. Refusals are the native
+  answers, unchanged.
+- `bootstrap.agent` announces `/control` and configures the native agent's
+  bootstrap client with the AP at the bootstrap `issuer`, reached at
+  `ap_transport`, the three paths and `person_server` as its `ps`. The agent
+  generates its own keys. Each control job runs one native operation and
+  answers 200 when it ran: `enroll`, `refresh` (two-key), `subagent` (sends
+  the job's `jwk` and `discriminator` with the agent's current token), and
+  `call` (a signed request to `url` through `transport` with the current
+  token). Requests keep the logical Host. The control answer is not graded.
+- `bootstrap.self-hosted` announces `/.well-known/aauth-agent.json`, serves
+  the native self-hosted AP's metadata and JWKS, and routes `issue_path` to
+  the token-issuing process. `{"agent", "jwk", "ps"}` self-issues a
+  top-level token. `{"parent_token", "jwk", "discriminator"}` issues a
+  sub-agent of that parent through the native call, which decides whether
+  the parent may have one. Both answer `200 {"agent_token"}`, or the native
+  refusal as a 4xx.
+
+Native APIs a launcher would use: aauth-go has `agentprovider.EnrollmentService`
+(`EnrollmentHandler`, `RefreshHandler`, `SingleKeyRefreshHandler`),
+`Server.SubagentHandler`, `Server.Issue`, `Server.IssueSubagent`,
+`SelfHostedAgent` and `agent.BootstrapClient`. aauth-rust has `AgentProvider::issue`,
+`AgentProvider::issue_subagent` and `PreparedRequest::verify_jkt_jwt`, and
+no enrollment or refresh service.

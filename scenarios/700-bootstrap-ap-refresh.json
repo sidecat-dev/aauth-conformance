@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-refresh",
+  "title": "Enrollment and a two-key refresh issue a top-level agent token bound to the ephemeral key",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "refresh",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "refresh",
+      "id": "refresh-status",
+      "clause": "bootstrap.ap.refresh",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "refresh",
+      "id": "token-signature",
+      "clause": "bootstrap.ap.token-structure",
+      "kind": "bootstrap-token",
+      "member": "signature",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "token-claims",
+      "clause": "bootstrap.ap.token-structure",
+      "kind": "bootstrap-token",
+      "member": "claims",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "token-top-level",
+      "clause": "bootstrap.ap.token-structure",
+      "kind": "bootstrap-token",
+      "member": "top-level",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "token-identifier",
+      "clause": "bootstrap.ap.identifier",
+      "kind": "bootstrap-token",
+      "member": "identifier",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "token-key",
+      "clause": "bootstrap.ap.key-binding",
+      "kind": "bootstrap-token",
+      "member": "key",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "token-ps",
+      "clause": "bootstrap.ap.ps",
+      "kind": "bootstrap-token",
+      "member": "ps",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "token-lifetime",
+      "clause": "bootstrap.ap.lifetime",
+      "kind": "bootstrap-token",
+      "member": "lifetime",
+      "equals": true
+    }
+  ]
+}

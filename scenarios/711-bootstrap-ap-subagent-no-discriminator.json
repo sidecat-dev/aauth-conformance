@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-subagent-no-discriminator",
+  "title": "Without a discriminator from the parent the AP chooses one",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "subagent",
+    "mutation": "no-discriminator"
+  },
+  "assertions": [
+    {
+      "stage": "subagent",
+      "id": "subagent-status",
+      "clause": "bootstrap.ap.subagent",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "subagent",
+      "id": "child-identifier",
+      "clause": "bootstrap.ap.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "identifier",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "child-key",
+      "clause": "bootstrap.ap.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "key",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "child-subagent-identity",
+      "clause": "bootstrap.ap.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "subagent-identity",
+      "equals": true
+    }
+  ]
+}

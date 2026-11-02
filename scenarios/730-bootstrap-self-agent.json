@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "id": "bootstrap-self-agent",
+  "title": "A self-hosted domain publishes its AP key and self-issues an agent token",
+  "role_under_test": "bootstrap.self-hosted",
+  "given": "agent-identity",
+  "input": {
+    "issues": [
+      {
+        "agent": "planner",
+        "key": "durable"
+      }
+    ],
+    "metadata": true
+  },
+  "assertions": [
+    {
+      "stage": "issue-1",
+      "id": "issue-status",
+      "clause": "bootstrap.self.issue",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "issue-1",
+      "id": "token-signature",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "signature",
+      "equals": true
+    },
+    {
+      "stage": "issue-1",
+      "id": "token-claims",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "claims",
+      "equals": true
+    },
+    {
+      "stage": "issue-1",
+      "id": "token-top-level",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "top-level",
+      "equals": true
+    },
+    {
+      "stage": "issue-1",
+      "id": "token-key",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "key",
+      "equals": true
+    },
+    {
+      "stage": "issue-1",
+      "id": "token-ps",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "ps",
+      "equals": true
+    },
+    {
+      "stage": "issue-1",
+      "id": "token-identifier",
+      "clause": "bootstrap.self.identifier",
+      "kind": "bootstrap-token",
+      "member": "identifier",
+      "equals": true
+    },
+    {
+      "stage": "metadata",
+      "id": "metadata-status",
+      "clause": "bootstrap.self.metadata",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "metadata",
+      "id": "metadata-issuer",
+      "clause": "bootstrap.self.metadata",
+      "kind": "json-member",
+      "member": "issuer",
+      "equals": "https://ap.conformance.test"
+    },
+    {
+      "stage": "jwks",
+      "id": "jwks-ap-key",
+      "clause": "bootstrap.self.metadata",
+      "kind": "bootstrap-jwks",
+      "member": "ap-key",
+      "equals": true
+    }
+  ]
+}

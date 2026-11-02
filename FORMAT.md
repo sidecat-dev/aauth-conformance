@@ -754,3 +754,96 @@ is a SHOULD.
 `cmd/sigkey-vectors` generates the file, its scenarios and `APPENDIX.md`
 with the same launchers (`-write`), or re-signs every vector and reports
 any difference from the published bytes (`-check`).
+
+## Bootstrap profiles
+
+Three extension roles grade draft-hardt-aauth-bootstrap at `70d6737`
+(catalog source `bootstrap`). The draft is informational and uses no BCP 14
+keywords (line 130), so the map has no keyword sentences from it. Each
+`protocol` clause is a core or Signature-Key requirement the draft applies
+to enrollment, refresh or sub-agent issuance, with the draft's line in its
+`section`. The draft's own guidance is `recommended`. The routes and bodies,
+which the draft leaves to each AP (lines 371 and 410), are
+`adapter-contract`. The single-key refresh is optional for an AP (line 150),
+so its clause is `out-of-slice`.
+
+`fixture.extensions.bootstrap` supplies the enrollment, refresh, single-key
+refresh and sub-agent paths, the self-hosted issue control path, the agent
+token lifetime (3600 seconds), five public test seeds (`durable`,
+`other_durable`, `ephemeral`, `second_ephemeral`, `subagent`), the
+discriminator a parent offers (`search1`) and a foreign AP (HTTPS issuer,
+seed, kid). The fixture AP issuer, seed and kid are the AP's identity; the
+fixture Person Server is the agent's configured `ps`.
+
+| Role | `input` | Stages |
+| --- | --- | --- |
+| `bootstrap.agent-provider` | `flow` and `mutation`: `refresh` (`none`, `unenrolled`, `jkt-iss`, `jkt-typ`, `jkt-signature`, `jkt-expired`, `proof-key`), `rotate`, `installs`, `single-key` (each `none`), `subagent` (`none`, `no-discriminator`, `nested`, `foreign-parent`, `expired-parent`) | `enroll`, `refresh`; `refresh-2` for `rotate`; `enroll-other`, `refresh-other` for `installs`; `subagent`, with `subagent-1` before it for `nested`. `foreign-parent` and `expired-parent` send only `subagent` |
+| `bootstrap.agent` | `operations`: `enroll` first, then `refresh` (at most twice), then optionally one `subagent` or `call` | the operation names, the second refresh `refresh-2` |
+| `bootstrap.self-hosted` | up to six `issues`, each a top-level `agent` local name or a `parent` (1-based index of an earlier issue) with a `discriminator`, and a `key` (a fixture seed name, or `ap` for the published key); optional `metadata` | `issue-N`, then `metadata` and `jwks` |
+
+For the hosted AP the harness plays the agent. It enrolls a durable key with
+an `hwk`-signed `POST {}`, then refreshes with `jkt-jwt`: a `jkt-s256+jwt`
+naming JWT signed by the durable key, `iss` its JWK Thumbprint URI, `cnf.jwk`
+the ephemeral key and a `jti`, in a request signed by the ephemeral key with
+body `{"ps": <fixture PS>}`. A single-key refresh is the same body signed
+under `hwk` by the durable key. A sub-agent request presents the parent's
+token under `jwt`, signed by its key, with body `{"jwk", "discriminator"}`,
+the draft's example members. Every request covers `content-type` and
+`content-digest`. A refresh answers `200 {"agent_token"}`. Mutations change
+one property: the naming JWT's durable key (never enrolled), `iss`, `typ`,
+signature or expiry; the HTTP signing key; or the parent, which is a
+sub-agent token the AP issued, a token the foreign AP signed, or a token the
+fixture AP key signed whose `exp` has passed. A sub-agent request that has
+no parent token to send is a case error, not a refusal.
+
+For the agent the harness plays the AP and the Resource. The launcher's
+control receives `{"operation"}` jobs: `enroll`, `refresh`, `subagent` with
+`jwk` and `discriminator`, and `call` with `method`, `url` and `transport`.
+The harness AP verifies each request independently and issues fixture-key
+tokens bound to the delegated key, so later operations can proceed. The
+control's answer is evidence only.
+
+For the self-hosted AP the harness posts each issue to the launcher's issue
+control, `{"agent", "jwk", "ps"}` for a top-level agent or `{"parent_token",
+"jwk", "discriminator"}` for a sub-agent, and reads `{"agent_token"}`. It then
+reads the metadata and the JWKS at its `jwks_uri`, which must be on the AP's
+origin.
+
+Four kinds are added, each with a boolean expectation and a `member` naming
+the property.
+
+- `bootstrap-token` grades an issued agent token. `signature` verifies it as
+  `aa-agent+jwt` under the fixture AP key. `claims` checks `iss`, `dwk`,
+  `jti`, `iat` at the fixture clock and an `exp` after it. `identifier` checks
+  `aauth:local@domain` with the AP's domain, and no `+` for a top-level
+  agent. `top-level` checks that `parent_agent` is absent. `key` checks that
+  `cnf.jwk` is the requested key with `alg`. `ps` checks the configured
+  Person Server. `lifetime` checks above 300 seconds and at most 24 hours.
+  `same-subject` (stage `refresh-2`) and `new-subject` (stage
+  `refresh-other`) compare `sub` with the first refresh. `subagent-identity`
+  checks `iss` and the parent, and the parent's local part, `+` and a
+  discriminator. `subagent-claims` checks `ps` copied, `exp` not after the
+  parent's, and the offered discriminator. `distinct-subject` (self-hosted
+  top-level issues) checks a `sub` no earlier issue got.
+- `bootstrap-no-token` passes on a 4xx response with no `agent_token`.
+- `bootstrap-request` grades a request the agent sent. `hwk-proof` is an
+  enrollment POST signed under `hwk` by the key it carries. `naming-jwt`
+  applies the `jkt-jwt` checks above. `durable-anchor` checks the naming
+  JWT's header key against the enrolled key. `ephemeral-proof` checks that
+  the delegated key signed the request. `naming-jti` checks for a `jti`.
+  `fresh-ephemeral` checks a delegated key that is neither the durable key
+  nor an earlier one. `body-coverage` checks `content-type` and
+  `content-digest` coverage with a digest of the actual body. `parent-proof`
+  checks the last issued token under `jwt`, signed by its key.
+  `subagent-key` checks the body `jwk`. `durable-absent` checks a `jwt`
+  request the durable key did not sign. `refreshed-token` checks a Resource
+  call that presents the last issued token and is signed by its key. Every
+  signature check requires `created` within 60 seconds of the fixture clock
+  and coverage of `@method`, `@authority`, `@path` and `signature-key`.
+- `bootstrap-jwks` (stage `jwks`): `ap-key` checks that the metadata
+  `issuer` is the AP and the JWKS holds the AP key under its kid.
+  `agent-keys-absent` checks that no agent key issued in the scenario is in
+  the JWKS.
+
+Generic kinds grade the stage responses. Remote mode does not run these
+roles.

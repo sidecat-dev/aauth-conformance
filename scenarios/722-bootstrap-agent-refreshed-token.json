@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "id": "bootstrap-agent-refreshed-token",
+  "title": "After a refresh the agent calls a Resource with the new token and its key",
+  "role_under_test": "bootstrap.agent",
+  "given": "agent-identity",
+  "input": {
+    "operations": [
+      "enroll",
+      "refresh",
+      "call"
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "call",
+      "id": "call-refreshed-token",
+      "clause": "bootstrap.agent.refreshed-token",
+      "kind": "bootstrap-request",
+      "member": "refreshed-token",
+      "equals": true
+    }
+  ]
+}

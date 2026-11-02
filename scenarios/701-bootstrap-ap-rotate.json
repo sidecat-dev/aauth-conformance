@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-rotate",
+  "title": "A second refresh with a new ephemeral key keeps the agent's sub and binds the new key",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "rotate",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "refresh-2",
+      "id": "second-status",
+      "clause": "bootstrap.ap.refresh",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "refresh-2",
+      "id": "second-signature",
+      "clause": "bootstrap.ap.token-structure",
+      "kind": "bootstrap-token",
+      "member": "signature",
+      "equals": true
+    },
+    {
+      "stage": "refresh-2",
+      "id": "second-key",
+      "clause": "bootstrap.ap.key-binding",
+      "kind": "bootstrap-token",
+      "member": "key",
+      "equals": true
+    },
+    {
+      "stage": "refresh-2",
+      "id": "second-same-subject",
+      "clause": "bootstrap.ap.stable-subject",
+      "kind": "bootstrap-token",
+      "member": "same-subject",
+      "equals": true
+    }
+  ]
+}

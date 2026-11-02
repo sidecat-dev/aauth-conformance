@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-refresh-unenrolled",
+  "title": "A naming JWT from a durable key that never enrolled gets no agent token",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "refresh",
+    "mutation": "unenrolled"
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "refresh",
+      "id": "refused",
+      "clause": "bootstrap.ap.enrolled-key",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    }
+  ]
+}

@@ -54,7 +54,10 @@ Library states come from each report's clause matrix (see
 
 ## Extraction rules
 
-- Keywords are the upper-case BCP 14 words.
+- Keywords are the upper-case BCP 14 words. The Bootstrap draft is
+  informational and has none (its line 130), so it gives no `:clauses`
+  entries. Its suite clauses are listed under `:suite-clauses`, and those
+  anchored in the core or Signature-Key drafts link to those drafts' entries.
 - Skipped: front matter, fenced code, HTML comments, lines starting with `{`,
   and the `Document History` section.
 - A paragraph or list item is joined and split into sentences after `.`, `!`

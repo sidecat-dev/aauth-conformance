@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "id": "bootstrap-self-single-key",
+  "title": "One self-hosted agent signs with the published key itself",
+  "role_under_test": "bootstrap.self-hosted",
+  "given": "agent-identity",
+  "input": {
+    "issues": [
+      {
+        "agent": "solo",
+        "key": "ap"
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "issue-1",
+      "id": "issue-status",
+      "clause": "bootstrap.self.issue",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "issue-1",
+      "id": "token-signature",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "signature",
+      "equals": true
+    },
+    {
+      "stage": "issue-1",
+      "id": "token-key",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "key",
+      "equals": true
+    }
+  ]
+}

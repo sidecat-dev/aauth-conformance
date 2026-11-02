@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "id": "bootstrap-self-many-agents",
+  "title": "Two agents under one domain get their own sub and key, and neither key is published",
+  "role_under_test": "bootstrap.self-hosted",
+  "given": "agent-identity",
+  "input": {
+    "issues": [
+      {
+        "agent": "planner",
+        "key": "durable"
+      },
+      {
+        "agent": "research",
+        "key": "ephemeral"
+      }
+    ],
+    "metadata": true
+  },
+  "assertions": [
+    {
+      "stage": "issue-2",
+      "id": "second-status",
+      "clause": "bootstrap.self.issue",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "issue-2",
+      "id": "second-signature",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "signature",
+      "equals": true
+    },
+    {
+      "stage": "issue-2",
+      "id": "second-key",
+      "clause": "bootstrap.self.token-structure",
+      "kind": "bootstrap-token",
+      "member": "key",
+      "equals": true
+    },
+    {
+      "stage": "issue-2",
+      "id": "second-distinct-subject",
+      "clause": "bootstrap.self.many-agents",
+      "kind": "bootstrap-token",
+      "member": "distinct-subject",
+      "equals": true
+    },
+    {
+      "stage": "jwks",
+      "id": "jwks-ap-key",
+      "clause": "bootstrap.self.metadata",
+      "kind": "bootstrap-jwks",
+      "member": "ap-key",
+      "equals": true
+    },
+    {
+      "stage": "jwks",
+      "id": "jwks-agent-keys",
+      "clause": "bootstrap.self.many-agents",
+      "kind": "bootstrap-jwks",
+      "member": "agent-keys-absent",
+      "equals": true
+    }
+  ]
+}

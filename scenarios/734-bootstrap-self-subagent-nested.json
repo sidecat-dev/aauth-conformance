@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "id": "bootstrap-self-subagent-nested",
+  "title": "The self-hosted AP refuses a sub-agent of a sub-agent",
+  "role_under_test": "bootstrap.self-hosted",
+  "given": "agent-identity",
+  "input": {
+    "issues": [
+      {
+        "agent": "planner",
+        "key": "durable"
+      },
+      {
+        "parent": 1,
+        "key": "subagent",
+        "discriminator": "search1"
+      },
+      {
+        "parent": 2,
+        "key": "second_ephemeral",
+        "discriminator": "nested"
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "issue-2",
+      "id": "subagent-status",
+      "clause": "bootstrap.self.issue",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "issue-3",
+      "id": "refused",
+      "clause": "bootstrap.self.single-level",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    }
+  ]
+}

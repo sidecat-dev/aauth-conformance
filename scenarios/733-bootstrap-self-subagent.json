@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "id": "bootstrap-self-subagent",
+  "title": "The self-hosted AP issues a sub-agent token under a parent it issued",
+  "role_under_test": "bootstrap.self-hosted",
+  "given": "agent-identity",
+  "input": {
+    "issues": [
+      {
+        "agent": "planner",
+        "key": "durable"
+      },
+      {
+        "parent": 1,
+        "key": "subagent",
+        "discriminator": "search1"
+      }
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "issue-2",
+      "id": "subagent-status",
+      "clause": "bootstrap.self.issue",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "issue-2",
+      "id": "child-signature",
+      "clause": "bootstrap.self.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "signature",
+      "equals": true
+    },
+    {
+      "stage": "issue-2",
+      "id": "child-claims",
+      "clause": "bootstrap.self.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "claims",
+      "equals": true
+    },
+    {
+      "stage": "issue-2",
+      "id": "child-identifier",
+      "clause": "bootstrap.self.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "identifier",
+      "equals": true
+    },
+    {
+      "stage": "issue-2",
+      "id": "child-key",
+      "clause": "bootstrap.self.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "key",
+      "equals": true
+    },
+    {
+      "stage": "issue-2",
+      "id": "child-subagent-identity",
+      "clause": "bootstrap.self.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "subagent-identity",
+      "equals": true
+    },
+    {
+      "stage": "issue-2",
+      "id": "child-subagent-claims",
+      "clause": "bootstrap.self.subagent-claims",
+      "kind": "bootstrap-token",
+      "member": "subagent-claims",
+      "equals": true
+    }
+  ]
+}

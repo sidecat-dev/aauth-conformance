@@ -29,6 +29,27 @@
     "kid": "as-1"
   },
   "extensions": {
+    "bootstrap": {
+      "enrollment_path": "/bootstrap/enroll",
+      "refresh_path": "/bootstrap/refresh",
+      "single_key_refresh_path": "/bootstrap/refresh-single-key",
+      "subagent_path": "/bootstrap/subagent",
+      "issue_path": "/__fixture/issue",
+      "agent_lifetime": 3600,
+      "seeds_hex": {
+        "durable": "2121212121212121212121212121212121212121212121212121212121212121",
+        "other_durable": "2222222222222222222222222222222222222222222222222222222222222222",
+        "ephemeral": "2323232323232323232323232323232323232323232323232323232323232323",
+        "second_ephemeral": "2424242424242424242424242424242424242424242424242424242424242424",
+        "subagent": "2525252525252525252525252525252525252525252525252525252525252525"
+      },
+      "discriminator": "search1",
+      "foreign_ap": {
+        "issuer": "https://foreign-ap.conformance.test",
+        "seed_hex": "2626262626262626262626262626262626262626262626262626262626262626",
+        "kid": "foreign-ap-1"
+      }
+    },
     "events": {
       "resource": {
         "issuer": "https://resource.conformance.test",

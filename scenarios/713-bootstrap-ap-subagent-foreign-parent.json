@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-subagent-foreign-parent",
+  "title": "A parent token another AP signed gets no sub-agent token",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "subagent",
+    "mutation": "foreign-parent"
+  },
+  "assertions": [
+    {
+      "stage": "subagent",
+      "id": "refused",
+      "clause": "bootstrap.ap.parent-token",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    }
+  ]
+}

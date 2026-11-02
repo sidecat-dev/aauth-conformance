@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-installs",
+  "title": "A second install's durable key enrolls as its own agent with its own sub",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "installs",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "enroll-other",
+      "id": "other-enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "refresh-other",
+      "id": "other-status",
+      "clause": "bootstrap.ap.refresh",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "refresh-other",
+      "id": "other-signature",
+      "clause": "bootstrap.ap.token-structure",
+      "kind": "bootstrap-token",
+      "member": "signature",
+      "equals": true
+    },
+    {
+      "stage": "refresh-other",
+      "id": "other-new-subject",
+      "clause": "bootstrap.ap.per-install",
+      "kind": "bootstrap-token",
+      "member": "new-subject",
+      "equals": true
+    }
+  ]
+}

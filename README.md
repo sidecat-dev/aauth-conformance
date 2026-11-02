@@ -1,7 +1,7 @@
 # AAuth conformance scenarios
 
 Run the same wire scenarios against different AAuth implementations. The suite
-has 372 scenarios and 1,498 assertions in 21 roles:
+has 396 scenarios and 1,595 assertions in 24 roles:
 
 | Role | Scenario files | Scenarios | Assertions | Draft |
 | --- | --- | ---: | ---: | --- |
@@ -26,6 +26,9 @@ has 372 scenarios and 1,498 assertions in 21 roles:
 | `sigkey.signer` | 330-341 | 12 | 36 | Signature-Key, protocol |
 | `vectors.library` | 400-493 | 94 | 105 | community test vectors |
 | `vectors.signature-key` | 500-555 | 56 | 111 | Signature-Key test vectors |
+| `bootstrap.agent-provider` | 700-714 | 15 | 52 | Bootstrap, protocol, Signature-Key |
+| `bootstrap.agent` | 720-723 | 4 | 17 | Bootstrap, Signature-Key, protocol |
+| `bootstrap.self-hosted` | 730-734 | 5 | 28 | Bootstrap, protocol |
 
 [CONFORMANCE-MAP.md](CONFORMANCE-MAP.md) describes `conformance-map.edn`, which
 lists each keyword sentence of the pinned drafts with the clauses, scenarios
@@ -575,3 +578,23 @@ The last command re-signs every vector with both libraries and reports any
 byte that differs from the published file, apart from randomized
 signatures. The two jkt-jwt vectors with an ES256 key are signed and graded
 for aauth-go only, as aauth-rust keeps jkt-jwt at Ed25519.
+
+## Bootstrap
+
+Three roles grade draft-hardt-aauth-bootstrap: a hosted Agent Provider
+(`bootstrap.agent-provider`: enrollment, two-key and single-key refresh,
+sub-agent issuance), the enrolling Agent (`bootstrap.agent`) and a
+self-hosted domain that is its own AP for several agents
+(`bootstrap.self-hosted`). The draft is informational and uses no BCP 14
+keywords, so the protocol clauses are the core and Signature-Key rules it
+applies, and its own guidance is graded as recommended. The draft defines no
+enrollment or refresh routes; [ADAPTERS.md](ADAPTERS.md#bootstrap-roles)
+fixes the ones a launcher serves.
+
+Neither library has a launcher yet. `build-adapters` reports both not offered
+for these roles, so their assertions are `not_claimed`:
+
+```sh
+go run ./cmd/build-adapters -role bootstrap.agent-provider -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/bootstrap-ap
+go run ./cmd/aauth-conformance -targets build/bootstrap-ap/targets.json -report build/bootstrap-ap-report.json -markdown build/bootstrap-ap-report.md
+```

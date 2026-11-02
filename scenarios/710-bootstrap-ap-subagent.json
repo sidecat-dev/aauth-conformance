@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-subagent",
+  "title": "A parent's request with the sub-agent key and a discriminator returns the sub-agent's token",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "subagent",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "stage": "subagent",
+      "id": "subagent-status",
+      "clause": "bootstrap.ap.subagent",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "subagent",
+      "id": "child-signature",
+      "clause": "bootstrap.ap.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "signature",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "child-claims",
+      "clause": "bootstrap.ap.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "claims",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "child-identifier",
+      "clause": "bootstrap.ap.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "identifier",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "child-key",
+      "clause": "bootstrap.ap.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "key",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "child-subagent-identity",
+      "clause": "bootstrap.ap.subagent-identity",
+      "kind": "bootstrap-token",
+      "member": "subagent-identity",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "child-subagent-claims",
+      "clause": "bootstrap.ap.subagent-claims",
+      "kind": "bootstrap-token",
+      "member": "subagent-claims",
+      "equals": true
+    }
+  ]
+}

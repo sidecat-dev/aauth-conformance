@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-subagent-nested",
+  "title": "A sub-agent asking for a sub-agent of its own gets no token",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "subagent",
+    "mutation": "nested"
+  },
+  "assertions": [
+    {
+      "stage": "subagent-1",
+      "id": "first-status",
+      "clause": "bootstrap.ap.subagent",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "subagent",
+      "id": "refused",
+      "clause": "bootstrap.ap.single-level",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    }
+  ]
+}

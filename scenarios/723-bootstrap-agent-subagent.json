@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "id": "bootstrap-agent-subagent",
+  "title": "A parent requests a sub-agent token with its own token and ephemeral key",
+  "role_under_test": "bootstrap.agent",
+  "given": "agent-identity",
+  "input": {
+    "operations": [
+      "enroll",
+      "refresh",
+      "subagent"
+    ]
+  },
+  "assertions": [
+    {
+      "stage": "subagent",
+      "id": "subagent-parent-proof",
+      "clause": "bootstrap.agent.subagent-request",
+      "kind": "bootstrap-request",
+      "member": "parent-proof",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "subagent-subagent-key",
+      "clause": "bootstrap.agent.subagent-request",
+      "kind": "bootstrap-request",
+      "member": "subagent-key",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "subagent-durable-absent",
+      "clause": "bootstrap.agent.subagent-request",
+      "kind": "bootstrap-request",
+      "member": "durable-absent",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "subagent-body-coverage",
+      "clause": "bootstrap.agent.body-coverage",
+      "kind": "bootstrap-request",
+      "member": "body-coverage",
+      "equals": true
+    }
+  ]
+}
