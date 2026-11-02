@@ -29,7 +29,7 @@ func TestAgentRunnerGradesReceivedProofsNotControllerPromises(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(report.Runs[0].Cases) != 4 {
+			if len(report.Runs[0].Cases) != 5 {
 				t.Fatal("role cases mixed")
 			}
 			if mode == "agent-valid" {
