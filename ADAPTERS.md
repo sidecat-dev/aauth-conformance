@@ -737,10 +737,10 @@ community module has no launcher for this role.
 
 ## Bootstrap roles
 
-No launcher exists yet for either library. `cmd/build-adapters/bootstrap.go`
-reports aauth-go and aauth-rust not offered for all three roles, with the
-reason, so a full run grades every assertion `not_claimed`. This section is
-the contract a launcher meets. The Bootstrap draft defines no routes or
+`adapters/go/bootstrap.go` is the aauth-go launcher for all three roles.
+aauth-rust has none yet: `cmd/build-adapters/bootstrap.go` reports it not
+offered, with the reason, so its run grades every assertion `not_claimed`.
+This section is the contract a launcher meets. The Bootstrap draft defines no routes or
 bodies (lines 371 and 410), so the paths come from
 `fixture.extensions.bootstrap` and the bodies are fixed below.
 
@@ -754,7 +754,9 @@ per role, the paths it serves. Clocks are fixed at the bootstrap `now`.
   `single_key_refresh_path` and `subagent_path`. Host policy approves every
   enrollment and refresh whatever its empty `evidence`, assigns each durable key its own identifier, issues
   `agent_lifetime` tokens with the `ps` the refresh body names, and approves
-  sub-agents of a top-level agent. Enrollment answers any 2xx. Refresh and
+  sub-agents of a top-level agent. When the parent offers no discriminator,
+  or one it already used, host policy chooses one (Bootstrap line 376).
+  Enrollment answers any 2xx. Refresh and
   sub-agent issuance answer `200 {"agent_token"}`. Refusals are the native
   answers, unchanged.
 - `bootstrap.agent` announces `/control` and configures the native agent's
@@ -773,9 +775,10 @@ per role, the paths it serves. Clocks are fixed at the bootstrap `now`.
   the parent may have one. Both answer `200 {"agent_token"}`, or the native
   refusal as a 4xx.
 
-Native APIs a launcher would use: aauth-go has `agentprovider.EnrollmentService`
-(`EnrollmentHandler`, `RefreshHandler`, `SingleKeyRefreshHandler`),
-`Server.SubagentHandler`, `Server.Issue`, `Server.IssueSubagent`,
-`SelfHostedAgent` and `agent.BootstrapClient`. aauth-rust has `AgentProvider::issue`,
+Native APIs: the aauth-go launcher uses `agentprovider.EnrollmentService`
+(`EnrollmentHandler`, `RefreshHandler`, `SingleKeyRefreshHandler`) over
+`testutil.NewEnrollmentStore`, `Server.SubagentHandler`, `Server.Issue`,
+`Server.IssueSubagent`, `SelfHostedAgent`, `agent.BootstrapClient` and
+`agent.Client`. aauth-rust has `AgentProvider::issue`,
 `AgentProvider::issue_subagent` and `PreparedRequest::verify_jkt_jwt`, and
 no enrollment or refresh service.

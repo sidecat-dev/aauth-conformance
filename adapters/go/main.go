@@ -81,6 +81,11 @@ var runSubagentServers func(bootstrap, signaturekey.StaticKeyResolver) error
 // extensionLaunchers holds the launchers of extension roles. Each role's source
 // file registers itself and is compiled only into that role's build.
 var extensionLaunchers = map[string]func(bootstrap, signaturekey.StaticKeyResolver) error{}
+
+// providerLaunchers holds the launchers of extension roles whose SUT is the
+// Agent Provider itself, so there is no fixture Agent Provider to read keys
+// from. Each role's source file registers itself.
+var providerLaunchers = map[string]func(bootstrap) error{}
 var builtInRoles = []string{"", "resource.agent-identity", "agent.signing", "person-server.direct", "authorization.federated", "authorization.deferred", "authorization.subagent"}
 
 func main() {
@@ -96,6 +101,9 @@ func run() error {
 	}
 	if config.Version != 1 {
 		return fmt.Errorf("bootstrap version must be 1")
+	}
+	if launch, ok := providerLaunchers[config.Role]; ok {
+		return launch(config)
 	}
 	if _, ok := extensionLaunchers[config.Role]; !ok && !slices.Contains(builtInRoles, config.Role) {
 		return fmt.Errorf("adapter source for role %q was not selected", config.Role)

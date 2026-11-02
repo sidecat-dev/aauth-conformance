@@ -591,10 +591,12 @@ applies, and its own guidance is graded as recommended. The draft defines no
 enrollment or refresh routes; [ADAPTERS.md](ADAPTERS.md#bootstrap-roles)
 fixes the ones a launcher serves.
 
-Neither library has a launcher yet. `build-adapters` reports both not offered
-for these roles, so their assertions are `not_claimed`:
+aauth-go has a launcher for all three roles (`adapters/go/bootstrap.go`) and
+also claims the out-of-slice single-key refresh, which its native handler
+implements. aauth-rust has none yet: `build-adapters` reports it not offered
+for these roles, so its assertions are `not_claimed`.
 
 ```sh
-go run ./cmd/build-adapters -role bootstrap.agent-provider -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -out build/bootstrap-ap
+go run ./cmd/build-adapters -role bootstrap.agent-provider -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -claim-recommended -out build/bootstrap-ap
 go run ./cmd/aauth-conformance -targets build/bootstrap-ap/targets.json -report build/bootstrap-ap-report.json -markdown build/bootstrap-ap-report.md
 ```
