@@ -112,6 +112,22 @@ errors, 1 for failed/incomplete execution, and 2 for invalid input/output errors
 `go run` wraps nonzero program statuses; use the binary to distinguish 1 from 2
 in automation. Missing targets never count as passes.
 
+## Run against deployed servers
+
+Remote mode tests servers you have already deployed, over HTTPS, with no
+adapter. Name them in a deployment file and run:
+
+```sh
+build/aauth-conformance -remote deployment.json -out build/remote -tls-cert suite.pem -tls-key suite.key
+```
+
+The suite plays the other parties and writes one report per role in the same
+format. It runs the Resource agent-identity, Person Server direct and
+four-party roles, and reports what it cannot exercise remotely as
+`not_exercised`, with the reason. [REMOTE.md](REMOTE.md) explains how to
+prepare a deployment and what each role covers;
+[deployments/](deployments/) stands up aauth-go and aauth-rust that way.
+
 ## Read the result
 
 Target manifests declare the clauses being tested, not an upstream full-conformance

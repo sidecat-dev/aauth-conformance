@@ -19,19 +19,27 @@ type Options struct {
 	Stderr                  io.Writer
 }
 
+// Exchange sends a logical request and returns the bounded response. A
+// launcher's loopback transport replaces only the physical origin. An empty
+// transport sends to the logical HTTPS URL itself, over the context's Network.
 func Exchange(ctx context.Context, logical *http.Request, transport string, timeout time.Duration) (Response, error) {
 	req := logical.Clone(ctx)
-	physical, err := url.Parse(transport)
-	if err != nil {
-		return Response{}, err
-	}
 	req.Host = logical.URL.Host
-	physical.Path = logical.URL.Path
-	physical.RawPath = logical.URL.RawPath
-	physical.RawQuery = logical.URL.RawQuery
-	physical.ForceQuery = logical.URL.ForceQuery
-	req.URL = physical
-	client := &http.Client{Timeout: timeout, Transport: &http.Transport{Proxy: nil, DisableKeepAlives: true}, CheckRedirect: func(*http.Request, []*http.Request) error {
+	connections := &http.Transport{Proxy: nil, DisableKeepAlives: true}
+	if transport == "" {
+		connections = networkFrom(ctx).transport()
+	} else {
+		physical, err := url.Parse(transport)
+		if err != nil {
+			return Response{}, err
+		}
+		physical.Path = logical.URL.Path
+		physical.RawPath = logical.URL.RawPath
+		physical.RawQuery = logical.URL.RawQuery
+		physical.ForceQuery = logical.URL.ForceQuery
+		req.URL = physical
+	}
+	client := &http.Client{Timeout: timeout, Transport: connections, CheckRedirect: func(*http.Request, []*http.Request) error {
 		return fmt.Errorf("redirects are not conformance responses")
 	}}
 	defer client.CloseIdleConnections()
@@ -205,44 +213,7 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 			run.Error = startError.Error()
 		}
 		for _, scenario := range s.Scenarios {
-			c := Case{ID: scenario.ID}
-			request, base, requestError := BuildRequest(s.Fixture, scenario)
-			var response Response
-			var exchangeError error
-			if requestError != nil {
-				exchangeError = requestError
-			} else {
-				c.Method = request.Method
-				c.URL = request.URL.String()
-				c.Headers = request.Header.Clone()
-				c.SignatureBase = string(base)
-				switch {
-				case startError != nil:
-					exchangeError = startError
-				default:
-					response, exchangeError = Exchange(ctx, request, ready.URL, options.Timeout)
-					if exchangeError == nil {
-						c.Response = &response
-					}
-				}
-			}
-			if exchangeError != nil {
-				c.Error = exchangeError.Error()
-			}
-			for _, assertion := range scenario.Assertions {
-				result := Result{Assertion: assertion.ID, Clause: assertion.Clause, Expected: assertion.Equals}
-				switch {
-				case !slices.Contains(target.Claims, assertion.Clause):
-					result.State = "not_claimed"
-				case exchangeError != nil:
-					result.State = "error"
-					result.Detail = exchangeError.Error()
-				default:
-					result = Check(assertion, response)
-				}
-				c.Results = append(c.Results, result)
-			}
-			run.Cases = append(run.Cases, c)
+			run.Cases = append(run.Cases, runResourceCase(ctx, s.Fixture, scenario, target, ready.URL, options, startError))
 		}
 		if stop != nil {
 			stop()
@@ -254,4 +225,46 @@ func RunSuite(ctx context.Context, s Suite, targets Targets, options Options) (R
 		report.Execution = "passed"
 	}
 	return report, nil
+}
+
+// runResourceCase sends one agent-identity request and grades the response.
+func runResourceCase(ctx context.Context, f Fixture, scenario Scenario, target Target, physical string, options Options, startError error) Case {
+	c := Case{ID: scenario.ID}
+	request, base, requestError := BuildRequest(f, scenario)
+	var response Response
+	var exchangeError error
+	if requestError != nil {
+		exchangeError = requestError
+	} else {
+		c.Method = request.Method
+		c.URL = request.URL.String()
+		c.Headers = request.Header.Clone()
+		c.SignatureBase = string(base)
+		switch {
+		case startError != nil:
+			exchangeError = startError
+		default:
+			response, exchangeError = Exchange(ctx, request, physical, options.Timeout)
+			if exchangeError == nil {
+				c.Response = &response
+			}
+		}
+	}
+	if exchangeError != nil {
+		c.Error = exchangeError.Error()
+	}
+	for _, assertion := range scenario.Assertions {
+		result := Result{Assertion: assertion.ID, Clause: assertion.Clause, Expected: assertion.Equals}
+		switch {
+		case !slices.Contains(target.Claims, assertion.Clause):
+			result.State = "not_claimed"
+		case exchangeError != nil:
+			result.State = "error"
+			result.Detail = exchangeError.Error()
+		default:
+			result = Check(assertion, response)
+		}
+		c.Results = append(c.Results, result)
+	}
+	return c
 }

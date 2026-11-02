@@ -102,6 +102,12 @@ redirects and timeouts are errors. Markdown shows the matrix and assertion evide
 Any assertion failure, transport error or adapter startup error makes the run unsuccessful;
 so does an all-unclaimed or all-unexercised run.
 
+A remote-mode report (see [REMOTE.md](REMOTE.md)) adds `"transport": "remote"`
+and names the deployed servers it tested under the implementation's `remote`,
+by party. Its claims default to the role's protocol and adapter-contract
+clauses, as for a launcher. A scenario remote mode cannot exercise keeps its
+assertions, each `not_exercised` with the reason in `detail`.
+
 Execution errors are retained on the case independently of clause claims. They
 make overall execution fail even when that case's assertions are not claimed.
 

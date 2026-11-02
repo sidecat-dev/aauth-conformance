@@ -21,7 +21,24 @@ type Fixture struct {
 	Access    *AccessFixture `json:"access_server,omitempty"`
 	// Extensions holds identities for extension roles, keyed by role family.
 	Extensions map[string]json.RawMessage `json:"extensions,omitempty"`
+	// Skew is how many seconds a server's issued-at time may differ from Now.
+	// Launchers share the fixed clock, so it is zero; remote mode sets it
+	// because a deployed server reads its own clock.
+	Skew int64 `json:"-"`
 }
+
+// issuedNow reports whether a server-chosen issued-at time is Now, within Skew.
+func (f Fixture) issuedNow(t float64) bool {
+	return t >= float64(f.Now-f.Skew) && t <= float64(f.Now+f.Skew)
+}
+
+// signedExpiry reports whether a response's expires_in agrees with the
+// signed expiry, counted from the server's issue time.
+func (f Fixture) signedExpiry(claims map[string]any, expiresIn int64) bool {
+	exp, ok := claims["exp"].(float64)
+	return ok && f.issuedNow(exp-float64(expiresIn))
+}
+
 type TokenSpec struct {
 	IATOffset int64 `json:"iat_offset"`
 	EXPOffset int64 `json:"exp_offset"`
@@ -86,11 +103,13 @@ type Suite struct {
 	Digest    string
 }
 type Target struct {
-	Unavailable string   `json:"unavailable,omitempty"`
-	ID          string   `json:"id"`
-	Revision    string   `json:"revision"`
-	Command     []string `json:"command"`
-	Claims      []string `json:"claims"`
+	// Remote names the deployed servers a remote-mode run tested, by party.
+	Remote      map[string]string `json:"remote,omitempty"`
+	Unavailable string            `json:"unavailable,omitempty"`
+	ID          string            `json:"id"`
+	Revision    string            `json:"revision"`
+	Command     []string          `json:"command"`
+	Claims      []string          `json:"claims"`
 }
 type Targets struct {
 	Role            string   `json:"role,omitempty"`

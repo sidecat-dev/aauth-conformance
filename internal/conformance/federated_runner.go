@@ -55,7 +55,9 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 	c := Case{ID: s.ID}
 	responses := map[string]Response{}
 	observations := map[string]PersonObservation{}
-	relay.reset(physical, s.Federated.Mutation, nil)
+	if relay != nil {
+		relay.reset(physical, s.Federated.Mutation, nil)
+	}
 	exchange := func(stage string, request *http.Request, base string) (Response, error) {
 		var body []byte
 		if request.Body != nil {
@@ -195,31 +197,21 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 			}
 			return nil
 		}
-		relay.reset(physical, s.Federated.Mutation, map[string]string{
-			"resource_token": resource, "presented_token": person, "agent_token": agentToken,
-		})
+		// Without a relay (remote mode) the PS-to-AS exchange is not observed.
+		if relay != nil {
+			relay.reset(physical, s.Federated.Mutation, map[string]string{
+				"resource_token": resource, "presented_token": person, "agent_token": agentToken,
+			})
+		}
 		tokenBody, _ := json.Marshal(map[string]string{"resource_token": resource, "presented_token": person})
 		tokenResponse, err := send("token", "POST", f.Person.Issuer+"/token", agentToken, tokenBody)
 		if err != nil {
 			return err
 		}
-		c.Handoff = relay.snapshot()
-		if c.Handoff == nil {
-			return fmt.Errorf("PS made no observable AS request")
-		}
-		if c.Handoff.Error != "" {
-			return fmt.Errorf("PS-to-AS exchange: %s", c.Handoff.Error)
-		}
-		if c.Handoff.NativeResponse == nil {
-			return fmt.Errorf("no native AS response")
-		}
-		responses["access"] = *c.Handoff.NativeResponse
-		if responses["access"].Status == 200 {
-			compact, err := responseToken(responses["access"], "auth_token")
-			if err != nil {
+		if relay != nil {
+			if c.Handoff, err = observeHandoff(f, relay, po.Claims, agentExp, responses, observations); err != nil {
 				return err
 			}
-			observations["access"] = checkResponseExpiry(responses["access"], observeFederatedAuth(f, compact, po.Claims, agentExp))
 		}
 		if tokenResponse.Status == 200 {
 			compact, err := responseToken(tokenResponse, "auth_token")
@@ -302,6 +294,30 @@ func runFederatedCase(ctx context.Context, f Fixture, s Scenario, target Target,
 		c.Results = append(c.Results, result)
 	}
 	return c
+}
+
+// observeHandoff retrieves the relay's record of the native PS-to-AS
+// exchange and observes the AS grant before any injected fault.
+func observeHandoff(f Fixture, relay *federationRelay, person map[string]any, agentExp int64, responses map[string]Response, observations map[string]PersonObservation) (*FederatedHandoff, error) {
+	handoff := relay.snapshot()
+	if handoff == nil {
+		return nil, fmt.Errorf("PS made no observable AS request")
+	}
+	if handoff.Error != "" {
+		return handoff, fmt.Errorf("PS-to-AS exchange: %s", handoff.Error)
+	}
+	if handoff.NativeResponse == nil {
+		return handoff, fmt.Errorf("no native AS response")
+	}
+	responses["access"] = *handoff.NativeResponse
+	if responses["access"].Status == 200 {
+		compact, err := responseToken(responses["access"], "auth_token")
+		if err != nil {
+			return handoff, err
+		}
+		observations["access"] = checkResponseExpiry(responses["access"], observeFederatedAuth(f, compact, person, agentExp))
+	}
+	return handoff, nil
 }
 
 func checkFederatedBudget(a Assertion, observation PersonObservation) Result {

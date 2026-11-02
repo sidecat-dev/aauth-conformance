@@ -1,0 +1,19 @@
+[package]
+name = "aauth-rust-deployment"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+# library links to the aauth-rust checkout being deployed; see README.md.
+[dependencies]
+aauth-rust-access-server = { path = "library/crates/aauth-rust-access-server" }
+aauth-rust-core = { path = "library/crates/aauth-rust-core" }
+aauth-rust-jose = { path = "library/crates/aauth-rust-jose" }
+aauth-rust-person-server = { path = "library/crates/aauth-rust-person-server" }
+aauth-rust-resource = { path = "library/crates/aauth-rust-resource" }
+http = "1"
+httparse = "1"
+rustls = { version = "0.23", default-features = false, features = ["std", "ring", "tls12"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

@@ -30,7 +30,10 @@ type Run struct {
 	Cases  []Case `json:"cases"`
 }
 type Report struct {
-	Role        string  `json:"role"`
+	Role string `json:"role"`
+	// Transport is "remote" when deployed servers were reached over HTTPS;
+	// empty means launchers on loopback HTTP.
+	Transport   string  `json:"transport,omitempty"`
 	Version     int     `json:"version"`
 	Execution   string  `json:"execution"`
 	SuiteSHA256 string  `json:"suite_sha256"`
@@ -129,7 +132,12 @@ func (r Report) Markdown(out io.Writer) error {
 		state = "passed"
 	}
 	fmt.Fprintf(&b, "Execution: **%s**.\n\n", state)
-	b.WriteString("Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. Loopback HTTP transport does not measure TLS, enrollment or discovery security.\n\n| Clause | Scope")
+	b.WriteString("Pass means only the listed assertions passed, not the entire section. `adapter-contract` rows specify the test application's response. ")
+	if r.Transport == "remote" {
+		b.WriteString("Remote mode reached the deployed servers over HTTPS; it does not grade TLS, enrollment or discovery security.\n\n| Clause | Scope")
+	} else {
+		b.WriteString("Loopback HTTP transport does not measure TLS, enrollment or discovery security.\n\n| Clause | Scope")
+	}
 	for _, run := range r.Runs {
 		fmt.Fprintf(&b, " | %s (`%s`)", clean(run.Target.ID), clean(run.Target.Revision))
 	}
@@ -168,6 +176,9 @@ func (r Report) Markdown(out io.Writer) error {
 				fmt.Fprintf(&b, "- `%s/%s` — `%s`: **%s**", clean(c.ID), clean(a.Assertion), clean(a.Clause), a.State)
 				if a.State == "fail" || a.State == "error" {
 					fmt.Fprintf(&b, "; expected `%s`, actual `%v` %s", clean(string(a.Expected)), a.Actual, clean(a.Detail))
+				}
+				if a.State == "not_exercised" && a.Detail != "" {
+					fmt.Fprintf(&b, ": %s", clean(a.Detail))
 				}
 				b.WriteByte('\n')
 			}

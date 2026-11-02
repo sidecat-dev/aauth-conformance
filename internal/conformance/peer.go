@@ -29,7 +29,9 @@ func MintToken(f Fixture, spec TokenSpec, id string) (string, error) {
 	return signed + "." + base64.RawURLEncoding.EncodeToString(signature), nil
 }
 func BuildRequest(f Fixture, s Scenario) (*http.Request, []byte, error) {
-	request, err := http.NewRequest(s.Request.Method, f.Origin+s.Request.Path, nil)
+	// Validation holds the request path to the fixture's; remote mode
+	// rebases the fixture path onto the deployed Resource.
+	request, err := http.NewRequest(s.Request.Method, f.Origin+f.Path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
