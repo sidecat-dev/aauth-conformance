@@ -1,0 +1,55 @@
+{
+  "names": {
+    "sigkey_verifier": "https://verifier.aauth-LIB.test"
+  },
+  "trusted": [
+    "https://signer.conformance.test",
+    "https://signer-mixed.conformance.test",
+    "https://signer-pq-only.conformance.test",
+    "https://ap-mixed.conformance.test",
+    "https://ap-pq-only.conformance.test",
+    "https://keys.conformance.test"
+  ],
+  "roles": {
+    "sigkey.verifier": {
+      "resource": "https://verifier.aauth-LIB.test/verify"
+    }
+  },
+  "roles_by_lib": {
+    "go": {
+      "sigkey.verifier": {
+        "resource": "https://verifier.aauth-go.test/verify",
+        "claims": [
+          "sigkey.v.echo",
+          "sigkey.v.hwk-ed25519",
+          "sigkey.v.hwk-es384",
+          "sigkey.v.hwk-rs256",
+          "sigkey.v.hwk-ps256",
+          "sigkey.v.ap-mixed-jwks",
+          "sigkey.v.ap-pq-only",
+          "sigkey.v.jwks-uri",
+          "sigkey.v.signer-mixed-jwks",
+          "sigkey.v.signer-pq-only",
+          "sigkey.v.unknown-kid",
+          "sigkey.v.jwks",
+          "sigkey.v.jkt-jwt",
+          "sigkey.v.uncovered-hwk",
+          "sigkey.v.uncovered-jwks-uri",
+          "sigkey.v.unknown-scheme",
+          "sigkey.v.missing-member-jwt",
+          "sigkey.v.missing-member-hwk",
+          "sigkey.v.hwk-kid",
+          "sigkey.v.hwk-eddsa",
+          "sigkey.v.cnf-eddsa",
+          "sigkey.v.jws-eddsa",
+          "sigkey.v.hwk-kty-mismatch",
+          "sigkey.v.hwk-crv-mismatch",
+          "sigkey.v.cnf-kty-mismatch",
+          "sigkey.v.hwk-symmetric",
+          "sigkey.v.cnf-symmetric",
+          "sigkey.v.jwt-exp"
+        ]
+      }
+    }
+  }
+}
