@@ -7,8 +7,10 @@
 # Usage: deployments/run-remote.sh /path/to/aauth-go /path/to/aauth-rust OUT
 #
 # deployments/roles/*.json say what the aauth-go and aauth-rust deployments
-# serve: "names" are server names (LIB stands for go or rust), "trusted" the
-# further suite parties they trust, and "roles" the deployment file's roles.
+# serve: "names" are server names (LIB stands for go or rust; a name outside
+# aauth-LIB names a suite party), "trusted" the further suite parties they
+# trust, "roles" the deployment file's roles, and the optional "libraries"
+# the deployments the file applies to (default both).
 # Optional environment: LIBS (default "go rust protocol") picks the
 # deployments; REMOTE_ROLES (space-separated) keeps only those suite roles;
 # CARGO_TARGET is a reusable Cargo target directory.
@@ -44,18 +46,17 @@ cd "$work"
 SUITE=127.0.0.1:18443
 declare -A PORT=([go]=127.0.0.1:18444 [rust]=127.0.0.1:18445 [protocol]=127.0.0.1:18446)
 suite_names=$(./aauth-conformance -suite "$suite" -harness-names | tr '\n' ' ')
-# One merged description of what the library deployments serve.
-jq -s '{names: (map(.names // {}) | add), trusted: (map(.trusted // []) | add | unique), roles: (map(.roles // {}) | add)}' \
-  "$here"/roles/*.json > roles.json
-if [ -n "${REMOTE_ROLES:-}" ]; then
-  jq --arg keep "$REMOTE_ROLES" '.roles |= with_entries(select(.key as $k | $keep | split(" ") | index($k)))' roles.json > kept.json
-  mv kept.json roles.json
-fi
-for_lib() { sed "s/aauth-LIB\./aauth-$1./g; s/LIB/$1/g" roles.json; }
+# One merged description of what a library deployment serves.
+for_lib() {
+  jq -s --arg lib "$1" --arg keep "${REMOTE_ROLES:-}" 'map(select((.libraries // [$lib]) | index($lib)))
+    | {names: (map(.names // {}) | add), trusted: (map(.trusted // []) | add | unique), roles: (map(.roles // {}) | add)}
+    | if $keep == "" then . else .roles |= with_entries(select(.key as $k | $keep | split(" ") | index($k))) end' \
+    "$here"/roles/*.json | sed "s/aauth-LIB\./aauth-$1./g; s/LIB/$1/g"
+}
 names() {
   case $1 in
   protocol) echo "api.aauth-protocol.test person.aauth-protocol.test" ;;
-  *) for_lib "$1" | jq -r '.names[]' | sed 's#^https://##; s#[/:].*##' | sort -u | tr '\n' ' ' ;;
+  *) for_lib "$1" | jq -r '.names[]' | sed 's#^https://##; s#[/:].*##' | grep -F "aauth-$1." | sort -u | tr '\n' ' ' ;;
   esac
 }
 

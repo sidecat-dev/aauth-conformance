@@ -25,11 +25,14 @@ type Deployment struct {
 // RemoteRole names one suite role's deployed servers. Resource is the URL of
 // a protected resource; the servers are named by their issuer identifiers.
 type RemoteRole struct {
-	Resource          string `json:"resource,omitempty"`
-	PersonServer      string `json:"person_server,omitempty"`
-	AccessServer      string `json:"access_server,omitempty"`
-	AgentProvider     string `json:"agent_provider,omitempty"`
-	SupervisionServer string `json:"supervision_server,omitempty"`
+	Resource string `json:"resource,omitempty"`
+	// ThreePartyResource is a second protected resource URL, for a role
+	// whose scenarios need a Resource of each topology (r3.resource).
+	ThreePartyResource string `json:"three_party_resource,omitempty"`
+	PersonServer       string `json:"person_server,omitempty"`
+	AccessServer       string `json:"access_server,omitempty"`
+	AgentProvider      string `json:"agent_provider,omitempty"`
+	SupervisionServer  string `json:"supervision_server,omitempty"`
 	// Agent is the agent identifier a deployed Agent Provider serves for the
 	// suite's Agent, which holds the fixture's agent key.
 	Agent string `json:"agent,omitempty"`
@@ -83,6 +86,7 @@ type remoteDocument struct {
 
 const (
 	partyResource    = "resource"
+	partyThreeParty  = "three_party_resource"
 	partyPerson      = "person_server"
 	partyAccess      = "access_server"
 	partyProvider    = "agent_provider"
@@ -188,7 +192,7 @@ func ValidateDeployment(d Deployment, s Suite) error {
 		for party, value := range servers {
 			identifier := value
 			switch party {
-			case partyResource:
+			case partyResource, partyThreeParty:
 				identifier = resourceIdentifier(value)
 				if !resourceURL(value) {
 					return fmt.Errorf("%s resource %q must be an HTTPS URL with a path and no port, query or fragment", role, value)
@@ -226,7 +230,7 @@ func ValidateDeployment(d Deployment, s Suite) error {
 // and control when it names them.
 func (r RemoteRole) servers() map[string]string {
 	servers := map[string]string{}
-	for party, value := range map[string]string{partyResource: r.Resource, partyPerson: r.PersonServer, partyAccess: r.AccessServer,
+	for party, value := range map[string]string{partyResource: r.Resource, partyThreeParty: r.ThreePartyResource, partyPerson: r.PersonServer, partyAccess: r.AccessServer,
 		partyProvider: r.AgentProvider, partySupervision: r.SupervisionServer, partyAgent: r.Agent, partyControl: r.Control} {
 		if value != "" {
 			servers[party] = value
@@ -417,7 +421,7 @@ func discoverRemote(ctx context.Context, r RemoteRole, documents map[string]remo
 			continue
 		}
 		issuer := value
-		if party == partyResource {
+		if party == partyResource || party == partyThreeParty {
 			issuer = resourceIdentifier(value)
 		}
 		keys, metadata, err := publishedKeys(ctx, issuer, document.Name, timeout, !document.Keys)

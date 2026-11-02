@@ -1,0 +1,13 @@
+{
+  "libraries": ["go"],
+  "names": {
+    "r3_federated_person_server": "https://r3-ps.aauth-LIB.test",
+    "r3_access_server": "https://r3-access.aauth-LIB.test"
+  },
+  "roles": {
+    "r3.federated-issuer": {
+      "person_server": "https://r3-ps.aauth-LIB.test",
+      "access_server": "https://r3-access.aauth-LIB.test"
+    }
+  }
+}

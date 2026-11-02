@@ -11,6 +11,7 @@ aauth-rust-access-server = { path = "library/crates/aauth-rust-access-server" }
 aauth-rust-core = { path = "library/crates/aauth-rust-core" }
 aauth-rust-jose = { path = "library/crates/aauth-rust-jose" }
 aauth-rust-person-server = { path = "library/crates/aauth-rust-person-server" }
+aauth-rust-r3 = { path = "library/crates/aauth-rust-r3" }
 aauth-rust-resource = { path = "library/crates/aauth-rust-resource" }
 http = "1"
 httparse = "1"
