@@ -66,11 +66,20 @@ func (p PersonFixture) resourceKeys() keySet {
 	return fixtureKeys(p.ResourceSeed, p.ResourceKid)
 }
 
-// keySet holds a signer's Ed25519 public keys by kid.
-type keySet map[string]ed25519.PublicKey
+// keySet holds a signer's public JWKs by kid. Each key carries its alg:
+// Ed25519 for the fixture's seeds; Ed25519 or ES256 for a deployed server's
+// published keys.
+type keySet map[string]map[string]any
 
 func fixtureKeys(seed, kid string) keySet {
-	return keySet{kid: seedKey(seed).Public().(ed25519.PublicKey)}
+	return keySet{kid: publicJWK(seed)}
+}
+
+// verify checks a JOSE-style signature by the key kid names, whose alg must
+// be alg. It answers false for an unknown kid or another algorithm.
+func (k keySet) verify(kid, alg string, message, signature []byte) bool {
+	key, known := k[kid]
+	return known && key["alg"] == alg && SigvecVerifyJWK(key, message, signature)
 }
 
 type PersonSpec struct {
@@ -103,8 +112,8 @@ func verifyJWT(compact, seed, kid, typ string) (map[string]any, map[string]any, 
 	return verifyJWTWith(compact, fixtureKeys(seed, kid), typ)
 }
 
-// verifyJWTWith verifies an Ed25519 JWT of the given type under the key its
-// kid names in keys.
+// verifyJWTWith verifies a JWT of the given type under the key its kid names
+// in keys, with that key's algorithm (Ed25519 or ES256).
 func verifyJWTWith(compact string, keys keySet, typ string) (map[string]any, map[string]any, error) {
 	parts := strings.Split(compact, ".")
 	if len(parts) != 3 {
@@ -126,8 +135,8 @@ func verifyJWTWith(compact string, keys keySet, typ string) (map[string]any, map
 		return nil, nil, e
 	}
 	kid, _ := head["kid"].(string)
-	key, known := keys[kid]
-	if head["alg"] != "Ed25519" || head["typ"] != typ || !known || !ed25519.Verify(key, []byte(parts[0]+"."+parts[1]), decoded[2]) {
+	alg, _ := head["alg"].(string)
+	if head["typ"] != typ || !keys.verify(kid, alg, []byte(parts[0]+"."+parts[1]), decoded[2]) {
 		return head, claims, fmt.Errorf("JWT signature/alg/type/kid did not verify")
 	}
 	return head, claims, nil

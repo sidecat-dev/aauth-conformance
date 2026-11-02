@@ -1,0 +1,18 @@
+{
+  "names": {
+    "r3_resource": "https://r3.aauth-LIB.test",
+    "r3_direct_resource": "https://r3-direct.aauth-LIB.test",
+    "r3_person_server": "https://r3-person.aauth-LIB.test",
+    "suite_access_server": "https://access.conformance.test",
+    "control": "https://control.aauth-LIB.test"
+  },
+  "trusted": ["https://access.conformance.test", "https://other.conformance.test"],
+  "roles": {
+    "r3.resource": {
+      "resource": "https://r3.aauth-LIB.test/authorize",
+      "three_party_resource": "https://r3-direct.aauth-LIB.test/authorize",
+      "control": "https://control.aauth-LIB.test/r3.resource"
+    },
+    "r3.issuer": {"person_server": "https://r3-person.aauth-LIB.test"}
+  }
+}

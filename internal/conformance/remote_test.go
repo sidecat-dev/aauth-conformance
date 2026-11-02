@@ -157,7 +157,7 @@ func TestHarnessDocumentsAreDiscoverableOverTLS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !keys["ps-1"].Equal(fixtureKeys(suite.Fixture.Person.Seed, "ps-1")["ps-1"]) || len(keys) != 1 {
+	if !jsonEqual(keys["ps-1"], fixtureKeys(suite.Fixture.Person.Seed, "ps-1")["ps-1"]) || len(keys) != 1 {
 		t.Fatalf("%v", keys)
 	}
 	if _, _, err := publishedKeys(ctx, suite.Fixture.Origin, "aauth-agent.json", time.Second); err == nil {
@@ -183,7 +183,8 @@ func TestRemotePersonServerEndpointsComeFromMetadata(t *testing.T) {
 		}), "ps.example")
 	}
 	r := RemoteRole{PersonServer: "https://ps.example"}
-	_, endpoints, err := discoverRemote(WithNetwork(context.Background(), serve(metadata)), r, time.Second)
+	documents := remoteDrivers[PersonServerRole].discover
+	_, endpoints, err := discoverRemote(WithNetwork(context.Background(), serve(metadata)), r, documents, time.Second)
 	if err != nil || endpoints.person != "https://ps.example/person-token" || endpoints.token != "https://ps.example/v1/token" {
 		t.Fatalf("%+v %v", endpoints, err)
 	}
@@ -193,7 +194,7 @@ func TestRemotePersonServerEndpointsComeFromMetadata(t *testing.T) {
 			partial[name] = value
 		}
 		delete(partial, missing)
-		if _, _, err := discoverRemote(WithNetwork(context.Background(), serve(partial)), r, time.Second); err == nil {
+		if _, _, err := discoverRemote(WithNetwork(context.Background(), serve(partial)), r, documents, time.Second); err == nil {
 			t.Fatalf("accepted metadata without %s", missing)
 		}
 	}

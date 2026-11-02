@@ -50,89 +50,73 @@ func (n *Network) transport() *http.Transport {
 	}
 }
 
-// harnessParty is a party the suite plays whose keys a deployed server must
-// discover: its metadata and JWKS are served under its own HTTPS name.
-type harnessParty struct {
-	issuer, document, seed, kid string
-}
-
-// harnessParties lists the fixture's Agent Provider, Resource and Person
-// Server. They keep their fixture names in remote mode, so a deployment
-// reaches them by routing those names to the suite's listener.
-func harnessParties(f Fixture) []harnessParty {
-	parties := []harnessParty{{f.Issuer, "aauth-agent.json", f.APSeed, f.Kid}}
-	if p := f.Person; p != nil {
-		parties = append(parties,
-			harnessParty{f.Origin, "aauth-resource.json", p.ResourceSeed, p.ResourceKid},
-			harnessParty{p.Issuer, "aauth-person.json", p.Seed, p.Kid})
-	}
-	return parties
-}
-
-// HarnessDocuments returns each harness party's metadata and JWKS by URL,
-// for a deployment that pins its trust instead of discovering it.
-func HarnessDocuments(f Fixture) map[string][]byte {
-	documents := map[string][]byte{}
-	for _, party := range harnessParties(f) {
-		key := publicJWK(party.seed)
-		key["kid"] = party.kid
-		documents[party.issuer+"/.well-known/"+party.document], _ = json.Marshal(map[string]any{"issuer": party.issuer, "jwks_uri": party.issuer + "/.well-known/jwks.json"})
-		documents[party.issuer+"/.well-known/jwks.json"], _ = json.Marshal(map[string]any{"keys": []any{key}})
-	}
-	return documents
-}
-
-// HarnessHandler serves HarnessDocuments, choosing the party by Host.
-func HarnessHandler(f Fixture) http.Handler {
-	documents := HarnessDocuments(f)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, ok := documents["https://"+r.Host+r.URL.Path]
-		if !ok || r.Method != http.MethodGet {
-			http.NotFound(w, r)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Content-Length", fmt.Sprint(len(body)))
-		w.Write(body)
-	})
-}
-
-// publishedKeys discovers a deployed server's Ed25519 signing keys: its
-// metadata at issuer/.well-known/document, then the JWKS that names. It
-// returns the metadata document's string members too.
-func publishedKeys(ctx context.Context, issuer, document string, timeout time.Duration) (keySet, map[string]string, error) {
-	var raw map[string]any
-	if err := fetchJSON(ctx, issuer+"/.well-known/"+document, timeout, &raw); err != nil {
+// publishedKeys discovers a deployed server's Ed25519 and ES256 signing
+// keys: its metadata at issuer/.well-known/document, then the JWKS that
+// names. It returns the metadata document too. With optional set, metadata
+// without a jwks_uri answers no keys instead of an error.
+func publishedKeys(ctx context.Context, issuer, document string, timeout time.Duration, optional ...bool) (keySet, map[string]any, error) {
+	var metadata map[string]any
+	if err := fetchJSON(ctx, issuer+"/.well-known/"+document, timeout, &metadata); err != nil {
 		return nil, nil, err
 	}
-	metadata := map[string]string{}
-	for name, value := range raw {
-		if text, ok := value.(string); ok {
-			metadata[name] = text
-		}
+	uri, _ := metadata["jwks_uri"].(string)
+	if metadata["issuer"] != issuer {
+		return nil, nil, fmt.Errorf("%s/.well-known/%s: issuer must be %s", issuer, document, issuer)
 	}
-	if metadata["issuer"] != issuer || metadata["jwks_uri"] == "" {
-		return nil, nil, fmt.Errorf("%s/.well-known/%s: issuer must be %s and jwks_uri present", issuer, document, issuer)
+	if uri == "" {
+		if len(optional) > 0 && optional[0] {
+			return nil, metadata, nil
+		}
+		return nil, nil, fmt.Errorf("%s/.well-known/%s: jwks_uri must be present", issuer, document)
 	}
 	var jwks struct {
 		Keys []map[string]any `json:"keys"`
 	}
-	if err := fetchJSON(ctx, metadata["jwks_uri"], timeout, &jwks); err != nil {
+	if err := fetchJSON(ctx, uri, timeout, &jwks); err != nil {
 		return nil, nil, err
 	}
 	keys := keySet{}
 	for _, key := range jwks.Keys {
 		kid, _ := key["kid"].(string)
-		x, _ := key["x"].(string)
-		material, err := base64.RawURLEncoding.Strict().DecodeString(x)
-		if key["kty"] == "OKP" && key["crv"] == "Ed25519" && kid != "" && err == nil && len(material) == ed25519.PublicKeySize {
-			keys[kid] = ed25519.PublicKey(material)
+		if public := signingJWK(key); kid != "" && public != nil {
+			keys[kid] = public
 		}
 	}
 	if len(keys) == 0 {
-		return nil, nil, fmt.Errorf("%s publishes no Ed25519 key with a kid", metadata["jwks_uri"])
+		return nil, nil, fmt.Errorf("%s publishes no Ed25519 or ES256 key with a kid", uri)
 	}
 	return keys, metadata, nil
+}
+
+// signingJWK returns the public members of a published Ed25519 or P-256 key,
+// with its alg, or nil for any other key. A key that names an alg must name
+// the one its type and curve fix.
+func signingJWK(key map[string]any) map[string]any {
+	member := func(name string, size int) (string, bool) {
+		value, _ := key[name].(string)
+		material, err := base64.RawURLEncoding.Strict().DecodeString(value)
+		return value, err == nil && len(material) == size
+	}
+	if _, private := key["d"]; private {
+		return nil
+	}
+	var public map[string]any
+	switch {
+	case key["kty"] == "OKP" && key["crv"] == "Ed25519":
+		if x, ok := member("x", ed25519.PublicKeySize); ok {
+			public = map[string]any{"kty": "OKP", "crv": "Ed25519", "x": x, "alg": "Ed25519"}
+		}
+	case key["kty"] == "EC" && key["crv"] == "P-256":
+		x, okX := member("x", 32)
+		y, okY := member("y", 32)
+		if okX && okY {
+			public = map[string]any{"kty": "EC", "crv": "P-256", "x": x, "y": y, "alg": "ES256"}
+		}
+	}
+	if alg, named := key["alg"]; public == nil || named && alg != public["alg"] {
+		return nil
+	}
+	return public
 }
 
 func fetchJSON(ctx context.Context, target string, timeout time.Duration, v any) error {

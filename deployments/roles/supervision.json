@@ -1,0 +1,13 @@
+{
+  "names": {
+    "supervision_server": "https://ss.aauth-LIB.test",
+    "control": "https://control.aauth-LIB.test"
+  },
+  "trusted": ["https://other-ps.conformance.test"],
+  "roles": {
+    "supervision.server": {
+      "supervision_server": "https://ss.aauth-LIB.test",
+      "control": "https://control.aauth-LIB.test/supervision.server"
+    }
+  }
+}
