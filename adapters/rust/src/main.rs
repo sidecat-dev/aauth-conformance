@@ -1,4 +1,6 @@
 //! Test transport and fixed host configuration around unmodified Rust APIs.
+#[cfg(feature = "bootstrap")]
+mod bootstrap;
 #[cfg(feature = "deferred")]
 mod deferred;
 #[cfg(feature = "events")]
@@ -221,6 +223,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return sigkey_vectors::run(config);
         #[cfg(not(feature = "sigkey-vectors"))]
         return Err("rebuild this launcher for vectors.signature-key".into());
+    }
+    if config.role.starts_with("bootstrap.") {
+        #[cfg(feature = "bootstrap")]
+        return bootstrap::run(config);
+        #[cfg(not(feature = "bootstrap"))]
+        return Err(format!("rebuild this launcher for {}", config.role).into());
     }
     if config.role == "vectors.library" {
         #[cfg(feature = "vectors")]

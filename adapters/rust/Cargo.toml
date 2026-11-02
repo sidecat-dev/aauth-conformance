@@ -16,6 +16,7 @@ supervision = []
 sigkey = []
 vectors = []
 sigkey-vectors = []
+bootstrap = []
 
 [dependencies]
 aauth-rust-jose = "=0.1.0-alpha.2"

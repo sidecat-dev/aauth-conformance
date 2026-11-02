@@ -737,9 +737,9 @@ community module has no launcher for this role.
 
 ## Bootstrap roles
 
-`adapters/go/bootstrap.go` is the aauth-go launcher for all three roles.
-aauth-rust has none yet: `cmd/build-adapters/bootstrap.go` reports it not
-offered, with the reason, so its run grades every assertion `not_claimed`.
+`adapters/go/bootstrap.go` is the aauth-go launcher and
+`adapters/rust/src/bootstrap.rs` (feature `bootstrap`) the aauth-rust
+launcher for all three roles.
 This section is the contract a launcher meets. The Bootstrap draft defines no routes or
 bodies (lines 371 and 410), so the paths come from
 `fixture.extensions.bootstrap` and the bodies are fixed below.
@@ -779,6 +779,10 @@ Native APIs: the aauth-go launcher uses `agentprovider.EnrollmentService`
 (`EnrollmentHandler`, `RefreshHandler`, `SingleKeyRefreshHandler`) over
 `testutil.NewEnrollmentStore`, `Server.SubagentHandler`, `Server.Issue`,
 `Server.IssueSubagent`, `SelfHostedAgent`, `agent.BootstrapClient` and
-`agent.Client`. aauth-rust has `AgentProvider::issue`,
-`AgentProvider::issue_subagent` and `PreparedRequest::verify_jkt_jwt`, and
-no enrollment or refresh service.
+`agent.Client`. The aauth-rust launcher uses `bootstrap::BootstrapService`
+over `MemoryBootstrapStore` with a fixture `BootstrapPolicy` for the hosted
+AP, `AgentProvider::issue_to` and `AgentProvider::issue_subagent_to` for the
+self-hosted domain, and `BootstrapClient` (a durable key it generates, a
+fresh ephemeral key per refresh) with `Agent::subagent_request` and
+`Agent::sign` for the Agent. The Agent verifies each refreshed token under
+the AP's published keys.

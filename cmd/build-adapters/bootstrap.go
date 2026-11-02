@@ -10,22 +10,22 @@ import "gitlab.com/sidecat-dev/aauth-conformance/internal/conformance"
 // refresh handler implements the optional single-key pattern, so aauth-go
 // claims that out-of-slice clause.
 //
-// aauth-rust has no launcher yet and is reported not offered, with the reason.
+// The Rust launcher serves all three roles under one feature, which links
+// the Agent Provider crate: its bootstrap::BootstrapService (enrollment,
+// two-key and single-key refresh, sub-agent issuance) for the hosted AP,
+// AgentProvider::issue_to and issue_subagent_to for the self-hosted domain,
+// and the Agent crate's BootstrapClient and Agent::subagent_request for the
+// enrolling Agent. Its single-key refresh implements the optional
+// single-key pattern, so aauth-rust claims that out-of-slice clause too.
 func init() {
-	reasons := map[string]string{
-		"aauth-rust": "aauth-rust implements no Bootstrap enrollment or refresh; its CONFORMANCE.md says Bootstrap behavior is absent",
-	}
 	for _, role := range []string{conformance.BootstrapProviderRole, conformance.BootstrapAgentRole, conformance.BootstrapSelfHostedRole} {
 		goRoleSources[role] = []string{"bootstrap.go"}
-		if unavailableRoles[role] == nil {
-			unavailableRoles[role] = map[string]string{}
-		}
-		for library, reason := range reasons {
-			unavailableRoles[role][library] = reason
-		}
+		rustRoleFeatures[role] = "bootstrap"
+		rustRoleCrates[role] = []string{"aauth-rust-agent-provider"}
 	}
 	if adoptedClaims[conformance.BootstrapProviderRole] == nil {
 		adoptedClaims[conformance.BootstrapProviderRole] = map[string][]string{}
 	}
 	adoptedClaims[conformance.BootstrapProviderRole]["aauth-go"] = []string{"bootstrap.ap.single-key"}
+	adoptedClaims[conformance.BootstrapProviderRole]["aauth-rust"] = []string{"bootstrap.ap.single-key"}
 }
