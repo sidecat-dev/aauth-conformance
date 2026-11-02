@@ -28,6 +28,7 @@ follows the remote mode test profile. `LIB` below is `go` or `rust`.
 | `https://ap.aauth-LIB.test` | Agent Provider with an event endpoint, serving `aauth:agent@ap.aauth-LIB.test` | `events.agent-provider`, `events.agent` |
 | `https://events.aauth-LIB.test` | Events Resource, subscriptions at `/events/subscribe` | `events.subscription`, `events.delivery` |
 | `https://ss.aauth-LIB.test` | Supervision server | `supervision.server` |
+| `https://sps.aauth-LIB.test` | Person Server whose every Agent the suite's supervisor at `https://ss.conformance.test` supervises | `supervision.person-server` |
 | `https://r3.aauth-LIB.test` | R3 Resource, four-party, at `/authorize` | `r3.resource` |
 | `https://r3-direct.aauth-LIB.test` | R3 Resource, three-party, at `/authorize` | `r3.resource` |
 | `https://r3-person.aauth-LIB.test` | Person Server issuing R3 Auth tokens | `r3.issuer` |

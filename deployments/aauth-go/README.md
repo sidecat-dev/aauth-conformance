@@ -14,7 +14,8 @@ memory.
 
 The further roles are in their own files, each appending to `extensions`:
 `events.go` (Agent Provider, Events Resource and Agent), `supervision.go`
-(`supervisionserver.New`), `r3.go` (R3 Resources and issuers) and
+(`supervisionserver.New`), `supervised_person.go` (a Person Server with
+`personserver.SupervisionConfig`), `r3.go` (R3 Resources and issuers) and
 `sigkey.go` (the Signature-Key verifier). Each file's comment names its
 `names` keys, its policy and its host controls.
 

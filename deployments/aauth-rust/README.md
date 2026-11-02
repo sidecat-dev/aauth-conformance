@@ -15,7 +15,8 @@ connection, with Content-Length framing only.
 
 The further roles are route modules: `src/events.rs` (Agent Provider,
 Events Resource and Agent), `src/supervision.rs`
-(`aauth-rust-supervision-server`), `src/r3.rs` (R3 Resources and the
+(`aauth-rust-supervision-server`), `src/supervised_person.rs` (a Person
+Server with `with_supervision`), `src/r3.rs` (R3 Resources and the
 three-party issuer) and `src/sigkey.rs` (the Signature-Key verifier). Each
 module's comment names its `names` keys, its policy and its host controls.
 

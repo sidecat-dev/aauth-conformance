@@ -8,6 +8,7 @@ mod events;
 mod https;
 mod r3;
 mod sigkey;
+mod supervised_person;
 mod supervision;
 
 use aauth_rust_access_server::{
@@ -244,6 +245,7 @@ fn main() -> Result<(), Failure> {
     let mut routes = Vec::new();
     routes.extend(events::routes(&env)?);
     routes.extend(supervision::routes(&env)?);
+    routes.extend(supervised_person::routes(&env)?);
     routes.extend(r3::routes(&env)?);
     routes.extend(sigkey::routes(&env)?);
 

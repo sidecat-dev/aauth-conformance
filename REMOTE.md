@@ -18,6 +18,7 @@ same clause-tagged reports as a launcher run, so the counts compare directly.
 | `events.delivery` | `resource` (the subscription endpoint) | 1 of 1 | 0 |
 | `events.agent` | `agent`, `control` | 11 of 11 | 0 |
 | `supervision.server` | `supervision_server` | 14 of 14 | 12 |
+| `supervision.person-server` | `person_server` | 12 of 12 | 9 |
 | `r3.resource` | `resource` (four-party), optional `three_party_resource` | 10 of 10 | 10 |
 | `r3.issuer` | `person_server` | 4 of 4 | 4 |
 | `r3.federated-issuer` | `person_server`, `access_server` | 3 of 3 | 3 |
@@ -30,7 +31,7 @@ the execution counts of 148 and 149 need the control.
 
 The other roles still need launchers. The Agent signer and the vector roles
 call library functions or a client signer. Deferred authorization,
-sub-agents, missions and `supervision.person-server` have no remote driver.
+sub-agents and missions have no remote driver.
 
 ### What is not exercised, and why
 
@@ -53,6 +54,13 @@ failure or a pass. The reasons:
 - **Needs a host control, and the deployment names no control.** The reason
   names the control path. See [Host controls](#host-controls).
 - **The deployment names no `three_party_resource`** (`r3.resource`, 147).
+- **A supervised Person Server's events and reports, without a control.**
+  It delivers them when its host asks (`{"deliver": true}`), so without a
+  control the `event:` and `report:` assertions of
+  `supervision.person-server` are not exercised.
+- **A supervised Person Server that made no connect in the run.** It
+  connects to a supervisor once. If it was connected to the suite's
+  supervisor before the run, restart it to grade its connect.
 - **The supervision server publishes no `jwks_uri`.** The draft makes
   `jwks_uri` optional, and a server without one signs no decisions, so the
   `ss-signed` assertions are not exercised.
@@ -75,6 +83,8 @@ names that `aauth-conformance -harness-names` prints:
 | `access.conformance.test` | Access Server (`aauth-access.json`) | your four-party R3 Resource |
 | `other-resource.conformance.test` | a second Events Resource | your Agent Provider |
 | `other-ps.conformance.test` | a Person Server you must refuse | your supervision server |
+| `ss.conformance.test` | the supervision server (`aauth-supervisor.json`, with a `jwks_uri`) | your supervised Person Server |
+| `foreign-ss.conformance.test` | another supervision server, whose decisions your Person Server must refuse | your supervised Person Server |
 | `other.conformance.test` | a trusted server no R3 document entitles | your four-party R3 Resource |
 | `signer.conformance.test`, `keys.conformance.test` | the `jwks_uri` signer and a direct JWKS URL | your verifier |
 | `ap-mixed`, `ap-pq-only`, `signer-mixed`, `signer-pq-only` `.conformance.test` | the same parties with mixed or post-quantum-only key sets | your verifier |
@@ -118,6 +128,12 @@ The clauses scoped `adapter-contract` grade that policy:
   refuses `other-ps.conformance.test` with 403 and `unsupported_iss`. It
   allows token and mission acts and the permission `fixture.allow`, and
   defers `fixture.defer`. Pending `Location` URLs are on its own origin.
+- **Supervised Person Server.** It routes every Agent to the supervision
+  server `https://ss.conformance.test`, with the person's identifier there
+  `ss-directed-person-1`, discovers that server's keys from its
+  `aauth-supervisor.json` and acts only on decisions it signed. Its own
+  policy decides nothing for those Agents. It binds `directed-person-1`, as
+  the direct Person Server does, and offers missions.
 - **R3 Resources.** Both offer the MCP tools `records.read`,
   `records.export` and `records.delete` at `/op/{tool}` and accept
   `directed-person-1` with `read`. The four-party one trusts
@@ -139,8 +155,11 @@ drafts' parent ceilings.
 
 Some scenarios need the host to act in a way no protocol message asks for:
 an Agent Provider issuing a subscribe token (the Events draft leaves that to
-the AP), a Resource firing an event, an Agent checking an event token, or a
-supervision server resolving a deferred decision. A deployment that offers
+the AP), a Resource firing an event, an Agent checking an event token, a
+supervision server resolving a deferred decision, or a Person Server
+answering for the person, polling a deferred supervisor or delivering its
+queued events. `pending` names the held act by the pending URL the Person
+Server gave the Agent. A deployment that offers
 these test hooks names a `control` URL per role. The suite POSTs JSON to
 these paths under it, and treats every answer as host input, never protocol
 output:
@@ -153,6 +172,7 @@ output:
 | `events.delivery` | `/__fixture/fire` | `{"agent_provider", "eid", "body"}` | `{"status"}` |
 | `events.agent` | `/__fixture/event` | `{"event_token", "body", "content_type"}` | `{"accepted", "error"}` |
 | `supervision.server` | `/__fixture/supervision` | `{"resolve": {"sdi", "verdict"}}` or `{"rate_limit": true}` | 200 |
+| `supervision.person-server` | `/__fixture/supervision` | `{"deliver": true}`, or `{"resolve": "allow", "pending"}` or `{"advance": true, "pending"}` | 200 |
 | `r3.resource` | `/__fixture/r3/executions` (GET) | none | execution counts by tool |
 
 A deployment without a control still runs every scenario that needs none.
@@ -232,7 +252,10 @@ implementation's `remote`.
   and delivers there. A launcher is graded against the fixture's fixed path.
 - **Long-running servers.** A deployed server keeps state across scenarios.
   The suite grades what each case adds: pending events for the case's own
-  event ID, and R3 execution counts read before and after the calls. The
+  event ID, R3 execution counts read before and after the calls, and a
+  supervised Person Server's events and reports that carry no `sdi` or one
+  of the case's own. Its first connect of the run is graded in the cases
+  that follow it. The
   verifier's key-set variants use their own names, so cached keys from
   another case never apply.
 
