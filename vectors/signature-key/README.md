@@ -156,7 +156,8 @@ The ML-DSA-44 key needs Go 1.27 or later (`crypto/mldsa`).
   not offer one, and verifies the vector.
 - Multiple signatures beyond `multi-hwk-jwks`: which labels a verifier
   checks is application context (signature-key lines 173 and 181), so that
-  vector states the labels to verify. With label `sig` configured and a
+  vector's verifier is configured to verify `sig1` and `sig2`, as its title
+  and basis say. The launchers take that label list from the verify job. With label `sig` configured and a
   second label present, the drafts fix no result: aauth-rust verifies `sig`
   and ignores the other, and aauth-go's Resource refuses the request with
   `invalid_signature`. That case is left out until the draft settles it.
