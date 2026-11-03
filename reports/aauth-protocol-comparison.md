@@ -39,8 +39,8 @@ With the subject clause counted, aauth-go and aauth-rust each pass 99 Person
 Server assertions, with 10 not exercised. The crates have no Access Server
 and no four-party Resource, so the four-party role does not apply to them.
 
-The Person Server's person token stage matches our two exactly: 57 passed and
-6 not exercised in all three. Every difference is in the auth token stage.
+The Person Server's person token stage matches aauth-go and aauth-rust
+exactly: 57 passed and 6 not exercised in all three. Every difference is in the auth token stage.
 
 ## Findings
 
@@ -81,14 +81,3 @@ The Person Server's person token stage matches our two exactly: 57 passed and
 - **Not exercised in every implementation.** The expired presented token
   scenario needs the Person Server's private key, so remote mode cannot run
   it.
-
-## What else the run needed
-
-- **Endpoints from metadata.** The crate serves person tokens at
-  `/person-token` and names it as `person_token_endpoint`. Remote mode had
-  sent every request to `/person` and `/token`. It now uses the endpoints a
-  Person Server's metadata names, as the draft requires agents to. The
-  aauth-go and aauth-rust counts are the same before and after this change.
-- **Discovery.** Both crates fetch keys through `ReqwestFetch::guarded` by
-  default, which refuses loopback addresses. The deployment gives each crate
-  its own `Fetch` instead, which reaches only the configured names.
