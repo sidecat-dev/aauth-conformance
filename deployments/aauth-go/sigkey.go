@@ -17,6 +17,8 @@ import (
 // with the scheme and the verified identity, as the launcher does.
 //
 // Name: names.sigkey_verifier, the verifier's issuer.
+// /.well-known/aauth-resource.json is the library document and is unsigned.
+// The library omits jwks_uri for this role.
 func init() {
 	extensions = append(extensions, func(e env) (map[string]http.Handler, error) {
 		issuer := e.c.Names["sigkey_verifier"]
@@ -60,11 +62,12 @@ func init() {
 		}
 		handler := verifier.Handler()
 		return map[string]http.Handler{issuer: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path != "/verify" {
+			switch r.URL.Path {
+			case "/.well-known/aauth-resource.json", "/verify":
+				handler.ServeHTTP(w, r)
+			default:
 				http.NotFound(w, r)
-				return
 			}
-			handler.ServeHTTP(w, r)
 		})}, nil
 	})
 }

@@ -9,6 +9,8 @@
 //!
 //! Name: `names.sigkey_verifier`, the verifier's issuer. Test profile:
 //! self-jwt assertions carry `typ` `conformance-self+jwt`.
+//! `/.well-known/aauth-resource.json` is `metadata()` and is not signed.
+//! That document names no `jwks_uri`.
 use crate::https::{Client, Failure};
 use crate::{Env, Route, json, now};
 use aauth_rust_core::{
@@ -190,7 +192,15 @@ pub fn routes(env: &Env) -> Result<Vec<Route>, Failure> {
         |_: &VerifiedAgentToken, _: &Request<Vec<u8>>| true,
     )?
     .with_further_schemes(&["hwk", "jkt-jwt", "self-jwt", "jwks", "jwks_uri"])?;
-    Ok(vec![Route::new(issuer, "/verify", move |request| {
+    let metadata = resource.metadata()?;
+    Ok(vec![
+        Route::new(issuer, "/.well-known/aauth-resource.json", move |request| {
+            if request.uri().path() != "/.well-known/aauth-resource.json" {
+                return json(404, Vec::new());
+            }
+            json(200, metadata.clone())
+        }),
+        Route::new(issuer, "/verify", move |request| {
         if request.uri().path() != "/verify" {
             return json(404, Vec::new());
         }

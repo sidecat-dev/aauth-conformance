@@ -254,6 +254,8 @@ fn main() -> Result<(), Failure> {
         keys.clone(),
         |_: &VerifiedAgentToken, _: &Request<Vec<u8>>| true,
     )?;
+    // metadata() is the public document. It names no jwks_uri. /whoami stays signed.
+    let identity_metadata = identity.metadata()?;
     let mut direct_config =
         PersonConfig::new(&c.direct_person_server, "rust-direct-ps", SigningKey::generate());
     direct_config.person_lifetime = PERSON_LIFETIME;
@@ -327,9 +329,12 @@ fn main() -> Result<(), Failure> {
         let name = request.uri().host().unwrap_or_default();
         let echo = |sub: &str| json(200, serde_json::json!({ "sub": sub }).to_string().into_bytes());
         match names.iter().position(|issuer| host(issuer) == name) {
-            Some(0) => match identity.authorize(&request, now()).into_result() {
-                Ok((token, ())) => echo(&token.claims().sub),
-                Err(response) => *response,
+            Some(0) => match request.uri().path() {
+                "/.well-known/aauth-resource.json" => json(200, identity_metadata.clone()),
+                _ => match identity.authorize(&request, now()).into_result() {
+                    Ok((token, ())) => echo(&token.claims().sub),
+                    Err(response) => *response,
+                },
             },
             Some(1) => direct.handle(&request),
             Some(2) => federated_person.handle(&request),
