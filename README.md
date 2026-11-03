@@ -1,7 +1,7 @@
 # AAuth conformance scenarios
 
 Run the same wire scenarios against different AAuth implementations. The suite
-has 407 scenarios and 1,633 assertions in 24 roles:
+has 416 scenarios and 1,650 assertions in 24 roles:
 
 | Role | Scenario files | Scenarios | Assertions | Draft |
 | --- | --- | ---: | ---: | --- |
@@ -25,7 +25,7 @@ has 407 scenarios and 1,633 assertions in 24 roles:
 | `sigkey.verifier` | 300-329, 342 | 31 | 58 | Signature-Key, protocol |
 | `sigkey.signer` | 330-341 | 12 | 36 | Signature-Key, protocol |
 | `vectors.library` | 400-493 | 94 | 105 | community test vectors |
-| `vectors.signature-key` | 500-557 | 58 | 116 | Signature-Key test vectors |
+| `vectors.signature-key` | 500-566 | 67 | 133 | Signature-Key test vectors |
 | `bootstrap.agent-provider` | 700-719, 740 | 21 | 77 | Bootstrap, protocol, Signature-Key |
 | `bootstrap.agent` | 720-725 | 6 | 23 | Bootstrap, Signature-Key, protocol |
 | `bootstrap.self-hosted` | 730-734 | 5 | 28 | Bootstrap, protocol |
@@ -542,12 +542,15 @@ difference. Add `-claim-recommended` to grade the ES256 (SHOULD) cases too.
 
 ## Signature-Key test vectors
 
-`vectors/signature-key/` holds 56 test vectors for HTTP Signature Keys,
+`vectors/signature-key/` holds 67 test vectors for HTTP Signature Keys,
 answering [dickhardt/signature-key#25](https://github.com/dickhardt/signature-key/issues/25):
-31 positive vectors for the hwk, jwt, jkt-jwt, jwks_uri, jwks, self-jwt and
-x509 schemes with Ed25519, ES256 and, for hwk, ES384, RS256 and PS256; 24
-negative vectors for the draft's MUST-reject rules, each with its expected
-`Signature-Error` code; and an ML-DSA-44 key-handling vector. Each vector
+33 positive vectors for the hwk, jwt, jkt-jwt, jwks_uri, jwks, self-jwt and
+x509 schemes with Ed25519, ES256 and, for hwk, ES384, RS256 and PS256, one
+of them a request with two signatures; 8 must-accept boundary vectors, each
+one step from a refusal; 24 negative vectors for the draft's MUST-reject
+rules, each with its expected `Signature-Error` code; and 2 ML-DSA-44
+vectors, one of them signed with the deterministic variant so its bytes
+reproduce. Each vector
 publishes the request, the signature base verbatim, the signed header
 fields, the keys with their private material and every document it resolves
 against, and is tagged with the issue's category. The
@@ -555,8 +558,8 @@ against, and is tagged with the issue's category. The
 to reproduce the set; [APPENDIX.md](vectors/signature-key/APPENDIX.md) shows
 the vectors folded per RFC 8792.
 
-aauth-rust and aauth-go both signed each case; the harness checked every
-output with its own code. Where both libraries signed a deterministic case,
+aauth-rust and aauth-go both signed each case either can sign; the harness
+signed the rest and checked every output with its own code. Where both libraries signed a deterministic case,
 their bytes were identical. The `vectors.signature-key` role runs every
 vector against each library's native verifier:
 
@@ -568,8 +571,7 @@ go run ./cmd/sigkey-vectors -targets build/sigvec/targets.json -check
 
 The last command re-signs every vector with both libraries and reports any
 byte that differs from the published file, apart from randomized
-signatures. The two jkt-jwt vectors with an ES256 key are signed and graded
-for aauth-go only, as aauth-rust keeps jkt-jwt at Ed25519.
+signatures.
 
 ## Bootstrap
 
