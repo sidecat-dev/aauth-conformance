@@ -1,6 +1,6 @@
 {:version 1
- :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"
- :reports-source "full run of all roles on suite afcbb3b, aauth-rust 920519b and aauth-go e76d864, ended 2026-11-03T00:34:24Z"
+ :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"
+ :reports-source "full run of all roles on suite 6f29245, aauth-rust 920519b and aauth-go e76d864, ended 2026-11-03T00:51:42Z"
  :drafts
  [{:id "core" :file "draft-hardt-oauth-aauth-protocol.md" :commit "70d67375deb0bb002af7da0711fc58f6e8926e7e" :sha256 "99ef2430c7babec7ea9cb2e9af40e3c3c57d18bce5a6e8501e9748063cfd9ab0" :lines 3649}
   {:id "key" :file "draft-hardt-httpbis-signature-key.md" :commit "69f5ba2647be848feed043fb6d8b0790e43cd0b6" :sha256 "b2b43db67a1aa5249d1166589834d44f81e97ea2e6375a07b475115efa196b7d" :lines 1750}
@@ -10,54 +10,54 @@
   {:id "supervision" :file "draft-hardt-aauth-supervision.md" :commit "70d67375deb0bb002af7da0711fc58f6e8926e7e" :sha256 "9fd44f899e06bf2a1e903459799cccdd8c6365b5eb5fa1efe2ed5b23b1a6d1a3" :lines 740}
   {:id "bootstrap" :file "draft-hardt-aauth-bootstrap.md" :commit "70d67375deb0bb002af7da0711fc58f6e8926e7e" :sha256 "40ca9d052e942a78ef01a827a23bd0149d34a58f626e750949f3ddcd2601b82c" :lines 520}]
  :reports
- [{:role "agent.signing" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "agent.signing" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "authorization.deferred" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "authorization.deferred" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "authorization.federated" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "authorization.federated" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "authorization.subagent" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "authorization.subagent" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "bootstrap.agent" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "bootstrap.agent" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "bootstrap.agent-provider" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "bootstrap.agent-provider" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "bootstrap.self-hosted" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "bootstrap.self-hosted" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "events.agent" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "events.agent" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "events.agent-provider" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "events.agent-provider" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "events.delivery" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "events.delivery" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "events.subscription" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "events.subscription" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "mission.person-server" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "mission.person-server" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "mission.resource" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "mission.resource" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "person-server.direct" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "person-server.direct" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "r3.federated-issuer" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "r3.federated-issuer" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "r3.issuer" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "r3.issuer" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "r3.resource" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "r3.resource" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "resource.agent-identity" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "resource.agent-identity" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "sigkey.signer" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "sigkey.signer" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "sigkey.verifier" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "sigkey.verifier" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "supervision.person-server" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "supervision.person-server" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "supervision.server" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "supervision.server" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "vectors.library" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "vectors.library" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "vectors.signature-key" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}
-  {:role "vectors.signature-key" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "f1ccaf34f850553493863b75ffb65618b36bd7be9b05f1508713e9444baf537f"}]
+ [{:role "agent.signing" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "agent.signing" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "authorization.deferred" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "authorization.deferred" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "authorization.federated" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "authorization.federated" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "authorization.subagent" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "authorization.subagent" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "bootstrap.agent" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "bootstrap.agent" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "bootstrap.agent-provider" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "bootstrap.agent-provider" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "bootstrap.self-hosted" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "bootstrap.self-hosted" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "events.agent" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "events.agent" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "events.agent-provider" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "events.agent-provider" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "events.delivery" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "events.delivery" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "events.subscription" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "events.subscription" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "mission.person-server" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "mission.person-server" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "mission.resource" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "mission.resource" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "person-server.direct" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "person-server.direct" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "r3.federated-issuer" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "r3.federated-issuer" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "r3.issuer" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "r3.issuer" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "r3.resource" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "r3.resource" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "resource.agent-identity" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "resource.agent-identity" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "sigkey.signer" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "sigkey.signer" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "sigkey.verifier" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "sigkey.verifier" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "supervision.person-server" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "supervision.person-server" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "supervision.server" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "supervision.server" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "vectors.library" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "vectors.library" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "vectors.signature-key" :library "aauth-go" :revision "e76d864fa47073313d760ee1ead5a41cbc347d47" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}
+  {:role "vectors.signature-key" :library "aauth-rust" :revision "920519b562a7c004e03923fcbf3df66a149d7dbe" :execution :passed :suite-sha256 "c446fe6e6f512fc8f7594fc24a203cf5a202496671e0859b0c699180263406ac"}]
  :scenarios
  [{:id "unsigned" :role "resource.agent-identity" :file "scenarios/01-unsigned.json"}
   {:id "valid" :role "resource.agent-identity" :file "scenarios/02-valid.json"}
@@ -441,6 +441,11 @@
   {:id "bootstrap-ap-subagent-nested" :role "bootstrap.agent-provider" :file "scenarios/712-bootstrap-ap-subagent-nested.json"}
   {:id "bootstrap-ap-subagent-foreign-parent" :role "bootstrap.agent-provider" :file "scenarios/713-bootstrap-ap-subagent-foreign-parent.json"}
   {:id "bootstrap-ap-subagent-expired-parent" :role "bootstrap.agent-provider" :file "scenarios/714-bootstrap-ap-subagent-expired-parent.json"}
+  {:id "bootstrap-ap-refresh-uncovered-body" :role "bootstrap.agent-provider" :file "scenarios/715-bootstrap-ap-refresh-uncovered-body.json"}
+  {:id "bootstrap-ap-refresh-digest-mismatch" :role "bootstrap.agent-provider" :file "scenarios/716-bootstrap-ap-refresh-digest-mismatch.json"}
+  {:id "bootstrap-ap-refresh-jti-replay" :role "bootstrap.agent-provider" :file "scenarios/717-bootstrap-ap-refresh-jti-replay.json"}
+  {:id "bootstrap-ap-refresh-revoked" :role "bootstrap.agent-provider" :file "scenarios/718-bootstrap-ap-refresh-revoked.json"}
+  {:id "bootstrap-ap-refresh-disabled" :role "bootstrap.agent-provider" :file "scenarios/719-bootstrap-ap-refresh-disabled.json"}
   {:id "subagent-short-parent" :role "authorization.subagent" :file "scenarios/72-subagent-short-parent.json"}
   {:id "bootstrap-agent-refresh" :role "bootstrap.agent" :file "scenarios/720-bootstrap-agent-refresh.json"}
   {:id "bootstrap-agent-rotate" :role "bootstrap.agent" :file "scenarios/721-bootstrap-agent-rotate.json"}
@@ -455,6 +460,7 @@
   {:id "bootstrap-self-subagent" :role "bootstrap.self-hosted" :file "scenarios/733-bootstrap-self-subagent.json"}
   {:id "bootstrap-self-subagent-nested" :role "bootstrap.self-hosted" :file "scenarios/734-bootstrap-self-subagent-nested.json"}
   {:id "budget-four-party-omission" :role "authorization.federated" :file "scenarios/74-budget-four-party-omission.json"}
+  {:id "bootstrap-ap-subagent-limit" :role "bootstrap.agent-provider" :file "scenarios/740-bootstrap-ap-subagent-limit.json"}
   {:id "budget-consumption" :role "authorization.federated" :file "scenarios/75-budget-consumption.json"}
   {:id "budget-header" :role "authorization.federated" :file "scenarios/76-budget-header.json"}
   {:id "budget-usage" :role "authorization.federated" :file "scenarios/77-budget-usage.json"}
@@ -761,8 +767,8 @@
   {:id "sigvec.reject.jkt-iss" :draft "key" :anchor "jkt-jwt-scheme" :anchor-line 305 :role "vectors.signature-key" :scope :protocol :linked 16 :scenarios ["sigvec.reject-jkt-jwt-iss-mismatch"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "sigvec.reject.cache-miss" :draft "key" :anchor "cache_miss" :anchor-line 1006 :role "vectors.signature-key" :scope :protocol :linked 2 :scenarios ["sigvec.reject-cached-unknown-cid"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "sigvec.multi" :draft "key" :anchor "multiple-signatures" :anchor-line 189 :role "vectors.signature-key" :scope :protocol :linked 1 :scenarios ["sigvec.multi-hwk-jwks"] :status {:aauth-go :pass :aauth-rust :pass}}
-  {:id "bootstrap.ap.enrollment" :draft "bootstrap" :anchor "web-app-enrollment" :anchor-line 406 :role "bootstrap.agent-provider" :scope :adapter-contract :linked 0 :scenarios ["bootstrap-ap-refresh" "bootstrap-ap-rotate" "bootstrap-ap-installs" "bootstrap-ap-single-key" "bootstrap-ap-refresh-unenrolled" "bootstrap-ap-refresh-jkt-iss" "bootstrap-ap-refresh-jkt-typ" "bootstrap-ap-refresh-jkt-signature" "bootstrap-ap-refresh-jkt-expired" "bootstrap-ap-refresh-proof-key"] :status {:aauth-go :pass :aauth-rust :pass}}
-  {:id "bootstrap.ap.refresh" :draft "bootstrap" :anchor "two-key-refresh" :anchor-line 293 :role "bootstrap.agent-provider" :scope :adapter-contract :linked 0 :scenarios ["bootstrap-ap-refresh" "bootstrap-ap-rotate" "bootstrap-ap-installs"] :status {:aauth-go :pass :aauth-rust :pass}}
+  {:id "bootstrap.ap.enrollment" :draft "bootstrap" :anchor "web-app-enrollment" :anchor-line 406 :role "bootstrap.agent-provider" :scope :adapter-contract :linked 0 :scenarios ["bootstrap-ap-refresh" "bootstrap-ap-rotate" "bootstrap-ap-installs" "bootstrap-ap-single-key" "bootstrap-ap-refresh-unenrolled" "bootstrap-ap-refresh-jkt-iss" "bootstrap-ap-refresh-jkt-typ" "bootstrap-ap-refresh-jkt-signature" "bootstrap-ap-refresh-jkt-expired" "bootstrap-ap-refresh-proof-key" "bootstrap-ap-refresh-uncovered-body" "bootstrap-ap-refresh-digest-mismatch" "bootstrap-ap-refresh-jti-replay" "bootstrap-ap-refresh-revoked" "bootstrap-ap-refresh-disabled"] :status {:aauth-go :pass :aauth-rust :pass}}
+  {:id "bootstrap.ap.refresh" :draft "bootstrap" :anchor "two-key-refresh" :anchor-line 293 :role "bootstrap.agent-provider" :scope :adapter-contract :linked 0 :scenarios ["bootstrap-ap-refresh" "bootstrap-ap-rotate" "bootstrap-ap-installs" "bootstrap-ap-refresh-jti-replay" "bootstrap-ap-refresh-revoked" "bootstrap-ap-refresh-disabled"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.token-structure" :draft "core" :anchor "agent-token-structure" :anchor-line 510 :role "bootstrap.agent-provider" :scope :protocol :linked 4 :scenarios ["bootstrap-ap-refresh" "bootstrap-ap-rotate" "bootstrap-ap-installs"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.identifier" :draft "core" :anchor "agent-identifiers" :anchor-line 486 :role "bootstrap.agent-provider" :scope :protocol :linked 7 :scenarios ["bootstrap-ap-refresh"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.key-binding" :draft "core" :anchor "agent-token-structure" :anchor-line 510 :role "bootstrap.agent-provider" :scope :protocol :linked 4 :scenarios ["bootstrap-ap-refresh" "bootstrap-ap-rotate"] :status {:aauth-go :pass :aauth-rust :pass}}
@@ -774,11 +780,15 @@
   {:id "bootstrap.ap.naming-jwt" :draft "key" :anchor "jkt-jwt-scheme" :anchor-line 305 :role "bootstrap.agent-provider" :scope :protocol :linked 16 :scenarios ["bootstrap-ap-refresh-jkt-iss" "bootstrap-ap-refresh-jkt-typ" "bootstrap-ap-refresh-jkt-signature" "bootstrap-ap-refresh-jkt-expired"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.request-proof" :draft "key" :anchor "jkt-jwt-scheme" :anchor-line 305 :role "bootstrap.agent-provider" :scope :protocol :linked 16 :scenarios ["bootstrap-ap-refresh-proof-key"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.enrolled-key" :draft "bootstrap" :anchor "two-key-refresh" :anchor-line 293 :role "bootstrap.agent-provider" :scope :recommended :linked 0 :scenarios ["bootstrap-ap-refresh-unenrolled"] :status {:aauth-go :pass :aauth-rust :pass}}
-  {:id "bootstrap.ap.subagent" :draft "bootstrap" :anchor "sub-agents-under-a-hosted-ap" :anchor-line 369 :role "bootstrap.agent-provider" :scope :adapter-contract :linked 0 :scenarios ["bootstrap-ap-subagent" "bootstrap-ap-subagent-no-discriminator" "bootstrap-ap-subagent-nested"] :status {:aauth-go :pass :aauth-rust :pass}}
+  {:id "bootstrap.ap.subagent" :draft "bootstrap" :anchor "sub-agents-under-a-hosted-ap" :anchor-line 369 :role "bootstrap.agent-provider" :scope :adapter-contract :linked 0 :scenarios ["bootstrap-ap-subagent" "bootstrap-ap-subagent-no-discriminator" "bootstrap-ap-subagent-nested" "bootstrap-ap-subagent-limit"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.subagent-identity" :draft "core" :anchor "sub-agent-identity" :anchor-line 1892 :role "bootstrap.agent-provider" :scope :protocol :linked 2 :scenarios ["bootstrap-ap-subagent" "bootstrap-ap-subagent-no-discriminator"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.subagent-claims" :draft "bootstrap" :anchor "sub-agents-under-a-hosted-ap" :anchor-line 369 :role "bootstrap.agent-provider" :scope :recommended :linked 0 :scenarios ["bootstrap-ap-subagent"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.single-level" :draft "core" :anchor "single-level-depth" :anchor-line 1913 :role "bootstrap.agent-provider" :scope :protocol :linked 3 :scenarios ["bootstrap-ap-subagent-nested"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.ap.parent-token" :draft "core" :anchor "agent-token-verification" :anchor-line 537 :role "bootstrap.agent-provider" :scope :protocol :linked 0 :scenarios ["bootstrap-ap-subagent-foreign-parent" "bootstrap-ap-subagent-expired-parent"] :status {:aauth-go :pass :aauth-rust :pass}}
+  {:id "bootstrap.ap.body-coverage" :draft "bootstrap" :anchor "two-key-refresh" :anchor-line 293 :role "bootstrap.agent-provider" :scope :recommended :linked 0 :scenarios ["bootstrap-ap-refresh-uncovered-body" "bootstrap-ap-refresh-digest-mismatch"] :status {:aauth-go :pass :aauth-rust :pass}}
+  {:id "bootstrap.ap.naming-jti" :draft "bootstrap" :anchor "two-key-refresh" :anchor-line 293 :role "bootstrap.agent-provider" :scope :recommended :linked 0 :scenarios ["bootstrap-ap-refresh-jti-replay"] :status {:aauth-go :pass :aauth-rust :pass}}
+  {:id "bootstrap.ap.inactive-enrollment" :draft "bootstrap" :anchor "durable-key-compromise" :anchor-line 445 :role "bootstrap.agent-provider" :scope :recommended :linked 0 :scenarios ["bootstrap-ap-refresh-revoked" "bootstrap-ap-refresh-disabled"] :status {:aauth-go :pass :aauth-rust :pass}}
+  {:id "bootstrap.ap.subagent-limit" :draft "bootstrap" :anchor "sub-agents-under-a-hosted-ap" :anchor-line 369 :role "bootstrap.agent-provider" :scope :recommended :linked 0 :scenarios ["bootstrap-ap-subagent-limit"] :status {:aauth-go :not-claimed :aauth-rust :pass}}
   {:id "bootstrap.agent.enrollment" :draft "bootstrap" :anchor "web-app-enrollment" :anchor-line 406 :role "bootstrap.agent" :scope :adapter-contract :linked 0 :scenarios ["bootstrap-agent-refresh"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.agent.naming-jwt" :draft "key" :anchor "jkt-jwt-scheme" :anchor-line 305 :role "bootstrap.agent" :scope :protocol :linked 16 :scenarios ["bootstrap-agent-refresh" "bootstrap-agent-rotate"] :status {:aauth-go :pass :aauth-rust :pass}}
   {:id "bootstrap.agent.ephemeral-proof" :draft "key" :anchor "jkt-jwt-scheme" :anchor-line 305 :role "bootstrap.agent" :scope :protocol :linked 16 :scenarios ["bootstrap-agent-refresh" "bootstrap-agent-rotate"] :status {:aauth-go :pass :aauth-rust :pass}}
