@@ -2,32 +2,32 @@
   "assertions": [
     {
       "id": "refused",
-      "clause": "sigvec.reject.jwt-exp",
+      "clause": "sigvec.reject.alg",
       "kind": "status",
       "equals": 401
     },
     {
       "id": "error",
-      "clause": "sigvec.reject.jwt-exp",
+      "clause": "sigvec.reject.alg",
       "kind": "sfv-token",
       "header": "Signature-Error",
       "member": "error",
-      "equals": "invalid_jwt"
+      "equals": "unsupported_algorithm"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-jwt-no-exp",
+  "id": "sigvec.reject-jwks-uri-alg-absent",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 46
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 53
     },
     "vector": {
-      "id": "reject-jwt-no-exp",
-      "title": "jwt without exp",
+      "id": "reject-jwks-uri-alg-absent",
+      "title": "jwks_uri whose selected JWKS key has no alg",
       "category": 3,
-      "scheme": "jwt",
+      "scheme": "jwks_uri",
       "alg": "Ed25519",
       "now": 1800000000,
       "request": {
@@ -35,47 +35,29 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:nmh8MAIdM1hnGODJuI4Np4ZWIz0X3JM8bfzOcA+cpnpmaTwpAH1OigLI0AnRMhomJDyetSGEXriVylgbf3QOBQ==:",
+        "Signature": "sig=:5lY8VHaMJOxDvcsEPzQ9KbJgvoZXSE6VNlbtPcKKjjWaVZZbgWxs3aHI6JqAvjONmmw9s1GJkxTvmuw5aDTZBg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJpYXQiOjE3OTk5OTk3MDAsImlzcyI6Imh0dHBzOi8vYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1qd3Qtbm8tZXhwIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.hdsaGSj6Ur2-NGn4BmfutR61FPfytSK0fPOyJQM_8LMuFFztq1SBoXPfH99dPCcBxi-gZ4YuLtyQoTiZ3CU1CQ\""
+        "Signature-Key": "sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-ed25519\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJpYXQiOjE3OTk5OTk3MDAsImlzcyI6Imh0dHBzOi8vYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1qd3Qtbm8tZXhwIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.hdsaGSj6Ur2-NGn4BmfutR61FPfytSK0fPOyJQM_8LMuFFztq1SBoXPfH99dPCcBxi-gZ4YuLtyQoTiZ3CU1CQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "2b0970aa1134adb9ab3657868da9862dfe2a5314b7deaf617a1f792430e2a388",
-      "signature_base_length": 704,
-      "signature_verifies": true,
-      "signing_key": "agent-ed25519",
-      "assertion": {
-        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJpYXQiOjE3OTk5OTk3MDAsImlzcyI6Imh0dHBzOi8vYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1qd3Qtbm8tZXhwIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.hdsaGSj6Ur2-NGn4BmfutR61FPfytSK0fPOyJQM_8LMuFFztq1SBoXPfH99dPCcBxi-gZ4YuLtyQoTiZ3CU1CQ",
-        "header": {
-          "alg": "Ed25519",
-          "kid": "ap-ed25519",
-          "typ": "aa-agent+jwt"
-        },
-        "payload": {
-          "cnf": {
-            "jwk": {
-              "alg": "Ed25519",
-              "crv": "Ed25519",
-              "kty": "OKP",
-              "x": "ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA"
-            }
-          },
-          "dwk": "aauth-agent.json",
-          "iat": 1799999700,
-          "iss": "https://agent-provider.example",
-          "jti": "reject-jwt-no-exp",
-          "sub": "aauth:assistant@agent-provider.example"
-        },
-        "signed_by": "ap-ed25519"
-      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "8f8df2c2fec81135eefdca12e96ba5075b1d82e74615ed553826971538a45ba4",
+      "signature_base_length": 259,
+      "signing_key": "signer-ed25519",
+      "documents": [
+        {
+          "url": "https://signer.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"}]}"
+        }
+      ],
       "resolves": [
-        "https://agent-provider.example/.well-known/aauth-agent.json",
-        "https://agent-provider.example/.well-known/jwks.json"
+        "https://signer.example/.well-known/aauth-resource.json",
+        "https://signer.example/.well-known/jwks.json"
       ],
       "expect": {
         "outcome": "reject",
-        "error": "invalid_jwt",
-        "basis": "signature-key line 552: the JWT MUST contain exp; protocol Verification step 5: invalid_jwt when a JWT scheme fails verification"
+        "error": "unsupported_algorithm",
+        "basis": "signature-key line 227: the resolved JWKS entry MUST carry alg; protocol Verification step 6: unsupported_algorithm if alg is absent"
       },
       "provenance": {
         "signed_by": "aauth-go",
@@ -143,7 +125,7 @@
         {
           "url": "https://signer.example/.well-known/jwks.json",
           "content_type": "application/json",
-          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"},{\"alg\":\"ES256\",\"crv\":\"P-256\",\"kid\":\"signer-es256\",\"kty\":\"EC\",\"x\":\"na6GJ2V2n70jCjzJF7H5rtXnUokY_90isxO3ny4iNLQ\",\"y\":\"5vt7nLlc92fzNn5baKytoofmPBukg5ikncT8hIWSQJs\"}]}"
+          "body": "{\"keys\":[{\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"}]}"
         }
       ],
       "x509": {
@@ -157,6 +139,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-jwt-no-exp: jwt without exp",
+  "title": "Signature-Key vector reject-jwks-uri-alg-absent: jwks_uri whose selected JWKS key has no alg",
   "version": 1
 }

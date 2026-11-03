@@ -19,7 +19,7 @@
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
       "index": 25
     },
     "vector": {
@@ -34,17 +34,17 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:fFXJnTV2BRMm3oiIAC+S+Il2WOutBnynC+RwjekOaqIxz75cg2O9t758rfpG5w2CcWvB/xlZFYimxWPz6q6dCg==:",
+        "Signature": "sig=:kHclT8pjxcWWhog1q8AYbi4Kd2pwJoaE6TOEpaZQ+4tK8F0GxxGW7cDUh8U6A18Al+i72ZsZt9Rhi8B8zNKgAA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.KQwPIe4WhqS4iWMU_f8D1r-kwWGymb0h05i29weeyggu9BHglU9Ud5sklSwShUby_WtBgO0nWVDo68b5tmdDTQ\""
+        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.yGb8aGkHtuvxAFhZYsDhKJ7BGx3CTEsPZlxIC4HYhcCB5ajk9yZbBkqnwR8Ay7Un0eX9BQCSb8dDJttMiuU3MA\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.KQwPIe4WhqS4iWMU_f8D1r-kwWGymb0h05i29weeyggu9BHglU9Ud5sklSwShUby_WtBgO0nWVDo68b5tmdDTQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "a0dacf314901336ada4b689fb3e47d0e43bfd9855c8c62b4cbdb20f1aceb3eb7",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.yGb8aGkHtuvxAFhZYsDhKJ7BGx3CTEsPZlxIC4HYhcCB5ajk9yZbBkqnwR8Ay7Un0eX9BQCSb8dDJttMiuU3MA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "e40084388423f79c49611b729eb799bce18b99c08b7e833bdfeaf2086cf3c900",
       "signature_base_length": 848,
       "signature_verifies": true,
       "signing_key": "agent-ed25519",
       "assertion": {
-        "compact": "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.KQwPIe4WhqS4iWMU_f8D1r-kwWGymb0h05i29weeyggu9BHglU9Ud5sklSwShUby_WtBgO0nWVDo68b5tmdDTQ",
+        "compact": "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.yGb8aGkHtuvxAFhZYsDhKJ7BGx3CTEsPZlxIC4HYhcCB5ajk9yZbBkqnwR8Ay7Un0eX9BQCSb8dDJttMiuU3MA",
         "header": {
           "alg": "ES256",
           "jwk": {
@@ -77,8 +77,10 @@
         "basis": "a correctly signed request under this scheme verifies"
       },
       "provenance": {
-        "signed_by": "aauth-go",
-        "note": "Not signed by aauth-rust: refused (HTTP 422): unsupported_algorithm (unsupported or missing key alg: AAuth keys and tokens use Ed25519 or ES256, an hwk key may also be ES384, RS256 or PS256 and an x509 key ES384; algorithms are not inferred from key shape)."
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
       }
     },
     "environment": {

@@ -2,67 +2,55 @@
   "assertions": [
     {
       "id": "refused",
-      "clause": "sigvec.reject.issuer",
+      "clause": "sigvec.reject.kty-crv",
       "kind": "status",
       "equals": 401
     },
     {
       "id": "error",
-      "clause": "sigvec.reject.issuer",
+      "clause": "sigvec.reject.kty-crv",
       "kind": "sfv-token",
       "header": "Signature-Error",
       "member": "error",
-      "equals": "issuer_mismatch"
+      "equals": "invalid_key"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-jwks-uri-issuer-mismatch",
+  "id": "sigvec.reject-hwk-crv-mismatch",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 50
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 38
     },
     "vector": {
-      "id": "reject-jwks-uri-issuer-mismatch",
-      "title": "jwks_uri whose metadata names another issuer",
-      "category": 3,
-      "scheme": "jwks_uri",
-      "alg": "Ed25519",
+      "id": "reject-hwk-crv-mismatch",
+      "title": "hwk P-384 key naming ES256",
+      "category": 2,
+      "scheme": "hwk",
+      "alg": "ES384",
       "now": 1800000000,
       "request": {
         "method": "GET",
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:5lY8VHaMJOxDvcsEPzQ9KbJgvoZXSE6VNlbtPcKKjjWaVZZbgWxs3aHI6JqAvjONmmw9s1GJkxTvmuw5aDTZBg==:",
+        "Signature": "sig=:RVV1gFCDCgheN9mBxHQlFmdKjMMRKEquSaqVHwd3Zw1L8Us5JOqWa3/rh/s0yI3glpWmrFNV+p8blaa/M2JDLgUfWclY102kLwqhU+Eqy+VplUv7jgmW1ZuqmrBId647:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-ed25519\""
+        "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-384\";x=\"bfPOJCwtKpeY-u4uoaDBCfsct3meT5xE2xcLJtxuqWnW_Bgn1nXi-DNsuFvbf2Au\";y=\"O6DNv-okgDuYtZ4keVM0oizSEw8SKem9lLja7W7fy0ykCtGkdNmXvD0daJdzxelI\";alg=\"ES256\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "8f8df2c2fec81135eefdca12e96ba5075b1d82e74615ed553826971538a45ba4",
-      "signature_base_length": 259,
-      "signing_key": "signer-ed25519",
-      "documents": [
-        {
-          "url": "https://signer.example/.well-known/aauth-resource.json",
-          "content_type": "application/json",
-          "body": "{\"issuer\":\"https://other-signer.example\",\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
-        }
-      ],
-      "resolves": [
-        "https://signer.example/.well-known/aauth-resource.json"
-      ],
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"EC\";crv=\"P-384\";x=\"bfPOJCwtKpeY-u4uoaDBCfsct3meT5xE2xcLJtxuqWnW_Bgn1nXi-DNsuFvbf2Au\";y=\"O6DNv-okgDuYtZ4keVM0oizSEw8SKem9lLja7W7fy0ykCtGkdNmXvD0daJdzxelI\";alg=\"ES256\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "8bdc37545d959633d98bd13127f295b76ef80706f1b724e0a878161722b67852",
+      "signature_base_length": 350,
+      "signing_key": "agent-es384",
       "expect": {
         "outcome": "reject",
-        "error": "issuer_mismatch",
-        "basis": "signature-key line 464: issuer MUST equal id, else issuer_mismatch"
+        "error": "invalid_key",
+        "basis": "signature-key line 229; protocol Verification step 6: invalid_key when crv disagrees with alg"
       },
       "provenance": {
-        "signed_by": "aauth-go",
-        "reproduced_by": [
-          "aauth-rust"
-        ]
+        "signed_by": "harness",
+        "note": "Signed by the harness: both libraries emit hwk members only for the signing key's own JWK, with alg and without kid."
       }
     },
     "environment": {
@@ -119,7 +107,7 @@
         {
           "url": "https://signer.example/.well-known/aauth-resource.json",
           "content_type": "application/json",
-          "body": "{\"issuer\":\"https://other-signer.example\",\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
+          "body": "{\"issuer\":\"https://signer.example\",\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
         },
         {
           "url": "https://signer.example/.well-known/jwks.json",
@@ -138,6 +126,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-jwks-uri-issuer-mismatch: jwks_uri whose metadata names another issuer",
+  "title": "Signature-Key vector reject-hwk-crv-mismatch: hwk P-384 key naming ES256",
   "version": 1
 }

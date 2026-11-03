@@ -471,8 +471,8 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:bDbtHDOHYUJOdzPzkcCJ77/mb3tV+ud6mmShlWwYN4f54UJ8m4Y\
-mT5ki+nzsZuUpFOPXISCO2fYIeZMhcI67Jg==:
+Signature: sig=:U7H4RcUs7LgT7SFf4aJRWYxv+Co+Z5p6ebPGaVCMyaw4cepwoQ/\
+tN+1UnhbK9B7b1zjADCtODQaMGmKYU7/Zgw==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=hwk;kty="EC";crv="P-256";x="kWn1q9uoMexzm15PKmMJ\
@@ -544,9 +544,9 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:RCN8WgjYfSSfzYecNqdh+7APchQC3grxnY/rZBuewxplmDArM2o\
-d/7yVrK/hc6etJU9ob20nz6w2qi05nuL1q3j1OHZVOgxFU/sPnS40jjJNZJnfMoQDrG\
-Px6fYSPDI6:
+Signature: sig=:XoYPXLVBDFas6GcnyRLIj/x1vz8UFBtR8J6s6hr6ZDqeOkex6rE\
++Y+HTFheHRqUHrB1vW9Fdl30j21oXrKL8bs/dnGLI7miOr6KG9t2eneZnhVL5kFyOef\
+JWCOMKLTZT:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=hwk;kty="EC";crv="P-384";x="bfPOJCwtKpeY-u4uoaDB\
@@ -627,12 +627,12 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:dU8mxvAC59459E67T/E57hvrhECiBC1essszW8CvdeMBqdnrCmc\
-YbcklHUixbpjPgFw5j8LLd4P1ui72wxiXbTC7YAF/c9FSLH2og9YDfBvfG91ZkscSRv\
-5lWGUu2mrpDseppZnF9am71x/R5Cn90IfM+dlUmGIW4FtbMDoym5XI465GqaoAiz7sI\
-UFUJ7ah35nd0cgl6rzoFaje0JaGAzUSJK0V6rOjuDwZ3CdsZNa9Yfru9I4hHPNXjD6A\
-KcIEWu5ZGFYllvJ6erJfh+sJ57JyzZCjqcfSGS1sETK7vkE12wNQnqRzIVtUAnyQ6U0\
-YouWA20k4BUw3eFA27sIKrg==:
+Signature: sig=:UgPOlQh0qAIgZYqg3iKHP5KaoRoBGiorAhu1ACK9jrA6D0KGECO\
+ZBv6iFscSqb2r9tX6c4owrDNF8bKsldH+p81l5HLG8yI30DseDfGnfdgEOEFijPZ5sR\
+oZBAromr6dJ0b7WgOeS3o52RiqmtWmZjZwyR0J6QvuhSlgwRalrPxjJBY+RUDCueAmG\
+KhpuYgKlwqF1O084IWvkG4jJaGLb+Wp0ABNnRWgprR/CvH+6BGFGu9vDXw9N3Y9u+VU\
+M3JiHQEsNP3ksIh6N4un9Xgjxgy1022yU1QYuXRKtcD72DxdqdMcLusqz1eGqPserr4\
+6v6xtOTJBFXcP6l51kmoXmA==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=hwk;kty="RSA";n="tE2hQ7RoXWIGUZIlGG0i748Sp0uG87X\
@@ -673,12 +673,12 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:bjEecVTAtfxrEoA2rGHbshaabw/UHEe1+klf4SCjhXymh2dyodB\
-hK58VhQCad3J1edM5sbLFfPLYKVFu9XghpnW2yi6GxYCiIIgC6bxpGCEx/pL7a9k8aA\
-F3lzf35fd42E89WQ0Ho46rrUaY7ouno8XMsyaUaXpeYVfEbxh7GJ2FubOTTvVjfjQGm\
-h7mXcdmqeMUxVKV0d1ej6kw+jxB7wHW1X0VA1TCr8J7kHCtESjLz8dZ1xg+6eiXtMpA\
-63MusZcOd9D8cXf2khT1upNo2r0brLHOKsyEYWVZI0JWQR8DRQhZa2z/ABRV0QoiwLN\
-fRbwfiHjmWDyom6Beki4cgA==:
+Signature: sig=:EUoMkQuVQunQeAIGsntQKRp8DlXMnn3Dn3Z4fmehVe94z81bGLc\
+wK3AD3/fyl9qmxCVrEeuY8nkw82IIFnHBoJZEwocTdAqzZH9/zHBipIKBsgD6f9i8kh\
+AHl/TT7l+QWLLijpS878H2EChRReBVs7O1xnOrGpM5N0cuWLEjHw28wwI1EihrzLJB/\
+qn+nymOSdQONwK9k9GPX2w3Xeg5TgEkaxLTzg3RG4WyterIEfeVBjdiTKCCYUkxPT03\
+ZJoG298FjR6PSau9vPFTS15hkzvtRxN4ISkYKL9sCq5vf4G5qR6+jawsxM3+st3GesK\
+XECGFltUezfE7CbxBicQlww==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=hwk;kty="RSA";n="tE2hQ7RoXWIGUZIlGG0i748Sp0uG87X\
@@ -1027,8 +1027,8 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:mC/VmNf9K8oP1u4qjQrM4cPgVdPU7ZavHjVpGBHtSio/W7kwuxd\
-dhy3hDOtkCdx+RMoO96Xm/9WPp6UmOK/xsg==:
+Signature: sig=:IUxJM91udkf3AaDBW9TBhJJi42udwMb2Z5+/6ZcravvHgx67uxc\
+AxacmyrKE8BD5DPNcY0e47gkzcfeYmE5PRA==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=jwt;jwt="eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQ\
@@ -1172,8 +1172,8 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:uEUeDrHUfD3/ElAAhEK/2EuzFfE1NdP4nT9T8Xzir50MU6qe7AB\
-BEBD/vNoAe96ZFGO/Jjh2949ipBLJ+ncuxw==:
+Signature: sig=:2OuyxUqCVJWW0ZlEvCU3nNk8HywW+2c/YwLePdKoPiLhotoACXc\
+G3PNJKYBt7Bd/GYHFvflDp4T+6dlBT8L5gQ==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=jwks_uri;id="https://signer.example";dwk="aauth-\
@@ -1274,8 +1274,8 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:abQR8TFppXhQj8+2C7W1OvYS0y7DNOfSvKN7n6vNTmXrnYQQ5hV\
-QnRLzML0xBZCXWmxJ5qJzidHKdZsIyxrhVA==:
+Signature: sig=:UwLYvIuu6xMkqsrTOlrq/MqfF8p3kRppJwmPjoUY8EX6NEM8P/j\
+xcnVvG+Qq/CU3SxawwkIxJkRuZqYTTC0xPw==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=jwks;url="https://keys.example/signer.jwks";kid=\
@@ -1370,20 +1370,20 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:VBorYNTpvlDWKb4n464IzAK2iaPa4Tl0TvPoKovdNMYnuMIHizk\
-b+r6+W1BdSSjJ4Q2cY3YDMTit8o9rQ+ok/w==:
+Signature: sig=:QhtCCxLgYTGyjCyuZm06zEE1U54WePHJT39LaMBIfcffe962pOm\
+qQNsgiOUliNMDmkCyVPA4nL4Jo5LLE+UJQA==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=self-jwt;jwt="eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ2\
 5lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczov\
 L3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXh\
 wIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbm\
-VyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURK\
-RITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ"
+VyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j7v\
+W0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6w"
 
 ```
 
-Signature base (559 bytes, SHA-256 5b7addd22b96b85071a901984b067450b884d6d7e98402ad5ceff2ddad6c090b):
+Signature base (559 bytes, SHA-256 27a3bf2fe3e648e7b5ad724cf3d84fc30ec1fa6da134c301ce139e112b96a8d3):
 
 ```
 NOTE: '\' line wrapping per RFC 8792
@@ -1395,9 +1395,9 @@ NOTE: '\' line wrapping per RFC 8792
 Z25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwcz\
 ovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZ\
 XhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2ln\
-bmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bU\
-RKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_Oikf\
-Q"
+bmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j\
+7vW0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6\
+w"
 "@signature-params": ("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 ```
@@ -1431,20 +1431,20 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:M6ZcaTLwZVwhyBMTtN4GvsOVT0NMQi9NeHW6PCnPKG+MOMetcGN\
-D+juE5mOky9R7UY/kOxksbDBclJFSuoN9OA==:
+Signature: sig=:PcKFGoz6sbOlvnSXyRTcqYntZVIagzmwIf5hVYtD3MfC9vTUNUz\
+lLgT5PUw0Fkv0HY1ikvaT+qWxiGUy2uq/AA==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=self-jwt;jwt="eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ2\
 5lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczov\
 L3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXh\
 wIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbm\
-VyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURK\
-RITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ"
+VyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j7v\
+W0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6w"
 
 ```
 
-Signature base (559 bytes, SHA-256 5b7addd22b96b85071a901984b067450b884d6d7e98402ad5ceff2ddad6c090b):
+Signature base (559 bytes, SHA-256 27a3bf2fe3e648e7b5ad724cf3d84fc30ec1fa6da134c301ce139e112b96a8d3):
 
 ```
 NOTE: '\' line wrapping per RFC 8792
@@ -1456,9 +1456,9 @@ NOTE: '\' line wrapping per RFC 8792
 Z25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwcz\
 ovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZ\
 XhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2ln\
-bmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bU\
-RKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_Oikf\
-Q"
+bmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j\
+7vW0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6\
+w"
 "@signature-params": ("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 ```
@@ -1562,7 +1562,7 @@ Assertion header and payload (signed by jkt-identity-ed25519):
 
 ### jkt-jwt-es256-identity
 
-jkt-jwt, ES256 identity key delegating to an Ed25519 request key (the draft's example shape). Category 3 (reproduce-the-bytes). Signed by aauth-go. Expected: verify (a correctly signed request under this scheme verifies).
+jkt-jwt, ES256 identity key delegating to an Ed25519 request key (the draft's example shape). Category 3 (reproduce-the-bytes). Signed by aauth-rust; aauth-go produced the same bytes. Expected: verify (a correctly signed request under this scheme verifies).
 
 Request:
 
@@ -1571,8 +1571,8 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:fFXJnTV2BRMm3oiIAC+S+Il2WOutBnynC+RwjekOaqIxz75cg2O\
-9t758rfpG5w2CcWvB/xlZFYimxWPz6q6dCg==:
+Signature: sig=:kHclT8pjxcWWhog1q8AYbi4Kd2pwJoaE6TOEpaZQ+4tK8F0GxxG\
+W7cDUh8U6A18Al+i72ZsZt9Rhi8B8zNKgAA==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=jkt-jwt;jwt="eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGc\
@@ -1584,12 +1584,12 @@ E5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TN\
 jVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAw\
 LCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUN\
 oc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ\
-.KQwPIe4WhqS4iWMU_f8D1r-kwWGymb0h05i29weeyggu9BHglU9Ud5sklSwShUby_W\
-tBgO0nWVDo68b5tmdDTQ"
+.yGb8aGkHtuvxAFhZYsDhKJ7BGx3CTEsPZlxIC4HYhcCB5ajk9yZbBkqnwR8Ay7Un0e\
+X9BQCSb8dDJttMiuU3MA"
 
 ```
 
-Signature base (848 bytes, SHA-256 a0dacf314901336ada4b689fb3e47d0e43bfd9855c8c62b4cbdb20f1aceb3eb7):
+Signature base (848 bytes, SHA-256 e40084388423f79c49611b729eb799bce18b99c08b7e833bdfeaf2086cf3c900):
 
 ```
 NOTE: '\' line wrapping per RFC 8792
@@ -1606,8 +1606,8 @@ NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9\
 TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5Nz\
 AwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6Y\
 UNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHki\
-fQ.KQwPIe4WhqS4iWMU_f8D1r-kwWGymb0h05i29weeyggu9BHglU9Ud5sklSwShUby\
-_WtBgO0nWVDo68b5tmdDTQ"
+fQ.yGb8aGkHtuvxAFhZYsDhKJ7BGx3CTEsPZlxIC4HYhcCB5ajk9yZbBkqnwR8Ay7Un\
+0eX9BQCSb8dDJttMiuU3MA"
 "@signature-params": ("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 ```
@@ -1642,7 +1642,89 @@ Assertion header and payload (signed by jkt-identity-es256):
 }
 ```
 
-### jkt-jwt-es256
+### jkt-jwt-es256.rust
+
+jkt-jwt, Ed25519 identity key delegating to an ES256 request key. Category 2 (verify-only). Signed by aauth-rust. Expected: verify (a correctly signed request under this scheme verifies).
+
+Request:
+
+```http
+NOTE: '\' line wrapping per RFC 8792
+
+GET /api/items HTTP/1.1
+Host: resource.example
+Signature: sig=:UpUJI0RK5Hov+uQWtvYLS1TvPBQbaIRmXCFzUV7SlWs5G1IGtsz\
+krgvVqkpKRB6NW5tXkY2aBHaIgagmIBCQZQ==:
+Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
+");created=1800000000
+Signature-Key: sig=jkt-jwt;jwt="eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImF\
+sZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaE\
+NydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoia\
+mt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2Ijoi\
+UC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXp\
+JSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TD\
+IxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5N\
+zAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dl\
+U3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsa\
+t59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd\
+0kKw0qPdMBg"
+
+```
+
+Signature base (839 bytes, SHA-256 28c896487857f2b0ab2988a5526a4feeeb7f207a455e3f19f9b81318d87afd04):
+
+```
+NOTE: '\' line wrapping per RFC 8792
+
+"@method": GET
+"@authority": resource.example
+"@path": /api/items
+"signature-key": sig=jkt-jwt;jwt="eyJhbGciOiJFZDI1NTE5IiwiandrIjp7I\
+mFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhN\
+aENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjo\
+iamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2Ij\
+oiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPW\
+XpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4\
+TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk\
+5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0\
+dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFt\
+sat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgY\
+xd0kKw0qPdMBg"
+"@signature-params": ("@method" "@authority" "@path" "signature-key\
+");created=1800000000
+```
+
+Assertion header and payload (signed by jkt-identity-ed25519):
+
+```
+{
+  "alg": "Ed25519",
+  "jwk": {
+    "alg": "Ed25519",
+    "crv": "Ed25519",
+    "kty": "OKP",
+    "x": "xMhCrtHXUGjauU2ci3cct0HCofsRTWJmD3kCDC8HQ5A"
+  },
+  "typ": "jkt-s256+jwt"
+}
+{
+  "cnf": {
+    "jwk": {
+      "alg": "ES256",
+      "crv": "P-256",
+      "kty": "EC",
+      "x": "kWn1q9uoMexzm15PKmMJ9n45OYzIJOFhsGAfNvxLaG8",
+      "y": "SFtVwCFSswQbnzphZWuRiu78r8L21Y_mFpYLaUzTuXw"
+    }
+  },
+  "exp": 1800003000,
+  "iat": 1799999700,
+  "iss": "urn:jkt:sha-256:6ZYrr7h-Aq7KGM3Lz8YZc7GeSslAvPWfPnv-3tI-jgc",
+  "jti": "jkt-jwt-es256"
+}
+```
+
+### jkt-jwt-es256.go
 
 jkt-jwt, Ed25519 identity key delegating to an ES256 request key. Category 2 (verify-only). Signed by aauth-go. Expected: verify (a correctly signed request under this scheme verifies).
 
@@ -1653,8 +1735,8 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:g/OlTOkc7XSiUvU46s5/ztDSSm75+ZZdu0CcGh5ViDGDm/PLpxW\
-OI4S6C4DqPLor9UbjVRyxXyGSj4h9cSwFnA==:
+Signature: sig=:YxK9m0DhPBOmpNoPpznXmkclgGqv64iHW3jzjt794uQsZkbxT6h\
+PCJXN1Ietobt+AOpjDmchtSGktZYtBbsw/Q==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=jkt-jwt;jwt="eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImF\
@@ -1803,8 +1885,8 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:QfTASpi/yKtq0SWkMjnVPXf7w4pd3AEI2W/aElkVBYRZeewmpD4\
-FsX21eVhiI90NMlLf66OSS/jUt7TCWfgpWQ==:
+Signature: sig=:QWgsWxFFEqAdb79qOjJKgJh0nwn3WFanqZ/IRetazjawCQchR81\
+3Q4Ocu4Sr8FhcN4VZJ1viBFfoFXAtVFTMbA==:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=x509;x5u="https://certs.example/x509-es256.pem";\
@@ -2194,9 +2276,9 @@ NOTE: '\' line wrapping per RFC 8792
 
 GET /api/items HTTP/1.1
 Host: resource.example
-Signature: sig=:JneP9BP4KTYKgUELDH0eUY1D5/ZpN8ZDDXYOvSkwBvWWfLdWih2\
-mNH3pOPQqT710HMwdS85jD0UOAqay5JzKYWi72zaeMBouKSBWcvOoAba6I4eyMHyQ6i\
-2BjNa7zIBB:
+Signature: sig=:RVV1gFCDCgheN9mBxHQlFmdKjMMRKEquSaqVHwd3Zw1L8Us5JOq\
+Wa3/rh/s0yI3glpWmrFNV+p8blaa/M2JDLgUfWclY102kLwqhU+Eqy+VplUv7jgmW1Z\
+uqmrBId647:
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 Signature-Key: sig=hwk;kty="EC";crv="P-384";x="bfPOJCwtKpeY-u4uoaDB\
@@ -3096,6 +3178,60 @@ NOTE: '\' line wrapping per RFC 8792
 "@authority": resource.example
 "@path": /api/items
 "signature-key": sig=cached;cid="never-issued-0001"
+"@signature-params": ("@method" "@authority" "@path" "signature-key\
+");created=1800000000
+```
+
+### multi-hwk-jwks
+
+two signatures on one request: sig1 under hwk and sig2 under jwks, both Ed25519. Category 3 (reproduce-the-bytes). Signed by aauth-rust; aauth-go produced the same bytes. Expected: verify (signature-key lines 191 and 199: each signature has its own member keyed by its label, the complete Signature-Key is populated before any signature is created and each signature covers signature-key; lines 173 and 177: a verifier that verifies both labels selects each label's member, and each signature verifies over its own base).
+
+Request:
+
+```http
+NOTE: '\' line wrapping per RFC 8792
+
+GET /api/items HTTP/1.1
+Host: resource.example
+Signature: sig1=:rkrKo/Z0Yr0hokLRnPHNfBdZreQ6MEC3/lysj8HGAI+9wjjSgC\
+t8V5M9U2hr3LB04gNge2WCsunRsfiTqHxbBg==:, sig2=:02unbdslIEPAmEcilkFB\
+v0EVPLtIjiJlalWYtKpLDZqGgKiophj4Gcp7BJrWEDMpHrIBa+4cVFe1Vd99rTgKBg=\
+=:
+Signature-Input: sig1=("@method" "@authority" "@path" "signature-ke\
+y");created=1800000000, sig2=("@method" "@authority" "@path" "signa\
+ture-key");created=1800000000
+Signature-Key: sig1=hwk;kty="OKP";crv="Ed25519";x="ge9CgQnrIEclu2br\
+zev1Ve02hk2_S65Fk_2JSD-dIsA";alg="Ed25519", sig2=jwks;url="https://\
+keys.example/signer.jwks";kid="signer-ed25519"
+
+```
+
+Signature base for label `sig1` (hwk, Ed25519, key agent-ed25519; 337 bytes, SHA-256 7f6f6aeaaabab3b3ea74278a703ef86f417eb25d0bd9d4138afb58f1fdd15940):
+
+```
+NOTE: '\' line wrapping per RFC 8792
+
+"@method": GET
+"@authority": resource.example
+"@path": /api/items
+"signature-key": sig1=hwk;kty="OKP";crv="Ed25519";x="ge9CgQnrIEclu2\
+brzev1Ve02hk2_S65Fk_2JSD-dIsA";alg="Ed25519", sig2=jwks;url="https:\
+//keys.example/signer.jwks";kid="signer-ed25519"
+"@signature-params": ("@method" "@authority" "@path" "signature-key\
+");created=1800000000
+```
+
+Signature base for label `sig2` (jwks, Ed25519, key signer-ed25519; 337 bytes, SHA-256 7f6f6aeaaabab3b3ea74278a703ef86f417eb25d0bd9d4138afb58f1fdd15940):
+
+```
+NOTE: '\' line wrapping per RFC 8792
+
+"@method": GET
+"@authority": resource.example
+"@path": /api/items
+"signature-key": sig1=hwk;kty="OKP";crv="Ed25519";x="ge9CgQnrIEclu2\
+brzev1Ve02hk2_S65Fk_2JSD-dIsA";alg="Ed25519", sig2=jwks;url="https:\
+//keys.example/signer.jwks";kid="signer-ed25519"
 "@signature-params": ("@method" "@authority" "@path" "signature-key\
 ");created=1800000000
 ```

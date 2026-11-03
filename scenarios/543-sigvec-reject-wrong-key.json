@@ -2,32 +2,32 @@
   "assertions": [
     {
       "id": "refused",
-      "clause": "sigvec.reject.kty-crv",
+      "clause": "sigvec.reject.signature",
       "kind": "status",
       "equals": 401
     },
     {
       "id": "error",
-      "clause": "sigvec.reject.kty-crv",
+      "clause": "sigvec.reject.signature",
       "kind": "sfv-token",
       "header": "Signature-Error",
       "member": "error",
-      "equals": "invalid_key"
+      "equals": "invalid_signature"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-hwk-kty-mismatch",
+  "id": "sigvec.reject-wrong-key",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 36
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 43
     },
     "vector": {
-      "id": "reject-hwk-kty-mismatch",
-      "title": "hwk OKP key naming ES256",
+      "id": "reject-wrong-key",
+      "title": "jwt whose cnf names one key while another key signs",
       "category": 3,
-      "scheme": "hwk",
+      "scheme": "jwt",
       "alg": "Ed25519",
       "now": 1800000000,
       "request": {
@@ -35,22 +35,54 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:YqVi4RaAaaTck2nfSAMuCBC9+pwL9sPz50H5j+AtwgOtmoTBFLdvUINylWlGiFKf9T0+iip2Ext3e0Na5ajsAQ==:",
+        "Signature": "sig=:wFaVtQM+qOKl3DeR2BAsBVYxK44jZDuX0ng5OVYU+dQZqwbAU0NK3fwBj8mR/KjV7l9cj8BzIO7nupck2D7nDg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"ES256\""
+        "Signature-Key": "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDMwMDAsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoicmVqZWN0LXdyb25nLWtleSIsInN1YiI6ImFhdXRoOmFzc2lzdGFudEBhZ2VudC1wcm92aWRlci5leGFtcGxlIn0.J2azk_nRaTpbxVrMX8-5mg_aLg_Y7oDcvItu86FuRLn-ig0c81OBDo1uKZc59Tnom2h77d9vRRLSXO38c81CBQ\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"ES256\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "0bb99d045ace21f339455d8807958f47433202923211240eda64b40733970b53",
-      "signature_base_length": 263,
-      "signing_key": "agent-ed25519",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDMwMDAsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoicmVqZWN0LXdyb25nLWtleSIsInN1YiI6ImFhdXRoOmFzc2lzdGFudEBhZ2VudC1wcm92aWRlci5leGFtcGxlIn0.J2azk_nRaTpbxVrMX8-5mg_aLg_Y7oDcvItu86FuRLn-ig0c81OBDo1uKZc59Tnom2h77d9vRRLSXO38c81CBQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "4579bb4dfe5367782847135570d1ef633ec5d3dc99ed8d2be22c71d572b1e274",
+      "signature_base_length": 725,
+      "signature_verifies": false,
+      "signing_key": "other-ed25519",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDMwMDAsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoicmVqZWN0LXdyb25nLWtleSIsInN1YiI6ImFhdXRoOmFzc2lzdGFudEBhZ2VudC1wcm92aWRlci5leGFtcGxlIn0.J2azk_nRaTpbxVrMX8-5mg_aLg_Y7oDcvItu86FuRLn-ig0c81OBDo1uKZc59Tnom2h77d9vRRLSXO38c81CBQ",
+        "header": {
+          "alg": "Ed25519",
+          "kid": "ap-ed25519",
+          "typ": "aa-agent+jwt"
+        },
+        "payload": {
+          "cnf": {
+            "jwk": {
+              "alg": "Ed25519",
+              "crv": "Ed25519",
+              "kty": "OKP",
+              "x": "ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA"
+            }
+          },
+          "dwk": "aauth-agent.json",
+          "exp": 1800003000,
+          "iat": 1799999700,
+          "iss": "https://agent-provider.example",
+          "jti": "reject-wrong-key",
+          "sub": "aauth:assistant@agent-provider.example"
+        },
+        "signed_by": "ap-ed25519"
+      },
+      "resolves": [
+        "https://agent-provider.example/.well-known/aauth-agent.json",
+        "https://agent-provider.example/.well-known/jwks.json"
+      ],
       "expect": {
         "outcome": "reject",
-        "error": "invalid_key",
-        "basis": "signature-key line 229; protocol Verification step 6: invalid_key when kty disagrees with alg"
+        "error": "invalid_signature",
+        "basis": "protocol Verification step 7: the signature does not verify under the key the member conveys"
       },
       "provenance": {
-        "signed_by": "harness",
-        "note": "Signed by the harness: both libraries emit hwk members only for the signing key's own JWK, with alg and without kid."
+        "signed_by": "aauth-go",
+        "reproduced_by": [
+          "aauth-rust"
+        ]
       }
     },
     "environment": {
@@ -126,6 +158,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-hwk-kty-mismatch: hwk OKP key naming ES256",
+  "title": "Signature-Key vector reject-wrong-key: jwt whose cnf names one key while another key signs",
   "version": 1
 }

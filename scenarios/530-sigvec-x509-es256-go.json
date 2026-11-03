@@ -1,60 +1,57 @@
 {
   "assertions": [
     {
-      "id": "refused",
-      "clause": "sigvec.reject.uncovered",
+      "id": "verified",
+      "clause": "sigvec.x509.es256",
       "kind": "status",
-      "equals": 401
+      "equals": 200
     },
     {
-      "id": "error",
-      "clause": "sigvec.reject.uncovered",
-      "kind": "sfv-token",
-      "header": "Signature-Error",
-      "member": "error",
-      "equals": "invalid_input"
+      "id": "scheme",
+      "clause": "sigvec.x509.es256",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "x509"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-uncovered-signature-key",
+  "id": "sigvec.x509-es256.go",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 32
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 30
     },
     "vector": {
-      "id": "reject-uncovered-signature-key",
-      "title": "hwk signature that does not cover signature-key",
-      "category": 3,
-      "scheme": "hwk",
-      "alg": "Ed25519",
+      "id": "x509-es256.go",
+      "title": "x509, ES256 end-entity certificate",
+      "category": 2,
+      "scheme": "x509",
+      "alg": "ES256",
       "now": 1800000000,
       "request": {
         "method": "GET",
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:40U9PJwSgKHu+NuICdxn2mbg3F9pbKnj88pkUlXw0mR6fQfEOASySu+3wsDHxxlECbHXO0cq6QmGEAsRiL4NDQ==:",
-        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\");created=1800000000",
-        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\""
+        "Signature": "sig=:QWgsWxFFEqAdb79qOjJKgJh0nwn3WFanqZ/IRetazjawCQchR813Q4Ocu4Sr8FhcN4VZJ1viBFfoFXAtVFTMbA==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=x509;x5u=\"https://certs.example/x509-es256.pem\";x5t=:+lK4xVUMzZg9a/La6cse/5HCoyMmbTEThhavw+w5dyk=:"
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\");created=1800000000",
-      "signature_base_sha256": "e0041788604b1443bd9176d80d95abe2299ce2ec4c59258248adeb988690faf6",
-      "signature_base_length": 138,
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=x509;x5u=\"https://certs.example/x509-es256.pem\";x5t=:+lK4xVUMzZg9a/La6cse/5HCoyMmbTEThhavw+w5dyk=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "5003da3f4a189892b828309e0f7d08987eea8df8d2225f4ddc0a9000f9edbf2a",
+      "signature_base_length": 274,
       "signature_verifies": true,
-      "signing_key": "agent-ed25519",
+      "signing_key": "x509-es256",
+      "resolves": [
+        "https://certs.example/x509-es256.pem"
+      ],
       "expect": {
-        "outcome": "reject",
-        "error": "invalid_input",
-        "required_input_includes": [
-          "signature-key"
-        ],
-        "basis": "signature-key line 1301: verifiers MUST reject requests where signature-key is not covered; protocol Verification step 2: invalid_input with required_input"
+        "outcome": "verify",
+        "basis": "a correctly signed request under this scheme verifies"
       },
       "provenance": {
-        "signed_by": "harness",
-        "note": "Signed by the harness: both libraries always cover signature-key."
+        "signed_by": "aauth-go"
       }
     },
     "environment": {
@@ -130,6 +127,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-uncovered-signature-key: hwk signature that does not cover signature-key",
+  "title": "Signature-Key vector x509-es256.go: x509, ES256 end-entity certificate",
   "version": 1
 }

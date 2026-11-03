@@ -2,32 +2,32 @@
   "assertions": [
     {
       "id": "refused",
-      "clause": "sigvec.reject.unknown-kid",
+      "clause": "sigvec.reject.issuer",
       "kind": "status",
       "equals": 401
     },
     {
       "id": "error",
-      "clause": "sigvec.reject.unknown-kid",
+      "clause": "sigvec.reject.issuer",
       "kind": "sfv-token",
       "header": "Signature-Error",
       "member": "error",
-      "equals": "unknown_key"
+      "equals": "issuer_missing"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-jwks-unknown-kid",
+  "id": "sigvec.reject-jwks-uri-issuer-missing",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 49
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 52
     },
     "vector": {
-      "id": "reject-jwks-unknown-kid",
-      "title": "jwks naming a kid the JWKS does not hold",
+      "id": "reject-jwks-uri-issuer-missing",
+      "title": "jwks_uri whose metadata has no issuer",
       "category": 3,
-      "scheme": "jwks",
+      "scheme": "jwks_uri",
       "alg": "Ed25519",
       "now": 1800000000,
       "request": {
@@ -35,21 +35,28 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:tAkXQF0rx/URKmOtOa8XM+pDD26aWCsnldzgp0Mtzpo1Jw05oeubZGz0V6KhX5daR7E1ZRafw+ECQiefaNG1Cg==:",
+        "Signature": "sig=:5lY8VHaMJOxDvcsEPzQ9KbJgvoZXSE6VNlbtPcKKjjWaVZZbgWxs3aHI6JqAvjONmmw9s1GJkxTvmuw5aDTZBg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-absent\""
+        "Signature-Key": "sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-ed25519\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-absent\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "2f0024f58d99876b4d3f4699a186d08ed29d11c966baec4228787309476f440f",
-      "signature_base_length": 239,
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "8f8df2c2fec81135eefdca12e96ba5075b1d82e74615ed553826971538a45ba4",
+      "signature_base_length": 259,
       "signing_key": "signer-ed25519",
+      "documents": [
+        {
+          "url": "https://signer.example/.well-known/aauth-resource.json",
+          "content_type": "application/json",
+          "body": "{\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
+        }
+      ],
       "resolves": [
-        "https://keys.example/signer.jwks"
+        "https://signer.example/.well-known/aauth-resource.json"
       ],
       "expect": {
         "outcome": "reject",
-        "error": "unknown_key",
-        "basis": "signature-key line 1054 (applicable to jwks): unknown_key"
+        "error": "issuer_missing",
+        "basis": "signature-key line 462: the document MUST contain issuer, else issuer_missing"
       },
       "provenance": {
         "signed_by": "aauth-go",
@@ -112,7 +119,7 @@
         {
           "url": "https://signer.example/.well-known/aauth-resource.json",
           "content_type": "application/json",
-          "body": "{\"issuer\":\"https://signer.example\",\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
+          "body": "{\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
         },
         {
           "url": "https://signer.example/.well-known/jwks.json",
@@ -131,6 +138,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-jwks-unknown-kid: jwks naming a kid the JWKS does not hold",
+  "title": "Signature-Key vector reject-jwks-uri-issuer-missing: jwks_uri whose metadata has no issuer",
   "version": 1
 }

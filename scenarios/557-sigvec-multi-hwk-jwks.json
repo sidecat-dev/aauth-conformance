@@ -2,56 +2,82 @@
   "assertions": [
     {
       "id": "verified",
-      "clause": "sigvec.x509.es256",
+      "clause": "sigvec.multi",
       "kind": "status",
       "equals": 200
     },
     {
-      "id": "scheme",
-      "clause": "sigvec.x509.es256",
-      "kind": "json-member",
-      "member": "scheme",
-      "equals": "x509"
+      "id": "scheme-sig1",
+      "clause": "sigvec.multi",
+      "kind": "json-path",
+      "member": "labels.sig1",
+      "equals": "hwk"
+    },
+    {
+      "id": "scheme-sig2",
+      "clause": "sigvec.multi",
+      "kind": "json-path",
+      "member": "labels.sig2",
+      "equals": "jwks"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.x509-es256.rust",
+  "id": "sigvec.multi-hwk-jwks",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 28
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 57
     },
     "vector": {
-      "id": "x509-es256.rust",
-      "title": "x509, ES256 end-entity certificate",
-      "category": 2,
-      "scheme": "x509",
-      "alg": "ES256",
+      "id": "multi-hwk-jwks",
+      "title": "two signatures on one request: sig1 under hwk and sig2 under jwks, both Ed25519",
+      "category": 3,
+      "alg": "Ed25519",
       "now": 1800000000,
       "request": {
         "method": "GET",
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:b/Co8ZabPv0mA2KXkGgQtf3F4C8mdT2AGDd8HCscmTxwWUkCxYC03GTjcUNH/TlbbZSsR9qq+c3A1IPJ6kcNaA==:",
-        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=x509;x5u=\"https://certs.example/x509-es256.pem\";x5t=:+lK4xVUMzZg9a/La6cse/5HCoyMmbTEThhavw+w5dyk=:"
+        "Signature": "sig1=:rkrKo/Z0Yr0hokLRnPHNfBdZreQ6MEC3/lysj8HGAI+9wjjSgCt8V5M9U2hr3LB04gNge2WCsunRsfiTqHxbBg==:, sig2=:02unbdslIEPAmEcilkFBv0EVPLtIjiJlalWYtKpLDZqGgKiophj4Gcp7BJrWEDMpHrIBa+4cVFe1Vd99rTgKBg==:",
+        "Signature-Input": "sig1=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000, sig2=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig1=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\", sig2=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ed25519\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=x509;x5u=\"https://certs.example/x509-es256.pem\";x5t=:+lK4xVUMzZg9a/La6cse/5HCoyMmbTEThhavw+w5dyk=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "5003da3f4a189892b828309e0f7d08987eea8df8d2225f4ddc0a9000f9edbf2a",
-      "signature_base_length": 274,
-      "signature_verifies": true,
-      "signing_key": "x509-es256",
-      "resolves": [
-        "https://certs.example/x509-es256.pem"
+      "signatures": [
+        {
+          "label": "sig1",
+          "scheme": "hwk",
+          "alg": "Ed25519",
+          "signing_key": "agent-ed25519",
+          "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig1=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\", sig2=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+          "signature_base_sha256": "7f6f6aeaaabab3b3ea74278a703ef86f417eb25d0bd9d4138afb58f1fdd15940",
+          "signature_base_length": 337,
+          "signature_verifies": true
+        },
+        {
+          "label": "sig2",
+          "scheme": "jwks",
+          "alg": "Ed25519",
+          "signing_key": "signer-ed25519",
+          "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig1=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\", sig2=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+          "signature_base_sha256": "7f6f6aeaaabab3b3ea74278a703ef86f417eb25d0bd9d4138afb58f1fdd15940",
+          "signature_base_length": 337,
+          "signature_verifies": true,
+          "resolves": [
+            "https://keys.example/signer.jwks"
+          ]
+        }
       ],
       "expect": {
         "outcome": "verify",
-        "basis": "a correctly signed request under this scheme verifies"
+        "basis": "signature-key lines 191 and 199: each signature has its own member keyed by its label, the complete Signature-Key is populated before any signature is created and each signature covers signature-key; lines 173 and 177: a verifier that verifies both labels selects each label's member, and each signature verifies over its own base"
       },
       "provenance": {
-        "signed_by": "aauth-rust"
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
       }
     },
     "environment": {
@@ -127,6 +153,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector x509-es256.rust: x509, ES256 end-entity certificate",
+  "title": "Signature-Key vector multi-hwk-jwks: two signatures on one request: sig1 under hwk and sig2 under jwks, both Ed25519",
   "version": 1
 }

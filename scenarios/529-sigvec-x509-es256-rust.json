@@ -2,59 +2,56 @@
   "assertions": [
     {
       "id": "verified",
-      "clause": "sigvec.x509",
+      "clause": "sigvec.x509.es256",
       "kind": "status",
       "equals": 200
     },
     {
       "id": "scheme",
-      "clause": "sigvec.x509",
+      "clause": "sigvec.x509.es256",
       "kind": "json-member",
       "member": "scheme",
       "equals": "x509"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.x509-ed25519",
+  "id": "sigvec.x509-es256.rust",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 27
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 29
     },
     "vector": {
-      "id": "x509-ed25519",
-      "title": "x509, Ed25519 end-entity certificate",
-      "category": 3,
+      "id": "x509-es256.rust",
+      "title": "x509, ES256 end-entity certificate",
+      "category": 2,
       "scheme": "x509",
-      "alg": "Ed25519",
+      "alg": "ES256",
       "now": 1800000000,
       "request": {
         "method": "GET",
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:Qc5gjqEGDmnRCdF2C4aua0W493NIrVGFPgGrcK11j+N+GI3+rfM4mdvyyTmprO6lv6YJlSxVKx1kiOudM0cKAA==:",
+        "Signature": "sig=:b/Co8ZabPv0mA2KXkGgQtf3F4C8mdT2AGDd8HCscmTxwWUkCxYC03GTjcUNH/TlbbZSsR9qq+c3A1IPJ6kcNaA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=x509;x5u=\"https://certs.example/x509-ed25519.pem\";x5t=:2WOvHULNKK+ByRzW0sLjBM0JAdYrPj/cjmLD+tlthsE=:"
+        "Signature-Key": "sig=x509;x5u=\"https://certs.example/x509-es256.pem\";x5t=:+lK4xVUMzZg9a/La6cse/5HCoyMmbTEThhavw+w5dyk=:"
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=x509;x5u=\"https://certs.example/x509-ed25519.pem\";x5t=:2WOvHULNKK+ByRzW0sLjBM0JAdYrPj/cjmLD+tlthsE=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "bb857229428941e9cc0acbb55d367469be116429907bb2083b4b7df29c742c37",
-      "signature_base_length": 276,
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=x509;x5u=\"https://certs.example/x509-es256.pem\";x5t=:+lK4xVUMzZg9a/La6cse/5HCoyMmbTEThhavw+w5dyk=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "5003da3f4a189892b828309e0f7d08987eea8df8d2225f4ddc0a9000f9edbf2a",
+      "signature_base_length": 274,
       "signature_verifies": true,
-      "signing_key": "x509-ed25519",
+      "signing_key": "x509-es256",
       "resolves": [
-        "https://certs.example/x509-ed25519.pem"
+        "https://certs.example/x509-es256.pem"
       ],
       "expect": {
         "outcome": "verify",
         "basis": "a correctly signed request under this scheme verifies"
       },
       "provenance": {
-        "signed_by": "aauth-rust",
-        "reproduced_by": [
-          "aauth-go"
-        ]
+        "signed_by": "aauth-rust"
       }
     },
     "environment": {
@@ -130,6 +127,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector x509-ed25519: x509, Ed25519 end-entity certificate",
+  "title": "Signature-Key vector x509-es256.rust: x509, ES256 end-entity certificate",
   "version": 1
 }

@@ -2,30 +2,30 @@
   "assertions": [
     {
       "id": "refused",
-      "clause": "sigvec.reject.window",
+      "clause": "sigvec.reject.alg",
       "kind": "status",
       "equals": 401
     },
     {
       "id": "error",
-      "clause": "sigvec.reject.window",
+      "clause": "sigvec.reject.alg",
       "kind": "sfv-token",
       "header": "Signature-Error",
       "member": "error",
-      "equals": "invalid_signature"
+      "equals": "unsupported_algorithm"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-created-stale",
+  "id": "sigvec.reject-hwk-alg-eddsa",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 44
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 35
     },
     "vector": {
-      "id": "reject-created-stale",
-      "title": "created 300 seconds before the verifier clock (window 60)",
+      "id": "reject-hwk-alg-eddsa",
+      "title": "hwk member naming the polymorphic EdDSA",
       "category": 3,
       "scheme": "hwk",
       "alg": "Ed25519",
@@ -35,25 +35,22 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:XQ56lBDIO/6O7TZpv4bcD8VE0rhK67IhYioyW+dG/j5RJRFVYPDFUxXwUyoWqn56SF7d7t12duD0DQqEsIEsDg==:",
-        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1799999700",
-        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\""
+        "Signature": "sig=:DaWbQqqoinENBfbpLxps38mAkKoOCZTMQmcVv+zMMU+UqQXROQTAnWwsOdA5OUkOO7T8ETWQykM6L/dS6A/qDA==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"EdDSA\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1799999700",
-      "signature_base_sha256": "acd054495b6b81406eb0c2427ee24e3f6688db97c23dd48f98fed883e099eb74",
-      "signature_base_length": 265,
-      "signature_verifies": true,
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"EdDSA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "702f025ec1d6d2223b357c32ebc73496acdcb19e0222ca32998e7cbc0c6fdfeb",
+      "signature_base_length": 263,
       "signing_key": "agent-ed25519",
       "expect": {
         "outcome": "reject",
-        "error": "invalid_signature",
-        "basis": "signature-key line 1114 and protocol Verification step 3: invalid_signature when created is older than the window"
+        "error": "unsupported_algorithm",
+        "basis": "signature-key lines 203 and 211; protocol Verification step 6: unsupported_algorithm for a polymorphic alg"
       },
       "provenance": {
-        "signed_by": "aauth-go",
-        "reproduced_by": [
-          "aauth-rust"
-        ]
+        "signed_by": "harness",
+        "note": "Signed by the harness: both libraries emit hwk members only for the signing key's own JWK, with alg and without kid."
       }
     },
     "environment": {
@@ -129,6 +126,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-created-stale: created 300 seconds before the verifier clock (window 60)",
+  "title": "Signature-Key vector reject-hwk-alg-eddsa: hwk member naming the polymorphic EdDSA",
   "version": 1
 }

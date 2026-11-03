@@ -25,11 +25,11 @@
     "libraries": [
       {
         "id": "aauth-go",
-        "revision": "1e0b03e4069fe3eccb2822242186d4cfc6637e03"
+        "revision": "e76d864fa47073313d760ee1ead5a41cbc347d47"
       },
       {
         "id": "aauth-rust",
-        "revision": "1b4059e0e3507336c8e70560cec238ea759cff8a"
+        "revision": "9b13c8bdee14f099284eada22e90f1e1fc6bba29"
       }
     ],
     "harness": "aauth-conformance internal/conformance (Go standard library only)"
@@ -549,7 +549,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:bDbtHDOHYUJOdzPzkcCJ77/mb3tV+ud6mmShlWwYN4f54UJ8m4YmT5ki+nzsZuUpFOPXISCO2fYIeZMhcI67Jg==:",
+        "Signature": "sig=:U7H4RcUs7LgT7SFf4aJRWYxv+Co+Z5p6ebPGaVCMyaw4cepwoQ/tN+1UnhbK9B7b1zjADCtODQaMGmKYU7/Zgw==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-256\";x=\"kWn1q9uoMexzm15PKmMJ9n45OYzIJOFhsGAfNvxLaG8\";y=\"SFtVwCFSswQbnzphZWuRiu78r8L21Y_mFpYLaUzTuXw\";alg=\"ES256\""
       },
@@ -607,7 +607,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:RCN8WgjYfSSfzYecNqdh+7APchQC3grxnY/rZBuewxplmDArM2od/7yVrK/hc6etJU9ob20nz6w2qi05nuL1q3j1OHZVOgxFU/sPnS40jjJNZJnfMoQDrGPx6fYSPDI6:",
+        "Signature": "sig=:XoYPXLVBDFas6GcnyRLIj/x1vz8UFBtR8J6s6hr6ZDqeOkex6rE+Y+HTFheHRqUHrB1vW9Fdl30j21oXrKL8bs/dnGLI7miOr6KG9t2eneZnhVL5kFyOefJWCOMKLTZT:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-384\";x=\"bfPOJCwtKpeY-u4uoaDBCfsct3meT5xE2xcLJtxuqWnW_Bgn1nXi-DNsuFvbf2Au\";y=\"O6DNv-okgDuYtZ4keVM0oizSEw8SKem9lLja7W7fy0ykCtGkdNmXvD0daJdzxelI\";alg=\"ES384\""
       },
@@ -668,7 +668,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:dU8mxvAC59459E67T/E57hvrhECiBC1essszW8CvdeMBqdnrCmcYbcklHUixbpjPgFw5j8LLd4P1ui72wxiXbTC7YAF/c9FSLH2og9YDfBvfG91ZkscSRv5lWGUu2mrpDseppZnF9am71x/R5Cn90IfM+dlUmGIW4FtbMDoym5XI465GqaoAiz7sIUFUJ7ah35nd0cgl6rzoFaje0JaGAzUSJK0V6rOjuDwZ3CdsZNa9Yfru9I4hHPNXjD6AKcIEWu5ZGFYllvJ6erJfh+sJ57JyzZCjqcfSGS1sETK7vkE12wNQnqRzIVtUAnyQ6U0YouWA20k4BUw3eFA27sIKrg==:",
+        "Signature": "sig=:UgPOlQh0qAIgZYqg3iKHP5KaoRoBGiorAhu1ACK9jrA6D0KGECOZBv6iFscSqb2r9tX6c4owrDNF8bKsldH+p81l5HLG8yI30DseDfGnfdgEOEFijPZ5sRoZBAromr6dJ0b7WgOeS3o52RiqmtWmZjZwyR0J6QvuhSlgwRalrPxjJBY+RUDCueAmGKhpuYgKlwqF1O084IWvkG4jJaGLb+Wp0ABNnRWgprR/CvH+6BGFGu9vDXw9N3Y9u+VUM3JiHQEsNP3ksIh6N4un9Xgjxgy1022yU1QYuXRKtcD72DxdqdMcLusqz1eGqPserr46v6xtOTJBFXcP6l51kmoXmA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"RSA\";n=\"tE2hQ7RoXWIGUZIlGG0i748Sp0uG87X5ee96CqeMG11F2NCYFlueGn6lGB3xYC5A-QqeoUB3BP_b7lY54oRRfICD_KE5LF-D8bXS4JocdQfq9hO4QxBuVZG57oWs8bXICrws-Lj_Lmu-ZeZW5K4ooynqdzxfbx8_2-MP1SlmD3N_mOPzHiaVDSxelry0xH61YLh_0nUHrKw37wiIqwQZgsKDnTBMN1YMmNsdIt5AUdKlyWJzQBN9S0TCAKE47vJxZoqVTDBxc-w2jG1zif-2h_mwbzLnWQj0FebK_sI5jagVDEGn5_Zzzw3rXFhjYDhraWkqMGbmZdq0sd8Iw9jF5Q\";e=\"AQAB\";alg=\"PS256\""
       },
@@ -697,7 +697,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:bjEecVTAtfxrEoA2rGHbshaabw/UHEe1+klf4SCjhXymh2dyodBhK58VhQCad3J1edM5sbLFfPLYKVFu9XghpnW2yi6GxYCiIIgC6bxpGCEx/pL7a9k8aAF3lzf35fd42E89WQ0Ho46rrUaY7ouno8XMsyaUaXpeYVfEbxh7GJ2FubOTTvVjfjQGmh7mXcdmqeMUxVKV0d1ej6kw+jxB7wHW1X0VA1TCr8J7kHCtESjLz8dZ1xg+6eiXtMpA63MusZcOd9D8cXf2khT1upNo2r0brLHOKsyEYWVZI0JWQR8DRQhZa2z/ABRV0QoiwLNfRbwfiHjmWDyom6Beki4cgA==:",
+        "Signature": "sig=:EUoMkQuVQunQeAIGsntQKRp8DlXMnn3Dn3Z4fmehVe94z81bGLcwK3AD3/fyl9qmxCVrEeuY8nkw82IIFnHBoJZEwocTdAqzZH9/zHBipIKBsgD6f9i8khAHl/TT7l+QWLLijpS878H2EChRReBVs7O1xnOrGpM5N0cuWLEjHw28wwI1EihrzLJB/qn+nymOSdQONwK9k9GPX2w3Xeg5TgEkaxLTzg3RG4WyterIEfeVBjdiTKCCYUkxPT03ZJoG298FjR6PSau9vPFTS15hkzvtRxN4ISkYKL9sCq5vf4G5qR6+jawsxM3+st3GesKXECGFltUezfE7CbxBicQlww==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"RSA\";n=\"tE2hQ7RoXWIGUZIlGG0i748Sp0uG87X5ee96CqeMG11F2NCYFlueGn6lGB3xYC5A-QqeoUB3BP_b7lY54oRRfICD_KE5LF-D8bXS4JocdQfq9hO4QxBuVZG57oWs8bXICrws-Lj_Lmu-ZeZW5K4ooynqdzxfbx8_2-MP1SlmD3N_mOPzHiaVDSxelry0xH61YLh_0nUHrKw37wiIqwQZgsKDnTBMN1YMmNsdIt5AUdKlyWJzQBN9S0TCAKE47vJxZoqVTDBxc-w2jG1zif-2h_mwbzLnWQj0FebK_sI5jagVDEGn5_Zzzw3rXFhjYDhraWkqMGbmZdq0sd8Iw9jF5Q\";e=\"AQAB\";alg=\"PS256\""
       },
@@ -973,7 +973,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:mC/VmNf9K8oP1u4qjQrM4cPgVdPU7ZavHjVpGBHtSio/W7kwuxddhy3hDOtkCdx+RMoO96Xm/9WPp6UmOK/xsg==:",
+        "Signature": "sig=:IUxJM91udkf3AaDBW9TBhJJi42udwMb2Z5+/6ZcravvHgx67uxcAxacmyrKE8BD5DPNcY0e47gkzcfeYmE5PRA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDMwMDAsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoiand0LWVzMjU2Iiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.KdmDplIRdYUDbHSPwIXG47b5weauYdIg4VYe6_anY6nMhrPdrpaGQldMJy3qETzPwHcApN3Goeaq0hibOV1TDg\""
       },
@@ -1101,7 +1101,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:uEUeDrHUfD3/ElAAhEK/2EuzFfE1NdP4nT9T8Xzir50MU6qe7ABBEBD/vNoAe96ZFGO/Jjh2949ipBLJ+ncuxw==:",
+        "Signature": "sig=:2OuyxUqCVJWW0ZlEvCU3nNk8HywW+2c/YwLePdKoPiLhotoACXcG3PNJKYBt7Bd/GYHFvflDp4T+6dlBT8L5gQ==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-es256\""
       },
@@ -1201,7 +1201,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:abQR8TFppXhQj8+2C7W1OvYS0y7DNOfSvKN7n6vNTmXrnYQQ5hVQnRLzML0xBZCXWmxJ5qJzidHKdZsIyxrhVA==:",
+        "Signature": "sig=:UwLYvIuu6xMkqsrTOlrq/MqfF8p3kRppJwmPjoUY8EX6NEM8P/jxcnVvG+Qq/CU3SxawwkIxJkRuZqYTTC0xPw==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-es256\""
       },
@@ -1286,17 +1286,17 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:VBorYNTpvlDWKb4n464IzAK2iaPa4Tl0TvPoKovdNMYnuMIHizkb+r6+W1BdSSjJ4Q2cY3YDMTit8o9rQ+ok/w==:",
+        "Signature": "sig=:QhtCCxLgYTGyjCyuZm06zEE1U54WePHJT39LaMBIfcffe962pOmqQNsgiOUliNMDmkCyVPA4nL4Jo5LLE+UJQA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ\""
+        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j7vW0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6w\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "5b7addd22b96b85071a901984b067450b884d6d7e98402ad5ceff2ddad6c090b",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j7vW0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6w\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "27a3bf2fe3e648e7b5ad724cf3d84fc30ec1fa6da134c301ce139e112b96a8d3",
       "signature_base_length": 559,
       "signature_verifies": true,
       "signing_key": "signer-es256",
       "assertion": {
-        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ",
+        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j7vW0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6w",
         "header": {
           "alg": "ES256",
           "kid": "signer-es256",
@@ -1336,17 +1336,17 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:M6ZcaTLwZVwhyBMTtN4GvsOVT0NMQi9NeHW6PCnPKG+MOMetcGND+juE5mOky9R7UY/kOxksbDBclJFSuoN9OA==:",
+        "Signature": "sig=:PcKFGoz6sbOlvnSXyRTcqYntZVIagzmwIf5hVYtD3MfC9vTUNUzlLgT5PUw0Fkv0HY1ikvaT+qWxiGUy2uq/AA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ\""
+        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j7vW0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6w\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "5b7addd22b96b85071a901984b067450b884d6d7e98402ad5ceff2ddad6c090b",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j7vW0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6w\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "27a3bf2fe3e648e7b5ad724cf3d84fc30ec1fa6da134c301ce139e112b96a8d3",
       "signature_base_length": 559,
       "signature_verifies": true,
       "signing_key": "signer-es256",
       "assertion": {
-        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.QKEX0KOfyRGmG2R2bURKRITh_RLA5OgLdpFGRFwvZZ3oI7rWSJZFSmIDryLdWVStKDFx7BOXUKtUukCw_OikfQ",
+        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.fU-rR_Dy0aG15n703j7vW0sOAEqEck6znfrXNOv6YRSWKzDYKzSYRngGjJR7xC8kUAFGPQ1ePJGiimRJp8CS6w",
         "header": {
           "alg": "ES256",
           "kid": "signer-es256",
@@ -1446,17 +1446,17 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:fFXJnTV2BRMm3oiIAC+S+Il2WOutBnynC+RwjekOaqIxz75cg2O9t758rfpG5w2CcWvB/xlZFYimxWPz6q6dCg==:",
+        "Signature": "sig=:kHclT8pjxcWWhog1q8AYbi4Kd2pwJoaE6TOEpaZQ+4tK8F0GxxGW7cDUh8U6A18Al+i72ZsZt9Rhi8B8zNKgAA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.KQwPIe4WhqS4iWMU_f8D1r-kwWGymb0h05i29weeyggu9BHglU9Ud5sklSwShUby_WtBgO0nWVDo68b5tmdDTQ\""
+        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.yGb8aGkHtuvxAFhZYsDhKJ7BGx3CTEsPZlxIC4HYhcCB5ajk9yZbBkqnwR8Ay7Un0eX9BQCSb8dDJttMiuU3MA\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.KQwPIe4WhqS4iWMU_f8D1r-kwWGymb0h05i29weeyggu9BHglU9Ud5sklSwShUby_WtBgO0nWVDo68b5tmdDTQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "a0dacf314901336ada4b689fb3e47d0e43bfd9855c8c62b4cbdb20f1aceb3eb7",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.yGb8aGkHtuvxAFhZYsDhKJ7BGx3CTEsPZlxIC4HYhcCB5ajk9yZbBkqnwR8Ay7Un0eX9BQCSb8dDJttMiuU3MA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "e40084388423f79c49611b729eb799bce18b99c08b7e833bdfeaf2086cf3c900",
       "signature_base_length": 848,
       "signature_verifies": true,
       "signing_key": "agent-ed25519",
       "assertion": {
-        "compact": "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.KQwPIe4WhqS4iWMU_f8D1r-kwWGymb0h05i29weeyggu9BHglU9Ud5sklSwShUby_WtBgO0nWVDo68b5tmdDTQ",
+        "compact": "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.yGb8aGkHtuvxAFhZYsDhKJ7BGx3CTEsPZlxIC4HYhcCB5ajk9yZbBkqnwR8Ay7Un0eX9BQCSb8dDJttMiuU3MA",
         "header": {
           "alg": "ES256",
           "jwk": {
@@ -1489,12 +1489,14 @@
         "basis": "a correctly signed request under this scheme verifies"
       },
       "provenance": {
-        "signed_by": "aauth-go",
-        "note": "Not signed by aauth-rust: refused (HTTP 422): unsupported_algorithm (unsupported or missing key alg: AAuth keys and tokens use Ed25519 or ES256, an hwk key may also be ES384, RS256 or PS256 and an x509 key ES384; algorithms are not inferred from key shape)."
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
       }
     },
     {
-      "id": "jkt-jwt-es256",
+      "id": "jkt-jwt-es256.rust",
       "title": "jkt-jwt, Ed25519 identity key delegating to an ES256 request key",
       "category": 2,
       "scheme": "jkt-jwt",
@@ -1505,7 +1507,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:g/OlTOkc7XSiUvU46s5/ztDSSm75+ZZdu0CcGh5ViDGDm/PLpxWOI4S6C4DqPLor9UbjVRyxXyGSj4h9cSwFnA==:",
+        "Signature": "sig=:UpUJI0RK5Hov+uQWtvYLS1TvPBQbaIRmXCFzUV7SlWs5G1IGtszkrgvVqkpKRB6NW5tXkY2aBHaIgagmIBCQZQ==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg\""
       },
@@ -1548,8 +1550,65 @@
         "basis": "a correctly signed request under this scheme verifies"
       },
       "provenance": {
-        "signed_by": "aauth-go",
-        "note": "Not signed by aauth-rust: refused (HTTP 422): unsupported_algorithm (unsupported or missing key alg: AAuth keys and tokens use Ed25519 or ES256, an hwk key may also be ES384, RS256 or PS256 and an x509 key ES384; algorithms are not inferred from key shape)."
+        "signed_by": "aauth-rust"
+      }
+    },
+    {
+      "id": "jkt-jwt-es256.go",
+      "title": "jkt-jwt, Ed25519 identity key delegating to an ES256 request key",
+      "category": 2,
+      "scheme": "jkt-jwt",
+      "alg": "ES256",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:YxK9m0DhPBOmpNoPpznXmkclgGqv64iHW3jzjt794uQsZkbxT6hPCJXN1Ietobt+AOpjDmchtSGktZYtBbsw/Q==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "28c896487857f2b0ab2988a5526a4feeeb7f207a455e3f19f9b81318d87afd04",
+      "signature_base_length": 839,
+      "signature_verifies": true,
+      "signing_key": "agent-es256",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg",
+        "header": {
+          "alg": "Ed25519",
+          "jwk": {
+            "alg": "Ed25519",
+            "crv": "Ed25519",
+            "kty": "OKP",
+            "x": "xMhCrtHXUGjauU2ci3cct0HCofsRTWJmD3kCDC8HQ5A"
+          },
+          "typ": "jkt-s256+jwt"
+        },
+        "payload": {
+          "cnf": {
+            "jwk": {
+              "alg": "ES256",
+              "crv": "P-256",
+              "kty": "EC",
+              "x": "kWn1q9uoMexzm15PKmMJ9n45OYzIJOFhsGAfNvxLaG8",
+              "y": "SFtVwCFSswQbnzphZWuRiu78r8L21Y_mFpYLaUzTuXw"
+            }
+          },
+          "exp": 1800003000,
+          "iat": 1799999700,
+          "iss": "urn:jkt:sha-256:6ZYrr7h-Aq7KGM3Lz8YZc7GeSslAvPWfPnv-3tI-jgc",
+          "jti": "jkt-jwt-es256"
+        },
+        "signed_by": "jkt-identity-ed25519"
+      },
+      "expect": {
+        "outcome": "verify",
+        "basis": "a correctly signed request under this scheme verifies"
+      },
+      "provenance": {
+        "signed_by": "aauth-go"
       }
     },
     {
@@ -1631,7 +1690,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:QfTASpi/yKtq0SWkMjnVPXf7w4pd3AEI2W/aElkVBYRZeewmpD4FsX21eVhiI90NMlLf66OSS/jUt7TCWfgpWQ==:",
+        "Signature": "sig=:QWgsWxFFEqAdb79qOjJKgJh0nwn3WFanqZ/IRetazjawCQchR813Q4Ocu4Sr8FhcN4VZJ1viBFfoFXAtVFTMbA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=x509;x5u=\"https://certs.example/x509-es256.pem\";x5t=:+lK4xVUMzZg9a/La6cse/5HCoyMmbTEThhavw+w5dyk=:"
       },
@@ -1901,7 +1960,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:JneP9BP4KTYKgUELDH0eUY1D5/ZpN8ZDDXYOvSkwBvWWfLdWih2mNH3pOPQqT710HMwdS85jD0UOAqay5JzKYWi72zaeMBouKSBWcvOoAba6I4eyMHyQ6i2BjNa7zIBB:",
+        "Signature": "sig=:RVV1gFCDCgheN9mBxHQlFmdKjMMRKEquSaqVHwd3Zw1L8Us5JOqWa3/rh/s0yI3glpWmrFNV+p8blaa/M2JDLgUfWclY102kLwqhU+Eqy+VplUv7jgmW1ZuqmrBId647:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-384\";x=\"bfPOJCwtKpeY-u4uoaDBCfsct3meT5xE2xcLJtxuqWnW_Bgn1nXi-DNsuFvbf2Au\";y=\"O6DNv-okgDuYtZ4keVM0oizSEw8SKem9lLja7W7fy0ykCtGkdNmXvD0daJdzxelI\";alg=\"ES256\""
       },
@@ -2702,6 +2761,57 @@
       "provenance": {
         "signed_by": "aauth-rust",
         "note": "Not signed by aauth-go: not offered: aauth-go presents only a cache identifier a verifier issued: NewCachedCredential takes a CacheGrant."
+      }
+    },
+    {
+      "id": "multi-hwk-jwks",
+      "title": "two signatures on one request: sig1 under hwk and sig2 under jwks, both Ed25519",
+      "category": 3,
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig1=:rkrKo/Z0Yr0hokLRnPHNfBdZreQ6MEC3/lysj8HGAI+9wjjSgCt8V5M9U2hr3LB04gNge2WCsunRsfiTqHxbBg==:, sig2=:02unbdslIEPAmEcilkFBv0EVPLtIjiJlalWYtKpLDZqGgKiophj4Gcp7BJrWEDMpHrIBa+4cVFe1Vd99rTgKBg==:",
+        "Signature-Input": "sig1=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000, sig2=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig1=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\", sig2=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ed25519\""
+      },
+      "signatures": [
+        {
+          "label": "sig1",
+          "scheme": "hwk",
+          "alg": "Ed25519",
+          "signing_key": "agent-ed25519",
+          "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig1=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\", sig2=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+          "signature_base_sha256": "7f6f6aeaaabab3b3ea74278a703ef86f417eb25d0bd9d4138afb58f1fdd15940",
+          "signature_base_length": 337,
+          "signature_verifies": true
+        },
+        {
+          "label": "sig2",
+          "scheme": "jwks",
+          "alg": "Ed25519",
+          "signing_key": "signer-ed25519",
+          "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig1=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\", sig2=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+          "signature_base_sha256": "7f6f6aeaaabab3b3ea74278a703ef86f417eb25d0bd9d4138afb58f1fdd15940",
+          "signature_base_length": 337,
+          "signature_verifies": true,
+          "resolves": [
+            "https://keys.example/signer.jwks"
+          ]
+        }
+      ],
+      "expect": {
+        "outcome": "verify",
+        "basis": "signature-key lines 191 and 199: each signature has its own member keyed by its label, the complete Signature-Key is populated before any signature is created and each signature covers signature-key; lines 173 and 177: a verifier that verifies both labels selects each label's member, and each signature verifies over its own base"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
       }
     }
   ]

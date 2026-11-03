@@ -2,32 +2,32 @@
   "assertions": [
     {
       "id": "refused",
-      "clause": "sigvec.reject.signature",
+      "clause": "sigvec.reject.self-jwt-cnf",
       "kind": "status",
       "equals": 401
     },
     {
       "id": "error",
-      "clause": "sigvec.reject.signature",
+      "clause": "sigvec.reject.self-jwt-cnf",
       "kind": "sfv-token",
       "header": "Signature-Error",
       "member": "error",
-      "equals": "invalid_signature"
+      "equals": "invalid_jwt"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-tampered-signature",
+  "id": "sigvec.reject-self-jwt-cnf",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 41
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 54
     },
     "vector": {
-      "id": "reject-tampered-signature",
-      "title": "hwk signature with one bit flipped",
+      "id": "reject-self-jwt-cnf",
+      "title": "self-jwt carrying a cnf claim",
       "category": 3,
-      "scheme": "hwk",
+      "scheme": "self-jwt",
       "alg": "Ed25519",
       "now": 1800000000,
       "request": {
@@ -35,26 +35,52 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:wGI92boz47sJN4qsSaCcM0+BMgWEO811RefzvZKQsWWj1JyUrAaeest2kFd5oYfb9Vi8G3wYD+rV6AliCGTCBQ==:",
+        "Signature": "sig=:WrqolhtWXBUBtCIZkIHvOEbDq0Z2FG2WM1UfeBx3LB57wE4zIMwTxNAzTI/GGocHuLsKK70reIbZp9JouUpfBg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\""
+        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6Ikc2NTVZWjZ2eXcyMGVrV3R3cG5WT3V3RjM2eTZDc3h4bWx1UnZ3WmFtTzQifX0sImR3ayI6ImFhdXRoLXJlc291cmNlLmpzb24iLCJleHAiOjE4MDAwMDAzMDAsImlhdCI6MTc5OTk5OTk3MCwiaXNzIjoiaHR0cHM6Ly9zaWduZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1zZWxmLWp3dC1jbmYifQ.-LAkxLo2ZAlCf93AcRatxna1ZqUPnoGzAC4LNlEL9YitA8rTJlp5tHTAmwW_kaFsPx0v_0zuum_l_5iq-pOiAQ\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "e09cd5dec4a12dd98550210595214918f0203dc9156a5cbdce50906ca01f273f",
-      "signature_base_length": 265,
-      "signature_verifies": false,
-      "signing_key": "agent-ed25519",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6Ikc2NTVZWjZ2eXcyMGVrV3R3cG5WT3V3RjM2eTZDc3h4bWx1UnZ3WmFtTzQifX0sImR3ayI6ImFhdXRoLXJlc291cmNlLmpzb24iLCJleHAiOjE4MDAwMDAzMDAsImlhdCI6MTc5OTk5OTk3MCwiaXNzIjoiaHR0cHM6Ly9zaWduZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1zZWxmLWp3dC1jbmYifQ.-LAkxLo2ZAlCf93AcRatxna1ZqUPnoGzAC4LNlEL9YitA8rTJlp5tHTAmwW_kaFsPx0v_0zuum_l_5iq-pOiAQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "052ef17af178b84d568dd05030bdb414d7fca3c0f959b4fd6688a8ef24fbcb86",
+      "signature_base_length": 719,
+      "signature_verifies": true,
+      "signing_key": "signer-ed25519",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6Ikc2NTVZWjZ2eXcyMGVrV3R3cG5WT3V3RjM2eTZDc3h4bWx1UnZ3WmFtTzQifX0sImR3ayI6ImFhdXRoLXJlc291cmNlLmpzb24iLCJleHAiOjE4MDAwMDAzMDAsImlhdCI6MTc5OTk5OTk3MCwiaXNzIjoiaHR0cHM6Ly9zaWduZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1zZWxmLWp3dC1jbmYifQ.-LAkxLo2ZAlCf93AcRatxna1ZqUPnoGzAC4LNlEL9YitA8rTJlp5tHTAmwW_kaFsPx0v_0zuum_l_5iq-pOiAQ",
+        "header": {
+          "alg": "Ed25519",
+          "kid": "signer-ed25519",
+          "typ": "vector-self+jwt"
+        },
+        "payload": {
+          "aud": "https://resource.example",
+          "cnf": {
+            "jwk": {
+              "alg": "Ed25519",
+              "crv": "Ed25519",
+              "kty": "OKP",
+              "x": "G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4"
+            }
+          },
+          "dwk": "aauth-resource.json",
+          "exp": 1800000300,
+          "iat": 1799999970,
+          "iss": "https://signer.example",
+          "jti": "reject-self-jwt-cnf"
+        },
+        "signed_by": "signer-ed25519"
+      },
+      "resolves": [
+        "https://signer.example/.well-known/aauth-resource.json",
+        "https://signer.example/.well-known/jwks.json"
+      ],
       "expect": {
         "outcome": "reject",
-        "error": "invalid_signature",
-        "basis": "protocol Verification step 7: invalid_signature if verification fails"
+        "error": "invalid_jwt",
+        "basis": "signature-key lines 629 and 651: a self-jwt MUST NOT contain cnf; invalid_jwt (line 1078) for a JWT that fails verification"
       },
       "provenance": {
         "signed_by": "aauth-go",
-        "reproduced_by": [
-          "aauth-rust"
-        ],
-        "mutation": "tamper-signature"
+        "note": "Not signed by aauth-rust: refused (HTTP 422): invalid_jwt (invalid Signature-Key JWT: check compact serialization, required claims, and the assertion signature)."
       }
     },
     "environment": {
@@ -130,6 +156,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-tampered-signature: hwk signature with one bit flipped",
+  "title": "Signature-Key vector reject-self-jwt-cnf: self-jwt carrying a cnf claim",
   "version": 1
 }

@@ -19,7 +19,7 @@
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
       "index": 4
     },
     "vector": {
@@ -34,7 +34,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:bDbtHDOHYUJOdzPzkcCJ77/mb3tV+ud6mmShlWwYN4f54UJ8m4YmT5ki+nzsZuUpFOPXISCO2fYIeZMhcI67Jg==:",
+        "Signature": "sig=:U7H4RcUs7LgT7SFf4aJRWYxv+Co+Z5p6ebPGaVCMyaw4cepwoQ/tN+1UnhbK9B7b1zjADCtODQaMGmKYU7/Zgw==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-256\";x=\"kWn1q9uoMexzm15PKmMJ9n45OYzIJOFhsGAfNvxLaG8\";y=\"SFtVwCFSswQbnzphZWuRiu78r8L21Y_mFpYLaUzTuXw\";alg=\"ES256\""
       },

@@ -1,84 +1,59 @@
 {
   "assertions": [
     {
-      "id": "verified",
-      "clause": "sigvec.jkt-jwt.es256",
+      "id": "refused",
+      "clause": "sigvec.reject.window",
       "kind": "status",
-      "equals": 200
+      "equals": 401
     },
     {
-      "id": "scheme",
-      "clause": "sigvec.jkt-jwt.es256",
-      "kind": "json-member",
-      "member": "scheme",
-      "equals": "jkt-jwt"
+      "id": "error",
+      "clause": "sigvec.reject.window",
+      "kind": "sfv-token",
+      "header": "Signature-Error",
+      "member": "error",
+      "equals": "clock_skew"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.jkt-jwt-es256",
+  "id": "sigvec.reject-created-future",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 26
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 44
     },
     "vector": {
-      "id": "jkt-jwt-es256",
-      "title": "jkt-jwt, Ed25519 identity key delegating to an ES256 request key",
-      "category": 2,
-      "scheme": "jkt-jwt",
-      "alg": "ES256",
+      "id": "reject-created-future",
+      "title": "created 300 seconds ahead of the verifier clock (window 60)",
+      "category": 3,
+      "scheme": "hwk",
+      "alg": "Ed25519",
       "now": 1800000000,
       "request": {
         "method": "GET",
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:g/OlTOkc7XSiUvU46s5/ztDSSm75+ZZdu0CcGh5ViDGDm/PLpxWOI4S6C4DqPLor9UbjVRyxXyGSj4h9cSwFnA==:",
-        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg\""
+        "Signature": "sig=:0YpRYhLRSBF/MqozPjvJXkGvqF8cDSZsdpvntnK2eAi32J2YwuTq2j0By8DWCOUdReN39j/uxP+Tq4FI0XSTAw==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000300",
+        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "28c896487857f2b0ab2988a5526a4feeeb7f207a455e3f19f9b81318d87afd04",
-      "signature_base_length": 839,
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000300",
+      "signature_base_sha256": "18fe024fda49f86501d3afbc789809745a18cac619bda901269e8630e546d671",
+      "signature_base_length": 265,
       "signature_verifies": true,
-      "signing_key": "agent-es256",
-      "assertion": {
-        "compact": "eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg",
-        "header": {
-          "alg": "Ed25519",
-          "jwk": {
-            "alg": "Ed25519",
-            "crv": "Ed25519",
-            "kty": "OKP",
-            "x": "xMhCrtHXUGjauU2ci3cct0HCofsRTWJmD3kCDC8HQ5A"
-          },
-          "typ": "jkt-s256+jwt"
-        },
-        "payload": {
-          "cnf": {
-            "jwk": {
-              "alg": "ES256",
-              "crv": "P-256",
-              "kty": "EC",
-              "x": "kWn1q9uoMexzm15PKmMJ9n45OYzIJOFhsGAfNvxLaG8",
-              "y": "SFtVwCFSswQbnzphZWuRiu78r8L21Y_mFpYLaUzTuXw"
-            }
-          },
-          "exp": 1800003000,
-          "iat": 1799999700,
-          "iss": "urn:jkt:sha-256:6ZYrr7h-Aq7KGM3Lz8YZc7GeSslAvPWfPnv-3tI-jgc",
-          "jti": "jkt-jwt-es256"
-        },
-        "signed_by": "jkt-identity-ed25519"
-      },
+      "signing_key": "agent-ed25519",
       "expect": {
-        "outcome": "verify",
-        "basis": "a correctly signed request under this scheme verifies"
+        "outcome": "reject",
+        "error": "clock_skew",
+        "basis": "signature-key line 1106 and protocol Verification step 3: clock_skew when created is further ahead than the window"
       },
       "provenance": {
         "signed_by": "aauth-go",
-        "note": "Not signed by aauth-rust: refused (HTTP 422): unsupported_algorithm (unsupported or missing key alg: AAuth keys and tokens use Ed25519 or ES256, an hwk key may also be ES384, RS256 or PS256 and an x509 key ES384; algorithms are not inferred from key shape)."
+        "reproduced_by": [
+          "aauth-rust"
+        ]
       }
     },
     "environment": {
@@ -154,6 +129,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector jkt-jwt-es256: jkt-jwt, Ed25519 identity key delegating to an ES256 request key",
+  "title": "Signature-Key vector reject-created-future: created 300 seconds ahead of the verifier clock (window 60)",
   "version": 1
 }

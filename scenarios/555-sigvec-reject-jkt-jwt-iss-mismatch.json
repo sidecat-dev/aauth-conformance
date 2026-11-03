@@ -2,32 +2,32 @@
   "assertions": [
     {
       "id": "refused",
-      "clause": "sigvec.reject.jwt-expired",
+      "clause": "sigvec.reject.jkt-iss",
       "kind": "status",
       "equals": 401
     },
     {
       "id": "error",
-      "clause": "sigvec.reject.jwt-expired",
+      "clause": "sigvec.reject.jkt-iss",
       "kind": "sfv-token",
       "header": "Signature-Error",
       "member": "error",
-      "equals": "expired_jwt"
+      "equals": "invalid_jwt"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-jwt-expired",
+  "id": "sigvec.reject-jkt-jwt-iss-mismatch",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 45
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 55
     },
     "vector": {
-      "id": "reject-jwt-expired",
-      "title": "jwt whose exp is one second before the verifier clock",
+      "id": "reject-jkt-jwt-iss-mismatch",
+      "title": "jkt-jwt whose iss is not the thumbprint of its header jwk",
       "category": 3,
-      "scheme": "jwt",
+      "scheme": "jkt-jwt",
       "alg": "Ed25519",
       "now": 1800000000,
       "request": {
@@ -35,21 +35,26 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:0y9eOM82VAFNGK6zMxJPFKD1/H6PLakNR4HlUAmXkOYKjK050hEY2j/MskKfYeiX0kN8YPqufkchl/e2UG8nCA==:",
+        "Signature": "sig=:RkQvIWlH0U9UpNZYSw0F4aANJIhlZO0E0rMvOqyPuiubFhl/pYG1muntUY/hm5Kg+Ly9EaPUZnB+1d+zfJM9BA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE3OTk5OTk5OTksImlhdCI6MTc5OTk5NjQwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoicmVqZWN0LWp3dC1leHBpcmVkIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.TIqkuYzpPhcvgyAdGuxxMMiZUuTlCD7w1eiTO5cmaNZXk09sUFX4wjzNgfxzLD0vSywW13eptq69xx6S6iCmBQ\""
+        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6Y1hKSzBYYmNPTXJoZGJKNTJQc2FvQ1VKMEhwSWtfQy1IYVlhNkUwNmtXcyIsImp0aSI6InJlamVjdC1qa3Qtand0LWlzcy1taXNtYXRjaCJ9.SBdGewXJ5YbbbBIABBzCPUFjAnm3a9IR3pOiUXN05e_7bbThtBiVGfsnLC8GKfUEPUbesrD6a0-aSF22HOwxBA\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE3OTk5OTk5OTksImlhdCI6MTc5OTk5NjQwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoicmVqZWN0LWp3dC1leHBpcmVkIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.TIqkuYzpPhcvgyAdGuxxMMiZUuTlCD7w1eiTO5cmaNZXk09sUFX4wjzNgfxzLD0vSywW13eptq69xx6S6iCmBQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "95146f367560a37461f36cec44ef172714f14eda582bbb470da079ef19902a3a",
-      "signature_base_length": 728,
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6Y1hKSzBYYmNPTXJoZGJKNTJQc2FvQ1VKMEhwSWtfQy1IYVlhNkUwNmtXcyIsImp0aSI6InJlamVjdC1qa3Qtand0LWlzcy1taXNtYXRjaCJ9.SBdGewXJ5YbbbBIABBzCPUFjAnm3a9IR3pOiUXN05e_7bbThtBiVGfsnLC8GKfUEPUbesrD6a0-aSF22HOwxBA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "3658e4565af90b5cc167bd1bedf7b0f95e60b07bcf2cdfa3a06a4288475225ed",
+      "signature_base_length": 797,
       "signature_verifies": true,
       "signing_key": "agent-ed25519",
       "assertion": {
-        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE3OTk5OTk5OTksImlhdCI6MTc5OTk5NjQwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoicmVqZWN0LWp3dC1leHBpcmVkIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.TIqkuYzpPhcvgyAdGuxxMMiZUuTlCD7w1eiTO5cmaNZXk09sUFX4wjzNgfxzLD0vSywW13eptq69xx6S6iCmBQ",
+        "compact": "eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6Y1hKSzBYYmNPTXJoZGJKNTJQc2FvQ1VKMEhwSWtfQy1IYVlhNkUwNmtXcyIsImp0aSI6InJlamVjdC1qa3Qtand0LWlzcy1taXNtYXRjaCJ9.SBdGewXJ5YbbbBIABBzCPUFjAnm3a9IR3pOiUXN05e_7bbThtBiVGfsnLC8GKfUEPUbesrD6a0-aSF22HOwxBA",
         "header": {
           "alg": "Ed25519",
-          "kid": "ap-ed25519",
-          "typ": "aa-agent+jwt"
+          "jwk": {
+            "alg": "Ed25519",
+            "crv": "Ed25519",
+            "kty": "OKP",
+            "x": "xMhCrtHXUGjauU2ci3cct0HCofsRTWJmD3kCDC8HQ5A"
+          },
+          "typ": "jkt-s256+jwt"
         },
         "payload": {
           "cnf": {
@@ -60,29 +65,21 @@
               "x": "ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA"
             }
           },
-          "dwk": "aauth-agent.json",
-          "exp": 1799999999,
-          "iat": 1799996400,
-          "iss": "https://agent-provider.example",
-          "jti": "reject-jwt-expired",
-          "sub": "aauth:assistant@agent-provider.example"
+          "exp": 1800003000,
+          "iat": 1799999700,
+          "iss": "urn:jkt:sha-256:cXJK0XbcOMrhdbJ52PsaoCUJ0HpIk_C-HaYa6E06kWs",
+          "jti": "reject-jkt-jwt-iss-mismatch"
         },
-        "signed_by": "ap-ed25519"
+        "signed_by": "jkt-identity-ed25519"
       },
-      "resolves": [
-        "https://agent-provider.example/.well-known/aauth-agent.json",
-        "https://agent-provider.example/.well-known/jwks.json"
-      ],
       "expect": {
         "outcome": "reject",
-        "error": "expired_jwt",
-        "basis": "signature-key line 1084 and protocol Verification step 5: expired_jwt"
+        "error": "invalid_jwt",
+        "basis": "signature-key lines 339 and 424: iss MUST equal the thumbprint URI of the header jwk; invalid_jwt (line 1078)"
       },
       "provenance": {
         "signed_by": "aauth-go",
-        "reproduced_by": [
-          "aauth-rust"
-        ]
+        "note": "Not signed by aauth-rust: refused (HTTP 422): invalid_jwt (invalid Signature-Key JWT: check compact serialization, required claims, and the assertion signature)."
       }
     },
     "environment": {
@@ -158,6 +155,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-jwt-expired: jwt whose exp is one second before the verifier clock",
+  "title": "Signature-Key vector reject-jkt-jwt-iss-mismatch: jkt-jwt whose iss is not the thumbprint of its header jwk",
   "version": 1
 }

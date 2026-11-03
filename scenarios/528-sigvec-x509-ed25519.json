@@ -1,33 +1,32 @@
 {
   "assertions": [
     {
-      "id": "refused",
-      "clause": "sigvec.reject.cache-miss",
+      "id": "verified",
+      "clause": "sigvec.x509",
       "kind": "status",
-      "equals": 401
+      "equals": 200
     },
     {
-      "id": "error",
-      "clause": "sigvec.reject.cache-miss",
-      "kind": "sfv-token",
-      "header": "Signature-Error",
-      "member": "error",
-      "equals": "cache_miss"
+      "id": "scheme",
+      "clause": "sigvec.x509",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "x509"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-cached-unknown-cid",
+  "id": "sigvec.x509-ed25519",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 55
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 28
     },
     "vector": {
-      "id": "reject-cached-unknown-cid",
-      "title": "cached member whose cid this verifier never issued",
+      "id": "x509-ed25519",
+      "title": "x509, Ed25519 end-entity certificate",
       "category": 3,
-      "scheme": "cached",
+      "scheme": "x509",
       "alg": "Ed25519",
       "now": 1800000000,
       "request": {
@@ -35,22 +34,27 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:rbVsPdcFwwgwG2XNdnC2xBvRTTMAqOT71it318MOdgTIRz+ZzsAbzbBbiNCxCZ6rDiWG+OzLyhWBexmTS0/pBg==:",
+        "Signature": "sig=:Qc5gjqEGDmnRCdF2C4aua0W493NIrVGFPgGrcK11j+N+GI3+rfM4mdvyyTmprO6lv6YJlSxVKx1kiOudM0cKAA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=cached;cid=\"never-issued-0001\""
+        "Signature-Key": "sig=x509;x5u=\"https://certs.example/x509-ed25519.pem\";x5t=:2WOvHULNKK+ByRzW0sLjBM0JAdYrPj/cjmLD+tlthsE=:"
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=cached;cid=\"never-issued-0001\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "e88abed8bdd3e0208e041a4eca41a244815e4d50d695e3b371f957c55399be80",
-      "signature_base_length": 206,
-      "signing_key": "agent-ed25519",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=x509;x5u=\"https://certs.example/x509-ed25519.pem\";x5t=:2WOvHULNKK+ByRzW0sLjBM0JAdYrPj/cjmLD+tlthsE=:\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "bb857229428941e9cc0acbb55d367469be116429907bb2083b4b7df29c742c37",
+      "signature_base_length": 276,
+      "signature_verifies": true,
+      "signing_key": "x509-ed25519",
+      "resolves": [
+        "https://certs.example/x509-ed25519.pem"
+      ],
       "expect": {
-        "outcome": "reject",
-        "error": "cache_miss",
-        "basis": "signature-key lines 1008-1014: cache_miss when a cache identifier cannot be resolved"
+        "outcome": "verify",
+        "basis": "a correctly signed request under this scheme verifies"
       },
       "provenance": {
         "signed_by": "aauth-rust",
-        "note": "Not signed by aauth-go: not offered: aauth-go presents only a cache identifier a verifier issued: NewCachedCredential takes a CacheGrant."
+        "reproduced_by": [
+          "aauth-go"
+        ]
       }
     },
     "environment": {
@@ -126,6 +130,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-cached-unknown-cid: cached member whose cid this verifier never issued",
+  "title": "Signature-Key vector x509-ed25519: x509, Ed25519 end-entity certificate",
   "version": 1
 }

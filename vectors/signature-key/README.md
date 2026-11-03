@@ -79,7 +79,7 @@ Each vector:
 | `signature_base` | the RFC 9421 signature base for label `sig`, verbatim, with `signature_base_sha256` and `signature_base_length` |
 | `signature_verifies` | whether `Signature` verifies over the base under the key the member conveys, when that key is well formed. It separates a canonicalization fault from a crypto fault |
 | `signing_key` | the `keys` id that produced the signature; absent with `signatures` |
-| `signatures` | only on a request carrying more than one signature: per label, its `scheme`, `alg`, `signing_key`, `signature_base` with its SHA-256 and length, `signature_verifies` and `resolves`. The top-level `signature_base` is then absent |
+| `signatures` | only on a request carrying more than one signature: per label, its `scheme`, `alg`, `signing_key`, `signature_base` with its SHA-256 and length, `signature_verifies` and `resolves`. The top-level `signature_base` is then absent. RFC 9421 leaves the label out of the base, so two signatures over the same components and parameters have the same base and differ only in key and signature |
 | `assertion` | for jwt, jkt-jwt and self-jwt: the compact JWT, its decoded header and payload, and the key that signed it |
 | `documents` | documents that replace the defaults for this vector |
 | `resolves` | the document URLs key resolution reads |
@@ -154,8 +154,6 @@ The ML-DSA-44 key needs Go 1.27 or later (`crypto/mldsa`).
   establish. The cached scheme appears only as a `cache_miss` vector.
 - A `nonce` parameter is signed by aauth-go only; aauth-rust's signer does
   not offer one, and verifies the vector.
-- jkt-jwt with an ES256 identity or request key is signed and verified by
-  aauth-go only: aauth-rust keeps jkt-jwt at Ed25519.
 - Multiple signatures beyond `multi-hwk-jwks`: which labels a verifier
   checks is application context (signature-key lines 173 and 181), so that
   vector states the labels to verify. With label `sig` configured and a

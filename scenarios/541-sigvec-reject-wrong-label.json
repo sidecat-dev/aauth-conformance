@@ -2,32 +2,32 @@
   "assertions": [
     {
       "id": "refused",
-      "clause": "sigvec.reject.alg",
+      "clause": "sigvec.reject.signature",
       "kind": "status",
       "equals": 401
     },
     {
       "id": "error",
-      "clause": "sigvec.reject.alg",
+      "clause": "sigvec.reject.signature",
       "kind": "sfv-token",
       "header": "Signature-Error",
       "member": "error",
-      "equals": "unsupported_algorithm"
+      "equals": "invalid_signature"
     }
   ],
   "given": "agent-identity",
-  "id": "sigvec.reject-jwt-cnf-eddsa",
+  "id": "sigvec.reject-wrong-label",
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "4d8c3ce238bd4ced305ea5aebfc6168bbc7ef5c9dc10fdec2a114b3e62023e58",
-      "index": 47
+      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "index": 41
     },
     "vector": {
-      "id": "reject-jwt-cnf-eddsa",
-      "title": "jwt whose cnf.jwk names the polymorphic EdDSA",
+      "id": "reject-wrong-label",
+      "title": "Signature-Key member under sig1 while the signature is labelled sig",
       "category": 3,
-      "scheme": "jwt",
+      "scheme": "hwk",
       "alg": "Ed25519",
       "now": 1800000000,
       "request": {
@@ -35,53 +35,25 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:kxS7I578/I4tF/rytUNerBpWFSURCPQ14/8s8Wy+txUcQF23B6Tf8lHqQoq+crfRjhFvbm7dm18kgqShQkDZCw==:",
+        "Signature": "sig=:FaJPwsiTYpA+3JVG+QPMgYHnh0q/n7yZo5V9/36By2S8lV/ufn1Aifli5DHO/Its9uLn0vgW9r/UkTMh6Y20Cg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkRFNBIiwiY3J2IjoiRWQyNTUxOSIsImt0eSI6Ik9LUCIsIngiOiJnZTlDZ1FucklFY2x1MmJyemV2MVZlMDJoazJfUzY1RmtfMkpTRC1kSXNBIn19LCJkd2siOiJhYXV0aC1hZ2VudC5qc29uIiwiZXhwIjoxODAwMDAzMDAwLCJpYXQiOjE3OTk5OTk3MDAsImlzcyI6Imh0dHBzOi8vYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1qd3QtY25mLWVkZHNhIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.PHE2v90S-7Gcup_lyyg04xCJo1RfWUVutTgzN9kEmldsfGRU84QQD1mQxwtE1Q2WZBt_Oy8snRkLxdprQIkiAQ\""
+        "Signature-Key": "sig1=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkRFNBIiwiY3J2IjoiRWQyNTUxOSIsImt0eSI6Ik9LUCIsIngiOiJnZTlDZ1FucklFY2x1MmJyemV2MVZlMDJoazJfUzY1RmtfMkpTRC1kSXNBIn19LCJkd2siOiJhYXV0aC1hZ2VudC5qc29uIiwiZXhwIjoxODAwMDAzMDAwLCJpYXQiOjE3OTk5OTk3MDAsImlzcyI6Imh0dHBzOi8vYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1qd3QtY25mLWVkZHNhIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.PHE2v90S-7Gcup_lyyg04xCJo1RfWUVutTgzN9kEmldsfGRU84QQD1mQxwtE1Q2WZBt_Oy8snRkLxdprQIkiAQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "4971ec2b02efdfbd5ad65b0b006e8ff60902c362b8820bc76245993ffbb31f39",
-      "signature_base_length": 728,
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig1=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "a2b4faef6faa40c68dac5847e45fa13c5be66727e183804e885ddbd21ab11947",
+      "signature_base_length": 266,
       "signing_key": "agent-ed25519",
-      "assertion": {
-        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkRFNBIiwiY3J2IjoiRWQyNTUxOSIsImt0eSI6Ik9LUCIsIngiOiJnZTlDZ1FucklFY2x1MmJyemV2MVZlMDJoazJfUzY1RmtfMkpTRC1kSXNBIn19LCJkd2siOiJhYXV0aC1hZ2VudC5qc29uIiwiZXhwIjoxODAwMDAzMDAwLCJpYXQiOjE3OTk5OTk3MDAsImlzcyI6Imh0dHBzOi8vYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSIsImp0aSI6InJlamVjdC1qd3QtY25mLWVkZHNhIiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.PHE2v90S-7Gcup_lyyg04xCJo1RfWUVutTgzN9kEmldsfGRU84QQD1mQxwtE1Q2WZBt_Oy8snRkLxdprQIkiAQ",
-        "header": {
-          "alg": "Ed25519",
-          "kid": "ap-ed25519",
-          "typ": "aa-agent+jwt"
-        },
-        "payload": {
-          "cnf": {
-            "jwk": {
-              "alg": "EdDSA",
-              "crv": "Ed25519",
-              "kty": "OKP",
-              "x": "ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA"
-            }
-          },
-          "dwk": "aauth-agent.json",
-          "exp": 1800003000,
-          "iat": 1799999700,
-          "iss": "https://agent-provider.example",
-          "jti": "reject-jwt-cnf-eddsa",
-          "sub": "aauth:assistant@agent-provider.example"
-        },
-        "signed_by": "ap-ed25519"
-      },
-      "resolves": [
-        "https://agent-provider.example/.well-known/aauth-agent.json",
-        "https://agent-provider.example/.well-known/jwks.json"
-      ],
       "expect": {
         "outcome": "reject",
-        "error": "unsupported_algorithm",
-        "basis": "signature-key line 211 and protocol Verification step 6, for the cnf.jwk the jwt scheme conveys"
+        "error": "invalid_signature",
+        "basis": "signature-key lines 179 and 187: no member for the verified label MUST fail; line 1018 assigns missing Signature-Key material to invalid_signature"
       },
       "provenance": {
         "signed_by": "aauth-go",
         "reproduced_by": [
           "aauth-rust"
-        ]
+        ],
+        "mutation": "rename-label"
       }
     },
     "environment": {
@@ -157,6 +129,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector reject-jwt-cnf-eddsa: jwt whose cnf.jwk names the polymorphic EdDSA",
+  "title": "Signature-Key vector reject-wrong-label: Signature-Key member under sig1 while the signature is labelled sig",
   "version": 1
 }
