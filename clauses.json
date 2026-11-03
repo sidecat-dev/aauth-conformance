@@ -2445,6 +2445,38 @@
       "scope": "protocol"
     },
     {
+      "role": "vectors.signature-key",
+      "id": "sigvec.accept.window",
+      "source": "core",
+      "section": "Verification (Server) step 3, line 2246, with signature-key lines 1106 and 1114: a created exactly 60 seconds ahead of or behind the verifier's clock is within the default 60-second window and the request verifies; clock_skew is only for further ahead and invalid_signature only for older",
+      "anchor": "verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.accept.jwt-exp",
+      "source": "key",
+      "section": "expired_jwt, line 1086, with the jwt, jkt-jwt and self-jwt procedures (lines 566, 428 and 647) and protocol Common JWT Verification step 3 (line 2317): an assertion whose exp is one second after the verifier's clock has not expired and the request verifies",
+      "anchor": "expired_jwt",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.accept.jwt-nbf",
+      "source": "core",
+      "section": "Common JWT Verification, line 2313, and signature-key lines 1194-1198: JWTs are verified per RFC 7519, whose Section 4.1.5 accepts a JWT when the current time is after or equal to nbf; the drafts add no nbf rule, so an assertion whose nbf equals the verifier's clock verifies",
+      "anchor": "common-verification",
+      "scope": "protocol"
+    },
+    {
+      "role": "vectors.signature-key",
+      "id": "sigvec.pq-deterministic",
+      "source": "key",
+      "section": "Algorithm Determination, lines 231 and 233, and protocol Verification step 6 (line 2249): a jwks key with alg ML-DSA-44, signed with the FIPS 204 deterministic variant so the signature reproduces; a verifier that implements ML-DSA-44 verifies, one that does not MUST reject with unsupported_algorithm",
+      "anchor": "algorithm-determination",
+      "scope": "protocol"
+    },
+    {
       "role": "bootstrap.agent-provider",
       "id": "bootstrap.ap.enrollment",
       "source": "bootstrap",

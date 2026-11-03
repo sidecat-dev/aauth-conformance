@@ -46,6 +46,7 @@ type sigvecCase struct {
 	Expect            SigvecExpect
 	Category          int // 0 derives it from the algorithm
 	Assertion         string
+	Optional          string // why the category check may be skipped
 }
 
 const (
@@ -166,6 +167,8 @@ func replaceSignerJWKS(keys ...map[string]any) func(*sigvecBuild) []SigvecDocume
 }
 
 const (
+	basisWindow = "protocol Verification step 3, line 2246: created MUST be within the verifier's signature validity window, 60 seconds by default."
+	basisNBF    = "the drafts add no nbf rule; RFC 7519 Section 4.1.5 accepts a JWT when the current time is after or equal to nbf, and"
 	basisVerify = "a correctly signed request under this scheme verifies"
 	harnessHWK  = "both libraries emit hwk members only for the signing key's own JWK, with alg and without kid"
 )
@@ -333,6 +336,56 @@ func sigvecCases() []sigvecCase {
 				}, nil
 			},
 			Expect: SigvecExpect{Outcome: "verify", Basis: "signature-key lines 173 and 181 leave the labels a verifier checks to application context, so this vector's verifier is configured to verify sig1 and sig2 in place of sig; lines 191 and 199: each signature has its own member keyed by its label, the complete Signature-Key is populated before any signature is created and each signature covers signature-key; line 177: the verifier selects each label's member, and each signature verifies over its own base"}},
+		// Must-accept boundary vectors: one step from a violation, each still
+		// verifies. A verifier that over-blocks fails them.
+		{ID: "accept-created-window-ahead", Title: "boundary, must verify: hwk signature whose created is 60 seconds ahead of the verifier clock, the edge of the 60-second window", Clause: "sigvec.accept.window", Alg: "Ed25519", Signers: bothLibraries, CreatedOffset: sigvecWindow, Parts: hwkPart("agent-ed25519"),
+			Expect: SigvecExpect{Outcome: "verify", Basis: basisWindow + " clock_skew is for a created further ahead than the window (signature-key line 1106); 60 seconds ahead is not further ahead"}},
+		{ID: "accept-created-window-behind", Title: "boundary, must verify: hwk signature whose created is 60 seconds before the verifier clock, the edge of the 60-second window", Clause: "sigvec.accept.window", Alg: "Ed25519", Signers: bothLibraries, CreatedOffset: -sigvecWindow, Parts: hwkPart("agent-ed25519"),
+			Expect: SigvecExpect{Outcome: "verify", Basis: basisWindow + " invalid_signature is for a created older than the window (signature-key line 1114); 60 seconds old is not older"}},
+		{ID: "accept-jwt-exp-next-second", Title: "boundary, must verify: jwt whose exp is one second after the verifier clock", Clause: "sigvec.accept.jwt-exp", Alg: "Ed25519", Signers: bothLibraries,
+			Parts: func(b *sigvecBuild) ([]sigvecPart, error) {
+				token, err := b.agentToken(b.keys["agent-ed25519"].key.public, "accept-jwt-exp-next-second", func(c map[string]any) { c["exp"] = sigvecNow + 1 })
+				return one(sigvecPart{Key: "agent-ed25519", Scheme: "jwt", JWT: token}, err)
+			},
+			Expect: SigvecExpect{Outcome: "verify", Basis: "signature-key line 566 (reject if the token has expired) and line 1086 (expired_jwt: exp is in the past); protocol Common JWT Verification step 3, line 2317: exp is in the future by the verifier's own clock, with no skew tolerance. exp one second after now has not expired"}},
+		{ID: "accept-jwt-nbf-now", Title: "boundary, must verify: jwt whose nbf equals the verifier clock", Clause: "sigvec.accept.jwt-nbf", Alg: "Ed25519", Signers: bothLibraries,
+			Parts: func(b *sigvecBuild) ([]sigvecPart, error) {
+				token, err := b.agentToken(b.keys["agent-ed25519"].key.public, "accept-jwt-nbf-now", func(c map[string]any) { c["nbf"] = sigvecNow })
+				return one(sigvecPart{Key: "agent-ed25519", Scheme: "jwt", JWT: token}, err)
+			},
+			Expect: SigvecExpect{Outcome: "verify", Basis: basisNBF + " protocol line 2313 verifies the agent token per RFC 7519"}},
+		{ID: "accept-jkt-jwt-exp-next-second", Title: "boundary, must verify: jkt-jwt whose exp is one second after the verifier clock", Clause: "sigvec.accept.jwt-exp", Alg: "Ed25519", Signers: bothLibraries,
+			Parts: func(b *sigvecBuild) ([]sigvecPart, error) {
+				token, err := b.jktToken("jkt-identity-ed25519", "agent-ed25519", "accept-jkt-jwt-exp-next-second", func(c map[string]any) { c["exp"] = sigvecNow + 1 })
+				return one(sigvecPart{Key: "agent-ed25519", Scheme: "jkt-jwt", JWT: token}, err)
+			},
+			Expect: SigvecExpect{Outcome: "verify", Basis: "signature-key line 428 (validate exp) and line 1086 (expired_jwt: exp is in the past, for jkt-jwt too). exp one second after now has not expired"}},
+		{ID: "accept-jkt-jwt-nbf-now", Title: "boundary, must verify: jkt-jwt whose nbf equals the verifier clock", Clause: "sigvec.accept.jwt-nbf", Alg: "Ed25519", Signers: bothLibraries,
+			Parts: func(b *sigvecBuild) ([]sigvecPart, error) {
+				token, err := b.jktToken("jkt-identity-ed25519", "agent-ed25519", "accept-jkt-jwt-nbf-now", func(c map[string]any) { c["nbf"] = sigvecNow })
+				return one(sigvecPart{Key: "agent-ed25519", Scheme: "jkt-jwt", JWT: token}, err)
+			},
+			Expect: SigvecExpect{Outcome: "verify", Basis: basisNBF + " signature-key line 1198 verifies a jkt-jwt per RFC 7519"}},
+		{ID: "accept-self-jwt-exp-next-second", Title: "boundary, must verify: self-jwt whose exp is one second after the verifier clock", Clause: "sigvec.accept.jwt-exp", Alg: "Ed25519", Signers: bothLibraries,
+			Parts: func(b *sigvecBuild) ([]sigvecPart, error) {
+				token, err := b.selfToken("signer-ed25519", "accept-self-jwt-exp-next-second", func(c map[string]any) { c["exp"] = sigvecNow + 1 })
+				return one(sigvecPart{Key: "signer-ed25519", Scheme: "self-jwt", JWT: token}, err)
+			},
+			Expect: SigvecExpect{Outcome: "verify", Basis: "signature-key line 647 (reject if the token has expired) and line 1086 (expired_jwt: exp is in the past, for self-jwt too). exp one second after now has not expired"}},
+		{ID: "accept-self-jwt-nbf-now", Title: "boundary, must verify: self-jwt whose nbf equals the verifier clock", Clause: "sigvec.accept.jwt-nbf", Alg: "Ed25519", Signers: bothLibraries,
+			Parts: func(b *sigvecBuild) ([]sigvecPart, error) {
+				token, err := b.selfToken("signer-ed25519", "accept-self-jwt-nbf-now", func(c map[string]any) { c["nbf"] = sigvecNow })
+				return one(sigvecPart{Key: "signer-ed25519", Scheme: "self-jwt", JWT: token}, err)
+			},
+			Expect: SigvecExpect{Outcome: "verify", Basis: basisNBF + " signature-key line 1196 verifies a self-jwt per RFC 7519"}},
+		// Deterministic ML-DSA-44: the only form whose bytes reproduce.
+		{ID: "jwks-ml-dsa-44-deterministic", Title: "jwks, ML-DSA-44, signed with the FIPS 204 deterministic variant (rnd all zeros) so the signature reproduces", Clause: "sigvec.pq-deterministic", Alg: "ML-DSA-44", HarnessReason: "neither library signs with ML-DSA-44",
+			Parts: jwksPart("signer-ml-dsa-44", "signer-ml-dsa-44"),
+			Documents: func(b *sigvecBuild) []SigvecDocument {
+				return []SigvecDocument{sigvecDocument(sigvecJWKSURL, map[string]any{"keys": []any{b.keys["signer-ml-dsa-44"].public()}})}
+			},
+			Expect:   SigvecExpect{Outcome: "verify-or-reject", Error: "unsupported_algorithm", Basis: "signature-key line 231: ML-DSA-44 is a fully-specified alg used as-is; line 233 and protocol Verification step 6: a verifier that does not implement the AKP key type MUST reject it with unsupported_algorithm and MUST NOT fail in an undefined manner; one that implements ML-DSA-44 verifies"},
+			Optional: "reproducing the bytes needs ML-DSA-44 signing with the FIPS 204 deterministic variant (rnd all zeros, empty context); most libraries do not expose that option, so a signer without it may skip the byte comparison. Verification is graded as verify-or-reject either way"},
 	}
 	return cases
 }

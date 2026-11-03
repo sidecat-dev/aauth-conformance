@@ -356,7 +356,7 @@ func (b *sigvecBuild) vector(c sigvecCase, id string, category int, pre SigvecRe
 	if err != nil {
 		return SigvecVector{}, err
 	}
-	v := SigvecVector{ID: id, Title: c.Title, Category: category, Scheme: parts[0].Scheme, Alg: c.Alg, Now: sigvecNow, Request: pre, Signed: signed, SigningKey: parts[0].Key, Expect: c.Expect}
+	v := SigvecVector{ID: id, Title: c.Title, Category: category, Scheme: parts[0].Scheme, Alg: c.Alg, Now: sigvecNow, Request: pre, Signed: signed, SigningKey: parts[0].Key, Expect: c.Expect, Optional: c.Optional}
 	if v.SigningKey == "" {
 		v.SigningKey = "symmetric-hs256"
 	}
@@ -722,6 +722,9 @@ func SigvecAppendix(file SigvecFile) string {
 			w(" with `%s`", v.Expect.Error)
 		}
 		w(" (%s).\n\n", v.Expect.Basis)
+		if v.Optional != "" {
+			w("Optional: %s\n\n", v.Optional)
+		}
 		received := SigvecReceived(v)
 		target, _ := url.Parse(received.URL)
 		var request strings.Builder

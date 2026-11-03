@@ -109,7 +109,10 @@ type SigvecVector struct {
 	Documents           []SigvecDocument  `json:"documents,omitempty"`
 	Resolves            []string          `json:"resolves,omitempty"`
 	Expect              SigvecExpect      `json:"expect"`
-	Provenance          SigvecProvenance  `json:"provenance"`
+	// Optional, when present, says why an implementation may skip the
+	// vector's category check, and what it is still graded on.
+	Optional   string           `json:"optional,omitempty"`
+	Provenance SigvecProvenance `json:"provenance"`
 }
 
 // SigvecSignature is one signature of a vector that carries more than one.
