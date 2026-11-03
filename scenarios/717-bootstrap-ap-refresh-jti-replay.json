@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-refresh-jti-replay",
+  "title": "A naming JWT already used for a refresh, or a new one reusing its jti, gets no further agent token",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "replay",
+    "mutation": "none"
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "refresh",
+      "id": "first-refresh",
+      "clause": "bootstrap.ap.refresh",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "refresh-replay",
+      "id": "replay-refused",
+      "clause": "bootstrap.ap.naming-jti",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    },
+    {
+      "stage": "refresh-jti",
+      "id": "jti-reuse-refused",
+      "clause": "bootstrap.ap.naming-jti",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    }
+  ]
+}

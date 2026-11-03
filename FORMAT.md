@@ -771,13 +771,22 @@ which the draft leaves to each AP (lines 371 and 410), are
 `adapter-contract`. The single-key refresh is optional for an AP (line 150),
 so its clauses, for the AP and for the agent, are `out-of-slice`. The
 agent's refresh margin is a core SHOULD (line 1301) the draft applies (line
-291), so its clause is `recommended`. A target that claims none of a
+291), so its clause is `recommended`. The hosted AP's refusals of an
+uncovered or mismatched body, a reused naming-JWT `jti`, a disabled or
+revoked enrollment and a parent past its live sub-agent limit are
+`recommended` too: each rests on the draft's own guidance (lines 319, 321,
+447-449 and 375), and no pinned draft makes the refusal a MUST. Where core
+says how such a refusal is answered (line 2245 for missing coverage, line
+2254 for a refusal after the signature verified), the clause grades that
+answer. A target that claims none of a
 scenario's clauses does not run that scenario; its assertions are reported
 not claimed.
 
 `fixture.extensions.bootstrap` supplies the enrollment, refresh, single-key
-refresh and sub-agent paths, the self-hosted issue control path, the agent
-token lifetime (3600 seconds), five public test seeds (`durable`,
+refresh and sub-agent paths, the self-hosted issue control path, the hosted
+AP's enrollment-state control path, the agent token lifetime (3600 seconds),
+the live sub-agent limit the AP's fixture policy applies per parent (2), five
+public test seeds (`durable`,
 `other_durable`, `ephemeral`, `second_ephemeral`, `subagent`), the
 discriminator a parent offers (`search1`) and a foreign AP (HTTPS issuer,
 seed, kid). The fixture AP issuer, seed and kid are the AP's identity; the
@@ -785,7 +794,7 @@ fixture Person Server is the agent's configured `ps`.
 
 | Role | `input` | Stages |
 | --- | --- | --- |
-| `bootstrap.agent-provider` | `flow` and `mutation`: `refresh` (`none`, `unenrolled`, `jkt-iss`, `jkt-typ`, `jkt-signature`, `jkt-expired`, `proof-key`), `rotate`, `installs`, `single-key` (each `none`), `subagent` (`none`, `no-discriminator`, `nested`, `foreign-parent`, `expired-parent`) | `enroll`, `refresh`; `refresh-2` for `rotate`; `enroll-other`, `refresh-other` for `installs`; `subagent`, with `subagent-1` before it for `nested`. `foreign-parent` and `expired-parent` send only `subagent` |
+| `bootstrap.agent-provider` | `flow` and `mutation`: `refresh` (`none`, `unenrolled`, `jkt-iss`, `jkt-typ`, `jkt-signature`, `jkt-expired`, `proof-key`, `uncovered-body`, `digest-mismatch`), `rotate`, `installs`, `single-key`, `replay` (each `none`), `inactive` (`revoked`, `disabled`), `subagent` (`none`, `no-discriminator`, `nested`, `foreign-parent`, `expired-parent`, `limit`) | `enroll`, `refresh`; `refresh-2` for `rotate`; `enroll-other`, `refresh-other` for `installs`; `refresh-replay`, `refresh-jti` for `replay`; `enrollment-state`, `refresh-2` for `inactive`; `subagent`, with `subagent-1` before it for `nested` and `subagent-1` to `subagent-N` (N the limit) for `limit`. `foreign-parent` and `expired-parent` send only `subagent` |
 | `bootstrap.agent` | `operations`: `enroll` first, then `refresh` (at most twice) or one `single-key`, then optionally one `subagent` or `call`; after a `refresh`, up to two `renew` operations last, with one `remaining` entry (seconds, above 0 and below the agent lifetime) per `renew` | the operation names, the second refresh `refresh-2`, the second renew `renew-2` |
 | `bootstrap.self-hosted` | up to six `issues`, each a top-level `agent` local name or a `parent` (1-based index of an earlier issue) with a `discriminator`, and a `key` (a fixture seed name, or `ap` for the published key); optional `metadata` | `issue-N`, then `metadata` and `jwks` |
 
@@ -804,6 +813,21 @@ signature or expiry; the HTTP signing key; or the parent, which is a
 sub-agent token the AP issued, a token the foreign AP signed, or a token the
 fixture AP key signed whose `exp` has passed. A sub-agent request that has
 no parent token to send is a case error, not a refusal.
+
+The refusal flows break the request or the AP's state instead.
+`uncovered-body` signs only the four base components and sends no
+`Content-Digest`. `digest-mismatch` signs a `Content-Digest` and then sends
+another body. `replay` refreshes once, sends the same naming JWT again with
+the body `{"ps", "evidence": {"attempt": 2}}`, so the request is new and the
+delegation is not, then sends a new naming JWT for the second ephemeral key
+that reuses the first `jti`. `inactive` refreshes once, posts
+`{"jwk": <durable key>, "state"}` to the enrollment-state control, which must
+answer `200 {"state"}` with that state, then refreshes again with the second
+ephemeral key and a new `jti`. `limit` has the parent request sub-agents up
+to the fixture limit, each with its own key and the discriminator
+`search1-N`, then one more. In each, a step before the refusal that issues
+nothing, or a control that changes nothing, is a case error, so a refusal
+never passes on an AP that refuses everything.
 
 For the agent the harness plays the AP and the Resource. The launcher's
 control receives `{"operation"}` jobs: `enroll`, `refresh`, `single-key`,

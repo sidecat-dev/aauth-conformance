@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-refresh-digest-mismatch",
+  "title": "A refresh whose signed Content-Digest does not match its body gets no agent token",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "refresh",
+    "mutation": "digest-mismatch"
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "refresh",
+      "id": "refused",
+      "clause": "bootstrap.ap.body-coverage",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    }
+  ]
+}

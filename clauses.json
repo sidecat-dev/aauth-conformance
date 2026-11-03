@@ -2589,6 +2589,38 @@
       "scope": "protocol"
     },
     {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.body-coverage",
+      "source": "bootstrap",
+      "section": "Two-Key Refresh, line 319, and Sub-Agents Under a Hosted AP step 2, line 374: a request with a body to an AP endpoint should cover content-digest and content-type, which binds the body to the signature. An AP that requires them refuses a refresh that leaves them uncovered as core Verification step 2, line 2245, says, 401 with Signature-Error invalid_input and required_input, and refuses one whose Content-Digest does not match its body; neither gets an agent token. Core's MUST (line 2211) names PS, AS and revocation endpoints only, so no pinned draft requires this of an AP",
+      "anchor": "two-key-refresh",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.naming-jti",
+      "source": "bootstrap",
+      "section": "Two-Key Refresh, line 321: the naming JWT carries a jti for replay protection, so a naming JWT already used for a refresh, or a new one reusing its jti, gets no further agent token. Signature-Key makes jti OPTIONAL in a jkt-jwt (line 347) and states no replay rule, and core's replay cache is a MAY (line 2272); no pinned draft defines the refusal's status",
+      "anchor": "two-key-refresh",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.inactive-enrollment",
+      "source": "bootstrap",
+      "section": "Durable Key Compromise, lines 447-449: the AP lets a person revoke a durable enrollment, and revoking it stops further agent tokens; Two-Key Refresh step 4, line 300: the AP applies its policy, account status included, before it issues. A refresh for a revoked or disabled enrollment gets no agent token, and its signature verified, so the refusal is 403 without Signature-Error (core Verification, line 2254)",
+      "anchor": "durable-key-compromise",
+      "scope": "recommended"
+    },
+    {
+      "role": "bootstrap.agent-provider",
+      "id": "bootstrap.ap.subagent-limit",
+      "source": "bootstrap",
+      "section": "Sub-Agents Under a Hosted AP step 3, line 375, and line 400: the AP records the sub-agent tokens live per parent and applies its policy on how many a parent may have live. The draft states no number; the fixture policy's limit comes from the suite. A request beyond it gets no token, and the parent's signature verified, so the refusal is 403 (core Verification, line 2254)",
+      "anchor": "sub-agents-under-a-hosted-ap",
+      "scope": "recommended"
+    },
+    {
       "role": "bootstrap.agent",
       "id": "bootstrap.agent.enrollment",
       "source": "bootstrap",

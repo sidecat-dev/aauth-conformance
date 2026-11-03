@@ -49,7 +49,9 @@ type bootstrapExtension struct {
 	SingleKeyRefreshPath string `json:"single_key_refresh_path"`
 	SubagentPath         string `json:"subagent_path"`
 	IssuePath            string `json:"issue_path"`
+	EnrollmentStatePath  string `json:"enrollment_state_path"`
 	AgentLifetime        int64  `json:"agent_lifetime"`
+	SubagentLimit        int    `json:"subagent_limit"`
 	PersonServer         string `json:"person_server"`
 }
 
@@ -86,7 +88,12 @@ func bootstrapIDs(prefix string) func() string {
 // enrollment whatever its evidence and names each durable key its own
 // top-level Agent; refresh approves the requested Person Server with the
 // fixture lifetime; sub-agent policy (bootstrapSubagentNames) approves
-// sub-agents of a top-level Agent and chooses their discriminators.
+// sub-agents of a top-level Agent and chooses their discriminators. The
+// enrollment-state control is the host's administrative change: it applies
+// EnrollmentStore.TransitionEnrollment, and aauth-go's refresh refuses the
+// inactive enrollment. The fixture's subagent_limit is not applied:
+// aauth-go keeps no record of a parent's live sub-agents, and a count kept
+// here would grade this launcher (cmd/build-adapters/bootstrap.go).
 func runBootstrapProvider(config bootstrap) error {
 	extension, clock, err := bootstrapConfig(config)
 	if err != nil {
@@ -101,9 +108,10 @@ func runBootstrapProvider(config bootstrap) error {
 		return err
 	}
 	lifetime := time.Duration(extension.AgentLifetime) * time.Second
+	store := testutil.NewEnrollmentStore(clock)
 	service, err := agentprovider.NewEnrollmentService(agentprovider.EnrollmentServiceConfig{
 		Provider: provider,
-		Store:    testutil.NewEnrollmentStore(clock),
+		Store:    store,
 		Enroll: func(_ context.Context, request agentprovider.EnrollmentRequest) (agentprovider.EnrollmentDecision, error) {
 			// One Agent per install: the local part derives from the durable
 			// key's thumbprint URI, so it is stable for that key and no other.
@@ -124,6 +132,36 @@ func runBootstrapProvider(config bootstrap) error {
 	mux.Handle(extension.RefreshPath, service.RefreshHandler())
 	mux.Handle(extension.SingleKeyRefreshPath, service.SingleKeyRefreshHandler())
 	mux.Handle(extension.SubagentPath, provider.SubagentHandler(names.decide))
+	if extension.EnrollmentStatePath != "" {
+		mux.HandleFunc("POST "+extension.EnrollmentStatePath, func(w http.ResponseWriter, r *http.Request) {
+			var job struct {
+				JWK   jose.JWK `json:"jwk"`
+				State string   `json:"state"`
+			}
+			if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 65536)).Decode(&job); err != nil {
+				bootstrapRefuse(w, http.StatusBadRequest, err)
+				return
+			}
+			next := agentprovider.EnrollmentState(job.State)
+			if next != agentprovider.EnrollmentDisabled && next != agentprovider.EnrollmentRevoked {
+				bootstrapRefuse(w, http.StatusBadRequest, fmt.Errorf("state %q is neither disabled nor revoked", job.State))
+				return
+			}
+			identity, err := job.JWK.ThumbprintURI()
+			var record agentprovider.EnrollmentRecord
+			if err == nil {
+				record, err = store.LoadEnrollment(r.Context(), identity)
+			}
+			if err == nil {
+				record, err = store.TransitionEnrollment(r.Context(), identity, record.Revision, next)
+			}
+			if err != nil {
+				bootstrapRefuse(w, http.StatusUnprocessableEntity, err)
+				return
+			}
+			bootstrapAnswer(w, http.StatusOK, map[string]string{"state": string(record.State)})
+		})
+	}
 	return bootstrapServe("/.well-known/aauth-agent.json", mux)
 }
 

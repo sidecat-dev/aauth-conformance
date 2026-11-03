@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-subagent-limit",
+  "title": "A parent at its live sub-agent limit gets no further sub-agent token and a 403",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "subagent",
+    "mutation": "limit"
+  },
+  "assertions": [
+    {
+      "stage": "subagent-1",
+      "id": "first-status",
+      "clause": "bootstrap.ap.subagent",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "subagent-2",
+      "id": "second-status",
+      "clause": "bootstrap.ap.subagent",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "subagent",
+      "id": "refused",
+      "clause": "bootstrap.ap.subagent-limit",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    },
+    {
+      "stage": "subagent",
+      "id": "status",
+      "clause": "bootstrap.ap.subagent-limit",
+      "kind": "status",
+      "equals": 403
+    }
+  ]
+}

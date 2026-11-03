@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-refresh-revoked",
+  "title": "A refresh for a revoked enrollment gets no agent token and a 403",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "inactive",
+    "mutation": "revoked"
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "refresh",
+      "id": "first-refresh",
+      "clause": "bootstrap.ap.refresh",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "stage": "refresh-2",
+      "id": "refused",
+      "clause": "bootstrap.ap.inactive-enrollment",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    },
+    {
+      "stage": "refresh-2",
+      "id": "status",
+      "clause": "bootstrap.ap.inactive-enrollment",
+      "kind": "status",
+      "equals": 403
+    },
+    {
+      "stage": "refresh-2",
+      "id": "no-signature-error",
+      "clause": "bootstrap.ap.inactive-enrollment",
+      "kind": "header-equals",
+      "equals": "",
+      "header": "Signature-Error"
+    }
+  ]
+}

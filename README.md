@@ -1,7 +1,7 @@
 # AAuth conformance scenarios
 
 Run the same wire scenarios against different AAuth implementations. The suite
-has 400 scenarios and 1,606 assertions in 24 roles:
+has 406 scenarios and 1,631 assertions in 24 roles:
 
 | Role | Scenario files | Scenarios | Assertions | Draft |
 | --- | --- | ---: | ---: | --- |
@@ -26,7 +26,7 @@ has 400 scenarios and 1,606 assertions in 24 roles:
 | `sigkey.signer` | 330-341 | 12 | 36 | Signature-Key, protocol |
 | `vectors.library` | 400-493 | 94 | 105 | community test vectors |
 | `vectors.signature-key` | 500-557 | 58 | 116 | Signature-Key test vectors |
-| `bootstrap.agent-provider` | 700-714 | 15 | 52 | Bootstrap, protocol, Signature-Key |
+| `bootstrap.agent-provider` | 700-719, 740 | 21 | 77 | Bootstrap, protocol, Signature-Key |
 | `bootstrap.agent` | 720-725 | 6 | 23 | Bootstrap, Signature-Key, protocol |
 | `bootstrap.self-hosted` | 730-734 | 5 | 28 | Bootstrap, protocol |
 
@@ -589,6 +589,16 @@ the AP and on the agent, which each library implements natively. The agent's
 refresh margin (core line 1301, Bootstrap line 291) is graded for both: each
 library's bootstrap client decides when a token is due, and the launcher
 refreshes only when it says so.
+
+The hosted AP's refusals are graded as recommended, because each rests on
+the draft's own guidance and no pinned draft makes it a MUST: a refresh whose
+body the signature leaves uncovered or whose `Content-Digest` does not match
+(line 319), a naming JWT used again or a new one reusing its `jti` (line
+321), a refresh for a disabled or revoked enrollment (lines 447-449), and a
+sub-agent request from a parent already at the fixture policy's limit of live
+sub-agents (line 375). Both libraries are graded on the first three. aauth-go
+leaves the limit unclaimed, because it keeps no count of a parent's live
+sub-agents.
 
 ```sh
 go run ./cmd/build-adapters -role bootstrap.agent-provider -go-source /path/to/aauth-go -rust-source /path/to/aauth-rust -claim-recommended -out build/bootstrap-ap

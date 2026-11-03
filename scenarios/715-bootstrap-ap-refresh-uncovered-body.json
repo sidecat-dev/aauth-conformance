@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "id": "bootstrap-ap-refresh-uncovered-body",
+  "title": "A refresh whose signature leaves the body uncovered gets no agent token",
+  "role_under_test": "bootstrap.agent-provider",
+  "given": "agent-identity",
+  "input": {
+    "flow": "refresh",
+    "mutation": "uncovered-body"
+  },
+  "assertions": [
+    {
+      "stage": "enroll",
+      "id": "enroll-accepted",
+      "clause": "bootstrap.ap.enrollment",
+      "kind": "status-class",
+      "equals": "2xx"
+    },
+    {
+      "stage": "refresh",
+      "id": "refused",
+      "clause": "bootstrap.ap.body-coverage",
+      "kind": "bootstrap-no-token",
+      "equals": true
+    },
+    {
+      "stage": "refresh",
+      "id": "status",
+      "clause": "bootstrap.ap.body-coverage",
+      "kind": "status",
+      "equals": 401
+    },
+    {
+      "stage": "refresh",
+      "id": "error",
+      "clause": "bootstrap.ap.body-coverage",
+      "kind": "sfv-token",
+      "equals": "invalid_input",
+      "header": "Signature-Error",
+      "member": "error"
+    },
+    {
+      "stage": "refresh",
+      "id": "required-coverage",
+      "clause": "bootstrap.ap.body-coverage",
+      "kind": "sfv-string-set",
+      "equals": [
+        "@method",
+        "@authority",
+        "@path",
+        "signature-key",
+        "content-type",
+        "content-digest"
+      ],
+      "header": "Signature-Error",
+      "member": "required_input"
+    }
+  ]
+}

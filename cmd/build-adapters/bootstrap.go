@@ -29,6 +29,21 @@ import "gitlab.com/sidecat-dev/aauth-conformance/internal/conformance"
 // REFRESH_MARGIN. Each launcher's renew asks it at the job's clock and
 // refreshes only when it says yes, so both claim
 // bootstrap.agent.refresh-margin, a recommended clause.
+//
+// The hosted AP's refusals are the library's in both: an uncovered or
+// mismatched body (bootstrap.ap.body-coverage), a reused naming-JWT jti
+// (bootstrap.ap.naming-jti) and a disabled or revoked enrollment
+// (bootstrap.ap.inactive-enrollment), which each launcher's
+// enrollment-state control sets through the library's store. The live
+// sub-agent limit (bootstrap.ap.subagent-limit, Bootstrap lines 375 and
+// 400) needs the AP to know how many sub-agents a parent has live.
+// aauth-rust's BootstrapService records them and passes them to host policy
+// in SubagentRequest::live, and the launcher's policy applies the fixture
+// limit to that list. aauth-go's SubagentHandler records nothing per parent:
+// its SubagentRequest carries no count, and its INTERPRETATIONS.md leaves
+// the record to host policy. A count kept in the launcher would grade the
+// launcher, not the library, so aauth-go leaves that clause unclaimed until
+// it records live sub-agents per parent.
 func init() {
 	for _, role := range []string{conformance.BootstrapProviderRole, conformance.BootstrapAgentRole, conformance.BootstrapSelfHostedRole} {
 		goRoleSources[role] = []string{"bootstrap.go"}
@@ -44,4 +59,8 @@ func init() {
 		"aauth-go":   {"bootstrap.agent.single-key"},
 		"aauth-rust": {"bootstrap.agent.single-key"},
 	}
+	if unofferedClaims[conformance.BootstrapProviderRole] == nil {
+		unofferedClaims[conformance.BootstrapProviderRole] = map[string][]string{}
+	}
+	unofferedClaims[conformance.BootstrapProviderRole]["aauth-go"] = []string{"bootstrap.ap.subagent-limit"}
 }

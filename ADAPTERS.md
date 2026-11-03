@@ -759,9 +759,15 @@ per role, the paths it serves. Clocks are fixed at the bootstrap `now`.
   `agent_lifetime` tokens with the `ps` the refresh body names, and approves
   sub-agents of a top-level agent. When the parent offers no discriminator,
   or one it already used, host policy chooses one (Bootstrap line 376).
-  Enrollment answers any 2xx. Refresh and
+  Host policy refuses a sub-agent while its parent already has
+  `subagent_limit` live sub-agents, when the library keeps that count
+  (Bootstrap line 375). Enrollment answers any 2xx. Refresh and
   sub-agent issuance answer `200 {"agent_token"}`. Refusals are the native
-  answers, unchanged.
+  answers, unchanged. The host control at `enrollment_state_path` takes
+  `{"jwk", "state"}`, the durable public key and `disabled` or `revoked`,
+  makes that change in the native enrollment store, and answers
+  `200 {"state"}` with the state now held (Bootstrap line 447 has the AP let
+  a person revoke an enrollment and defines no endpoint).
 - `bootstrap.agent` announces `/control` and configures the native agent's
   bootstrap client with the AP at the bootstrap `issuer`, reached at
   `ap_transport`, the four paths and `person_server` as its `ps`. The agent

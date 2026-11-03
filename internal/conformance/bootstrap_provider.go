@@ -1,10 +1,12 @@
 package conformance
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -19,6 +21,7 @@ func bootstrapAPConfig(f Fixture, b BootstrapFixture, role string) Bootstrap {
 		launcher.IssuePath = b.IssuePath
 	} else {
 		launcher.EnrollmentPath, launcher.RefreshPath, launcher.SingleKeyRefreshPath, launcher.SubagentPath = b.EnrollmentPath, b.RefreshPath, b.SingleKeyRefreshPath, b.SubagentPath
+		launcher.EnrollmentStatePath, launcher.SubagentLimit = b.EnrollmentStatePath, b.SubagentLimit
 	}
 	config.Extension, _ = json.Marshal(launcher)
 	return config
@@ -74,11 +77,38 @@ func flipSignature(compact string) string {
 	return strings.Join(parts, ".")
 }
 
+// refreshBody is a refresh body naming the fixture Person Server, with the
+// AP-defined evidence slot (empty unless a flow needs another body).
+func refreshBody(f Fixture, evidence map[string]any) []byte {
+	if evidence == nil {
+		evidence = map[string]any{}
+	}
+	body, _ := json.Marshal(map[string]any{"ps": f.Person.Issuer, "evidence": evidence})
+	return body
+}
+
 // refreshRequest is a two-key refresh: the naming JWT under jkt-jwt and an
-// HTTP signature by signer (the ephemeral key, unless a mutation changes it).
-func refreshRequest(f Fixture, b BootstrapFixture, stage, naming, signer string) (*requestRecord, error) {
-	body, _ := json.Marshal(map[string]any{"ps": f.Person.Issuer, "evidence": map[string]any{}})
-	return signEventsRequest(f, stage, signer, http.MethodPost, f.Issuer+b.RefreshPath, `sig=jkt-jwt;jwt="`+naming+`"`, body, eventsCovered(true))
+// HTTP signature by signer (the ephemeral key, unless a mutation changes it)
+// covering the body (Bootstrap line 319). Two mutations break that coverage:
+// uncovered-body signs neither content-type nor content-digest and sends no
+// Content-Digest, and digest-mismatch keeps the signed Content-Digest but
+// sends another body.
+func refreshRequest(f Fixture, b BootstrapFixture, stage, naming, signer string, body []byte, mutation string) (*requestRecord, error) {
+	record, err := signEventsRequest(f, stage, signer, http.MethodPost, f.Issuer+b.RefreshPath, `sig=jkt-jwt;jwt="`+naming+`"`, body, eventsCovered(mutation != "uncovered-body"))
+	if err != nil {
+		return nil, err
+	}
+	switch mutation {
+	case "uncovered-body":
+		record.request.Header.Del("Content-Digest")
+	case "digest-mismatch":
+		substituted := refreshBody(f, map[string]any{"substituted": true})
+		record.request.Body = io.NopCloser(bytes.NewReader(substituted))
+		record.request.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(substituted)), nil }
+		record.request.ContentLength = int64(len(substituted))
+		record.body = substituted
+	}
+	return record, nil
 }
 
 // subagentRequest is a parent's sub-agent request (Bootstrap Sub-Agents Under
@@ -115,13 +145,10 @@ func bootstrapProviderCase(ctx context.Context, f Fixture, b BootstrapFixture, s
 		_, err := send(hwkRequest(f, stage, durable, f.Issuer+b.EnrollmentPath, bootstrapEnrollmentBody))
 		return err
 	}
-	// refresh sends a two-key refresh and grades the token it returns.
-	refresh := func(stage, durable, ephemeral, mutation string, earlier []string) (tokenObservation, error) {
-		signer := ephemeral
-		if mutation == "proof-key" {
-			signer = seed["second_ephemeral"]
-		}
-		r, err := send(refreshRequest(f, b, stage, namingJWT(f, durable, ephemeral, seed["other_durable"], s.ID+"-"+stage, mutation), signer))
+	// refreshWith sends one two-key refresh signed by signer and grades the
+	// token it returns, which must bind bound.
+	refreshWith := func(stage, naming, signer, bound string, body []byte, mutation string, earlier []string) (tokenObservation, error) {
+		r, err := send(refreshRequest(f, b, stage, naming, signer, body, mutation))
 		if err != nil {
 			return tokenObservation{}, err
 		}
@@ -131,9 +158,27 @@ func bootstrapProviderCase(ctx context.Context, f Fixture, b BootstrapFixture, s
 		if detail != nil {
 			reason = detail.Error()
 		}
-		observed := observeAgentToken(f, token, tokenExpectation{issuer: f.Issuer, keys: keys, key: seedPublic(ephemeral), ps: f.Person.Issuer, earlier: earlier})
+		observed := observeAgentToken(f, token, tokenExpectation{issuer: f.Issuer, keys: keys, key: seedPublic(bound), ps: f.Person.Issuer, earlier: earlier})
 		gradeToken(s, stage, observed, reason, own)
 		return observed, nil
+	}
+	// refresh sends a two-key refresh with its own naming JWT, whose jti
+	// names the scenario and stage.
+	refresh := func(stage, durable, ephemeral, mutation string, earlier []string) (tokenObservation, error) {
+		signer := ephemeral
+		if mutation == "proof-key" {
+			signer = seed["second_ephemeral"]
+		}
+		return refreshWith(stage, namingJWT(f, durable, ephemeral, seed["other_durable"], s.ID+"-"+stage, mutation), signer, ephemeral, refreshBody(f, nil), mutation, earlier)
+	}
+	// refreshed is a refresh that must issue a token, because a later
+	// refusal proves nothing on an AP that issued none.
+	refreshed := func(stage, durable, ephemeral string) (tokenObservation, error) {
+		observed, err := refresh(stage, durable, ephemeral, "none", nil)
+		if err == nil && !observed.Properties["signature"] {
+			err = fmt.Errorf("%s issued no verifiable agent token: %s", stage, strings.Join(observed.Problems, "; "))
+		}
+		return observed, err
 	}
 	switch in.Flow {
 	case "refresh", "rotate", "installs":
@@ -166,6 +211,49 @@ func bootstrapProviderCase(ctx context.Context, f Fixture, b BootstrapFixture, s
 			}
 			other.Properties["new-subject"] = first.subject() != "" && other.subject() != "" && other.subject() != first.subject()
 			gradeToken(s, "refresh-other", other, "", own)
+		}
+	case "replay":
+		// Bootstrap line 321: the naming JWT's jti is for replay protection.
+		// The naming JWT of the first refresh comes back with another body,
+		// so the request is new and the delegation is not; then a new naming
+		// JWT for another ephemeral key reuses its jti.
+		if err := enroll("enroll", seed["durable"]); err != nil {
+			return stages, exchanges, own, err
+		}
+		if _, err := refreshed("refresh", seed["durable"], seed["ephemeral"]); err != nil {
+			return stages, exchanges, own, err
+		}
+		jti := s.ID + "-refresh"
+		used := namingJWT(f, seed["durable"], seed["ephemeral"], seed["other_durable"], jti, "none")
+		if _, err := refreshWith("refresh-replay", used, seed["ephemeral"], seed["ephemeral"], refreshBody(f, map[string]any{"attempt": 2}), "none", nil); err != nil {
+			return stages, exchanges, own, err
+		}
+		reused := namingJWT(f, seed["durable"], seed["second_ephemeral"], seed["other_durable"], jti, "none")
+		if _, err := refreshWith("refresh-jti", reused, seed["second_ephemeral"], seed["second_ephemeral"], refreshBody(f, nil), "none", nil); err != nil {
+			return stages, exchanges, own, err
+		}
+	case "inactive":
+		// Bootstrap lines 447-449: the AP lets a person revoke a durable
+		// enrollment, and revoking it stops further agent tokens. The host
+		// control changes the enrollment's state between two refreshes.
+		if err := enroll("enroll", seed["durable"]); err != nil {
+			return stages, exchanges, own, err
+		}
+		if _, err := refreshed("refresh", seed["durable"], seed["ephemeral"]); err != nil {
+			return stages, exchanges, own, err
+		}
+		control, err := controlRequest("enrollment-state", f.Issuer+b.EnrollmentStatePath, map[string]any{"jwk": publicJWK(seed["durable"]), "state": in.Mutation})
+		if err != nil {
+			return stages, exchanges, own, err
+		}
+		if err := eventsExchange(ctx, control, ready, o, stages, &exchanges); err != nil {
+			return stages, exchanges, own, err
+		}
+		if state, err := controlMember(stages["enrollment-state"], "state"); err != nil || state != in.Mutation {
+			return stages, exchanges, own, fmt.Errorf("the host control did not make the enrollment %s: %v %q", in.Mutation, err, state)
+		}
+		if _, err := refresh("refresh-2", seed["durable"], seed["second_ephemeral"], "none", nil); err != nil {
+			return stages, exchanges, own, err
 		}
 	case "single-key":
 		if err := enroll("enroll", seed["durable"]); err != nil {
@@ -228,6 +316,22 @@ func bootstrapProviderCase(ctx context.Context, f Fixture, b BootstrapFixture, s
 		child := seed["subagent"]
 		if in.Mutation == "nested" {
 			child = seed["second_ephemeral"]
+		}
+		if in.Mutation == "limit" {
+			// Bootstrap line 375: the AP applies its policy on how many
+			// sub-agents a parent may have live. The parent reaches the
+			// fixture limit, and one more request follows.
+			for i := 1; i <= b.SubagentLimit; i++ {
+				stage := fmt.Sprintf("subagent-%d", i)
+				r, err := send(subagentRequest(f, b, stage, parent, parentSeed, seed[bootstrapLimitChildren[i-1]], fmt.Sprintf("%s-%d", b.Discriminator, i)))
+				if err != nil {
+					return stages, exchanges, own, err
+				}
+				if _, detail := issuedToken(r); detail != nil {
+					return stages, exchanges, own, fmt.Errorf("%s issued no sub-agent token, so the parent never reached the limit: %v", stage, detail)
+				}
+			}
+			child, discriminator = seed[bootstrapLimitChildren[b.SubagentLimit]], fmt.Sprintf("%s-%d", b.Discriminator, b.SubagentLimit+1)
 		}
 		r, err := send(subagentRequest(f, b, "subagent", parent, parentSeed, child, discriminator))
 		if err != nil {

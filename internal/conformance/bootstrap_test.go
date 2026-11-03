@@ -81,7 +81,7 @@ func TestBootstrapScenariosLoadAndRefuseMalformedInput(t *testing.T) {
 			reached[a.Clause] = true
 		}
 	}
-	if counts[BootstrapProviderRole] != 15 || counts[BootstrapAgentRole] != 6 || counts[BootstrapSelfHostedRole] != 5 {
+	if counts[BootstrapProviderRole] != 21 || counts[BootstrapAgentRole] != 6 || counts[BootstrapSelfHostedRole] != 5 {
 		t.Fatalf("bootstrap scenario counts: %v", counts)
 	}
 	for _, c := range suite.Catalog.Clauses {
@@ -104,6 +104,13 @@ func TestBootstrapScenariosLoadAndRefuseMalformedInput(t *testing.T) {
 		"unknown property":    func(s *Scenario) { s.Assertions[2].Member = "colour" },
 		"same-subject early":  func(s *Scenario) { s.Assertions[2].Member = "same-subject" },
 		"non-boolean":         func(s *Scenario) { s.Assertions[2].Equals = json.RawMessage(`"yes"`) },
+		"inactive, no state":  func(s *Scenario) { s.Input = json.RawMessage(`{"flow":"inactive","mutation":"none"}`) },
+		"token at control": func(s *Scenario) {
+			s.Input, s.Assertions[1].Stage = json.RawMessage(`{"flow":"inactive","mutation":"revoked"}`), "enrollment-state"
+		},
+		"limit stage beyond": func(s *Scenario) {
+			s.Input, s.Assertions[1].Stage = json.RawMessage(`{"flow":"subagent","mutation":"limit"}`), "subagent-3"
+		},
 	} {
 		s := find("bootstrap-ap-refresh")
 		s.Assertions = slices.Clone(s.Assertions)
@@ -144,6 +151,9 @@ func TestBootstrapScenariosLoadAndRefuseMalformedInput(t *testing.T) {
 
 // referenceAP is a test Agent Provider written to the adapter contract. Its
 // faults let a test show that the scenarios catch the matching defect.
+// state holds a disabled or revoked enrollment's state by durable
+// thumbprint, used each naming JWT jti per durable thumbprint, and live the
+// sub-agent tokens issued per parent sub.
 type referenceAP struct {
 	f        Fixture
 	b        BootstrapFixture
@@ -151,6 +161,15 @@ type referenceAP struct {
 	mu       sync.Mutex
 	enrolled map[string]string
 	n        int
+	state    map[string]string
+	used     map[string]bool
+	live     map[string]int
+}
+
+// signatureError answers 401 with the given Signature-Error members.
+func signatureError(w http.ResponseWriter, members string) {
+	w.Header().Set("Signature-Error", members)
+	writeJSON(w, http.StatusUnauthorized, map[string]any{"error": "refused"})
 }
 
 func (ap *referenceAP) mint(claims map[string]any) string {
@@ -188,18 +207,51 @@ func (ap *referenceAP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			ap.enrolled[jwkThumbprint(key)] = fmt.Sprintf("aauth:install%d@%s", len(ap.enrolled)+1, hostOf(ap.f.Issuer))
 		}
 		writeJSON(w, 201, map[string]any{"agent": ap.enrolled[jwkThumbprint(key)]})
+	case ap.b.EnrollmentStatePath:
+		state, _ := body["state"].(string)
+		thumbprint := jwkThumbprint(confirmationPublicKey(body["jwk"]))
+		if _, ok := ap.enrolled[thumbprint]; !ok || state != "revoked" && state != "disabled" {
+			refuse(400)
+			return
+		}
+		ap.state[thumbprint] = state
+		writeJSON(w, 200, map[string]any{"state": state})
 	case ap.b.RefreshPath:
 		naming := readNamingJWT(ap.f, signed.Params["jwt"])
 		accepted := naming.Valid || ap.fault == "accept-bad-iss" && strings.HasPrefix(naming.Error, "iss")
-		if signed.Scheme != "jkt-jwt" || !accepted || !signed.verifiedBy(ap.f, naming.delegated, "content-type", "content-digest") {
+		if signed.Scheme != "jkt-jwt" || !accepted || !signed.verifiedBy(ap.f, naming.delegated) {
 			refuse(401)
 			return
 		}
-		sub, ok := ap.enrolled[jwkThumbprint(naming.durable)]
+		covered := slices.Contains(signed.Covered, "content-type") && slices.Contains(signed.Covered, "content-digest")
+		if !covered && ap.fault != "accept-uncovered" {
+			signatureError(w, `error=invalid_input, required_input=("@method" "@authority" "@path" "signature-key" "content-type" "content-digest")`)
+			return
+		}
+		if covered && !signed.coversBody(c) && ap.fault != "ignore-digest" {
+			signatureError(w, "error=invalid_signature")
+			return
+		}
+		thumbprint := jwkThumbprint(naming.durable)
+		sub, ok := ap.enrolled[thumbprint]
 		if !ok {
 			refuse(404)
 			return
 		}
+		if ap.state[thumbprint] != "" && ap.fault != "ignore-inactive" {
+			if ap.fault == "inactive-401" {
+				signatureError(w, "error=invalid_key")
+				return
+			}
+			refuse(403)
+			return
+		}
+		jti, _ := naming.Claims["jti"].(string)
+		if ap.used[thumbprint+" "+jti] && ap.fault != "accept-replay" {
+			signatureError(w, "error=invalid_signature")
+			return
+		}
+		ap.used[thumbprint+" "+jti] = true
 		if ap.fault == "unstable-sub" {
 			sub = strings.Replace(sub, "install", fmt.Sprintf("install%d-", ap.n), 1)
 		}
@@ -219,6 +271,12 @@ func (ap *referenceAP) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			refuse(401)
 			return
 		}
+		parentSub, _ := parent["sub"].(string)
+		if ap.live[parentSub] >= ap.b.SubagentLimit && ap.fault != "no-limit" {
+			refuse(403)
+			return
+		}
+		ap.live[parentSub]++
 		writeJSON(w, 200, map[string]any{"agent_token": ap.child(parent, body)})
 	default:
 		refuse(404)
@@ -276,7 +334,7 @@ func (ap *referenceAP) issue(w http.ResponseWriter, r *http.Request) {
 func TestBootstrapProviderScenariosAgainstReferenceAP(t *testing.T) {
 	suite, b := bootstrapTestSuite(t)
 	run := func(fault string, s Scenario) []Result {
-		ap := &referenceAP{f: suite.Fixture, b: b, fault: fault, enrolled: map[string]string{}}
+		ap := &referenceAP{f: suite.Fixture, b: b, fault: fault, enrolled: map[string]string{}, state: map[string]string{}, used: map[string]bool{}, live: map[string]int{}}
 		server := httptest.NewServer(ap)
 		defer server.Close()
 		stages, _, own, err := bootstrapProviderCase(context.Background(), suite.Fixture, b, s, Ready{Version: 1, URL: server.URL + "/.well-known/aauth-agent.json"}, Options{Timeout: 2 * time.Second})
@@ -287,7 +345,9 @@ func TestBootstrapProviderScenariosAgainstReferenceAP(t *testing.T) {
 			t.Errorf("%s against the reference AP: %v", s.ID, bad)
 		}
 	}
-	for fault, id := range map[string]string{"accept-bad-iss": "bootstrap-ap-refresh-jkt-iss", "nested": "bootstrap-ap-subagent-nested", "unstable-sub": "bootstrap-ap-rotate"} {
+	for fault, id := range map[string]string{"accept-bad-iss": "bootstrap-ap-refresh-jkt-iss", "nested": "bootstrap-ap-subagent-nested", "unstable-sub": "bootstrap-ap-rotate",
+		"accept-uncovered": "bootstrap-ap-refresh-uncovered-body", "ignore-digest": "bootstrap-ap-refresh-digest-mismatch", "accept-replay": "bootstrap-ap-refresh-jti-replay",
+		"ignore-inactive": "bootstrap-ap-refresh-disabled", "inactive-401": "bootstrap-ap-refresh-revoked", "no-limit": "bootstrap-ap-subagent-limit"} {
 		for _, s := range roleScenarios(suite, BootstrapProviderRole) {
 			if s.ID == id && len(failing(run(fault, s))) == 0 {
 				t.Errorf("fault %s passed %s", fault, id)
@@ -299,7 +359,7 @@ func TestBootstrapProviderScenariosAgainstReferenceAP(t *testing.T) {
 func TestBootstrapSelfHostedScenariosAgainstReference(t *testing.T) {
 	suite, b := bootstrapTestSuite(t)
 	run := func(fault string, s Scenario) []Result {
-		ap := &referenceAP{f: suite.Fixture, b: b, fault: fault, enrolled: map[string]string{}}
+		ap := &referenceAP{f: suite.Fixture, b: b, fault: fault, enrolled: map[string]string{}, state: map[string]string{}, used: map[string]bool{}, live: map[string]int{}}
 		mux := http.NewServeMux()
 		mux.Handle("/", ap)
 		mux.HandleFunc(b.IssuePath, ap.issue)

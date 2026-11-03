@@ -33,14 +33,20 @@ const (
 	BootstrapSelfHostedRole = "bootstrap.self-hosted"
 )
 
-// BootstrapFixture is fixture.json extensions.bootstrap.
+// BootstrapFixture is fixture.json extensions.bootstrap. EnrollmentStatePath
+// is the hosted AP's host control that disables or revokes an enrollment:
+// Bootstrap has the AP let a person revoke one (line 447) and defines no
+// endpoint for it. SubagentLimit is the fixture host policy's number of live
+// sub-agents one parent may have, which line 375 leaves to policy.
 type BootstrapFixture struct {
 	EnrollmentPath       string            `json:"enrollment_path"`
 	RefreshPath          string            `json:"refresh_path"`
 	SingleKeyRefreshPath string            `json:"single_key_refresh_path"`
 	SubagentPath         string            `json:"subagent_path"`
 	IssuePath            string            `json:"issue_path"`
+	EnrollmentStatePath  string            `json:"enrollment_state_path"`
 	AgentLifetime        int64             `json:"agent_lifetime"`
+	SubagentLimit        int               `json:"subagent_limit"`
 	Seeds                map[string]string `json:"seeds_hex"`
 	Discriminator        string            `json:"discriminator"`
 	ForeignAP            EventsIdentity    `json:"foreign_ap"`
@@ -48,6 +54,11 @@ type BootstrapFixture struct {
 
 // bootstrapSeedNames are the fixture keys a scenario may name.
 var bootstrapSeedNames = []string{"durable", "other_durable", "ephemeral", "second_ephemeral", "subagent"}
+
+// bootstrapLimitChildren are the sub-agent keys of the limit flow, in
+// request order: one per sub-agent up to the limit, then the one refused.
+// None is the parent's ephemeral key.
+var bootstrapLimitChildren = []string{"subagent", "second_ephemeral", "other_durable"}
 
 func (b BootstrapFixture) seed(name string) string {
 	if name == "ap" {
@@ -61,7 +72,7 @@ func bootstrapFixture(f Fixture) (BootstrapFixture, error) {
 	if err := DecodeExtension(f, "bootstrap", &b); err != nil {
 		return b, err
 	}
-	paths := []string{b.EnrollmentPath, b.RefreshPath, b.SingleKeyRefreshPath, b.SubagentPath, b.IssuePath}
+	paths := []string{b.EnrollmentPath, b.RefreshPath, b.SingleKeyRefreshPath, b.SubagentPath, b.IssuePath, b.EnrollmentStatePath}
 	for i, p := range paths {
 		if !strings.HasPrefix(p, "/") || strings.ContainsAny(p, "?#\r\n") || slices.Contains(paths[:i], p) || strings.HasPrefix(p, "/.well-known/") {
 			return b, fmt.Errorf("bootstrap fixture paths must be distinct origin-relative paths")
@@ -69,6 +80,9 @@ func bootstrapFixture(f Fixture) (BootstrapFixture, error) {
 	}
 	if b.AgentLifetime <= 300 || b.AgentLifetime > 86400 || f.Person == nil {
 		return b, fmt.Errorf("bootstrap fixture needs an agent lifetime above the refresh margin and a Person Server")
+	}
+	if b.SubagentLimit < 1 || b.SubagentLimit > len(bootstrapLimitChildren)-1 {
+		return b, fmt.Errorf("bootstrap subagent_limit must be 1 to %d, so that one more sub-agent than the limit has its own fixture key", len(bootstrapLimitChildren)-1)
 	}
 	if len(b.Seeds) != len(bootstrapSeedNames) {
 		return b, fmt.Errorf("bootstrap fixture names exactly the seeds %v", bootstrapSeedNames)
@@ -114,22 +128,36 @@ type bootstrapSelfInput struct {
 }
 
 var bootstrapProviderFlows = map[string][]string{
-	"refresh":    {"none", "unenrolled", "jkt-iss", "jkt-typ", "jkt-signature", "jkt-expired", "proof-key"},
+	"refresh":    {"none", "unenrolled", "jkt-iss", "jkt-typ", "jkt-signature", "jkt-expired", "proof-key", "uncovered-body", "digest-mismatch"},
 	"rotate":     {"none"},
 	"installs":   {"none"},
 	"single-key": {"none"},
-	"subagent":   {"none", "no-discriminator", "nested", "foreign-parent", "expired-parent"},
+	"replay":     {"none"},
+	"inactive":   {"revoked", "disabled"},
+	"subagent":   {"none", "no-discriminator", "nested", "foreign-parent", "expired-parent", "limit"},
 }
 
-// bootstrapProviderStages lists, in order, the requests a flow sends.
-func bootstrapProviderStages(in bootstrapProviderInput) []string {
+// bootstrapProviderStages lists, in order, the requests a flow sends. The
+// limit flow sends one sub-agent request per allowed sub-agent, subagent-1
+// to subagent-N, then the refused one.
+func bootstrapProviderStages(in bootstrapProviderInput, b BootstrapFixture) []string {
 	switch {
 	case in.Flow == "rotate":
 		return []string{"enroll", "refresh", "refresh-2"}
 	case in.Flow == "installs":
 		return []string{"enroll", "refresh", "enroll-other", "refresh-other"}
+	case in.Flow == "replay":
+		return []string{"enroll", "refresh", "refresh-replay", "refresh-jti"}
+	case in.Flow == "inactive":
+		return []string{"enroll", "refresh", "enrollment-state", "refresh-2"}
 	case in.Flow == "subagent" && in.Mutation == "nested":
 		return []string{"enroll", "refresh", "subagent-1", "subagent"}
+	case in.Flow == "subagent" && in.Mutation == "limit":
+		stages := []string{"enroll", "refresh"}
+		for i := 1; i <= b.SubagentLimit; i++ {
+			stages = append(stages, fmt.Sprintf("subagent-%d", i))
+		}
+		return append(stages, "subagent")
 	case in.Flow == "subagent" && (in.Mutation == "foreign-parent" || in.Mutation == "expired-parent"):
 		return []string{"subagent"}
 	case in.Flow == "subagent":
@@ -197,7 +225,8 @@ func tokenProperties(stage string) []string {
 }
 
 func validateBootstrapProvider(f Fixture, s Scenario) error {
-	if _, err := bootstrapFixture(f); err != nil {
+	b, err := bootstrapFixture(f)
+	if err != nil {
 		return err
 	}
 	var in bootstrapProviderInput
@@ -207,10 +236,10 @@ func validateBootstrapProvider(f Fixture, s Scenario) error {
 	if !slices.Contains(bootstrapProviderFlows[in.Flow], in.Mutation) {
 		return fmt.Errorf("%s: unsupported bootstrap flow %q or mutation %q", s.ID, in.Flow, in.Mutation)
 	}
-	stages := bootstrapProviderStages(in)
+	stages := bootstrapProviderStages(in, b)
 	for _, a := range s.Assertions {
-		if a.Kind == "bootstrap-token" && (a.Stage == "enroll" || a.Stage == "enroll-other") {
-			return fmt.Errorf("%s/%s: enrollment returns no agent token", s.ID, a.ID)
+		if a.Kind == "bootstrap-token" && (a.Stage == "enroll" || a.Stage == "enroll-other" || a.Stage == "enrollment-state") {
+			return fmt.Errorf("%s/%s: enrollment and its host control return no agent token", s.ID, a.ID)
 		}
 	}
 	return bootstrapAssertions(s, stages, map[string]func(string) []string{
@@ -362,7 +391,9 @@ type bootstrapLauncher struct {
 	SingleKeyRefreshPath string `json:"single_key_refresh_path,omitempty"`
 	SubagentPath         string `json:"subagent_path,omitempty"`
 	IssuePath            string `json:"issue_path,omitempty"`
+	EnrollmentStatePath  string `json:"enrollment_state_path,omitempty"`
 	AgentLifetime        int64  `json:"agent_lifetime,omitempty"`
+	SubagentLimit        int    `json:"subagent_limit,omitempty"`
 	PersonServer         string `json:"person_server,omitempty"`
 }
 

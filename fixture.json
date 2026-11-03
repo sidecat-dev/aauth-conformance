@@ -35,7 +35,9 @@
       "single_key_refresh_path": "/bootstrap/refresh-single-key",
       "subagent_path": "/bootstrap/subagent",
       "issue_path": "/__fixture/issue",
+      "enrollment_state_path": "/__fixture/enrollment-state",
       "agent_lifetime": 3600,
+      "subagent_limit": 2,
       "seeds_hex": {
         "durable": "2121212121212121212121212121212121212121212121212121212121212121",
         "other_durable": "2222222222222222222222222222222222222222222222222222222222222222",

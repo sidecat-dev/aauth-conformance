@@ -7,9 +7,9 @@ use super::{Bootstrap, exchange, fetch, person_request};
 use aauth_rust_agent::{Agent, BootstrapClient};
 use aauth_rust_agent_provider::AgentProvider;
 use aauth_rust_agent_provider::bootstrap::{
-    AgentGrant, BootstrapEndpoints, BootstrapPolicy, BootstrapService, Denial, EnrollmentApproval,
-    EnrollmentRequest, MemoryBootstrapStore, RefreshRequest, SubagentRequest,
-    thumbprint_local_part,
+    AgentGrant, BootstrapEndpoints, BootstrapPolicy, BootstrapService, BootstrapStore, Denial,
+    EnrollmentApproval, EnrollmentRequest, EnrollmentState, MemoryBootstrapStore, RefreshRequest,
+    SubagentRequest, thumbprint_local_part,
 };
 use aauth_rust_core::AgentProviderKeys;
 use aauth_rust_jose::{Jwk, SigningKey};
@@ -35,7 +35,11 @@ struct Extension {
     #[serde(default)]
     issue_path: String,
     #[serde(default)]
+    enrollment_state_path: String,
+    #[serde(default)]
     agent_lifetime: i64,
+    #[serde(default)]
+    subagent_limit: usize,
     #[serde(default)]
     person_server: String,
 }
@@ -121,9 +125,12 @@ fn discovery(
 /// The suite's host policy: every enrollment approved with an identifier
 /// derived from its durable key, every refresh granted the fixture lifetime
 /// and the Person Server the agent names, every sub-agent of a top-level
-/// agent approved for the fixture lifetime.
+/// agent approved for the fixture lifetime while the parent has fewer live
+/// sub-agents than the fixture limit. The service keeps the live records
+/// and passes them in `SubagentRequest::live`; the limit is the host's.
 struct FixturePolicy {
     lifetime: i64,
+    subagent_limit: usize,
 }
 impl BootstrapPolicy for FixturePolicy {
     fn enroll(&self, request: &EnrollmentRequest<'_>) -> Result<EnrollmentApproval, Denial> {
@@ -139,13 +146,61 @@ impl BootstrapPolicy for FixturePolicy {
             None => grant,
         })
     }
-    fn subagent(&self, _: &SubagentRequest<'_>) -> Result<i64, Denial> {
+    fn subagent(&self, request: &SubagentRequest<'_>) -> Result<i64, Denial> {
+        if self.subagent_limit > 0 && request.live.len() >= self.subagent_limit {
+            return Err(Denial {
+                reason: Some("this parent has as many live sub-agents as policy allows".into()),
+            });
+        }
         Ok(self.lifetime)
     }
 }
 
-/// Native hosted Agent Provider: metadata and JWKS, and `BootstrapService`
-/// at the fixture's enrollment, refresh, single-key refresh and sub-agent paths.
+/// The enrollment-state control: the host disables or revokes an enrollment
+/// in the service's store (Bootstrap, Durable Key Compromise).
+#[derive(Deserialize)]
+struct StateJob {
+    jwk: Jwk,
+    state: String,
+}
+
+fn set_enrollment_state<S: BootstrapStore, P: BootstrapPolicy>(
+    service: &BootstrapService<S, P>,
+    body: &[u8],
+) -> http::Response<Vec<u8>> {
+    let job: StateJob = match serde_json::from_slice(body) {
+        Ok(job) => job,
+        Err(error) => return reply(400, serde_json::json!({ "error": error.to_string() })),
+    };
+    let state = match job.state.as_str() {
+        "disabled" => EnrollmentState::Disabled,
+        "revoked" => EnrollmentState::Revoked,
+        other => {
+            return reply(
+                400,
+                serde_json::json!({ "error": format!("state {other} is neither disabled nor revoked") }),
+            );
+        }
+    };
+    let changed = job
+        .jwk
+        .thumbprint()
+        .map_err(|error| error.to_string())
+        .and_then(|thumbprint| {
+            service
+                .store()
+                .set_state(&thumbprint, state)
+                .map_err(|error| error.to_string())
+        });
+    match changed {
+        Ok(()) => reply(200, serde_json::json!({ "state": job.state })),
+        Err(error) => reply(422, serde_json::json!({ "error": error })),
+    }
+}
+
+/// Native hosted Agent Provider: metadata and JWKS, `BootstrapService` at the
+/// fixture's enrollment, refresh, single-key refresh and sub-agent paths, and
+/// the enrollment-state control.
 fn run_provider(config: Bootstrap, extension: Extension) -> Result<(), Failure> {
     let endpoint = |path: &str| format!("{}{path}", config.issuer);
     let service = BootstrapService::new(
@@ -159,14 +214,19 @@ fn run_provider(config: Bootstrap, extension: Extension) -> Result<(), Failure> 
         MemoryBootstrapStore::new(),
         FixturePolicy {
             lifetime: extension.agent_lifetime,
+            subagent_limit: extension.subagent_limit,
         },
     )?;
     let now = config.now;
     let server = announce("/.well-known/aauth-agent.json")?;
     for mut incoming in server.incoming_requests() {
         let request = person_request(&mut incoming)?;
+        let control = !extension.enrollment_state_path.is_empty()
+            && request.method() == "POST"
+            && request.uri().path() == extension.enrollment_state_path;
         let response = match discovery(service.provider(), &request) {
             Some(published) => published?,
+            None if control => set_enrollment_state(&service, request.body()),
             None => service.handle(&request, now).into_response(),
         };
         respond(incoming, response)?;
