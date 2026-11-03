@@ -120,7 +120,7 @@ func supervisionMission(f Fixture, s SupervisionFixture) (blob []byte, encoded, 
 // the fixture issuers so a library that inspects them sees real tokens.
 func supervisionTokens(f Fixture, id string) map[string]string {
 	p := *f.Person
-	agent, _ := mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", map[string]any{"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": f.Subject, "jti": id + "-agent", "iat": f.Now - 10, "exp": f.Now + 600, "ps": p.Issuer, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}})
+	agent, _ := agentJWT(f, id+"-agent", f.Now-10, f.Now+600, p.Issuer)
 	person, _ := mintJWT(p.Seed, p.Kid, "aa-person+jwt", map[string]any{"iss": p.Issuer, "dwk": "aauth-person.json", "sub": p.Subject, "aud": f.Origin, "jti": id + "-person", "iat": f.Now - 5, "exp": f.Now + 60, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}})
 	resource, _ := mintJWT(p.ResourceSeed, p.ResourceKid, "aa-resource+jwt", map[string]any{"iss": f.Origin, "dwk": "aauth-resource.json", "aud": p.Issuer, "ps": p.Issuer, "sub": p.Subject, "presented_jti": id + "-person", "agent_jkt": thumbprint(f.AgentSeed), "jti": id + "-resource", "iat": f.Now - 1, "exp": f.Now + 120, "scope": "read"})
 	return map[string]string{"$agent_token": agent, "$presented_token": person, "$resource_token": resource}

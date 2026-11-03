@@ -546,10 +546,7 @@ func runR3IssuerCase(ctx context.Context, f Fixture, r R3Fixture, s Scenario, in
 		if startError != nil {
 			return startError
 		}
-		agent, err := mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", map[string]any{
-			"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": f.Subject, "jti": s.ID + "-agent",
-			"iat": f.Now - 10, "exp": f.Now + 600, "ps": p.Issuer, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)},
-		})
+		agent, err := agentJWT(f, s.ID+"-agent", f.Now-10, f.Now+600, p.Issuer)
 		if err != nil {
 			return err
 		}

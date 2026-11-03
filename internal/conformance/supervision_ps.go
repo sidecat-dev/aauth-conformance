@@ -382,7 +382,7 @@ func runSupervisionPSCase(ctx context.Context, f Fixture, ss SupervisionFixture,
 	c := Case{ID: scenario.ID}
 	p := *f.Person
 	physical := reach.physical
-	agent, _ := mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", map[string]any{"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": f.Subject, "jti": scenario.ID + "-agent", "iat": f.Now - 10, "exp": f.Now + 600, "ps": p.Issuer, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}})
+	agent, _ := agentJWT(f, scenario.ID+"-agent", f.Now-10, f.Now+600, p.Issuer)
 	credential := `sig=jwt;jwt="` + agent + `"`
 	exchanges := []*SupervisionPSExchange{}
 	stages := map[string]*SupervisionPSExchange{}

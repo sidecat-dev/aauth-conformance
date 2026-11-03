@@ -746,11 +746,11 @@ func budgetAuthorizationBody(mode string) ([]byte, error) {
 }
 
 func federationAgentToken(f Fixture, id string, issued, expires int64) (string, error) {
-	return mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", map[string]any{
-		"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": f.Subject, "jti": id,
-		"iat": issued, "exp": expires, "ps": f.Person.Issuer,
-		"cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)},
-	})
+	ps := ""
+	if f.Person != nil {
+		ps = f.Person.Issuer
+	}
+	return agentJWT(f, id, issued, expires, ps)
 }
 
 func responseToken(response Response, name string) (string, error) {

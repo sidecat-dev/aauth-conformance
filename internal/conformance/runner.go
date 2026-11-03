@@ -266,7 +266,7 @@ func runResourceCase(ctx context.Context, f Fixture, scenario Scenario, target T
 			result.State = "error"
 			result.Detail = exchangeError.Error()
 		default:
-			result = Check(assertion, response)
+			result = Check(presentedSubject(f, assertion), response)
 		}
 		c.Results = append(c.Results, result)
 	}

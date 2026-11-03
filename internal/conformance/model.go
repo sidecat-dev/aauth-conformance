@@ -28,6 +28,10 @@ type Fixture struct {
 	// Launchers share the fixed clock, so it is zero; remote mode sets it
 	// because a deployed server reads its own clock.
 	Skew int64 `json:"-"`
+	// Enrolled is an agent token a bootstrap provider signed for this run.
+	// Remote mode sets it when the deployment names a provider. Launchers
+	// leave it nil and mint tokens with the fixture key.
+	Enrolled *EnrolledAgent `json:"-"`
 }
 
 // issuedNow reports whether a server-chosen issued-at time is Now, within Skew.

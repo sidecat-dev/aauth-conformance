@@ -19,6 +19,12 @@ func publicJWK(seed string) map[string]any {
 	return map[string]any{"kty": "OKP", "crv": "Ed25519", "alg": "Ed25519", "x": base64.RawURLEncoding.EncodeToString(seedKey(seed).Public().(ed25519.PublicKey))}
 }
 func MintToken(f Fixture, spec TokenSpec, id string) (string, error) {
+	if f.Enrolled != nil {
+		if spec.IATOffset > 0 || spec.EXPOffset <= 0 {
+			return "", fmt.Errorf("enrolled agent token cannot represent %s", id)
+		}
+		return f.Enrolled.Token, nil
+	}
 	head, _ := json.Marshal(map[string]any{"alg": "Ed25519", "typ": "aa-agent+jwt", "kid": f.Kid})
 	claims := map[string]any{"iss": f.Issuer, "sub": f.Subject, "dwk": "aauth-agent.json", "jti": id, "iat": f.Now + spec.IATOffset, "exp": f.Now + spec.EXPOffset, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}}
 	if spec.PS {

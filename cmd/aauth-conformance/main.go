@@ -52,6 +52,7 @@ func run() int {
 	resolve := resolveFlags{}
 	flag.Var(resolve, "resolve", "remote mode: host:port=address to connect to instead of DNS (repeatable)")
 	public := flag.Bool("public", false, "remote mode: grade a deployment this suite does not operate; omit host controls and require a public callback listener")
+	agentProvider := flag.String("agent-provider", "", "remote mode: bootstrap Agent Provider to enroll the suite key at; overrides bootstrap_provider in the deployment file")
 	names := flag.Bool("harness-names", false, "remote mode: print the host names the suite serves, one per line, and exit")
 	flag.Parse()
 	suite, err := conformance.Load(*suitePath)
@@ -68,7 +69,7 @@ func run() int {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	if *remotePath != "" {
-		return runRemote(ctx, suite, *remotePath, *out, *listen, *certFile, *keyFile, *caFile, resolve, *timeout, *skew, *public)
+		return runRemote(ctx, suite, *remotePath, *out, *listen, *certFile, *keyFile, *caFile, resolve, *timeout, *skew, *public, *agentProvider)
 	}
 	var targets conformance.Targets
 	if err = conformance.ReadJSON(*targetsPath, &targets); err != nil {
@@ -94,7 +95,7 @@ func run() int {
 
 // runRemote serves the suite's parties over HTTPS, runs every role the
 // deployment names and writes one report per role.
-func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out, listen, certFile, keyFile, caFile string, resolve resolveFlags, timeout time.Duration, skew int64, public bool) int {
+func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out, listen, certFile, keyFile, caFile string, resolve resolveFlags, timeout time.Duration, skew int64, public bool, agentProvider string) int {
 	if public {
 		if err := conformance.PublicListen(listen); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -122,7 +123,7 @@ func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out
 	if public {
 		fmt.Printf("public grade: host controls omitted; callback receiver %s\n", listen)
 	}
-	reports, err := conformance.RunRemote(ctx, suite, deployment, conformance.RemoteOptions{Timeout: timeout, Skew: skew, Public: public})
+	reports, err := conformance.RunRemote(ctx, suite, deployment, conformance.RemoteOptions{Timeout: timeout, Skew: skew, Public: public, AgentProvider: agentProvider})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2

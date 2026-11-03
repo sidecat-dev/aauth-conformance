@@ -17,10 +17,14 @@ import (
 // mode plays every other party itself over HTTPS: the Agent, the Agent
 // Provider, and the Resource or Person Server a role does not name.
 type Deployment struct {
-	Version  int                   `json:"version"`
-	ID       string                `json:"id"`
-	Revision string                `json:"revision"`
-	Roles    map[string]RemoteRole `json:"roles"`
+	Version  int    `json:"version"`
+	ID       string `json:"id"`
+	Revision string `json:"revision"`
+	// BootstrapProvider is the Agent Provider the suite enrolls its durable
+	// key at before presenting an agent token. The flag -agent-provider
+	// overrides it. Empty keeps the fixture provider.
+	BootstrapProvider string                `json:"bootstrap_provider,omitempty"`
+	Roles             map[string]RemoteRole `json:"roles"`
 }
 
 // RemoteRole names one suite role's deployed servers. Resource is the URL of
@@ -50,11 +54,16 @@ type RemoteRole struct {
 // RemoteOptions bound one remote run. Skew is how far, in seconds, a
 // server's issued-at time may be from the suite's clock. Public grades a
 // deployment the suite does not operate: host controls are not dialed, and
-// scenarios that need one are not exercised.
+// scenarios that need one are not exercised. AgentProvider is the bootstrap
+// Agent Provider the suite enrolls its key at. Empty keeps the fixture
+// provider, which a deployment can verify only when it can fetch that
+// provider's keys.
 type RemoteOptions struct {
-	Timeout time.Duration
-	Skew    int64
-	Public  bool
+	Timeout       time.Duration
+	Skew          int64
+	Public        bool
+	AgentProvider string
+	trust         map[string]*EnrolledAgent
 }
 
 // remoteDriver runs one suite role against deployed servers.
@@ -288,6 +297,20 @@ func RunRemote(ctx context.Context, s Suite, d Deployment, options RemoteOptions
 	if options.Timeout <= 0 {
 		options.Timeout = 5 * time.Second
 	}
+	if options.AgentProvider == "" {
+		options.AgentProvider = d.BootstrapProvider
+	}
+	if options.AgentProvider != "" {
+		trust, err := enrollTrust(ctx, options.AgentProvider, s.Fixture.AgentSeed, trustTargets(d), time.Now().Unix(), options.Timeout)
+		if err != nil {
+			return nil, err
+		}
+		options.trust = trust
+		for _, enrolled := range trust {
+			fmt.Printf("agent trust: %s enrolled at %s\n", enrolled.Agent, options.AgentProvider)
+			break
+		}
+	}
 	roles := []string{}
 	for role := range d.Roles {
 		roles = append(roles, role)
@@ -391,6 +414,9 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 		if driver.gap != nil {
 			reason = driver.gap(scenario, r)
 		}
+		if reason == "" && options.trust != nil && presentsSuiteAgent(role) {
+			reason = enrolledGap(scenario)
+		}
 		if reason != "" {
 			run.Cases = append(run.Cases, unexercisedCase(scenario, target, reason))
 			continue
@@ -404,6 +430,9 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 			f = driver.fixture(s.Fixture, scenario, remote)
 		} else {
 			f = r.fixture(s.Fixture, scenario, published, endpoints, options.Skew)
+		}
+		if presentsSuiteAgent(role) {
+			f = presentEnrolled(f, options.trust[r.PersonServer])
 		}
 		c := driver.run(ctx, f, scenario, target, Options{Timeout: options.Timeout})
 		if driver.unobserved != nil {

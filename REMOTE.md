@@ -186,6 +186,17 @@ name of the same shape. That name is not public DNS. Without `-public`, a run
 that still names it records `lookup ... no such host` and those assertions
 are errors.
 
+Set `bootstrap_provider` in the deployment file, or pass `-agent-provider`,
+to an Agent Provider the servers under test trust. The suite enrolls its
+durable key there and refreshes an agent token whose `ps` is the Person
+Server that role names. A Person Server accepts the token only when `ps` is
+its own issuer, so the provider has to copy `ps` from the refresh body. The
+hosted provider `https://ap.aauth.sidecat.dev` does. A scenario that needs
+an expired or shorter agent token is not exercised: this suite does not hold
+the provider's signing key. `supervision.server` still signs as the harness
+Person Server, so that role needs the callback receiver below. Enrollment
+does not publish that server.
+
 ## Name your servers
 
 ```json
@@ -241,6 +252,7 @@ build/aauth-conformance -remote deployment.json -out build/remote \
 | `-skew` | `5` | Seconds a server's clock may differ from the suite's. |
 | `-out` | `build/remote` | Directory for `ROLE.json` and `ROLE.md`, one pair per role. |
 | `-public` | off | Grade a deployment you do not operate. Omit host controls. `-listen` must not be loopback. |
+| `-agent-provider` | deployment `bootstrap_provider`, or none | Bootstrap Agent Provider to enroll the suite's durable key at. The suite presents that provider's agent token. A server is graded only when it trusts this provider. |
 | `-harness-names` | off | Print the names the suite serves, one per line, and exit. |
 
 The exit status is 0 when no role failed. A role whose assertions are all

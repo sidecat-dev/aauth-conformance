@@ -153,7 +153,10 @@ func buildPersonExchange(f Fixture, p PersonFixture, s Scenario, stage, person s
 	if s.Person.Mutation == "short-parent" {
 		exp = 45
 	}
-	agent, _ := mintJWT(f.APSeed, f.Kid, "aa-agent+jwt", map[string]any{"iss": f.Issuer, "dwk": "aauth-agent.json", "sub": f.Subject, "jti": s.ID + "-agent", "iat": f.Now + s.Token.IATOffset, "exp": f.Now + exp, "ps": p.Issuer, "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}})
+	agent, err := agentJWT(f, s.ID+"-agent", f.Now+s.Token.IATOffset, f.Now+exp, p.Issuer)
+	if err != nil {
+		return nil, nil, err
+	}
 	endpoint := p.personURL()
 	body := map[string]any{"resource": f.Origin}
 	if stage == "token" {
