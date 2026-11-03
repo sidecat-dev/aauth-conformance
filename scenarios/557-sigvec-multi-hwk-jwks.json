@@ -26,12 +26,12 @@
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "sha256": "ae5a32ebba22f16710bb1ec0dd326f9f7bbe590cb3c911ce8e02bb3c97568ab7",
       "index": 57
     },
     "vector": {
       "id": "multi-hwk-jwks",
-      "title": "two signatures on one request: sig1 under hwk and sig2 under jwks, both Ed25519",
+      "title": "two signatures on one request, sig1 under hwk and sig2 under jwks, both Ed25519; the verifier is configured to verify sig1 and sig2",
       "category": 3,
       "alg": "Ed25519",
       "now": 1800000000,
@@ -71,7 +71,7 @@
       ],
       "expect": {
         "outcome": "verify",
-        "basis": "signature-key lines 191 and 199: each signature has its own member keyed by its label, the complete Signature-Key is populated before any signature is created and each signature covers signature-key; lines 173 and 177: a verifier that verifies both labels selects each label's member, and each signature verifies over its own base"
+        "basis": "signature-key lines 173 and 181 leave the labels a verifier checks to application context, so this vector's verifier is configured to verify sig1 and sig2 in place of sig; lines 191 and 199: each signature has its own member keyed by its label, the complete Signature-Key is populated before any signature is created and each signature covers signature-key; line 177: the verifier selects each label's member, and each signature verifies over its own base"
       },
       "provenance": {
         "signed_by": "aauth-rust",
@@ -153,6 +153,6 @@
     }
   },
   "role_under_test": "vectors.signature-key",
-  "title": "Signature-Key vector multi-hwk-jwks: two signatures on one request: sig1 under hwk and sig2 under jwks, both Ed25519",
+  "title": "Signature-Key vector multi-hwk-jwks: two signatures on one request, sig1 under hwk and sig2 under jwks, both Ed25519; the verifier is configured to verify sig1 and sig2",
   "version": 1
 }

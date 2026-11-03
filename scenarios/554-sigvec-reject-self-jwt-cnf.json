@@ -20,7 +20,7 @@
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "sha256": "ae5a32ebba22f16710bb1ec0dd326f9f7bbe590cb3c911ce8e02bb3c97568ab7",
       "index": 54
     },
     "vector": {

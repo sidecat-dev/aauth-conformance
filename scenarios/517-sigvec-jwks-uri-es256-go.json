@@ -19,7 +19,7 @@
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "ae4c48392af2036e94f98fc0f735419c8c816033bffaa493c7c77f44da1a98e2",
+      "sha256": "ae5a32ebba22f16710bb1ec0dd326f9f7bbe590cb3c911ce8e02bb3c97568ab7",
       "index": 17
     },
     "vector": {
@@ -34,7 +34,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:2OuyxUqCVJWW0ZlEvCU3nNk8HywW+2c/YwLePdKoPiLhotoACXcG3PNJKYBt7Bd/GYHFvflDp4T+6dlBT8L5gQ==:",
+        "Signature": "sig=:SDNUg7wuQ0r7WYe8pbVJ+nXWyl5OgAi8KPjwfL5YjZNbIaiNqdytZdPv6HSacyX/SS0Dtztov6DYTjSKHg2DUg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-es256\""
       },
