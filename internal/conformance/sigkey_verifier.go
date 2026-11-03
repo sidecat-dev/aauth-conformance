@@ -34,10 +34,12 @@ type sigkeyLaunch struct {
 }
 
 // sigkeyDocuments serves the fixture discovery documents for one case: the
-// Agent Provider, the jwks_uri signer and the direct JWKS URL, each origin on
-// its own loopback listener. keySet selects the plain, mixed or
-// post-quantum-only key set for the Agent Provider (jwt) or the signer (jwks_uri).
-func sigkeyDocuments(f Fixture, k SigkeyFixture, scheme, keySet string) (map[string]string, func(), error) {
+// Agent Provider, the jwks_uri signer under the document the case names and
+// the direct JWKS URL, each origin on its own loopback listener. in.JWKS
+// selects the plain, mixed or post-quantum-only key set for the Agent
+// Provider (jwt) or the signer (jwks_uri).
+func sigkeyDocuments(f Fixture, k SigkeyFixture, in sigkeyVerifierInput) (map[string]string, func(), error) {
+	scheme, keySet := in.Scheme, in.JWKS
 	pq, pqErr := sigkeyMLDSA44(k.PQSeed)
 	member := func(key sigkeyKey, kid string) map[string]any { return sigkeyCloneJWK(key.public, "kid", kid) }
 	set := func(classical map[string]any, pqKid string, variant string) ([]any, error) {
@@ -75,8 +77,8 @@ func sigkeyDocuments(f Fixture, k SigkeyFixture, scheme, keySet string) (map[str
 			"/.well-known/jwks.json":        map[string]any{"keys": apKeys},
 		},
 		k.Signer.Issuer: {
-			"/.well-known/" + k.Signer.DWK: map[string]any{"issuer": k.Signer.Issuer, "jwks_uri": k.Signer.Issuer + "/.well-known/jwks.json"},
-			"/.well-known/jwks.json":       map[string]any{"keys": signerKeys},
+			"/.well-known/" + sigkeySignerDocument(k, in): map[string]any{"issuer": k.Signer.Issuer, "jwks_uri": k.Signer.Issuer + "/.well-known/jwks.json"},
+			"/.well-known/jwks.json":                      map[string]any{"keys": signerKeys},
 		},
 		"https://" + jwksURL.Host: {
 			jwksURL.Path: map[string]any{"keys": []any{member(sigkeyEd25519(k.Signer.Seed), k.Signer.Kid)}},
@@ -208,7 +210,7 @@ func sigkeyCredential(f Fixture, k SigkeyFixture, in sigkeyVerifierInput, id str
 		if in.Mutation == "unknown-kid" {
 			kid = "signer-absent"
 		}
-		return "jwks_uri", []string{"id", k.Signer.Issuer, "dwk", k.Signer.DWK, "kid", kid}, key, nil
+		return "jwks_uri", []string{"id", k.Signer.Issuer, "dwk", sigkeySignerDocument(k, in), "kid", kid}, key, nil
 	case "jwks":
 		return "jwks", []string{"url", k.JWKSURL, "kid", k.Signer.Kid}, signer, nil
 	case "self-jwt":
@@ -353,7 +355,7 @@ func sigkeyGrade(c Case, scenario Scenario, target Target, offered bool, respons
 func sigkeyVerifierCase(ctx context.Context, f Fixture, k SigkeyFixture, s Scenario, target Target, ap string, o Options, c *Case) (*Response, string) {
 	var in sigkeyVerifierInput
 	DecodeInput(s, &in)
-	documents, stop, err := sigkeyDocuments(f, k, in.Scheme, in.JWKS)
+	documents, stop, err := sigkeyDocuments(f, k, in)
 	if err != nil {
 		return nil, err.Error()
 	}
@@ -363,7 +365,7 @@ func sigkeyVerifierCase(ctx context.Context, f Fixture, k SigkeyFixture, s Scena
 		return nil, err.Error()
 	}
 	config := Bootstrap{Version: 1, Role: SigkeyVerifierRole, Now: f.Now, Issuer: f.Issuer, Resource: k.Verifier, APTransport: ap, AgentSeed: f.AgentSeed, Subject: f.Subject}
-	config.Extension, _ = json.Marshal(sigkeyLaunch{Verifier: k.Verifier, AgentProvider: f.Issuer, Signer: k.Signer.Issuer, SignerDWK: k.Signer.DWK, JWKSURL: k.JWKSURL, SelfJWTTyp: k.SelfJWTTyp, Algorithms: []string{"Ed25519", "ES256", "ES384", "RS256", "PS256"}, Documents: documents})
+	config.Extension, _ = json.Marshal(sigkeyLaunch{Verifier: k.Verifier, AgentProvider: f.Issuer, Signer: k.Signer.Issuer, SignerDWK: sigkeySignerDocument(k, in), JWKSURL: k.JWKSURL, SelfJWTTyp: k.SelfJWTTyp, Algorithms: []string{"Ed25519", "ES256", "ES384", "RS256", "PS256"}, Documents: documents})
 	ready, stopAdapter, err := startAdapter(ctx, target, config, o)
 	if err != nil {
 		return nil, err.Error()

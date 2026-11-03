@@ -72,6 +72,19 @@ func TestSigkeyOracleVerifiesOnlyTheExpectedKeyAndMember(t *testing.T) {
 	if sigkeyObserveSigned(job, signer, sigkeyCaptured(record)).Member {
 		t.Fatal("another jwks_uri identity accepted")
 	}
+	named := Scenario{ID: "oracle-named", Input: json.RawMessage(`{"scheme":"jwks_uri","alg":"Ed25519","mutation":"named-document"}`)}
+	record, err = sigkeyVerifierRequest(f, k, named)
+	if err != nil {
+		t.Fatal(err)
+	}
+	job = sigkeySignJob{Scheme: "jwks_uri", ID: k.Signer.Issuer, DWK: sigkeyNamedDocument, Kid: k.Signer.Kid}
+	if o := sigkeyObserveSigned(job, signer, sigkeyCaptured(record)); !o.Signed || !o.Member {
+		t.Fatalf("jwks_uri request naming %s not accepted: %+v", sigkeyNamedDocument, o)
+	}
+	job.DWK = k.Signer.DWK
+	if sigkeyObserveSigned(job, signer, sigkeyCaptured(record)).Member {
+		t.Fatal("named-document request carries the role document")
+	}
 	uncovered := Scenario{ID: "oracle-uncovered", Input: json.RawMessage(`{"scheme":"hwk","alg":"Ed25519","mutation":"uncovered-signature-key"}`)}
 	record, err = sigkeyVerifierRequest(f, k, uncovered)
 	if err != nil {

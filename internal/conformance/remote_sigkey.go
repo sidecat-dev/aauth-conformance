@@ -63,8 +63,9 @@ func sigkeyVariantKeys(classical sigkeyKey, kid, pqKid string, pq sigkeyKey, pqE
 	return keys
 }
 
-// sigkeyRemoteParties are the signer, the direct JWKS host and the variant
-// Agent Providers and signers. The fixture Agent Provider is a core party.
+// sigkeyRemoteParties are the signer, under its role document and under
+// sigkeyNamedDocument, the direct JWKS host and the variant Agent Providers
+// and signers. The fixture Agent Provider is a core party.
 func sigkeyRemoteParties(f Fixture) []harnessParty {
 	k, err := sigkeyFixture(f)
 	if err != nil {
@@ -73,6 +74,7 @@ func sigkeyRemoteParties(f Fixture) []harnessParty {
 	jwks, _ := url.Parse(k.JWKSURL)
 	parties := []harnessParty{
 		party(k.Signer.Issuer, k.Signer.DWK, k.Signer.Seed, k.Signer.Kid),
+		party(k.Signer.Issuer, sigkeyNamedDocument, k.Signer.Seed, k.Signer.Kid),
 		{issuer: "https://" + jwks.Host},
 	}
 	pq, pqErr := sigkeyMLDSA44(k.PQSeed)

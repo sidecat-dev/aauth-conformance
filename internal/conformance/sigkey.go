@@ -77,9 +77,25 @@ var (
 		"symmetric":               {"hwk", "jwt"},
 		"no-exp":                  {"jwt"},
 		"unknown-kid":             {"jwks_uri"},
+		"named-document":          {"jwks_uri"},
 	}
 	sigkeySignerSchemes = []string{"hwk", "jwt", "jwks_uri", "jwks", "self-jwt", "jkt-jwt"}
 )
+
+// sigkeyNamedDocument is the metadata document the jwks_uri signer also
+// publishes for the named-document mutation. Signature-Key makes dwk any
+// document name under /.well-known/ (JWKS URI Discovery, line 454), and this
+// is the name of that section's own example (line 479), not an AAuth role's.
+const sigkeyNamedDocument = "example-configuration"
+
+// sigkeySignerDocument is the document the jwks_uri signer names in one
+// verifier case.
+func sigkeySignerDocument(k SigkeyFixture, in sigkeyVerifierInput) string {
+	if in.Mutation == "named-document" {
+		return sigkeyNamedDocument
+	}
+	return k.Signer.DWK
+}
 
 func init() {
 	RegisterRole(SigkeyVerifierRole, ExtensionRole{Kinds: []string{"sigkey-pq"}, Validate: validateSigkeyVerifier, Run: runSigkeyVerifier})

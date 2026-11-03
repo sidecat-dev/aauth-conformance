@@ -652,7 +652,9 @@ verifier with independent code. Mutations: `uncovered-signature-key`,
 `sig`), `hwk-kid`, `alg-eddsa` (hwk `alg` or `cnf.jwk` `alg`),
 `header-eddsa` (JWS `alg`), `alg-kty` (an OKP key naming ES256), `alg-crv`
 (a P-384 key naming ES256), `symmetric` (an HS256 key, HMAC signature),
-`no-exp` and `unknown-kid`. Generic kinds grade the response; `sigkey-pq`
+`no-exp`, `unknown-kid` and `named-document` (the `jwks_uri` signer names
+`example-configuration`, the Signature-Key example, as its `dwk`, and the
+harness serves its metadata there). Generic kinds grade the response; `sigkey-pq`
 (a code string, `""` for any) passes when the request verified, or when the
 verifier answered 401 with that Signature-Error code: a verifier need not
 implement ML-DSA, but MUST refuse a key type it does not implement with

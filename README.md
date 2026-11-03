@@ -1,7 +1,7 @@
 # AAuth conformance scenarios
 
 Run the same wire scenarios against different AAuth implementations. The suite
-has 406 scenarios and 1,631 assertions in 24 roles:
+has 407 scenarios and 1,633 assertions in 24 roles:
 
 | Role | Scenario files | Scenarios | Assertions | Draft |
 | --- | --- | ---: | ---: | --- |
@@ -22,7 +22,7 @@ has 406 scenarios and 1,631 assertions in 24 roles:
 | `mission.resource` | 193 | 1 | 1 | protocol (Mission) |
 | `supervision.server` | 220-233 | 14 | 73 | Supervision |
 | `supervision.person-server` | 240-251 | 12 | 64 | Supervision |
-| `sigkey.verifier` | 300-329 | 30 | 56 | Signature-Key, protocol |
+| `sigkey.verifier` | 300-329, 342 | 31 | 58 | Signature-Key, protocol |
 | `sigkey.signer` | 330-341 | 12 | 36 | Signature-Key, protocol |
 | `vectors.library` | 400-493 | 94 | 105 | community test vectors |
 | `vectors.signature-key` | 500-557 | 58 | 116 | Signature-Key test vectors |
@@ -505,7 +505,8 @@ Rejection"); `sigkey.signer` grades the native request signer. Together they
 cover the checks the community conformance scoping issue
 ([aauth-dev/conformance#1](https://github.com/aauth-dev/conformance/issues/1))
 plans: correctly signed requests under every scheme and algorithm a library
-offers, live `/.well-known/<dwk>` discovery naming `jwks_uri`, a JWKS that
+offers, live `/.well-known/<dwk>` discovery naming `jwks_uri` (also under
+`example-configuration`, a document no AAuth role publishes), a JWKS that
 mixes Ed25519 with ML-DSA-44 (`AKP`), a JWKS holding only ML-DSA-44, and the
 refusals of an uncovered `signature-key`, `hwk` with `kid`, polymorphic
 `EdDSA`, `alg` against `kty` or `crv`, a symmetric key, an unknown scheme,

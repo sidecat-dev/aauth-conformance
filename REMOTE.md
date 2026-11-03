@@ -22,7 +22,7 @@ same clause-tagged reports as a launcher run, so the counts compare directly.
 | `r3.resource` | `resource` (four-party), optional `three_party_resource` | 10 of 10 | 10 |
 | `r3.issuer` | `person_server` | 4 of 4 | 4 |
 | `r3.federated-issuer` | `person_server`, `access_server` | 3 of 3 | 3 |
-| `sigkey.verifier` | `resource` (the verifier) | 30 of 30 | 30 |
+| `sigkey.verifier` | `resource` (the verifier) | 31 of 31 | 31 |
 
 "Scenarios run" counts the scenarios that run when you name every server
 and a control. The last column counts those that still run without a
@@ -86,7 +86,7 @@ names that `aauth-conformance -harness-names` prints:
 | `ss.conformance.test` | the supervision server (`aauth-supervisor.json`, with a `jwks_uri`) | your supervised Person Server |
 | `foreign-ss.conformance.test` | another supervision server, whose decisions your Person Server must refuse | your supervised Person Server |
 | `other.conformance.test` | a trusted server no R3 document entitles | your four-party R3 Resource |
-| `signer.conformance.test`, `keys.conformance.test` | the `jwks_uri` signer and a direct JWKS URL | your verifier |
+| `signer.conformance.test`, `keys.conformance.test` | the `jwks_uri` signer (`aauth-resource.json`, and `example-configuration` for a `dwk` that names no AAuth role) and a direct JWKS URL | your verifier |
 | `ap-mixed`, `ap-pq-only`, `signer-mixed`, `signer-pq-only` `.conformance.test` | the same parties with mixed or post-quantum-only key sets | your verifier |
 
 Server identifiers carry no port. Your servers must reach these names on
