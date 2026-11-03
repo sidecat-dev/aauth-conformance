@@ -129,6 +129,10 @@ assertions, each `not_exercised` with the reason in `detail`.
 Execution errors are retained on the case independently of clause claims. They
 make overall execution fail even when that case's assertions are not claimed.
 
+[REPORT-FORMAT.md](REPORT-FORMAT.md) is the versioned report other tools
+exchange. It names the subject, the assertor, each test, and the result.
+The role JSON in this section is the evidence that report carries.
+
 ## Person Server direct profile
 
 `fixture.person_server` supplies issuer, public test signing seed/kid, configured

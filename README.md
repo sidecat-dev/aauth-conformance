@@ -301,7 +301,8 @@ cargo test --manifest-path build/federated/aauth-rust-adapter/Cargo.toml --featu
 
 ## Extend or contribute
 
-[FORMAT.md](FORMAT.md) describes scenarios, pins and result semantics;
+[FORMAT.md](FORMAT.md) describes scenarios, pins and result semantics.
+[REPORT-FORMAT.md](REPORT-FORMAT.md) is the versioned report other tools exchange.
 [ADAPTERS.md](ADAPTERS.md) specifies the launcher protocol. Add cases before
 changing harness behavior and cite the exact pinned section. Keep implementation
 names and alternative expectations out of scenarios; retain disagreements in reports.
