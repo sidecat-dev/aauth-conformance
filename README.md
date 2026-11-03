@@ -1,7 +1,7 @@
 # AAuth conformance scenarios
 
 Run the same wire scenarios against different AAuth implementations. The suite
-has 398 scenarios and 1,601 assertions in 24 roles:
+has 400 scenarios and 1,606 assertions in 24 roles:
 
 | Role | Scenario files | Scenarios | Assertions | Draft |
 | --- | --- | ---: | ---: | --- |
@@ -25,7 +25,7 @@ has 398 scenarios and 1,601 assertions in 24 roles:
 | `sigkey.verifier` | 300-329 | 30 | 56 | Signature-Key, protocol |
 | `sigkey.signer` | 330-341 | 12 | 36 | Signature-Key, protocol |
 | `vectors.library` | 400-493 | 94 | 105 | community test vectors |
-| `vectors.signature-key` | 500-555 | 56 | 111 | Signature-Key test vectors |
+| `vectors.signature-key` | 500-557 | 58 | 116 | Signature-Key test vectors |
 | `bootstrap.agent-provider` | 700-714 | 15 | 52 | Bootstrap, protocol, Signature-Key |
 | `bootstrap.agent` | 720-725 | 6 | 23 | Bootstrap, Signature-Key, protocol |
 | `bootstrap.self-hosted` | 730-734 | 5 | 28 | Bootstrap, protocol |
