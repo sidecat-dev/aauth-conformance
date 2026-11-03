@@ -86,24 +86,39 @@ func (r Report) Matrix() map[string]map[string]Cell {
 	return matrix
 }
 func (r Report) Success() bool {
+	if r.Failed() {
+		return false
+	}
 	passed := false
 	for _, run := range r.Runs {
-		if run.Error != "" {
-			return false
-		}
 		for _, c := range run.Cases {
-			if c.Error != "" {
-				return false
-			}
 			for _, v := range c.Results {
-				if v.State == "fail" || v.State == "error" {
-					return false
-				}
 				passed = passed || v.State == "pass"
 			}
 		}
 	}
 	return passed
+}
+
+// Failed reports a real failure: a run or case error, or an assertion whose
+// state is fail or error. not_exercised and not_claimed are not failures.
+func (r Report) Failed() bool {
+	for _, run := range r.Runs {
+		if run.Error != "" {
+			return true
+		}
+		for _, c := range run.Cases {
+			if c.Error != "" {
+				return true
+			}
+			for _, v := range c.Results {
+				if v.State == "fail" || v.State == "error" {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 func (r Report) Markdown(out io.Writer) error {
 	var b strings.Builder

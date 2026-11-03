@@ -239,3 +239,89 @@ func TestRunRemoteReachesDeployedResourceOverTLS(t *testing.T) {
 		}
 	}
 }
+
+// Catches a public grade dialing a host control it does not operate, and
+// counting that unexercised role as a failed run.
+func TestPublicGradeOmitsHostControlAndDoesNotFailWhenUnexercised(t *testing.T) {
+	suite := loadSuite(t)
+	hits := 0
+	network := testServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits++
+		http.Error(w, "control was dialed", http.StatusInternalServerError)
+	}), "control.example")
+	role := RemoteRole{Agent: "aauth:agent@ap.example", Control: "https://control.example/hooks"}
+	d := Deployment{Version: 1, ID: "impl", Revision: "v1", Roles: map[string]RemoteRole{EventsAgentRole: role}}
+	reports, err := RunRemote(WithNetwork(context.Background(), network), suite, d, RemoteOptions{Timeout: time.Second, Public: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hits != 0 {
+		t.Fatalf("public grade dialed the host control %d times", hits)
+	}
+	if d.Roles[EventsAgentRole].Control != role.Control {
+		t.Fatal("public grade cleared control on the caller's deployment")
+	}
+	report := reports[0]
+	if report.Failed() {
+		t.Fatal("unexercised host-control role failed the grade")
+	}
+	if report.Success() {
+		t.Fatal("an unexercised role counted as a pass")
+	}
+	if report.Execution != "not_exercised" {
+		t.Fatalf("execution %s", report.Execution)
+	}
+	for _, c := range report.Runs[0].Cases {
+		if c.Error != "" {
+			t.Fatal(c.Error)
+		}
+		for _, result := range c.Results {
+			if result.State != "not_exercised" && result.State != "not_claimed" {
+				t.Fatalf("%s graded %s", c.ID, result.State)
+			}
+		}
+	}
+}
+
+// Catches treating an assertion error or a case error as a clean grade, and
+// treating not_exercised as a failure.
+func TestRemoteFailureIsAnAssertionErrorNotAnUnexercisedRole(t *testing.T) {
+	report := Report{Runs: []Run{{Cases: []Case{{Results: []Result{{State: "not_exercised"}}}}}}}
+	if report.Failed() || report.Success() {
+		t.Fatal("not_exercised was a pass or a failure")
+	}
+	report.Runs[0].Cases[0].Results = []Result{{State: "pass"}, {State: "not_exercised"}}
+	if report.Failed() || !report.Success() {
+		t.Fatal("a pass beside not_exercised was not a clean pass")
+	}
+	report.Runs[0].Cases[0].Results = []Result{{State: "error"}}
+	if !report.Failed() {
+		t.Fatal("assertion error was not a failure")
+	}
+	report.Runs[0].Cases[0].Results = []Result{{State: "fail"}}
+	if !report.Failed() {
+		t.Fatal("assertion fail was not a failure")
+	}
+	report.Runs[0].Cases[0] = Case{Error: "dial tcp: lookup control.example", Results: []Result{{State: "not_exercised"}}}
+	if !report.Failed() {
+		t.Fatal("case error was not a failure")
+	}
+}
+
+// Catches a public grade advertising a loopback callback the graded servers
+// cannot reach, or refusing a listener on all interfaces.
+func TestPublicCallbackRejectsLoopback(t *testing.T) {
+	for _, addr := range []string{"127.0.0.1:18443", "localhost:443", "[::1]:443"} {
+		if PublicListen(addr) == nil {
+			t.Fatalf("loopback accepted: %s", addr)
+		}
+	}
+	for _, addr := range []string{":443", "0.0.0.0:8443", "203.0.113.5:8443", "[::]:443"} {
+		if err := PublicListen(addr); err != nil {
+			t.Fatalf("%s: %v", addr, err)
+		}
+	}
+	if PublicListen("not-an-address") == nil {
+		t.Fatal("malformed listen accepted")
+	}
+}

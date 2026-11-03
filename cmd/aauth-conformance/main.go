@@ -51,6 +51,7 @@ func run() int {
 	skew := flag.Int64("skew", 5, "remote mode: seconds a server's issued-at time may differ from the suite's clock")
 	resolve := resolveFlags{}
 	flag.Var(resolve, "resolve", "remote mode: host:port=address to connect to instead of DNS (repeatable)")
+	public := flag.Bool("public", false, "remote mode: grade a deployment this suite does not operate; omit host controls and require a public callback listener")
 	names := flag.Bool("harness-names", false, "remote mode: print the host names the suite serves, one per line, and exit")
 	flag.Parse()
 	suite, err := conformance.Load(*suitePath)
@@ -67,7 +68,7 @@ func run() int {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	if *remotePath != "" {
-		return runRemote(ctx, suite, *remotePath, *out, *listen, *certFile, *keyFile, *caFile, resolve, *timeout, *skew)
+		return runRemote(ctx, suite, *remotePath, *out, *listen, *certFile, *keyFile, *caFile, resolve, *timeout, *skew, *public)
 	}
 	var targets conformance.Targets
 	if err = conformance.ReadJSON(*targetsPath, &targets); err != nil {
@@ -93,7 +94,13 @@ func run() int {
 
 // runRemote serves the suite's parties over HTTPS, runs every role the
 // deployment names and writes one report per role.
-func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out, listen, certFile, keyFile, caFile string, resolve resolveFlags, timeout time.Duration, skew int64) int {
+func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out, listen, certFile, keyFile, caFile string, resolve resolveFlags, timeout time.Duration, skew int64, public bool) int {
+	if public {
+		if err := conformance.PublicListen(listen); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 2
+		}
+	}
 	var deployment conformance.Deployment
 	if err := conformance.ReadJSON(deploymentPath, &deployment); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -112,7 +119,10 @@ func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out
 	}
 	defer stop()
 	ctx = conformance.WithHarness(conformance.WithNetwork(ctx, network), harness)
-	reports, err := conformance.RunRemote(ctx, suite, deployment, conformance.RemoteOptions{Timeout: timeout, Skew: skew})
+	if public {
+		fmt.Printf("public grade: host controls omitted; callback receiver %s\n", listen)
+	}
+	reports, err := conformance.RunRemote(ctx, suite, deployment, conformance.RemoteOptions{Timeout: timeout, Skew: skew, Public: public})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
@@ -121,7 +131,7 @@ func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out
 		fmt.Fprintln(os.Stderr, err)
 		return 2
 	}
-	passed := true
+	failed := false
 	for _, report := range reports {
 		base := filepath.Join(out, report.Role)
 		if err := writeReport(report, base+".json", base+".md"); err != nil {
@@ -129,10 +139,10 @@ func runRemote(ctx context.Context, suite conformance.Suite, deploymentPath, out
 			return 2
 		}
 		fmt.Println(summary(report))
-		passed = passed && report.Success()
+		failed = failed || report.Failed()
 	}
 	fmt.Printf("Reports: %s\n", out)
-	if !passed {
+	if failed {
 		return 1
 	}
 	return 0

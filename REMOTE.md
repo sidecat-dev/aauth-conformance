@@ -178,6 +178,14 @@ output:
 A deployment without a control still runs every scenario that needs none.
 Do not expose controls on a production server.
 
+`-public` grades a deployment you do not operate. It drops every `control`
+before the run, including one copied from a reference deployment, so the
+scenarios that need a control are not exercised and the suite does not dial
+them. A reference file often names `control.aauth-rust.internal`, or the Go
+name of the same shape. That name is not public DNS. Without `-public`, a run
+that still names it records `lookup ... no such host` and those assertions
+are errors.
+
 ## Name your servers
 
 ```json
@@ -226,18 +234,37 @@ build/aauth-conformance -remote deployment.json -out build/remote \
 
 | Flag | Default | Meaning |
 | --- | --- | --- |
-| `-listen` | `:443` | Address that serves the suite's own parties. |
+| `-listen` | `:443` | Address that serves the suite's own parties. This is the callback receiver. |
 | `-tls-cert`, `-tls-key` | none | PEM certificate and key for the suite's names. |
-| `-ca` | system roots | PEM roots to trust for your servers. |
+| `-ca` | system roots | PEM roots to trust for your servers. Leave it unset for public certificates. |
 | `-resolve` | DNS | `host:443=address` to connect to instead, like curl's `--resolve`. Repeatable. |
 | `-skew` | `5` | Seconds a server's clock may differ from the suite's. |
 | `-out` | `build/remote` | Directory for `ROLE.json` and `ROLE.md`, one pair per role. |
+| `-public` | off | Grade a deployment you do not operate. Omit host controls. `-listen` must not be loopback. |
 | `-harness-names` | off | Print the names the suite serves, one per line, and exit. |
 
-The exit codes are the same as a launcher run: 0 when every role passed, 1
-for a failed or incomplete role, 2 for invalid input. Each report records
-`"transport": "remote"` and names the servers it tested under the
-implementation's `remote`.
+The exit status is 0 when no role failed. A role whose assertions are all
+`not_exercised` or `not_claimed` did not fail, and its `execution` is
+`not_exercised`. The status is 1 when an assertion is `fail` or `error`, or
+a run or case records an error (`execution` `failed_or_incomplete`). It is 2
+for invalid input. A role with a passing assertion and no failure has
+`execution` `passed`. Each report records `"transport": "remote"` and names
+the servers it tested under the implementation's `remote`.
+
+### Callback receiver
+
+The scenarios that still run call back to the suite. A Resource delivers to
+the Agent Provider, an R3 issuer fetches documents under
+`https://resource.conformance.test/r3/`, a supervision server checks the
+Person Server it connected, and a supervised Person Server connects to
+`https://ss.conformance.test`. Those names have no public DNS. The graded
+deployment routes every name `-harness-names` prints to the suite's
+`-listen` address, and trusts the certificate that listener presents.
+
+`-public` refuses a loopback `-listen`. The graded servers are not on the
+suite's machine, so `127.0.0.1` is not a receiver they can reach. Listen on
+every interface (`:8443`, `0.0.0.0:8443`) or on a public IP. The deployment's
+route is what sends port 443 of the harness names to that address.
 
 ## How remote grading differs
 

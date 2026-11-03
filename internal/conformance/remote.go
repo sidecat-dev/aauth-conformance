@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/url"
 	"slices"
 	"sort"
@@ -47,10 +48,13 @@ type RemoteRole struct {
 }
 
 // RemoteOptions bound one remote run. Skew is how far, in seconds, a
-// server's issued-at time may be from the suite's clock.
+// server's issued-at time may be from the suite's clock. Public grades a
+// deployment the suite does not operate: host controls are not dialed, and
+// scenarios that need one are not exercised.
 type RemoteOptions struct {
 	Timeout time.Duration
 	Skew    int64
+	Public  bool
 }
 
 // remoteDriver runs one suite role against deployed servers.
@@ -275,6 +279,9 @@ func resourceIdentifier(value string) string {
 // RunRemote runs every role the deployment names and returns one report per
 // role, in the suite's role order. Exchanges use the context's Network.
 func RunRemote(ctx context.Context, s Suite, d Deployment, options RemoteOptions) ([]Report, error) {
+	if options.Public {
+		d = omitHostControl(d)
+	}
 	if err := ValidateDeployment(d, s); err != nil {
 		return nil, err
 	}
@@ -406,11 +413,48 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 		run.Cases = append(run.Cases, c)
 	}
 	report.Runs = []Run{run}
-	report.Execution = "failed_or_incomplete"
-	if report.Success() {
+	switch {
+	case report.Failed():
+		report.Execution = "failed_or_incomplete"
+	case report.Success():
 		report.Execution = "passed"
+	default:
+		report.Execution = "not_exercised"
 	}
 	return report
+}
+
+// omitHostControl returns a deployment that names no host control. The
+// caller's deployment is left as it was.
+func omitHostControl(d Deployment) Deployment {
+	roles := make(map[string]RemoteRole, len(d.Roles))
+	for name, role := range d.Roles {
+		role.Control = ""
+		roles[name] = role
+	}
+	d.Roles = roles
+	return d
+}
+
+// PublicListen reports whether addr can be the callback receiver a graded
+// deployment reaches over the public internet. Loopback is refused: the
+// graded servers are not on this machine. An empty host, 0.0.0.0, or ::
+// listens on every interface.
+func PublicListen(addr string) error {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return fmt.Errorf("-listen %q is not host:port", addr)
+	}
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		return nil
+	}
+	if strings.EqualFold(host, "localhost") {
+		return fmt.Errorf("-public callback receiver %s is loopback; the graded servers cannot reach it", addr)
+	}
+	if ip := net.ParseIP(host); ip != nil && ip.IsLoopback() {
+		return fmt.Errorf("-public callback receiver %s is loopback; the graded servers cannot reach it", addr)
+	}
+	return nil
 }
 
 // personEndpoints are the endpoints a deployed Person Server's metadata
