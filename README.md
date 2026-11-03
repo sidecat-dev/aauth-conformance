@@ -246,7 +246,7 @@ two auth tokens, then refuses a further 1000000 on the first token without
 lowering its remaining 500000. The fixture amounts, paths, and assertion kinds
 are in `FORMAT.md`. Older Rust checkouts without native AS/federation APIs
 can still run the other roles. A checkout without the Budget authorization
-endpoint fails scenarios 73–78.
+endpoint fails scenarios 73–78. The [Budgets implementation report](reports/budgets-implementation-report.md) records what aauth-go and aauth-rust do with that draft.
 
 Ten independent-PS cases play Agent, AP and PS entirely in the harness, testing
 the native Resource and AS with the same fixture credentials and wire recipe.
@@ -572,6 +572,8 @@ go run ./cmd/sigkey-vectors -targets build/sigvec/targets.json -check
 The last command re-signs every vector with both libraries and reports any
 byte that differs from the published file, apart from randomized
 signatures.
+
+Deterministic Budgets test vectors, produced from both libraries, are in [vectors/budgets/](vectors/budgets/).
 
 ## Bootstrap
 

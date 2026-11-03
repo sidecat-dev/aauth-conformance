@@ -1,0 +1,11 @@
+[package]
+name = "budget-vector-driver"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# aauth-rust-src is a symlink to an aauth-rust checkout, created by the
+# generator's host script. It is not part of this repository.
+[dependencies]
+aauth-rust-budgets = { path = "aauth-rust-src/crates/aauth-rust-budgets" }
+serde_json = "1"

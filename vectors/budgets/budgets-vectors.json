@@ -1,0 +1,3409 @@
+{
+  "version": 1,
+  "title": "AAuth Budgets test vectors",
+  "description": [
+    "Deterministic Budgets cases that aauth-go and aauth-rust both compute, checked against draft-hardt-aauth-budgets at commit 70d67375deb0bb002af7da0711fc58f6e8926e7e (3 October 2026).",
+    "A vector is published only when both libraries agree. disagreements lists the cases they do not agree on. Those entries are findings, not expected results.",
+    "Serializations record each library's header field or compact budget JSON. The expected value is the parsed members. Member order is not significant.",
+    "Evaluate a vector with no network: run the operation in input and compare it with expect. vectors/budgets/README.md describes every member."
+  ],
+  "drafts": [
+    {
+      "name": "draft-hardt-aauth-budgets",
+      "commit": "70d67375deb0bb002af7da0711fc58f6e8926e7e",
+      "sha256": "f00d34c91576476cdb30b7aa1aa13a0bc9fc1d99fc43b4f0389ccb3e8bf2e150",
+      "date": "2026-10-03",
+      "url": "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-budgets.md"
+    }
+  ],
+  "generated": {
+    "libraries": [
+      {
+        "id": "aauth-go",
+        "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+      },
+      {
+        "id": "aauth-rust",
+        "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+        "version": "0.1.0-alpha.28"
+      }
+    ],
+    "harness": "cmd/budget-vectors, driver-go against budgets and testutil.NewBudgetStore, driver-rust against aauth-rust-budgets"
+  },
+  "vectors": [
+    {
+      "id": "object.zero",
+      "title": "Zero amount is a budget",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":0,\"unit\":\"USD\",\"decimals\":0}",
+        "op": "object"
+      },
+      "expect": {
+        "amount": 0,
+        "decimals": 0,
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "{\"amount\":0,\"unit\":\"USD\",\"decimals\":0}",
+          "aauth-rust": "{\"amount\":0,\"decimals\":0,\"unit\":\"USD\"}"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 344 and 326: amount is a non-negative integer."
+      }
+    },
+    {
+      "id": "object.draft-example",
+      "title": "Budget object from the draft example",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":5000000,\"unit\":\"USD\",\"decimals\":6}",
+        "op": "object"
+      },
+      "expect": {
+        "amount": 5000000,
+        "decimals": 6,
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "{\"amount\":5000000,\"unit\":\"USD\",\"decimals\":6}",
+          "aauth-rust": "{\"amount\":5000000,\"decimals\":6,\"unit\":\"USD\"}"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 334-346."
+      }
+    },
+    {
+      "id": "object.auth-example",
+      "title": "Budget object from the auth token example",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":2000000,\"unit\":\"USD\",\"decimals\":6}",
+        "op": "object"
+      },
+      "expect": {
+        "amount": 2000000,
+        "decimals": 6,
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "{\"amount\":2000000,\"unit\":\"USD\",\"decimals\":6}",
+          "aauth-rust": "{\"amount\":2000000,\"decimals\":6,\"unit\":\"USD\"}"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 593 and 344-346."
+      }
+    },
+    {
+      "id": "object.max-amount",
+      "title": "Largest amount the draft allows",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":999999999999999,\"unit\":\"tokens\",\"decimals\":0}",
+        "op": "object"
+      },
+      "expect": {
+        "amount": 999999999999999,
+        "decimals": 0,
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "{\"amount\":999999999999999,\"unit\":\"tokens\",\"decimals\":0}",
+          "aauth-rust": "{\"amount\":999999999999999,\"decimals\":0,\"unit\":\"tokens\"}"
+        },
+        "unit": "tokens"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 326: implementations MUST NOT issue an amount above 999999999999999."
+      }
+    },
+    {
+      "id": "object.decimals-zero",
+      "title": "Scale zero",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":15,\"unit\":\"tokens\",\"decimals\":0}",
+        "op": "object"
+      },
+      "expect": {
+        "amount": 15,
+        "decimals": 0,
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "{\"amount\":15,\"unit\":\"tokens\",\"decimals\":0}",
+          "aauth-rust": "{\"amount\":15,\"decimals\":0,\"unit\":\"tokens\"}"
+        },
+        "unit": "tokens"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 346: decimals is a non-negative integer."
+      }
+    },
+    {
+      "id": "object.key-order",
+      "title": "Members in a different order",
+      "kind": "object",
+      "input": {
+        "json": "{\"unit\":\"USD\",\"decimals\":2,\"amount\":500}",
+        "op": "object"
+      },
+      "expect": {
+        "amount": 500,
+        "decimals": 2,
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "{\"amount\":500,\"unit\":\"USD\",\"decimals\":2}",
+          "aauth-rust": "{\"amount\":500,\"decimals\":2,\"unit\":\"USD\"}"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 344-346. JSON object order is not significant."
+      }
+    },
+    {
+      "id": "object.whitespace",
+      "title": "Whitespace around one object",
+      "kind": "object",
+      "input": {
+        "json": " \n{\"amount\":1,\"unit\":\"USD\",\"decimals\":2}\n",
+        "op": "object"
+      },
+      "expect": {
+        "amount": 1,
+        "decimals": 2,
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "{\"amount\":1,\"unit\":\"USD\",\"decimals\":2}",
+          "aauth-rust": "{\"amount\":1,\"decimals\":2,\"unit\":\"USD\"}"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 344-346."
+      }
+    },
+    {
+      "id": "object.missing-amount",
+      "title": "Amount omitted",
+      "kind": "object",
+      "input": {
+        "json": "{\"unit\":\"USD\",\"decimals\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 344: amount is required."
+      }
+    },
+    {
+      "id": "object.missing-unit",
+      "title": "Unit omitted",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1,\"decimals\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 345: unit is required."
+      }
+    },
+    {
+      "id": "object.missing-decimals",
+      "title": "Decimals omitted",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1,\"unit\":\"USD\"}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 346: decimals is required."
+      }
+    },
+    {
+      "id": "object.empty",
+      "title": "Empty object",
+      "kind": "object",
+      "input": {
+        "json": "{}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 344-346."
+      }
+    },
+    {
+      "id": "object.negative-amount",
+      "title": "Negative amount",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":-1,\"unit\":\"USD\",\"decimals\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 344: amount is a non-negative integer."
+      }
+    },
+    {
+      "id": "object.amount-above-carrier",
+      "title": "Amount above 15 digits",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1000000000000000,\"unit\":\"USD\",\"decimals\":0}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "range",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 326."
+      }
+    },
+    {
+      "id": "object.amount-fraction",
+      "title": "Fractional amount",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1.5,\"unit\":\"USD\",\"decimals\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 344: amount is an integer."
+      }
+    },
+    {
+      "id": "object.amount-one-point-zero",
+      "title": "Amount written as 1.0",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1.0,\"unit\":\"USD\",\"decimals\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 344: amount is an integer. A JSON number with a fraction is not an integer."
+      }
+    },
+    {
+      "id": "object.amount-string",
+      "title": "Amount as a string",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":\"1\",\"unit\":\"USD\",\"decimals\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 344."
+      }
+    },
+    {
+      "id": "object.empty-unit",
+      "title": "Empty unit",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1,\"unit\":\"\",\"decimals\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 345: unit is a string identifying what is metered."
+      }
+    },
+    {
+      "id": "object.negative-decimals",
+      "title": "Negative decimals",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1,\"unit\":\"USD\",\"decimals\":-1}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 346: decimals is a non-negative integer."
+      }
+    },
+    {
+      "id": "object.decimals-fraction",
+      "title": "Fractional decimals",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1,\"unit\":\"USD\",\"decimals\":1.5}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 346."
+      }
+    },
+    {
+      "id": "object.unknown-member",
+      "title": "Unknown member",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1,\"unit\":\"USD\",\"decimals\":6,\"future\":true}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 344-346 name amount, unit, and decimals. The draft does not say to ignore other members."
+      }
+    },
+    {
+      "id": "object.duplicate-amount",
+      "title": "Duplicate amount member",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1,\"unit\":\"USD\",\"decimals\":2,\"amount\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 344-346."
+      }
+    },
+    {
+      "id": "object.two-values",
+      "title": "Two JSON values",
+      "kind": "object",
+      "input": {
+        "json": "{\"amount\":1,\"unit\":\"USD\",\"decimals\":2}{\"amount\":1,\"unit\":\"USD\",\"decimals\":2}",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 334-346: the budget is one object."
+      }
+    },
+    {
+      "id": "object.null",
+      "title": "JSON null",
+      "kind": "object",
+      "input": {
+        "json": "null",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 334-346."
+      }
+    },
+    {
+      "id": "object.array",
+      "title": "JSON array",
+      "kind": "object",
+      "input": {
+        "json": "[{\"amount\":1,\"unit\":\"USD\",\"decimals\":2}]",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 334-346."
+      }
+    },
+    {
+      "id": "object.number",
+      "title": "JSON number",
+      "kind": "object",
+      "input": {
+        "json": "1",
+        "op": "object"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 334-346."
+      }
+    },
+    {
+      "id": "narrow.equal",
+      "title": "Granted amount equals the offer",
+      "kind": "narrowing",
+      "input": {
+        "granted": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "offered": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "narrow"
+      },
+      "expect": {
+        "outcome": "accept"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 267: each stage MUST NOT exceed the previous stage. An equal amount does not exceed it."
+      }
+    },
+    {
+      "id": "narrow.lower",
+      "title": "Granted amount is lower",
+      "kind": "narrowing",
+      "input": {
+        "granted": {
+          "amount": 200,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "offered": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "narrow"
+      },
+      "expect": {
+        "outcome": "accept"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 299 and 301: a later party MAY lower the amount."
+      }
+    },
+    {
+      "id": "narrow.zero",
+      "title": "Granted amount is zero",
+      "kind": "narrowing",
+      "input": {
+        "granted": {
+          "amount": 0,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "offered": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "narrow"
+      },
+      "expect": {
+        "outcome": "accept"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 344: zero is a non-negative amount, and it does not exceed the offer."
+      }
+    },
+    {
+      "id": "narrow.higher",
+      "title": "Granted amount exceeds the offer",
+      "kind": "narrowing",
+      "input": {
+        "granted": {
+          "amount": 501,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "offered": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "narrow"
+      },
+      "expect": {
+        "code": "exceeds",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 267."
+      }
+    },
+    {
+      "id": "narrow.unit",
+      "title": "Granted unit differs",
+      "kind": "narrowing",
+      "input": {
+        "granted": {
+          "amount": 200,
+          "decimals": 2,
+          "unit": "EUR"
+        },
+        "offered": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "narrow"
+      },
+      "expect": {
+        "code": "denomination",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 301: the PS MUST NOT change unit or decimals. The same rule binds the access server at line 602."
+      }
+    },
+    {
+      "id": "narrow.decimals",
+      "title": "Granted decimals differ",
+      "kind": "narrowing",
+      "input": {
+        "granted": {
+          "amount": 200,
+          "decimals": 6,
+          "unit": "USD"
+        },
+        "offered": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "narrow"
+      },
+      "expect": {
+        "code": "denomination",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 301."
+      }
+    },
+    {
+      "id": "narrow.unit-and-higher",
+      "title": "Unit differs and the amount is higher",
+      "kind": "narrowing",
+      "input": {
+        "granted": {
+          "amount": 900,
+          "decimals": 2,
+          "unit": "EUR"
+        },
+        "offered": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "narrow"
+      },
+      "expect": {
+        "code": "denomination",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 267 and 301. The denomination check is the one both libraries report."
+      }
+    },
+    {
+      "id": "header.success-example",
+      "title": "Draft success header",
+      "kind": "header",
+      "input": {
+        "field": "cost=221200, remaining=1568800, unit=\"USD\", decimals=6",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": 221200,
+        "decimals": 6,
+        "outcome": "accept",
+        "remaining": 1568800,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "cost=221200, remaining=1568800, unit=\"USD\", decimals=6",
+          "aauth-rust": "remaining=1568800, cost=221200, unit=\"USD\", decimals=6"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 615 and 621-625."
+      }
+    },
+    {
+      "id": "header.success-remaining-first",
+      "title": "Success header with remaining before cost",
+      "kind": "header",
+      "input": {
+        "field": "remaining=375, cost=125, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": 125,
+        "decimals": 2,
+        "outcome": "accept",
+        "remaining": 375,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "cost=125, remaining=375, unit=\"USD\", decimals=2",
+          "aauth-rust": "remaining=375, cost=125, unit=\"USD\", decimals=2"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 621-625. RFC 9651 does not fix dictionary order."
+      }
+    },
+    {
+      "id": "header.success-no-space",
+      "title": "Success header without spaces",
+      "kind": "header",
+      "input": {
+        "field": "remaining=375,cost=125,unit=\"USD\",decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": 125,
+        "decimals": 2,
+        "outcome": "accept",
+        "remaining": 375,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "cost=125, remaining=375, unit=\"USD\", decimals=2",
+          "aauth-rust": "remaining=375, cost=125, unit=\"USD\", decimals=2"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 621-625."
+      }
+    },
+    {
+      "id": "header.success-no-unit",
+      "title": "Success header without the unit pair",
+      "kind": "header",
+      "input": {
+        "field": "remaining=375, cost=125",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": 125,
+        "decimals": null,
+        "outcome": "accept",
+        "remaining": 375,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "cost=125, remaining=375",
+          "aauth-rust": "remaining=375, cost=125"
+        },
+        "unit": null
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 625: unit and decimals are optional, and a sender includes both or neither."
+      }
+    },
+    {
+      "id": "header.stream-example",
+      "title": "Draft stream header",
+      "kind": "header",
+      "input": {
+        "field": "remaining=1568800, reserved=431200, unit=\"USD\", decimals=6",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": 6,
+        "outcome": "accept",
+        "remaining": 1568800,
+        "required": null,
+        "reserved": 431200,
+        "serializations": {
+          "aauth-go": "remaining=1568800, reserved=431200, unit=\"USD\", decimals=6",
+          "aauth-rust": "remaining=1568800, reserved=431200, unit=\"USD\", decimals=6"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 668 and 623."
+      }
+    },
+    {
+      "id": "header.stream-no-unit",
+      "title": "Stream header without the unit pair",
+      "kind": "header",
+      "input": {
+        "field": "remaining=300, reserved=200",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": null,
+        "outcome": "accept",
+        "remaining": 300,
+        "required": null,
+        "reserved": 200,
+        "serializations": {
+          "aauth-go": "remaining=300, reserved=200",
+          "aauth-rust": "remaining=300, reserved=200"
+        },
+        "unit": null
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 623 and 625."
+      }
+    },
+    {
+      "id": "header.exhausted-example",
+      "title": "Draft exhausted header",
+      "kind": "header",
+      "input": {
+        "field": "remaining=0, unit=\"USD\", decimals=6",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": 6,
+        "outcome": "accept",
+        "remaining": 0,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=0, unit=\"USD\", decimals=6",
+          "aauth-rust": "remaining=0, unit=\"USD\", decimals=6"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 643 and 737. A refusal carries no cost."
+      }
+    },
+    {
+      "id": "header.exhausted-no-unit",
+      "title": "Exhausted header without the unit pair",
+      "kind": "header",
+      "input": {
+        "field": "remaining=0",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": null,
+        "outcome": "accept",
+        "remaining": 0,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=0",
+          "aauth-rust": "remaining=0"
+        },
+        "unit": null
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 621 and 724."
+      }
+    },
+    {
+      "id": "header.insufficient-example",
+      "title": "Draft insufficient-budget header",
+      "kind": "header",
+      "input": {
+        "field": "remaining=150000, required=400000, unit=\"USD\", decimals=6",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": 6,
+        "outcome": "accept",
+        "remaining": 150000,
+        "required": 400000,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=150000, required=400000, unit=\"USD\", decimals=6",
+          "aauth-rust": "remaining=150000, required=400000, unit=\"USD\", decimals=6"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 755 and 624."
+      }
+    },
+    {
+      "id": "header.insufficient-no-unit",
+      "title": "Insufficient header without the unit pair",
+      "kind": "header",
+      "input": {
+        "field": "remaining=150, required=400",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": null,
+        "outcome": "accept",
+        "remaining": 150,
+        "required": 400,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=150, required=400",
+          "aauth-rust": "remaining=150, required=400"
+        },
+        "unit": null
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 624."
+      }
+    },
+    {
+      "id": "header.remaining-only",
+      "title": "Remaining alone",
+      "kind": "header",
+      "input": {
+        "field": "remaining=375",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": null,
+        "outcome": "accept",
+        "remaining": 375,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=375",
+          "aauth-rust": "remaining=375"
+        },
+        "unit": null
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621: remaining is the required member. A served metered response must not omit both cost and reserved (line 692); a recipient can still parse remaining on its own."
+      }
+    },
+    {
+      "id": "header.zero-cost",
+      "title": "Cost zero",
+      "kind": "header",
+      "input": {
+        "field": "remaining=500, cost=0, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": 0,
+        "decimals": 2,
+        "outcome": "accept",
+        "remaining": 500,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "cost=0, remaining=500, unit=\"USD\", decimals=2",
+          "aauth-rust": "remaining=500, cost=0, unit=\"USD\", decimals=2"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 622: cost is a non-negative integer."
+      }
+    },
+    {
+      "id": "header.zero-reserved",
+      "title": "Reserved zero",
+      "kind": "header",
+      "input": {
+        "field": "remaining=500, reserved=0, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": 2,
+        "outcome": "accept",
+        "remaining": 500,
+        "required": null,
+        "reserved": 0,
+        "serializations": {
+          "aauth-go": "remaining=500, reserved=0, unit=\"USD\", decimals=2",
+          "aauth-rust": "remaining=500, reserved=0, unit=\"USD\", decimals=2"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 623: reserved is a non-negative integer."
+      }
+    },
+    {
+      "id": "header.unknown-member",
+      "title": "Unknown member is ignored",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, cost=1, future=1, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": 1,
+        "decimals": 2,
+        "outcome": "accept",
+        "remaining": 10,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "cost=1, remaining=10, unit=\"USD\", decimals=2",
+          "aauth-rust": "remaining=10, cost=1, unit=\"USD\", decimals=2"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 627: recipients MUST ignore members they do not recognize."
+      }
+    },
+    {
+      "id": "header.unknown-boolean",
+      "title": "Unknown boolean member is ignored",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, future=?1",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": null,
+        "outcome": "accept",
+        "remaining": 10,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=10",
+          "aauth-rust": "remaining=10"
+        },
+        "unit": null
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 627."
+      }
+    },
+    {
+      "id": "header.empty",
+      "title": "Empty field",
+      "kind": "header",
+      "input": {
+        "field": "",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621: remaining is required."
+      }
+    },
+    {
+      "id": "header.cost-only",
+      "title": "Cost without remaining",
+      "kind": "header",
+      "input": {
+        "field": "cost=221200",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621. A trailer may be cost alone (line 699); a header may not."
+      }
+    },
+    {
+      "id": "header.negative-remaining",
+      "title": "Negative remaining",
+      "kind": "header",
+      "input": {
+        "field": "remaining=-1",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621: remaining is a non-negative integer."
+      }
+    },
+    {
+      "id": "header.remaining-above-carrier",
+      "title": "Remaining above 15 digits",
+      "kind": "header",
+      "input": {
+        "field": "remaining=1000000000000000",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 323 and 621."
+      }
+    },
+    {
+      "id": "header.remaining-string",
+      "title": "Remaining as a string",
+      "kind": "header",
+      "input": {
+        "field": "remaining=\"10\"",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621: remaining is an Integer."
+      }
+    },
+    {
+      "id": "header.remaining-decimal",
+      "title": "Remaining as a decimal",
+      "kind": "header",
+      "input": {
+        "field": "remaining=1.5",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621."
+      }
+    },
+    {
+      "id": "header.remaining-boolean",
+      "title": "Remaining as a boolean",
+      "kind": "header",
+      "input": {
+        "field": "remaining=?1",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621."
+      }
+    },
+    {
+      "id": "header.remaining-token",
+      "title": "Remaining as a token",
+      "kind": "header",
+      "input": {
+        "field": "remaining=USD",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621."
+      }
+    },
+    {
+      "id": "header.unit-only",
+      "title": "Unit without decimals",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, unit=\"USD\"",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 625: the pair is both or neither."
+      }
+    },
+    {
+      "id": "header.decimals-only",
+      "title": "Decimals without unit",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 625."
+      }
+    },
+    {
+      "id": "header.empty-unit",
+      "title": "Empty unit",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, unit=\"\", decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 625."
+      }
+    },
+    {
+      "id": "header.parameter",
+      "title": "Parameter on remaining",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10;k=1",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 612: AAuth-Budget is a Dictionary of members, not a parameterized item."
+      }
+    },
+    {
+      "id": "header.semicolons",
+      "title": "Members separated by semicolons",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10; cost=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 615 separates members with commas. A semicolon starts structured-field parameters."
+      }
+    },
+    {
+      "id": "header.duplicate-remaining",
+      "title": "Duplicate remaining key",
+      "kind": "header",
+      "input": {
+        "field": "remaining=1, remaining=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": null,
+        "decimals": null,
+        "outcome": "accept",
+        "remaining": 2,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=2",
+          "aauth-rust": "remaining=2"
+        },
+        "unit": null
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 621 and RFC 9651 dictionary keys."
+      }
+    },
+    {
+      "id": "header.format-success",
+      "title": "Format a completed request",
+      "kind": "header",
+      "input": {
+        "cost": 125,
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "kind": "success",
+        "op": "header-format",
+        "remaining": 375
+      },
+      "expect": {
+        "cost": 125,
+        "decimals": 2,
+        "outcome": "accept",
+        "remaining": 375,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "cost=125, remaining=375, unit=\"USD\", decimals=2",
+          "aauth-rust": "remaining=375, cost=125, unit=\"USD\", decimals=2"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 621-625."
+      }
+    },
+    {
+      "id": "header.format-stream",
+      "title": "Format a hold whose cost is not known yet",
+      "kind": "header",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "kind": "reserved",
+        "op": "header-format",
+        "remaining": 300,
+        "reserved": 200
+      },
+      "expect": {
+        "cost": null,
+        "decimals": 2,
+        "outcome": "accept",
+        "remaining": 300,
+        "required": null,
+        "reserved": 200,
+        "serializations": {
+          "aauth-go": "remaining=300, reserved=200, unit=\"USD\", decimals=2",
+          "aauth-rust": "remaining=300, reserved=200, unit=\"USD\", decimals=2"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 660-668."
+      }
+    },
+    {
+      "id": "header.format-exhausted",
+      "title": "Format an exhausted refusal",
+      "kind": "header",
+      "input": {
+        "grant": {
+          "amount": 5000000,
+          "decimals": 6,
+          "unit": "USD"
+        },
+        "kind": "refusal",
+        "op": "header-format",
+        "remaining": 0
+      },
+      "expect": {
+        "cost": null,
+        "decimals": 6,
+        "outcome": "accept",
+        "remaining": 0,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=0, unit=\"USD\", decimals=6",
+          "aauth-rust": "remaining=0, unit=\"USD\", decimals=6"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 724 and 737."
+      }
+    },
+    {
+      "id": "header.format-insufficient",
+      "title": "Format an insufficient-budget refusal",
+      "kind": "header",
+      "input": {
+        "grant": {
+          "amount": 5000000,
+          "decimals": 6,
+          "unit": "USD"
+        },
+        "kind": "refusal",
+        "op": "header-format",
+        "remaining": 150000,
+        "required": 400000
+      },
+      "expect": {
+        "cost": null,
+        "decimals": 6,
+        "outcome": "accept",
+        "remaining": 150000,
+        "required": 400000,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "remaining=150000, required=400000, unit=\"USD\", decimals=6",
+          "aauth-rust": "remaining=150000, required=400000, unit=\"USD\", decimals=6"
+        },
+        "unit": "USD"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 724 and 755."
+      }
+    },
+    {
+      "id": "trailer.cost-example",
+      "title": "Cost-only trailer from the draft",
+      "kind": "trailer",
+      "input": {
+        "cost": 221200,
+        "op": "trailer-format"
+      },
+      "expect": {
+        "listed": "AAuth-Budget",
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "cost=221200",
+          "aauth-rust": "cost=221200"
+        }
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 673 and 699: a trailer carries cost and nothing else."
+      }
+    },
+    {
+      "id": "trailer.zero",
+      "title": "Trailer cost zero",
+      "kind": "trailer",
+      "input": {
+        "cost": 0,
+        "op": "trailer-format"
+      },
+      "expect": {
+        "listed": "AAuth-Budget",
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "cost=0",
+          "aauth-rust": "cost=0"
+        }
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 622: cost is a non-negative integer."
+      }
+    },
+    {
+      "id": "trailer.negative",
+      "title": "Negative trailer cost",
+      "kind": "trailer",
+      "input": {
+        "cost": -1,
+        "op": "trailer-format"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 622."
+      }
+    },
+    {
+      "id": "trailer.above-carrier",
+      "title": "Trailer cost above 15 digits",
+      "kind": "trailer",
+      "input": {
+        "cost": 1000000000000000,
+        "op": "trailer-format"
+      },
+      "expect": {
+        "code": "range",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 323."
+      }
+    },
+    {
+      "id": "trailer.restate-cost",
+      "title": "Trailer restates a header that already carried cost",
+      "kind": "trailer",
+      "input": {
+        "cost": 50,
+        "header": "remaining=375, cost=125, unit=\"USD\", decimals=2",
+        "op": "trailer-restate"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 699: a trailer MUST NOT restate a member the header carried."
+      }
+    },
+    {
+      "id": "trailer.after-reserved",
+      "title": "Trailer cost within the hold",
+      "kind": "trailer",
+      "input": {
+        "cost": 125,
+        "header": "remaining=300, reserved=200, unit=\"USD\", decimals=2",
+        "op": "trailer-restate"
+      },
+      "expect": {
+        "outcome": "accept",
+        "serializations": {
+          "aauth-go": "cost=125",
+          "aauth-rust": "cost=125"
+        }
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 668-676 and 699."
+      }
+    },
+    {
+      "id": "meter.reserve-commit-refuse",
+      "title": "Reserve, commit part, refuse what does not fit, then exhaust",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 200,
+            "id": "h1",
+            "op": "reserve"
+          },
+          {
+            "cost": 125,
+            "id": "h1",
+            "op": "commit"
+          },
+          {
+            "hold": 400,
+            "id": "h2",
+            "op": "reserve"
+          },
+          {
+            "hold": 375,
+            "id": "h3",
+            "op": "reserve"
+          },
+          {
+            "cost": 375,
+            "id": "h3",
+            "op": "commit"
+          },
+          {
+            "hold": 1,
+            "id": "h4",
+            "op": "reserve"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 300,
+            "reserved": 200
+          },
+          {
+            "committed": 125,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "commit",
+            "outcome": "accept",
+            "remaining": 375,
+            "reserved": 0
+          },
+          {
+            "code": "insufficient",
+            "committed": 125,
+            "id": "h2",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 375,
+            "reserved": 0
+          },
+          {
+            "committed": 125,
+            "id": "h3",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 0,
+            "reserved": 375
+          },
+          {
+            "committed": 500,
+            "id": "h3",
+            "jti": "token-1",
+            "op": "commit",
+            "outcome": "accept",
+            "remaining": 0,
+            "reserved": 0
+          },
+          {
+            "code": "exhausted",
+            "committed": 500,
+            "id": "h4",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 0,
+            "reserved": 0
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 909 and 724. Committed consumption plus outstanding reservations stay within the grant. A refusal does not draw the grant down."
+      }
+    },
+    {
+      "id": "meter.release",
+      "title": "Release a hold without posting it",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 200,
+            "id": "h1",
+            "op": "reserve"
+          },
+          {
+            "id": "h1",
+            "op": "release"
+          },
+          {
+            "hold": 500,
+            "id": "h2",
+            "op": "reserve"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 300,
+            "reserved": 200
+          },
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "release",
+            "outcome": "accept",
+            "remaining": 500,
+            "reserved": 0
+          },
+          {
+            "committed": 0,
+            "id": "h2",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 0,
+            "reserved": 500
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 724: a refusal does not draw down the budget. Releasing a hold returns it."
+      }
+    },
+    {
+      "id": "meter.commit-zero",
+      "title": "Commit none of a hold",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 200,
+            "id": "h1",
+            "op": "reserve"
+          },
+          {
+            "cost": 0,
+            "id": "h1",
+            "op": "commit"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 300,
+            "reserved": 200
+          },
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "commit",
+            "outcome": "accept",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 623 and 676: the unspent hold returns to the grant."
+      }
+    },
+    {
+      "id": "meter.commit-above-hold",
+      "title": "Commit more than the hold",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 200,
+            "id": "h1",
+            "op": "reserve"
+          },
+          {
+            "cost": 201,
+            "id": "h1",
+            "op": "commit"
+          },
+          {
+            "id": "h1",
+            "op": "release"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 300,
+            "reserved": 200
+          },
+          {
+            "code": "rejected",
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "commit",
+            "outcome": "refuse",
+            "remaining": 300,
+            "reserved": 200
+          },
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "release",
+            "outcome": "accept",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 909: consumption must not exceed the grant, and a hold is the bound for that request."
+      }
+    },
+    {
+      "id": "meter.two-holds",
+      "title": "Two holds on one token",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 100,
+            "id": "h1",
+            "op": "reserve"
+          },
+          {
+            "hold": 100,
+            "id": "h2",
+            "op": "reserve"
+          },
+          {
+            "cost": 40,
+            "id": "h1",
+            "op": "commit"
+          },
+          {
+            "id": "h2",
+            "op": "release"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 400,
+            "reserved": 100
+          },
+          {
+            "committed": 0,
+            "id": "h2",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 300,
+            "reserved": 200
+          },
+          {
+            "committed": 40,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "commit",
+            "outcome": "accept",
+            "remaining": 360,
+            "reserved": 100
+          },
+          {
+            "committed": 40,
+            "id": "h2",
+            "jti": "token-1",
+            "op": "release",
+            "outcome": "accept",
+            "remaining": 460,
+            "reserved": 0
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 913: committed consumption plus outstanding reservations MUST NOT exceed the grant."
+      }
+    },
+    {
+      "id": "meter.two-tokens",
+      "title": "Two tokens do not share a grant",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 200,
+            "id": "a",
+            "jti": "token-1",
+            "op": "reserve"
+          },
+          {
+            "hold": 200,
+            "id": "b",
+            "jti": "token-2",
+            "op": "reserve"
+          },
+          {
+            "cost": 200,
+            "id": "a",
+            "jti": "token-1",
+            "op": "commit"
+          },
+          {
+            "hold": 300,
+            "id": "c",
+            "jti": "token-2",
+            "op": "reserve"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "committed": 0,
+            "id": "a",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 300,
+            "reserved": 200
+          },
+          {
+            "committed": 0,
+            "id": "b",
+            "jti": "token-2",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 300,
+            "reserved": 200
+          },
+          {
+            "committed": 200,
+            "id": "a",
+            "jti": "token-1",
+            "op": "commit",
+            "outcome": "accept",
+            "remaining": 300,
+            "reserved": 0
+          },
+          {
+            "committed": 0,
+            "id": "c",
+            "jti": "token-2",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 0,
+            "reserved": 500
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 631: the reported figures are this auth token's budget."
+      }
+    },
+    {
+      "id": "meter.exact-remaining",
+      "title": "Reserve exactly what remains",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 500,
+            "id": "h1",
+            "op": "reserve"
+          },
+          {
+            "hold": 1,
+            "id": "h2",
+            "op": "reserve"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 0,
+            "reserved": 500
+          },
+          {
+            "code": "exhausted",
+            "committed": 0,
+            "id": "h2",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 0,
+            "reserved": 500
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 909."
+      }
+    },
+    {
+      "id": "meter.spent-grant",
+      "title": "A grant of zero is already exhausted",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 0,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 1,
+            "id": "h1",
+            "op": "reserve"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "code": "exhausted",
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 0,
+            "reserved": 0
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 724 and 742."
+      }
+    },
+    {
+      "id": "meter.negative-hold",
+      "title": "Negative hold",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": -1,
+            "id": "h1",
+            "op": "reserve"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "code": "rejected",
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 623: a reservation is a non-negative integer."
+      }
+    },
+    {
+      "id": "meter.unknown-hold",
+      "title": "Commit a hold that was not reserved",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "cost": 1,
+            "id": "missing",
+            "op": "commit"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "code": "rejected",
+            "committed": 0,
+            "id": "missing",
+            "jti": "token-1",
+            "op": "commit",
+            "outcome": "refuse",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets line 909."
+      }
+    }
+  ],
+  "disagreements": [
+    {
+      "id": "header.max-remaining",
+      "title": "Remaining at the 15-digit limit",
+      "kind": "header",
+      "input": {
+        "field": "remaining=999999999999999, cost=0",
+        "op": "header-parse"
+      },
+      "basis": "Budgets lines 323 and 621.",
+      "aauth-go": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "cost": 0,
+        "decimals": null,
+        "field": "remaining=999999999999999, cost=0",
+        "outcome": "accept",
+        "remaining": 999999999999999,
+        "required": null,
+        "reserved": null,
+        "unit": null
+      }
+    },
+    {
+      "id": "header.cost-and-reserved",
+      "title": "Cost and reserved together",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, cost=4, reserved=8, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "basis": "Budgets line 623: reserved is meaningful where cost is not yet known. The draft does not forbid both on one field.",
+      "aauth-go": {
+        "code": "both",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "cost": 4,
+        "decimals": 2,
+        "field": "remaining=10, cost=4, reserved=8, unit=\"USD\", decimals=2",
+        "outcome": "accept",
+        "remaining": 10,
+        "required": null,
+        "reserved": 8,
+        "unit": "USD"
+      }
+    },
+    {
+      "id": "header.required-equal",
+      "title": "Required equal to remaining",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, required=10, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "basis": "Budgets line 624: required is the maximum cost of a request that did not fit. The draft does not say the member must be greater than remaining.",
+      "aauth-go": {
+        "code": "required",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "cost": null,
+        "decimals": 2,
+        "field": "remaining=10, required=10, unit=\"USD\", decimals=2",
+        "outcome": "accept",
+        "remaining": 10,
+        "required": 10,
+        "reserved": null,
+        "unit": "USD"
+      }
+    },
+    {
+      "id": "header.required-below",
+      "title": "Required below remaining",
+      "kind": "header",
+      "input": {
+        "field": "remaining=11, required=10, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "basis": "Budgets line 624.",
+      "aauth-go": {
+        "code": "required",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "cost": null,
+        "decimals": 2,
+        "field": "remaining=11, required=10, unit=\"USD\", decimals=2",
+        "outcome": "accept",
+        "remaining": 11,
+        "required": 10,
+        "reserved": null,
+        "unit": "USD"
+      }
+    },
+    {
+      "id": "header.cost-and-required",
+      "title": "Cost and required together",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, cost=1, required=20",
+        "op": "header-parse"
+      },
+      "basis": "Budgets lines 622 and 624. A refusal carries no cost (line 724).",
+      "aauth-go": {
+        "code": "exclusive",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "cost": 1,
+        "decimals": null,
+        "field": "remaining=10, cost=1, required=20",
+        "outcome": "accept",
+        "remaining": 10,
+        "required": 20,
+        "reserved": null,
+        "unit": null
+      }
+    },
+    {
+      "id": "header.reserved-and-required",
+      "title": "Reserved and required together",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, reserved=5, required=20",
+        "op": "header-parse"
+      },
+      "basis": "Budgets lines 623 and 624.",
+      "aauth-go": {
+        "code": "exclusive",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "cost": null,
+        "decimals": null,
+        "field": "remaining=10, reserved=5, required=20",
+        "outcome": "accept",
+        "remaining": 10,
+        "required": 20,
+        "reserved": 5,
+        "unit": null
+      }
+    },
+    {
+      "id": "header.format-required-equal",
+      "title": "Format required equal to remaining",
+      "kind": "header",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "kind": "refusal",
+        "op": "header-format",
+        "remaining": 10,
+        "required": 10
+      },
+      "basis": "Budgets line 624.",
+      "aauth-go": {
+        "code": "required",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "cost": null,
+        "decimals": 2,
+        "field": "remaining=10, required=10, unit=\"USD\", decimals=2",
+        "outcome": "accept",
+        "remaining": 10,
+        "required": 10,
+        "reserved": null,
+        "unit": "USD"
+      }
+    },
+    {
+      "id": "header.format-over-grant",
+      "title": "Format cost and remaining above the grant",
+      "kind": "header",
+      "input": {
+        "cost": 200,
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "kind": "success",
+        "op": "header-format",
+        "remaining": 400
+      },
+      "basis": "Budgets lines 621-622. The draft does not say a sender must reject a field whose figures sum above the grant.",
+      "aauth-go": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "cost": 200,
+        "decimals": 2,
+        "field": "remaining=400, cost=200, unit=\"USD\", decimals=2",
+        "outcome": "accept",
+        "remaining": 400,
+        "required": null,
+        "reserved": null,
+        "unit": "USD"
+      }
+    },
+    {
+      "id": "trailer.cost-above-reserved",
+      "title": "Trailer cost above the reserved hold",
+      "kind": "trailer",
+      "input": {
+        "cost": 250,
+        "header": "remaining=300, reserved=200, unit=\"USD\", decimals=2",
+        "op": "trailer-restate"
+      },
+      "basis": "Budgets lines 676 and 909. The balance formula subtracts cost from remaining plus reserved. The draft does not say a trailer parser must reject cost above reserved.",
+      "aauth-go": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "aauth-rust": {
+        "field": "cost=250",
+        "outcome": "accept"
+      }
+    },
+    {
+      "id": "meter.zero-hold",
+      "title": "Reserve a hold of zero",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 0,
+            "id": "h1",
+            "op": "reserve"
+          }
+        ]
+      },
+      "basis": "Budgets line 623. The draft does not say whether a zero hold is a reservation.",
+      "aauth-go": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "code": "rejected",
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      },
+      "aauth-rust": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "accept",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "meter.hold-above-carrier",
+      "title": "Hold above 15 digits",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 1000000000000000,
+            "id": "h1",
+            "op": "reserve"
+          }
+        ]
+      },
+      "basis": "Budgets line 323: derived figures stay inside the 15-digit carrier.",
+      "aauth-go": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "code": "insufficient",
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      },
+      "aauth-rust": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "code": "rejected",
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      }
+    }
+  ]
+}
