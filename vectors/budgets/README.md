@@ -1,8 +1,8 @@
 # Budgets test vectors
 
-`budgets-vectors.json` is the authoritative set. It holds the Budgets cases that aauth-go (`ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535`) and aauth-rust `v0.1.0-alpha.28` (`ed4671b6a6b03993480a1b7fa8ca156c6ae607bd`) both compute, against [draft-hardt-aauth-budgets](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-budgets.md) at commit `70d67375deb0bb002af7da0711fc58f6e8926e7e` (3 October 2026).
+`budgets-vectors.json` is the authoritative set. It holds the Budgets cases that aauth-go (`567e556af2bd7fc931143e679dd228b709111797`) and aauth-rust `v0.1.0-alpha.28` (`ed4671b6a6b03993480a1b7fa8ca156c6ae607bd`) both compute, against [draft-hardt-aauth-budgets](https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-budgets.md) at commit `70d67375deb0bb002af7da0711fc58f6e8926e7e` (3 October 2026).
 
-The file contains 81 vectors: 25 budget objects, 7 narrowing cases, 33 header cases, 6 trailer cases, and 10 metering sequences. A case is a vector only when both libraries return the same result. `disagreements` lists the other 11 cases. Those entries are findings. They are not expected results, and an implementation is not graded against either side.
+The file contains 82 vectors: 25 budget objects, 7 narrowing cases, 34 header cases, 6 trailer cases, and 10 metering sequences. A case is a vector only when both libraries return the same result. `disagreements` lists the other 10 cases. Those entries are findings. They are not expected results, and an implementation is not graded against either side.
 
 No network is required to evaluate a vector. Read `input`, run that operation, and compare the result with `expect`.
 

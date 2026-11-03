@@ -14,10 +14,10 @@ Implementation Status says implementation reports and test vectors are expected 
 
 ## Implementations
 
-- aauth-go, revision `ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535`. Budget objects, narrowing, the `AAuth-Budget` field, trailers, and usage queries are in package `budgets`. Metering is `resource.BudgetStore` and `resource.BudgetReserver`. The Person Server is package `personserver`. The Access Server is package `accessserver`.
+- aauth-go, revision `567e556af2bd7fc931143e679dd228b709111797`. Budget objects, narrowing, the `AAuth-Budget` field, trailers, and usage queries are in package `budgets`. Metering is `resource.BudgetStore` and `resource.BudgetReserver`. The Person Server is package `personserver`. The Access Server is package `accessserver`. The previous revision `ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535` refused `remaining=999999999999999, cost=0` because `httpsfv` v1.1.1 rejects a 15-digit integer when another character follows it. That field is now accepted.
 - aauth-rust `v0.1.0-alpha.28`, revision `ed4671b6a6b03993480a1b7fa8ca156c6ae607bd`. The profile crate is `aauth-rust-budgets`. The Resource is `aauth-rust-resource`. The Person Server is `aauth-rust-person-server`. The Access Server is `aauth-rust-access-server`.
 
-A vector is published only when both libraries return the same parsed result. Header field text and compact budget JSON are recorded for each library when the bytes differ. Member order is not treated as a disagreement. The eleven cases where the results differ are listed under Findings and in `disagreements` in `vectors/budgets/budgets-vectors.json`. They are not expected results.
+A vector is published only when both libraries return the same parsed result. Header field text and compact budget JSON are recorded for each library when the bytes differ. Member order is not treated as a disagreement. The ten cases where the results differ are listed under Findings and in `disagreements` in `vectors/budgets/budgets-vectors.json`. They are not expected results. The draft does not decide them.
 
 ## Budget object
 
@@ -150,9 +150,9 @@ For `authorization.federated`, both reports say execution passed: 62 assertions 
 
 ## Findings
 
-These eleven cases are the disagreements. The vector file records both results and does not pick one.
+These ten cases are the disagreements. The vector file records both results and does not pick one. The draft does not require either reading, so they are spec notes rather than a defect in one library.
 
-**Maximum `remaining` followed by another member.** The field is `remaining=999999999999999, cost=0`. The draft's structured-field integer allows 15 digits, and both libraries accept the same integer as a JSON `amount`. aauth-go `ParseFeedback` refuses the field. The error comes from `httpsfv` v1.1.1: `parseNumber` treats a 15-digit integer as out of range when any character follows it, before it looks at whether that character is a digit or a comma. The vector records that refusal as `malformed`. aauth-rust `parse_header` accepts `remaining=999999999999999` and `cost=0`.
+**Maximum `remaining` followed by another member.** The field is `remaining=999999999999999, cost=0`. Both libraries now accept it. aauth-go `567e556` parses that field one member at a time when `httpsfv` v1.1.1 reports a number out of range, because that parser rejects a 15-digit integer whenever another character follows it. A 16-digit integer is still refused. The case is `header.max-remaining` in the vector file, not in `disagreements`.
 
 **`cost` and `reserved` on one field.** The draft says `reserved` is meaningful where `cost` is not yet known. It does not say a field that carries both is malformed. aauth-go `ParseFeedback` and `FormatFeedback` return `AAuth-Budget header must not carry both cost and reserved`. The vector records that as `both`. aauth-rust `parse_header` and `BudgetHeader::build` accept both members.
 

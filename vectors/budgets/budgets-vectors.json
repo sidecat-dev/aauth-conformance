@@ -20,7 +20,7 @@
     "libraries": [
       {
         "id": "aauth-go",
-        "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+        "revision": "567e556af2bd7fc931143e679dd228b709111797"
       },
       {
         "id": "aauth-rust",
@@ -53,7 +53,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -87,7 +87,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -121,7 +121,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -155,7 +155,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -189,7 +189,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -223,7 +223,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -257,7 +257,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -285,7 +285,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -313,7 +313,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -341,7 +341,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -369,7 +369,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -397,7 +397,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -425,7 +425,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -453,7 +453,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -481,7 +481,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -509,7 +509,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -537,7 +537,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -565,7 +565,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -593,7 +593,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -621,7 +621,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -649,7 +649,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -677,7 +677,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -705,7 +705,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -733,7 +733,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -761,7 +761,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -797,7 +797,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -833,7 +833,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -869,7 +869,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -906,7 +906,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -943,7 +943,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -980,7 +980,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1017,7 +1017,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1054,7 +1054,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1091,7 +1091,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1128,7 +1128,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1165,7 +1165,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1202,7 +1202,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1239,7 +1239,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1276,7 +1276,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1313,7 +1313,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1350,7 +1350,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1387,7 +1387,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1424,7 +1424,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1461,7 +1461,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1498,7 +1498,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1535,7 +1535,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1572,7 +1572,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1582,6 +1582,43 @@
         ],
         "agreement": "both libraries returned this result",
         "basis": "Budgets line 627."
+      }
+    },
+    {
+      "id": "header.max-remaining",
+      "title": "Remaining at the 15-digit limit",
+      "kind": "header",
+      "input": {
+        "field": "remaining=999999999999999, cost=0",
+        "op": "header-parse"
+      },
+      "expect": {
+        "cost": 0,
+        "decimals": null,
+        "outcome": "accept",
+        "remaining": 999999999999999,
+        "required": null,
+        "reserved": null,
+        "serializations": {
+          "aauth-go": "cost=0, remaining=999999999999999",
+          "aauth-rust": "remaining=999999999999999, cost=0"
+        },
+        "unit": null
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
+            "version": "0.1.0-alpha.28"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 323 and 621."
       }
     },
     {
@@ -1600,7 +1637,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1628,7 +1665,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1656,7 +1693,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1684,7 +1721,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1712,7 +1749,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1740,7 +1777,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1768,7 +1805,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1796,7 +1833,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1824,7 +1861,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1852,7 +1889,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1880,7 +1917,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1908,7 +1945,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1936,7 +1973,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -1973,7 +2010,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2017,7 +2054,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2061,7 +2098,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2104,7 +2141,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2148,7 +2185,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2180,7 +2217,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2212,7 +2249,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2240,7 +2277,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2268,7 +2305,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2297,7 +2334,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2329,7 +2366,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2450,7 +2487,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2526,7 +2563,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2589,7 +2626,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2666,7 +2703,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2756,7 +2793,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2851,7 +2888,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2915,7 +2952,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -2965,7 +3002,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -3015,7 +3052,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -3065,7 +3102,7 @@
         "produced_by": [
           {
             "id": "aauth-go",
-            "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
           },
           {
             "id": "aauth-rust",
@@ -3079,30 +3116,6 @@
     }
   ],
   "disagreements": [
-    {
-      "id": "header.max-remaining",
-      "title": "Remaining at the 15-digit limit",
-      "kind": "header",
-      "input": {
-        "field": "remaining=999999999999999, cost=0",
-        "op": "header-parse"
-      },
-      "basis": "Budgets lines 323 and 621.",
-      "aauth-go": {
-        "code": "malformed",
-        "outcome": "refuse"
-      },
-      "aauth-rust": {
-        "cost": 0,
-        "decimals": null,
-        "field": "remaining=999999999999999, cost=0",
-        "outcome": "accept",
-        "remaining": 999999999999999,
-        "required": null,
-        "reserved": null,
-        "unit": null
-      }
-    },
     {
       "id": "header.cost-and-reserved",
       "title": "Cost and reserved together",
