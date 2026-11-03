@@ -26,7 +26,7 @@ the referenced text and expectations even when clause IDs stay unchanged.
 A scenario has `version`, unique `id`, `title`,
 `role_under_test` (`resource.agent-identity`, `agent.signing`,
 `person-server.direct`, `authorization.federated`, `authorization.deferred` or
-`authorization.subagent`), `given` matching the fixture ID,
+`authorization.subagent`, or an extension role described below), `given` matching the fixture ID,
 `token`, `request` and nonempty `assertions`. See [valid](scenarios/02-valid.json).
 
 `token.iat_offset`/`exp_offset` are seconds relative to the fixed clock. JWT `jti`
@@ -100,7 +100,7 @@ validation, bad-token client behavior and discovery negotiation need later cases
 ## Targets and reports
 
 A target file has `version: 1`, optional `role` (default `resource.agent-identity`)
-and nonempty `implementations`. `agent.signing` selects the three Agent cases.
+and nonempty `implementations`. `agent.signing` selects the Agent cases.
 Reports contain only the selected role's clauses/cases; the suite digest still
 covers all files, so adding another role changes it. Each entry has
 unique `id`, `revision`, executable `command` array and explicit `claims` of known
@@ -249,7 +249,7 @@ the auth token must omit the `budget` claim. The protected call uses
 `{path}-budget-omit`, which is not metered, and returns the subject. For
 `consume`, `header`, `usage`, and `cap` the harness request carries
 `{"amount":2000000,"unit":"credits","decimals":0}`. That figure is one
-per-token allocation. Both current Access Servers echo it. The draft permits a
+per-token allocation. The aauth-go and aauth-rust Access Servers echo it. The draft permits a
 lower amount; this fixture grades the echo.
 
 `consume` uses `{path}-budget-grant`. It sends `X-Fixture-Cost: 1500000` on
@@ -434,7 +434,7 @@ status or code.
 
 ## R3 profiles
 
-Two extension roles grade `draft-hardt-aauth-r3` at `70d6737` (catalog source
+Three extension roles grade `draft-hardt-aauth-r3` at `70d6737` (catalog source
 `r3`). Fixture `extensions.r3` names the vocabulary (`urn:aauth:vocabulary:mcp`),
 the Resource's authoritative `tools`, the `grantable` tools of the issuer's
 fixed consent, and an `other_server` (issuer, public seed, kid): a server both

@@ -1,10 +1,9 @@
 # Launcher protocol, version 1
 
 A launcher supplies host configuration and transport around one implementation's
-native Resource, Agent or Person Server API, or a native PS/AS/Resource bundle.
-The optional bootstrap `role` defaults to
-`resource.agent-identity`; `agent.signing` selects the outbound signer contract
-below.
+native Resource, Agent, Person Server, Agent Provider or supervision server API,
+or a native PS/AS/Resource bundle. The optional bootstrap `role` defaults to
+`resource.agent-identity`; each section below is one role's contract.
 
 ## Resource role
 
@@ -206,7 +205,7 @@ PS also resolves its own signing key for presented-token verification. The
 buffered `http::Request<Vec<u8>>` retains actual received Host, path, body and
 proof fields, and `handle` supplies the response unchanged. The transport
 regression checks those bytes with an intentionally foreign received authority.
-The Rust launcher now requires the Person Server crate in the selected checkout
+The Rust launcher requires the Person Server crate in the selected checkout
 alongside Agent, Core, JOSE and Resource.
 
 The build helper also copies Go adapter tests so explicit Host preservation

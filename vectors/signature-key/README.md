@@ -86,8 +86,10 @@ Each vector:
 ## Fixed values
 
 - `now` is 1800000000 for every vector, and `created` equals it except in
-  the two window vectors. Assertions are issued 300 seconds before and
-  expire 3000 seconds after.
+  the two window vectors. jwt and jkt-jwt assertions are issued 300
+  seconds before `now` and expire 3000 seconds after; self-jwt assertions
+  are issued 30 seconds before and expire 300 seconds after. The negative
+  vectors for an expired assertion and a missing `exp` change them.
 - The names are example domains: `resource.example`, `agent-provider.example`,
   `signer.example`, `keys.example` and `certs.example`.
 - The jwt vectors carry an AAuth agent token (`typ` `aa-agent+jwt`), so the

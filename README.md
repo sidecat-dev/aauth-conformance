@@ -56,14 +56,14 @@ and the runner grades that role's scenarios. The six original roles are:
 
 The harness uses no AAuth library to generate inputs or grade these roles.
 
-Six scenarios—unsigned request, accepted identity, tampered signature, expired
+The first six Resource scenarios—unsigned request, accepted identity, tampered signature, expired
 token, uncovered Signature-Key and future `created`—produce 17 assertions per
 implementation. Every assertion names a pinned draft clause. The
 [example report](reports/first-slice.md) records a real Go/Rust run. Its counts
 cover these assertions, not entire draft sections or complete AAuth conformance.
 
-The Agent role adds GET, empty POST to another path, and GET with query and
-Authorization: 16 assertions per implementation. The [Agent report](reports/agent-signing.md)
+The first three Agent scenarios cover GET, empty POST to another path, and GET
+with query and Authorization: 16 assertions per implementation. The [Agent report](reports/agent-signing.md)
 records both native signers. Only valid AP-token inputs are supplied; this does
 not test the Agent's rejection of bad AP tokens or its Person Server flows.
 
@@ -236,7 +236,7 @@ go run ./cmd/aauth-conformance -targets build/federated/targets.json -report bui
 ```
 
 This slice has **34 scenarios and 398 assertions per implementation**. Scenarios
-01–49 are the original four-party cases (28 scenarios, 336 assertions). Scenario
+22–49 are the original four-party cases (28 scenarios, 336 assertions). Scenario
 73 is the native Budget grant: the Resource offers 5000000, the Person Server
 narrows it to 2000000, and the protected call costs 1000. Scenarios 74–78 use
 the harness Person Server. Scenario 74 omits the Budget parameter and requires
