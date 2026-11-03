@@ -130,8 +130,9 @@ Execution errors are retained on the case independently of clause claims. They
 make overall execution fail even when that case's assertions are not claimed.
 
 [REPORT-FORMAT.md](REPORT-FORMAT.md) is the versioned report other tools
-exchange. It names the subject, the assertor, each test, and the result.
-The role JSON in this section is the evidence that report carries.
+exchange. It uses the OpenID conformance suite's plan, module, test status,
+test result, and condition result. The role JSON in this section is the
+evidence that report carries.
 
 ## Person Server direct profile
 

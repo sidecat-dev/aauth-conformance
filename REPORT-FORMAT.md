@@ -1,28 +1,56 @@
 # Conformance report, version 1
 
 This is the report a tool writes after it grades an implementation, and the
-report a tool reads when someone else graded one. Version 1 uses three
-vocabularies that already exist:
+report a tool reads when someone else graded one. The plan, the test, and the
+condition use the names the OpenID Foundation conformance suite already stores,
+so that suite can emit this file and can read one.
 
-* The claim is an [EARL](https://www.w3.org/TR/EARL10-Schema/) assertion: a
-  subject, a test, an outcome, and an assertor.
-* The result word is the OpenID Foundation conformance export:
-  `PASSED`, `FAILED`, `REVIEW`, `WARNING`, `SKIPPED`, `INTERRUPTED`.
-  `plan`, `test`, and `condition` are the same export's names for the run,
-  one graded unit, and one requirement inside it.
-* The prose file is the implementation-status note [RFC 7942](https://www.rfc-editor.org/rfc/rfc7942)
-  asks a draft to carry. The feature is the draft section. The status is the
-  outcome.
+The names were read from conformance-suite master
+`475e8bf0b18e887767184c21388ffe7d783df2c6` on 2026-11-03, and checked against a
+public plan and a public test on `staging.certification.openid.net`.
 
-This file does not copy an OpenID Foundation JSON schema. The Foundation
-publishes those six result words and the plan, test, and result names. The
-`conditions` array is this format's name for the requirements a test checked.
+* A plan is `planName`, `variant`, `certificationProfileName`, and `modules`.
+  Each module is `testModule`, `variant`, `instances`, `status`, and `result`.
+  That is the object `GET /api/plan/{id}` returns.
+  `net.openid.conformance.info.Plan`.
+* A test is `testId`, `testName`, `variant`, `status`, `result`, and `planId`.
+  That is `PublicTestInfo`. `status` is `TestModule.Status`. `result` is
+  `TestModule.Result`. Both enums are in
+  `net.openid.conformance.testmodule.TestModule`.
+* A condition is `src`, `result`, `msg`, and `requirements`. `src` is the
+  condition name. `result` is `Condition.ConditionResult` in
+  `net.openid.conformance.condition.Condition`: `SUCCESS`, `FAILURE`,
+  `WARNING`, `INFO`, `REVIEW`. `requirements` is the list of specification
+  citations the condition logs. A public log entry cites `AUTHZEN-5.1`.
+* The claim around that plan is an [EARL](https://www.w3.org/TR/EARL10-Schema/)
+  assertion: `subject`, `assertor`, and `outcome`. The suite does not have
+  those names. They say who was graded, who graded them, and the EARL outcome.
+* The prose file is the implementation-status note
+  [RFC 7942](https://www.rfc-editor.org/rfc/rfc7942) asks a draft to carry.
+
+The suite's export zip is a different object, `PlanExportInfo`: `exportedAt`,
+`exportedFrom`, `exportedBy`, `exportedVersion`, `planInfo`, and
+`testLogExports`. Each test export carries `testInfo` and `results`, and
+`results` is the log. This file is not that zip. It does not copy HTTP
+exchanges. It is the plan and the tests, with one condition per requirement
+instead of every log line.
+
+Two members are named `version`, and they are not the same value.
+
+* Top-level `version` is this format, the integer `1`.
+* `plan.version` is the suite release. On an OpenID plan that string is the
+  suite version, such as `5.1.43`. Here it is the conformance suite revision.
 
 A reader ignores object members it does not know. A producer uses each member
 name once. When `version` is present and is not `1`, a reader refuses the file
 rather than guessing. A file with no `version` is the legacy envelope below.
 Whitespace is not significant. A signature, when a deployment adds one, is over
 the exact file bytes of `report.json`.
+
+No hosted `report.json` used version 1 before this revision. An earlier draft
+of this file, committed the same day, put the test result words on a condition
+and used `INTERRUPTED` as a result. A reader still accepts that draft. A
+producer writes the names in this revision.
 
 ## Files
 
@@ -42,11 +70,11 @@ A producer writes these members.
 
 | Member | Meaning |
 | --- | --- |
-| `version` | The integer `1`. |
+| `version` | The integer `1`. This is the format, not the suite release. |
 | `subject` | The implementation under test. `implementation` is its name. `revision` is the revision the producer graded. |
 | `assertor` | Who graded it. `name` is the tool. `suite` is an optional build or commit identifier. |
-| `plan` | The run. `id` is the producer's plan name. `tests` lists the test ids in that plan. |
-| `tests` | One object per graded unit. For this suite, one test is one role. |
+| `plan` | The OpenID plan object, below. |
+| `tests` | One OpenID test object per graded unit. For this suite, one test is one role. |
 
 These members are optional. The hosted publisher writes them.
 
@@ -60,56 +88,89 @@ These members are optional. The hosted publisher writes them.
 | `implementation`, `revision`, `suite` | Copies of `subject.implementation`, `subject.revision`, and `assertor.suite`, for a reader that looks up those older names. |
 | `evidence` | Suite role documents. See below. |
 
-The hosted publisher's `plan.id` is `aauth-conformance-remote`. Another producer chooses its own plan id. A reader displays `plan.id` and does not require a particular value.
+## Plan object
+
+| Member | Meaning |
+| --- | --- |
+| `planName` | The plan name. The hosted publisher uses `aauth-conformance-remote`. Another producer chooses its own. A reader displays it and does not require a particular value. |
+| `variant` | The plan variant. An object whose values are strings, or `null`. The suite's `VariantSelection` is that object. This suite has no variant, so the publisher writes `{}`. |
+| `certificationProfileName` | The certification profile names `TestPlan.certificationProfileName` returns. An array of strings. Empty when the run is not a certification profile. This suite does not invent one. |
+| `modules` | One module per graded unit, in the same order as `tests`. |
+
+Optional: `description`, `started`, `summary`, `version`. `started` is the UTC time the producer records for the plan. This publisher uses the report's `published` time. `version` is the suite release, as above.
+
+### Module object
+
+| Member | Meaning |
+| --- | --- |
+| `testModule` | The test module name. In the OpenID suite this is the published module name, such as `authzen-pdp-interop-evaluation-01`. For this suite it is the role id. |
+| `variant` | The module variant. An object of strings, or `null`. This publisher writes `{}`. |
+| `instances` | The test ids of the module's runs. This publisher writes one id, the same value as `testId`. |
+| `status` | The latest run's `TestModule.Status`. |
+| `result` | The latest run's `TestModule.Result`. |
 
 ## Test object
 
 | Member | Meaning |
 | --- | --- |
-| `id` | Stable id of this test. For this suite, the role id. |
-| `role` | Optional. The suite role, when `id` is that role. |
-| `result` | One of the six result words below. |
-| `outcome` | The EARL outcome. Required when `result` is `SKIPPED`, so a reader can tell the two SKIPPED rows apart. |
-| `execution` | Optional suite word: `passed`, `failed_or_incomplete`, or `not_exercised`. |
-| `counts` | Optional assertion totals. See Counts. |
+| `testId` | The test id. For this suite, the role id. |
+| `testName` | The test module name. For this suite, the same role id. |
+| `status` | `TestModule.Status`: `NOT_YET_CREATED`, `CREATED`, `CONFIGURED`, `RUNNING`, `WAITING`, `INTERRUPTED`, `FINISHED`. This suite emits `FINISHED` or `INTERRUPTED`. |
+| `result` | `TestModule.Result`: `PASSED`, `FAILED`, `WARNING`, `REVIEW`, `SKIPPED`, `UNKNOWN`. |
+| `outcome` | The EARL outcome. Required when `result` is `SKIPPED` or `UNKNOWN`, so a reader can tell those rows apart. |
 | `conditions` | One object per requirement. May be empty. |
+
+Optional: `planId`, `variant`, `description`, `alias`, `summary`, `started`. This suite also writes `execution` (`passed`, `failed_or_incomplete`, or `not_exercised`) and `counts`. Those are not OpenID members. A reader that does not know them ignores them.
 
 ## Condition object
 
-A condition is one requirement the test checked. For this suite, that is one clause.
+A condition is one requirement the test checked. For this suite, that is one clause. The members `src`, `result`, `msg`, and `requirements` are the log fields a condition writes.
 
 | Member | Meaning |
 | --- | --- |
-| `id` | The requirement id. For this suite, the clause id. |
-| `result` | One of the six result words. |
-| `outcome` | The EARL outcome. |
-| `section` | The draft heading this requirement cites. This is the line a person reads. |
-| `source` | Absolute `http` or `https` URL of that draft. |
-| `anchor` | URL fragment of the heading, without `#`. The link is `source` + `#` + `anchor`. |
+| `src` | The condition name. For this suite, the clause id. |
+| `result` | A `ConditionResult`: `SUCCESS`, `FAILURE`, `WARNING`, `INFO`, `REVIEW`. Omitted when the suite has no condition verdict. |
+| `outcome` | The EARL outcome. This is how a reader tells apart the rows that omit `result`. |
+| `msg` | The short text a person reads. For this suite, the draft heading. It is not a copy of the draft sentence under that heading. |
+| `requirements` | Specification citations. The OpenID suite logs identifiers such as `AUTHZEN-5.1`. This suite logs one absolute `http` or `https` URL with the heading fragment, `source` + `#` + `anchor`. |
+| `section` | Optional copy of the draft heading, the same text as `msg`. |
+| `source` | Optional. Absolute `http` or `https` URL of that draft, without the fragment. |
+| `anchor` | Optional. URL fragment of the heading, without `#`. |
 | `scope` | Optional. This suite uses `protocol`, `adapter-contract`, `recommended`, or `out-of-slice`. |
 | `counts` | Optional per-state totals for this requirement. |
 
-`section` is the heading the catalog recorded. It is not a copy of the draft sentence under that heading.
-
 ## Result words
 
-| Result | EARL outcome | When this suite emits it |
+`INTERRUPTED` is a status. It is not a result. The suite's `AbstractTestModule` keeps a `FAILED` result when a test is stopped, and it clears a `WARNING` or a `REVIEW` to `UNKNOWN` because those are not a verdict until the test finishes.
+
+| Test result | EARL outcome | When this suite emits it |
 | --- | --- | --- |
-| `PASSED` | `passed` | The assertions passed. |
-| `FAILED` | `failed` | An assertion failed. |
-| `INTERRUPTED` | `cantTell` | The grader hit a transport or startup error. |
-| `SKIPPED` | `inapplicable` | The assertion was `not_exercised`: this transport does not run it, or the check did not apply. |
-| `SKIPPED` | `untested` | The assertion was `not_claimed`: the implementation did not claim the clause. |
+| `PASSED` | `passed` | The role's execution is `passed`. Status is `FINISHED`. |
+| `FAILED` | `failed` | An assertion failed, or the run is `failed_or_incomplete` without an error-only stop. Status is `FINISHED`. |
+| `UNKNOWN` | `cantTell` | The grader hit a transport or startup error and recorded no failing assertion. Status is `INTERRUPTED`. |
+| `SKIPPED` | `inapplicable` | The role was `not_exercised`. Status is `FINISHED`. |
+| `SKIPPED` | `untested` | The role claimed nothing and passed nothing. Status is `FINISHED`. |
+| `WARNING` | `cantTell` | Accepted from another producer. This suite does not emit it. A warning does not by itself fail the test. |
+| `REVIEW` | `untested` | Accepted from another producer. This suite does not emit it. |
+
+| Condition result | EARL outcome | When this suite emits it |
+| --- | --- | --- |
+| `SUCCESS` | `passed` | The clause's assertions passed. |
+| `FAILURE` | `failed` | An assertion for that clause failed. |
+| omitted | `cantTell` | The clause has an error and no failure. There is no `ConditionResult` for that. |
+| omitted | `inapplicable` | The clause was `not_exercised`. |
+| omitted | `untested` | The clause was `not_claimed`. |
 | `WARNING` | `cantTell` | Accepted from another producer. This suite does not emit it. |
+| `INFO` | `passed` | Accepted from another producer. This suite does not emit it. `INFO` does not fail the test. |
 | `REVIEW` | `untested` | Accepted from another producer. This suite does not emit it. |
 
 EARL's outcome URIs are `http://www.w3.org/ns/earl#passed`, `#failed`, `#cantTell`, `#inapplicable`, and `#untested`. This file uses the local names so the JSON stays plain JSON. `cantTell` keeps the capital T from the EARL spec.
 
-A reader uses `outcome` to split the two `SKIPPED` rows. When `outcome` is absent, `SKIPPED` means `inapplicable`.
+A reader uses `outcome` when `result` is `SKIPPED`, `UNKNOWN`, or omitted. When `outcome` is absent, `SKIPPED` means `inapplicable`.
 
 ### Counts
 
-`counts` is an object of integers:
+`counts` is an object of integers. These are this suite's assertion states. The OpenID log counter is `SUCCESS`, `FAILURE`, and `WARNING`, which correspond to `pass`, `fail`, and the `WARNING` result. `error`, `not_exercised`, and `not_claimed` have no condition result, so they stay under these names.
 
 | Member | Assertion state |
 | --- | --- |
@@ -121,27 +182,27 @@ A reader uses `outcome` to split the two `SKIPPED` rows. When `outcome` is absen
 
 On a test, the counts are every assertion in that role. On a condition, the counts are the assertions for that clause. A condition whose clause was not claimed has all-zero counts. The test totals still include an assertion that names an unclaimed clause. A reader that is given no `counts` object shows the result and leaves the count cells empty.
 
-### How this suite fills result
+### How this suite fills status and result
 
 The clause rule is the one in [FORMAT.md](FORMAT.md): failure, then error, then an observed pass, then no exercised assertion. A run error counts as error for every claimed clause. A clause the run did not claim is `not_claimed`.
 
-| Clause state | `result` | `outcome` |
+| Clause state | Condition `result` | `outcome` |
 | --- | --- | --- |
-| `fail` | `FAILED` | `failed` |
-| `error` | `INTERRUPTED` | `cantTell` |
-| `pass` | `PASSED` | `passed` |
-| `not_exercised` | `SKIPPED` | `inapplicable` |
-| `not_claimed` | `SKIPPED` | `untested` |
+| `fail` | `FAILURE` | `failed` |
+| `error` | omitted | `cantTell` |
+| `pass` | `SUCCESS` | `passed` |
+| `not_exercised` | omitted | `inapplicable` |
+| `not_claimed` | omitted | `untested` |
 
-The test result follows the role's `execution` value:
+The test status and result follow the role's `execution` value:
 
-| `execution` | Extra condition | `result` | `outcome` |
-| --- | --- | --- | --- |
-| `passed` | | `PASSED` | `passed` |
-| `not_exercised` | | `SKIPPED` | `inapplicable` |
-| `failed_or_incomplete` | a `fail` assertion | `FAILED` | `failed` |
-| `failed_or_incomplete` | an `error` assertion and no `fail` | `INTERRUPTED` | `cantTell` |
-| `failed_or_incomplete` | anything else | `FAILED` | `failed` |
+| `execution` | Extra condition | `status` | `result` | `outcome` |
+| --- | --- | --- | --- | --- |
+| `passed` | | `FINISHED` | `PASSED` | `passed` |
+| `not_exercised` | | `FINISHED` | `SKIPPED` | `inapplicable` |
+| `failed_or_incomplete` | a `fail` assertion | `FINISHED` | `FAILED` | `failed` |
+| `failed_or_incomplete` | an `error` assertion and no `fail` | `INTERRUPTED` | `UNKNOWN` | `cantTell` |
+| `failed_or_incomplete` | anything else | `FINISHED` | `FAILED` | `failed` |
 
 ## Evidence
 
@@ -151,15 +212,15 @@ A reader that finds a non-empty `evidence.roles` grades the page and the counts 
 
 ## JUnit
 
-`junit.xml` beside `report.json` is a `testsuites` element. One `testsuite` per test. `name` is the test id. One `testcase` per condition. `classname` is the test id and `name` is the condition id. A test with no conditions is one `testcase` named for the test.
+`junit.xml` beside `report.json` is a `testsuites` element. One `testsuite` per test. `name` is the test id. One `testcase` per condition. `classname` is the test id and `name` is the condition `src`. A test with no conditions is one `testcase` named for the test.
 
 | Condition | JUnit child |
 | --- | --- |
-| `PASSED` | none |
-| `FAILED` | `failure` |
-| `INTERRUPTED` | `error`, `type` `cantTell` |
-| `SKIPPED` with outcome `inapplicable` | `skipped`, message `not_exercised` |
-| `SKIPPED` with outcome `untested` | `skipped`, message `not_claimed` |
+| `SUCCESS` or `INFO` | none |
+| `FAILURE` | `failure` |
+| result omitted, outcome `cantTell` | `error`, `type` `cantTell` |
+| result omitted, outcome `inapplicable` | `skipped`, message `not_exercised` |
+| result omitted, outcome `untested` | `skipped`, message `not_claimed` |
 | `WARNING` | `system-out`. The suite still passes. |
 | `REVIEW` | `skipped` |
 
@@ -170,9 +231,9 @@ A reader that finds a non-empty `evidence.roles` grades the page and the counts 
 * Implementation: name and revision.
 * Description: the test id.
 * Coverage: the condition table. The feature column is the draft section, linked to `source#anchor`.
-* Experience: the execution word, the result word, and the assertion counts.
+* Experience: the test status, the test result, and the assertion counts.
 
-Licensing and contact are omitted because the report does not carry them. The status column uses the suite state word (`pass`, `fail`, `error`, `not_exercised`, `not_claimed`).
+Licensing and contact are omitted because the report does not carry them. The clause status column uses the suite state word (`pass`, `fail`, `error`, `not_exercised`, `not_claimed`), because those are the counts. The summary status column uses the OpenID status (`FINISHED`, `INTERRUPTED`).
 
 ## Legacy hosted envelope
 
@@ -195,6 +256,22 @@ Reports published before version 1 have no top-level `version`. They are one JSO
 
 A single role document, with `role` and `runs` and no `tests` array, is one role of that same evidence.
 
+## Earlier draft of version 1
+
+A reader accepts these names from the first draft of this file:
+
+| Draft name | Read it as |
+| --- | --- |
+| `plan.id` | `planName` |
+| `plan.tests` | the list of test ids, when `modules` is absent |
+| `test.id` | `testId` |
+| `condition.id` | `src` |
+| condition `result` `PASSED` | `SUCCESS` |
+| condition `result` `FAILED` | `FAILURE` |
+| condition `result` `INTERRUPTED` | result omitted, outcome `cantTell` |
+| condition `result` `SKIPPED` | result omitted, outcome from `outcome` |
+| test `result` `INTERRUPTED` | `status` `INTERRUPTED`, `result` `UNKNOWN` |
+
 ## Reading order
 
 1. Refuse a `version` other than `1`.
@@ -214,21 +291,39 @@ A single role document, with `role` and `runs` and no `tests` array, is one role
   "exit": 0,
   "subject": {"implementation": "example", "revision": "1"},
   "assertor": {"name": "aauth-conformance", "suite": "aauth-conformance f415f2f8e18bebb2b4b6928d96c80d999244e72a"},
-  "plan": {"id": "aauth-conformance-remote", "tests": ["person-server.direct"]},
+  "plan": {
+    "planName": "aauth-conformance-remote",
+    "variant": {},
+    "certificationProfileName": [],
+    "started": "2026-11-03T00:00:00Z",
+    "version": "aauth-conformance f415f2f8e18bebb2b4b6928d96c80d999244e72a",
+    "modules": [{
+      "testModule": "person-server.direct",
+      "variant": {},
+      "instances": ["person-server.direct"],
+      "status": "FINISHED",
+      "result": "PASSED"
+    }]
+  },
   "tests": [{
-    "id": "person-server.direct",
-    "role": "person-server.direct",
+    "testId": "person-server.direct",
+    "testName": "person-server.direct",
+    "planId": "aauth-conformance-remote",
+    "variant": {},
+    "status": "FINISHED",
     "result": "PASSED",
     "outcome": "passed",
     "execution": "passed",
     "counts": {"pass": 1, "fail": 0, "error": 0, "not_exercised": 0, "not_claimed": 0},
     "conditions": [{
-      "id": "ps.person-endpoint",
-      "result": "PASSED",
+      "src": "ps.person-endpoint",
+      "result": "SUCCESS",
       "outcome": "passed",
+      "msg": "Person Token Endpoint: signed POST and successful person-token response",
+      "requirements": ["https://example.test/draft#person-token-endpoint"],
       "section": "Person Token Endpoint: signed POST and successful person-token response",
-      "anchor": "person-token-endpoint",
       "source": "https://example.test/draft",
+      "anchor": "person-token-endpoint",
       "scope": "protocol",
       "counts": {"pass": 1, "fail": 0, "error": 0, "not_exercised": 0, "not_claimed": 0}
     }]
