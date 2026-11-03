@@ -2437,6 +2437,14 @@
       "scope": "protocol"
     },
     {
+      "role": "vectors.signature-key",
+      "id": "sigvec.multi",
+      "source": "key",
+      "section": "Multiple Signatures, lines 191 and 199, with lines 173 and 177: a request carrying two signatures under different schemes, each with its own Signature-Key member and each covering the complete Signature-Key; a verifier that verifies both labels verifies each over its own base",
+      "anchor": "multiple-signatures",
+      "scope": "protocol"
+    },
+    {
       "role": "bootstrap.agent-provider",
       "id": "bootstrap.ap.enrollment",
       "source": "bootstrap",

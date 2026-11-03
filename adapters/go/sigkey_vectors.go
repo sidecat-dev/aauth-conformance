@@ -92,6 +92,7 @@ type sigvecJob struct {
 	Request     sigvecRequest     `json:"request"`
 	Signatures  []sigvecSignPart  `json:"signatures"`
 	Environment sigvecEnvironment `json:"environment"`
+	Labels      []string          `json:"labels"`
 }
 
 type sigvecUnoffered string
@@ -324,6 +325,9 @@ func sigvecVerify(job sigvecJob) (*httptest.ResponseRecorder, error) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(value)
 	}
+	if len(job.Labels) > 0 {
+		return sigvecVerifyLabels(job, clock, resolver)
+	}
 	// A self-jwt member goes straight to its native verifier.
 	if credential, err := signaturekey.ParseCredentialForLabel(request.Header.Values("Signature-Key"), env.Verifier.Label); err == nil && credential.Scheme() == signaturekey.SchemeSelfJWT {
 		prepared, err := signaturekey.PrepareRequest(request, clock, signaturekey.VerifyOptions{
@@ -422,5 +426,45 @@ func sigvecVerify(job sigvecJob) (*httptest.ResponseRecorder, error) {
 		return nil, err
 	}
 	sut.Handler().ServeHTTP(recorder, request)
+	return recorder, nil
+}
+
+// sigvecVerifyLabels verifies every label a multi-signature vector names,
+// each through PrepareRequest with that SignatureLabel and the
+// PreparedRequest verifier its member's scheme calls for. It answers 200 with
+// each label's scheme when all verify, or the first refusal.
+func sigvecVerifyLabels(job sigvecJob, clock signaturekey.Clock, resolver *signaturekey.HTTPKeyResolver) (*httptest.ResponseRecorder, error) {
+	recorder := httptest.NewRecorder()
+	schemes := map[string]string{}
+	for _, label := range job.Labels {
+		request, err := sigvecBuildRequest(job.Request)
+		if err != nil {
+			return nil, err
+		}
+		prepared, err := signaturekey.PrepareRequest(request, clock, signaturekey.VerifyOptions{
+			AcceptedSchemes:    []signaturekey.Scheme{signaturekey.SchemeHWK, signaturekey.SchemeJWKS, signaturekey.SchemeJWKSURI},
+			AcceptedAlgorithms: job.Environment.Verifier.Algorithms,
+			SignatureLabel:     label,
+		})
+		if err == nil {
+			credential := prepared.Credential()
+			switch credential.Scheme() {
+			case signaturekey.SchemeHWK:
+				key, _ := credential.InlineJWK()
+				_, err = prepared.Verify(key)
+			case signaturekey.SchemeJWKS:
+				_, err = prepared.VerifyJWKS(context.Background(), resolver)
+			case signaturekey.SchemeJWKSURI:
+				_, err = prepared.VerifyJWKSURI(context.Background(), resolver)
+			}
+			schemes[label] = string(credential.Scheme())
+		}
+		if err != nil {
+			sigvecFailure(recorder, fmt.Errorf("label %s: %w", label, err))
+			return recorder, nil
+		}
+	}
+	recorder.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(recorder).Encode(map[string]any{"labels": schemes})
 	return recorder, nil
 }

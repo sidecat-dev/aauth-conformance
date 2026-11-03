@@ -324,6 +324,15 @@ func sigvecCases() []sigvecCase {
 				return one(sigvecPart{Key: "agent-ed25519", Scheme: "cached", CID: "never-issued-0001"}, nil)
 			},
 			Expect: reject("cache_miss", "signature-key lines 1008-1014: cache_miss when a cache identifier cannot be resolved")},
+		// Multiple signatures, appended so earlier scenario numbers stay.
+		{ID: "multi-hwk-jwks", Title: "two signatures on one request: sig1 under hwk and sig2 under jwks, both Ed25519", Clause: "sigvec.multi", Alg: "Ed25519", Signers: bothLibraries,
+			Parts: func(*sigvecBuild) ([]sigvecPart, error) {
+				return []sigvecPart{
+					{Label: "sig1", Key: "agent-ed25519", Scheme: "hwk"},
+					{Label: "sig2", Key: "signer-ed25519", Scheme: "jwks", URL: sigvecJWKSURL, Kid: "signer-ed25519"},
+				}, nil
+			},
+			Expect: SigvecExpect{Outcome: "verify", Basis: "signature-key lines 191 and 199: each signature has its own member keyed by its label, the complete Signature-Key is populated before any signature is created and each signature covers signature-key; lines 173 and 177: a verifier that verifies both labels selects each label's member, and each signature verifies over its own base"}},
 	}
 	return cases
 }

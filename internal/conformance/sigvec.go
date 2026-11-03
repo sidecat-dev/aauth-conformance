@@ -94,7 +94,7 @@ type SigvecVector struct {
 	ID                  string            `json:"id"`
 	Title               string            `json:"title"`
 	Category            int               `json:"category"`
-	Scheme              string            `json:"scheme"`
+	Scheme              string            `json:"scheme,omitempty"`
 	Alg                 string            `json:"alg"`
 	Now                 int64             `json:"now"`
 	Request             SigvecRequest     `json:"request"`
@@ -103,12 +103,41 @@ type SigvecVector struct {
 	SignatureBaseSHA256 string            `json:"signature_base_sha256,omitempty"`
 	SignatureBaseLength int               `json:"signature_base_length,omitempty"`
 	SignatureVerifies   *bool             `json:"signature_verifies,omitempty"`
-	SigningKey          string            `json:"signing_key"`
+	SigningKey          string            `json:"signing_key,omitempty"`
+	Signatures          []SigvecSignature `json:"signatures,omitempty"`
 	Assertion           *SigvecAssertion  `json:"assertion,omitempty"`
 	Documents           []SigvecDocument  `json:"documents,omitempty"`
 	Resolves            []string          `json:"resolves,omitempty"`
 	Expect              SigvecExpect      `json:"expect"`
 	Provenance          SigvecProvenance  `json:"provenance"`
+}
+
+// SigvecSignature is one signature of a vector that carries more than one.
+// The verifier verifies every listed label, each over its own base; the
+// vector's top-level scheme, signing_key and signature base are then absent.
+type SigvecSignature struct {
+	Label               string   `json:"label"`
+	Scheme              string   `json:"scheme"`
+	Alg                 string   `json:"alg"`
+	SigningKey          string   `json:"signing_key"`
+	SignatureBase       string   `json:"signature_base"`
+	SignatureBaseSHA256 string   `json:"signature_base_sha256"`
+	SignatureBaseLength int      `json:"signature_base_length"`
+	SignatureVerifies   *bool    `json:"signature_verifies,omitempty"`
+	Resolves            []string `json:"resolves,omitempty"`
+}
+
+// SigvecLabels is the labels a vector's verifier verifies: every label of a
+// multi-signature vector, or nil for the configured label alone.
+func SigvecLabels(v SigvecVector) []string {
+	labels := []string{}
+	for _, s := range v.Signatures {
+		labels = append(labels, s.Label)
+	}
+	if len(labels) == 0 {
+		return nil
+	}
+	return labels
 }
 
 // SigvecRequest is the request before signing. The received request is this
@@ -209,12 +238,16 @@ func validateSigvecScenario(_ Fixture, s Scenario) error {
 }
 
 // SigvecVerifyJob is the launcher input for one vector: the received request,
-// the verifier clock and the environment.
+// the verifier clock, the environment and, for a multi-signature vector, the
+// labels to verify.
 type SigvecVerifyJob struct {
 	Op          string            `json:"op"`
 	Now         int64             `json:"now"`
 	Request     SigvecRequest     `json:"request"`
 	Environment SigvecEnvironment `json:"environment"`
+	// Labels, when present, replaces the configured label: the launcher
+	// verifies every one and answers 200 only when all verify.
+	Labels []string `json:"labels,omitempty"`
 }
 
 // SigvecReceived is the request a verifier receives for a vector.
@@ -269,7 +302,7 @@ func runSigvecCase(ctx context.Context, scenario Scenario, target Target, ready 
 	if target.Unavailable == "" && claimed && execution == "" {
 		received := SigvecReceived(in.Vector)
 		c.SignatureBase = in.Vector.SignatureBase
-		body, err := json.Marshal(SigvecVerifyJob{Op: "verify", Now: in.Vector.Now, Request: received, Environment: in.Environment})
+		body, err := json.Marshal(SigvecVerifyJob{Op: "verify", Now: in.Vector.Now, Request: received, Environment: in.Environment, Labels: SigvecLabels(in.Vector)})
 		if err == nil {
 			var request *http.Request
 			request, err = http.NewRequest(http.MethodPost, sigvecEndpoint, bytes.NewReader(body))

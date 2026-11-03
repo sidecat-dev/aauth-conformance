@@ -25,7 +25,9 @@ licensed, as the rest of this repository.
    added.
 2. Evaluate it as if the current time were `now`, with the `verifier`
    configuration: the Resource at `verifier.resource`, label `sig`, a
-   60-second window, the listed schemes and algorithms.
+   60-second window, the listed schemes and algorithms. A vector with
+   `signatures` replaces label `sig` with every label it lists: each is
+   verified over its own base.
 3. Resolve keys only from the documents: the file's `documents`, with the
    vector's own `documents` replacing any at the same URL. x509 chains are
    documents too; the trust anchors and CRLs are in `x509`.
@@ -33,7 +35,7 @@ licensed, as the rest of this repository.
 
 | `expect.outcome` | Passes when |
 | --- | --- |
-| `verify` | the request verifies |
+| `verify` | the request verifies; for a vector with `signatures`, every listed label verifies |
 | `reject` | the request is refused, with `Signature-Error` `error` equal to `expect.error`; an absent `error` means the drafts fix no code, so any `Signature-Error` passes |
 | `verify-or-reject` | the request verifies, or is refused with `expect.error`. Used for an ML-DSA-44 key: a verifier that does not implement it must decline with `unsupported_algorithm`, never fail in an undefined way |
 
@@ -70,13 +72,14 @@ Each vector:
 | --- | --- |
 | `id`, `title` | name; an id ending in `.rust` or `.go` is one library's signature where both signed and the signatures differ (category 2) |
 | `category` | 1, 2 or 3, as above |
-| `scheme`, `alg` | the selected member's scheme and the request signature algorithm |
+| `scheme`, `alg` | the selected member's scheme and the request signature algorithm; a vector with `signatures` has no `scheme` |
 | `now` | the verification time, Unix seconds |
 | `request` | the request before signing: `method`, `url`, `headers`, `body` |
 | `signed` | the header fields signing added: `Signature-Input`, `Signature`, `Signature-Key` and, with content, `Content-Digest` |
 | `signature_base` | the RFC 9421 signature base for label `sig`, verbatim, with `signature_base_sha256` and `signature_base_length` |
 | `signature_verifies` | whether `Signature` verifies over the base under the key the member conveys, when that key is well formed. It separates a canonicalization fault from a crypto fault |
-| `signing_key` | the `keys` id that produced the signature |
+| `signing_key` | the `keys` id that produced the signature; absent with `signatures` |
+| `signatures` | only on a request carrying more than one signature: per label, its `scheme`, `alg`, `signing_key`, `signature_base` with its SHA-256 and length, `signature_verifies` and `resolves`. The top-level `signature_base` is then absent |
 | `assertion` | for jwt, jkt-jwt and self-jwt: the compact JWT, its decoded header and payload, and the key that signed it |
 | `documents` | documents that replace the defaults for this vector |
 | `resolves` | the document URLs key resolution reads |
@@ -122,8 +125,12 @@ the drafts give.
   defect, the harness signs it, and `provenance.note` says why.
 
 The `vectors.signature-key` role then runs every vector against each
-library's native verifier (see the repository README). The set is
-published only when both libraries agree.
+library's native verifier (see the repository README). A multi-signature
+vector is verified label by label with each library's request verifier:
+aauth-go `PrepareRequest` with `SignatureLabel`, aauth-rust
+`PreparedRequest::prepare_with_schemes` with the label, then the verifier
+the member's scheme calls for. The set is published only when both
+libraries agree.
 
 To check this file against the libraries, or to regenerate it:
 
@@ -149,8 +156,9 @@ The ML-DSA-44 key needs Go 1.27 or later (`crypto/mldsa`).
   not offer one, and verifies the vector.
 - jkt-jwt with an ES256 identity or request key is signed and verified by
   aauth-go only: aauth-rust keeps jkt-jwt at Ed25519.
-- Multiple signatures: which labels a verifier checks is application
-  context (signature-key lines 173 and 181), so the drafts fix no result
-  for a request carrying a second label. aauth-rust verifies label `sig`
-  and ignores the other; aauth-go refuses the request with
-  `invalid_signature`. The case is left out until the draft settles it.
+- Multiple signatures beyond `multi-hwk-jwks`: which labels a verifier
+  checks is application context (signature-key lines 173 and 181), so that
+  vector states the labels to verify. With label `sig` configured and a
+  second label present, the drafts fix no result: aauth-rust verifies `sig`
+  and ignores the other, and aauth-go's Resource refuses the request with
+  `invalid_signature`. That case is left out until the draft settles it.

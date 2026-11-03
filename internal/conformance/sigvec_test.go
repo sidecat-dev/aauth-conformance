@@ -68,6 +68,30 @@ func TestSigvecVectorsRecheckIndependently(t *testing.T) {
 		}
 		ids[v.ID] = true
 		received := SigvecReceived(v)
+		if len(v.Signatures) > 0 {
+			if v.SignatureBase != "" || v.Scheme != "" || v.SigningKey != "" {
+				t.Fatalf("%s: a multi-signature vector carries its bases, schemes and keys per signature only", v.ID)
+			}
+			for _, s := range v.Signatures {
+				got, err := sigvecSignatureFor(SigvecEnvironmentFor(file, v), received, s.Label)
+				if err != nil {
+					t.Fatalf("%s/%s: %v", v.ID, s.Label, err)
+				}
+				if got.SignatureBase != s.SignatureBase || got.SignatureBaseSHA256 != s.SignatureBaseSHA256 || got.SignatureBaseLength != s.SignatureBaseLength {
+					t.Fatalf("%s/%s: published signature base, digest or length is not the harness's", v.ID, s.Label)
+				}
+				if member, _, err := sigvecMember(received, s.Label); err != nil || member != s.Scheme {
+					t.Fatalf("%s/%s: member scheme is %q, published %q", v.ID, s.Label, member, s.Scheme)
+				}
+				if s.SignatureVerifies == nil || *got.SignatureVerifies != *s.SignatureVerifies {
+					t.Fatalf("%s/%s: signature_verifies differs from the harness's %v", v.ID, s.Label, *got.SignatureVerifies)
+				}
+				if v.Expect.Outcome == "verify" && !*got.SignatureVerifies {
+					t.Fatalf("%s/%s: positive vector does not verify under the harness", v.ID, s.Label)
+				}
+			}
+			continue
+		}
 		base, err := SigvecBase(received, file.Verifier.Label)
 		if err != nil {
 			if v.SignatureBase != "" {

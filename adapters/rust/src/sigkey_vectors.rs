@@ -75,6 +75,8 @@ struct Verifier {
     resource: String,
     agent_provider: String,
     self_jwt_typ: String,
+    #[serde(default)]
+    window_seconds: i64,
 }
 
 #[derive(Deserialize, Default)]
@@ -109,6 +111,8 @@ struct Job {
     signatures: Vec<Part>,
     #[serde(default)]
     environment: Environment,
+    #[serde(default)]
+    labels: Vec<String>,
 }
 
 pub fn run(config: Bootstrap) -> Result<(), Failure> {
@@ -305,6 +309,9 @@ fn verify(job: &Job) -> Result<Response<Vec<u8>>, Failure> {
     let env = &job.environment;
     let documents = Documents(&env.documents);
     let request = build_request(&job.request)?;
+    if !job.labels.is_empty() {
+        return Ok(verify_labels(job, &documents, &request));
+    }
     let ap = &env.verifier.agent_provider;
     let ap_metadata = documents
         .get(&format!("{ap}/.well-known/aauth-agent.json"))
@@ -335,6 +342,38 @@ fn verify(job: &Job) -> Result<Response<Vec<u8>>, Failure> {
         },
         other => other.into_response(),
     })
+}
+
+/// Verifies every label a multi-signature vector names, each through
+/// `PreparedRequest::prepare_with_schemes` with that label and the
+/// `PreparedRequest` verifier its member calls for. Answers 200 with each
+/// label's scheme when all verify, or the first refusal.
+fn verify_labels(
+    job: &Job,
+    documents: &Documents<'_>,
+    request: &Request<Vec<u8>>,
+) -> Response<Vec<u8>> {
+    let env = &job.environment;
+    let mut schemes = serde_json::Map::new();
+    for label in &job.labels {
+        let prepared = match PreparedRequest::prepare_with_schemes(
+            request,
+            label,
+            job.now,
+            env.verifier.window_seconds,
+            &["hwk", "jwks", "jwks_uri"],
+        ) {
+            Ok(prepared) => prepared,
+            Err(error) => return refuse(SignatureFailure::Proof(error)),
+        };
+        match further(env, documents, &prepared, job.now) {
+            Ok((scheme, _)) => {
+                schemes.insert(label.clone(), json!(scheme));
+            }
+            Err(failure) => return refuse(failure),
+        }
+    }
+    json_response(200, json!({"labels": schemes}))
 }
 
 /// The unverified `iss` and `dwk` of a self-jwt, which name the metadata

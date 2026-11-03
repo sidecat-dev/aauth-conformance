@@ -387,8 +387,21 @@ func (b *sigvecBuild) vector(c sigvecCase, id string, category int, pre SigvecRe
 	file := b.file(nil)
 	env := SigvecEnvironmentFor(file, v)
 	received := SigvecReceived(v)
+	if len(parts) > 1 {
+		// A multi-signature vector: one base per label, each verified under
+		// the key its own member conveys.
+		v.Scheme, v.SigningKey = "", ""
+		for _, p := range parts {
+			s, err := sigvecSignatureFor(env, received, p.Label)
+			if err != nil {
+				return v, fmt.Errorf("label %s: %w", p.Label, err)
+			}
+			s.Scheme, s.Alg, s.SigningKey = p.Scheme, b.keys[p.Key].def.alg, p.Key
+			v.Signatures = append(v.Signatures, s)
+		}
+	}
 	base, err := SigvecBase(received, sigvecLabel)
-	if err == nil {
+	if err == nil && len(parts) == 1 {
 		sum := sha256.Sum256([]byte(base))
 		v.SignatureBase, v.SignatureBaseSHA256, v.SignatureBaseLength = base, hex.EncodeToString(sum[:]), len(base)
 		if key, resolves, err := SigvecConveyedKey(env, received, sigvecLabel); err == nil || len(resolves) > 0 {
@@ -413,10 +426,40 @@ func (b *sigvecBuild) vector(c sigvecCase, id string, category int, pre SigvecRe
 	if v.Provenance.SignedBy == "harness" {
 		v.Provenance.Note = "Signed by the harness: " + c.HarnessReason + "."
 	}
-	if c.Expect.Outcome == "verify" && (v.SignatureVerifies == nil || !*v.SignatureVerifies) && c.Category != 1 {
+	verifies := v.SignatureVerifies != nil && *v.SignatureVerifies
+	if len(v.Signatures) > 0 {
+		verifies = true
+		for _, s := range v.Signatures {
+			verifies = verifies && s.SignatureVerifies != nil && *s.SignatureVerifies
+		}
+	}
+	if c.Expect.Outcome == "verify" && !verifies && c.Category != 1 {
 		return v, fmt.Errorf("positive vector does not verify under the harness's own resolution")
 	}
 	return v, nil
+}
+
+// sigvecSignatureFor rebuilds one label's signature base, resolves the key
+// its member conveys and checks the signature, with the harness's own code.
+func sigvecSignatureFor(env SigvecEnvironment, received SigvecRequest, label string) (SigvecSignature, error) {
+	base, err := SigvecBase(received, label)
+	if err != nil {
+		return SigvecSignature{}, err
+	}
+	sum := sha256.Sum256([]byte(base))
+	s := SigvecSignature{Label: label, SignatureBase: base, SignatureBaseSHA256: hex.EncodeToString(sum[:]), SignatureBaseLength: len(base)}
+	key, resolves, err := SigvecConveyedKey(env, received, label)
+	s.Resolves = resolves
+	if err != nil {
+		return s, err
+	}
+	signature, err := sigvecSignatureBytes(received, label)
+	if err != nil {
+		return s, err
+	}
+	verifies := SigvecVerifyJWK(key, []byte(base), signature)
+	s.SignatureVerifies = &verifies
+	return s, nil
 }
 
 // SigvecLauncherSigner signs through a started launcher.
@@ -505,6 +548,15 @@ func SigvecCompare(published, fresh SigvecFile) []string {
 		if p.SignatureBase != f.SignatureBase {
 			differences = append(differences, p.ID+": signature base differs")
 		}
+		if len(p.Signatures) != len(f.Signatures) {
+			differences = append(differences, p.ID+": number of signatures differs")
+		} else {
+			for i := range p.Signatures {
+				if p.Signatures[i].Label != f.Signatures[i].Label || p.Signatures[i].SignatureBase != f.Signatures[i].SignatureBase {
+					differences = append(differences, p.ID+": signature base of label "+p.Signatures[i].Label+" differs")
+				}
+			}
+		}
 		delete(index, p.ID)
 	}
 	for id := range index {
@@ -545,6 +597,13 @@ func sigvecAssertions(v SigvecVector, clause string) []Assertion {
 	raw := func(v any) json.RawMessage { b, _ := json.Marshal(v); return b }
 	switch v.Expect.Outcome {
 	case "verify":
+		if len(v.Signatures) > 0 {
+			assertions := []Assertion{{ID: "verified", Clause: clause, Kind: "status", Equals: raw(200)}}
+			for _, s := range v.Signatures {
+				assertions = append(assertions, Assertion{ID: "scheme-" + s.Label, Clause: clause, Kind: "json-path", Member: "labels." + s.Label, Equals: raw(s.Scheme)})
+			}
+			return assertions
+		}
 		return []Assertion{
 			{ID: "verified", Clause: clause, Kind: "status", Equals: raw(200)},
 			{ID: "scheme", Clause: clause, Kind: "json-member", Member: "scheme", Equals: raw(v.Scheme)},
@@ -681,6 +740,9 @@ func SigvecAppendix(file SigvecFile) string {
 		w("Request:\n\n```http\n%s```\n\n", sigvecFold(request.String()))
 		if v.SignatureBase != "" {
 			w("Signature base (%d bytes, SHA-256 %s):\n\n```\n%s```\n\n", v.SignatureBaseLength, v.SignatureBaseSHA256, sigvecFold(v.SignatureBase))
+		}
+		for _, s := range v.Signatures {
+			w("Signature base for label `%s` (%s, %s, key %s; %d bytes, SHA-256 %s):\n\n```\n%s```\n\n", s.Label, s.Scheme, s.Alg, s.SigningKey, s.SignatureBaseLength, s.SignatureBaseSHA256, sigvecFold(s.SignatureBase))
 		}
 		if v.Assertion != nil {
 			w("Assertion header and payload (signed by %s):\n\n```\n%s\n%s\n```\n\n", v.Assertion.SignedBy, sigvecPretty(v.Assertion.Header), sigvecPretty(v.Assertion.Payload))

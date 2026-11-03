@@ -743,8 +743,12 @@ start-up.
 
 The runner sends the received request (the vector's request with its
 `signed` fields), the vector's `now` and the environment to the launcher,
-which answers with its native verifier's response. Generic kinds grade it:
-a `verify` vector expects status 200 and the verified `scheme` in the echo;
+which answers with its native verifier's response. A multi-signature
+vector's job also carries `labels`, every label the launcher verifies; it
+answers 200 with `labels`, each label's verified scheme, only when all
+verify. Generic kinds grade it: a `verify` vector expects status 200 and
+the verified `scheme` in the echo (for a multi-signature vector, each
+label's scheme at `labels.<label>`);
 a `reject` vector expects 401 and the `Signature-Error` code, or any
 `Signature-Error` when the drafts fix none; a `verify-or-reject` vector
 uses `sigkey-pq`. Clauses are per scheme and algorithm (`sigvec.*`) and per
