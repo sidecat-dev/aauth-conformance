@@ -19,7 +19,7 @@
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "ae5a32ebba22f16710bb1ec0dd326f9f7bbe590cb3c911ce8e02bb3c97568ab7",
+      "sha256": "017013cc02433249f9e686df4743afd2cdb21025e41da4bbf339e0031dd616a4",
       "index": 27
     },
     "vector": {
@@ -34,7 +34,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:STLnBMJb/gNkFeo+YUcVKdD0PWKqxFNGN452rKOV6ajdy2c0s6GPWjq64vfN8Ga0T0i69luOh6rBCkQ95LiR9g==:",
+        "Signature": "sig=:8ngU8fozi54GL0z65FiITZIMA1XC3pknvzRZl5XSrRwb9RjpTu1mWxNDMYF6BRzjPCe5XwLN7w2li/byQnm4Qg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg\""
       },

@@ -20,7 +20,7 @@
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "ae5a32ebba22f16710bb1ec0dd326f9f7bbe590cb3c911ce8e02bb3c97568ab7",
+      "sha256": "017013cc02433249f9e686df4743afd2cdb21025e41da4bbf339e0031dd616a4",
       "index": 38
     },
     "vector": {
@@ -35,7 +35,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:NPJKOZFk/Xp5FlEnlW35X70s2tpp16+E8R06prlToMeQvQaoFhd+9WpHQ/pL6070TCJZ1psK1qLqqcpVC1IIb3f6ewU95KLyy0+JuaAL1h/BZkhrchI0FSlDOTvpvmYw:",
+        "Signature": "sig=:SRy47nSqZAmROzzcnWohR4NEUm2JWV02w8op7WRgaSiLthfLM/OrS5ayUEzIWFt0ogpU1hVSJ/1nZRdlvGJWyc/KHTqoP3OjPIKLQE1ATzUhjB6KjtrrC54uvpEcoj20:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-384\";x=\"bfPOJCwtKpeY-u4uoaDBCfsct3meT5xE2xcLJtxuqWnW_Bgn1nXi-DNsuFvbf2Au\";y=\"O6DNv-okgDuYtZ4keVM0oizSEw8SKem9lLja7W7fy0ykCtGkdNmXvD0daJdzxelI\";alg=\"ES256\""
       },

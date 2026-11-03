@@ -1,0 +1,132 @@
+{
+  "assertions": [
+    {
+      "id": "verified",
+      "clause": "sigvec.accept.window",
+      "kind": "status",
+      "equals": 200
+    },
+    {
+      "id": "scheme",
+      "clause": "sigvec.accept.window",
+      "kind": "json-member",
+      "member": "scheme",
+      "equals": "hwk"
+    }
+  ],
+  "given": "agent-identity",
+  "id": "sigvec.accept-created-window-behind",
+  "input": {
+    "source": {
+      "file": "vectors/signature-key/signature-key-vectors.json",
+      "sha256": "017013cc02433249f9e686df4743afd2cdb21025e41da4bbf339e0031dd616a4",
+      "index": 59
+    },
+    "vector": {
+      "id": "accept-created-window-behind",
+      "title": "boundary, must verify: hwk signature whose created is 60 seconds before the verifier clock, the edge of the 60-second window",
+      "category": 3,
+      "scheme": "hwk",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:iNrjY7EGsyMrCVG8OMpp5CzeEtvUHY9bh9vTBqQdeJiyx6yQtUNaZ8TJ6V016PYFBXPIEF7Kz5pBMeaNNln/Dg==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1799999940",
+        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1799999940",
+      "signature_base_sha256": "21033d14d21c6baa357badba4471b8eebb54c4bd84c0eabf249c7589760acebe",
+      "signature_base_length": 265,
+      "signature_verifies": true,
+      "signing_key": "agent-ed25519",
+      "expect": {
+        "outcome": "verify",
+        "basis": "protocol Verification step 3, line 2246: created MUST be within the verifier's signature validity window, 60 seconds by default. invalid_signature is for a created older than the window (signature-key line 1114); 60 seconds old is not older"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    "environment": {
+      "verifier": {
+        "resource": "https://resource.example/api/items",
+        "agent_provider": "https://agent-provider.example",
+        "self_jwt_typ": "vector-self+jwt",
+        "label": "sig",
+        "window_seconds": 60,
+        "schemes": [
+          "hwk",
+          "jwt",
+          "jkt-jwt",
+          "jwks_uri",
+          "jwks",
+          "self-jwt",
+          "x509",
+          "cached"
+        ],
+        "algorithms": [
+          "Ed25519",
+          "ES256",
+          "ES384",
+          "RS256",
+          "PS256"
+        ]
+      },
+      "documents": [
+        {
+          "url": "https://agent-provider.example/.well-known/aauth-agent.json",
+          "content_type": "application/json",
+          "body": "{\"issuer\":\"https://agent-provider.example\",\"jwks_uri\":\"https://agent-provider.example/.well-known/jwks.json\"}"
+        },
+        {
+          "url": "https://agent-provider.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"ap-ed25519\",\"kty\":\"OKP\",\"x\":\"9YIWN80tEjjl15PYCUMALnmQnFwualkJxWB9xKHb_tc\"}]}"
+        },
+        {
+          "url": "https://certs.example/x509-ed25519.pem",
+          "content_type": "application/pem-certificate-chain",
+          "body": "-----BEGIN CERTIFICATE-----\nMIIBRzCB+qADAgECAgECMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5\nIFRlc3QgVmVjdG9ycyBSb290MB4XDTI3MDExNDA4MDAwMFoXDTI4MDExNTA4MDAw\nMFowGTEXMBUGA1UEAxMOc2lnbmVyLmV4YW1wbGUwKjAFBgMrZXADIQAopB11rtRm\nquUBmuGFNTO79cMjEfBP9yq1d3v08oSOXqNWMFQwDgYDVR0PAQH/BAQDAgeAMBMG\nA1UdJQQMMAoGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU9xl1\nZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EAUePgKlSc6PuwbKPHBMH6L++k3Jpk\n+vyUK1ef0PhZYPQptFsBXs0EmFtsUgEbB6763doyD8FCGZzhvqhSswSOAQ==\n-----END CERTIFICATE-----\n"
+        },
+        {
+          "url": "https://certs.example/x509-es256.pem",
+          "content_type": "application/pem-certificate-chain",
+          "body": "-----BEGIN CERTIFICATE-----\nMIIBdzCCASmgAwIBAgIBAzAFBgMrZXAwKjEoMCYGA1UEAxMfU2lnbmF0dXJlLUtl\neSBUZXN0IFZlY3RvcnMgUm9vdDAeFw0yNzAxMTQwODAwMDBaFw0yODAxMTUwODAw\nMDBaMBkxFzAVBgNVBAMTDnNpZ25lci5leGFtcGxlMFkwEwYHKoZIzj0CAQYIKoZI\nzj0DAQcDQgAEooQulrtbZieXmZUQYIAUasssFpxOfc/YLagzXnXWtyRvUu6er8RC\nUIpAmTUUTNJ7b1iCKSc5CatjggAbPUV1zaNWMFQwDgYDVR0PAQH/BAQDAgeAMBMG\nA1UdJQQMMAoGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU9xl1\nZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EA7nTnFZIscBqIga3YCOtswhIVZrkG\njvu86fk2HO+461VPwe3KocWjasUwxqRgcUZlfiic3EHbcFWKwz5ZsU3KAg==\n-----END CERTIFICATE-----\n"
+        },
+        {
+          "url": "https://keys.example/signer.jwks",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"},{\"alg\":\"ES256\",\"crv\":\"P-256\",\"kid\":\"signer-es256\",\"kty\":\"EC\",\"x\":\"na6GJ2V2n70jCjzJF7H5rtXnUokY_90isxO3ny4iNLQ\",\"y\":\"5vt7nLlc92fzNn5baKytoofmPBukg5ikncT8hIWSQJs\"}]}"
+        },
+        {
+          "url": "https://signer.example/.well-known/aauth-resource.json",
+          "content_type": "application/json",
+          "body": "{\"issuer\":\"https://signer.example\",\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
+        },
+        {
+          "url": "https://signer.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"},{\"alg\":\"ES256\",\"crv\":\"P-256\",\"kid\":\"signer-es256\",\"kty\":\"EC\",\"x\":\"na6GJ2V2n70jCjzJF7H5rtXnUokY_90isxO3ny4iNLQ\",\"y\":\"5vt7nLlc92fzNn5baKytoofmPBukg5ikncT8hIWSQJs\"}]}"
+        }
+      ],
+      "x509": {
+        "trust_anchors_der_base64": [
+          "MIIBRzCB+qADAgECAgEBMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5IFRlc3QgVmVjdG9ycyBSb290MB4XDTI2MTIxNjA4MDAwMFoXDTM3MDExMjA4MDAwMFowKjEoMCYGA1UEAxMfU2lnbmF0dXJlLUtleSBUZXN0IFZlY3RvcnMgUm9vdDAqMAUGAytlcAMhAC1fS8gyIFdu2EjemO7sljJ3QH3RKffNd3+MlFw4vQEeo0UwQzAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQU9xl1ZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EA+scmME9B+zvrxgiyrB2sn9rl879hME4cnWhy0noV90hE8UeKgTKEC20PKbpe+KXhMKkCJephtlc1ac5pvK+lCA=="
+        ],
+        "crls_der_base64": [
+          "MIHSMIGFAgEBMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5IFRlc3QgVmVjdG9ycyBSb290Fw0yNzAxMTUwNzAwMDBaFw0yNzAxMjIwODAwMDBaoC8wLTAfBgNVHSMEGDAWgBT3GXVkj8aR1HoZdy3YKJ8S4nQJMzAKBgNVHRQEAwIBATAFBgMrZXADQQDwLqa0fp2PGPJYkGUzmUD89gFg+33kcNoMcJ2DwZxT1v6c1Hk/K7iWNh3cIySY1zLAN0AvUScKLIkVtm8h9aMO"
+        ]
+      }
+    }
+  },
+  "role_under_test": "vectors.signature-key",
+  "title": "Signature-Key vector accept-created-window-behind: boundary, must verify: hwk signature whose created is 60 seconds before the verifier clock, the edge of the 60-second window",
+  "version": 1
+}

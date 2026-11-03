@@ -19,7 +19,7 @@
   "input": {
     "source": {
       "file": "vectors/signature-key/signature-key-vectors.json",
-      "sha256": "ae5a32ebba22f16710bb1ec0dd326f9f7bbe590cb3c911ce8e02bb3c97568ab7",
+      "sha256": "017013cc02433249f9e686df4743afd2cdb21025e41da4bbf339e0031dd616a4",
       "index": 9
     },
     "vector": {
@@ -34,7 +34,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:YvaXFVfyQgQHgnuu6T97FXcGeeNJsaYHOkPWVX/vhIFZBDz+v9BwJqPVuSKCqTtOSBEohcPu2dmog2RyuxD5yHds2PJDywS4kjcyHxOhvuw39WPmORQioT4ksG3fLQVnFTZI2qStu/2ilGXkENJJ+FhOuwKwK01HM1C4GZdUDVG3l7AKXGUQONn9Ces6JU2I2dxLnV6H2P9KpbA2uK3saGbgRvM8YhPGimNcnJuvodRXegyGjkIPsVG1MLz4RhxP3Id3VVM6V0foetNr+RAZH6N78tjjrhc87qxAN50AqEg3P35uFcuHUFeG6qGGfGDTJ5t1TBtdWiAhZGtPQjOSZw==:",
+        "Signature": "sig=:D9bDtnEhKNdgvAEsoC7mJ/ZxVsKjH5BiK6/q8i8X+s+LqQ42t5YYwLvNuT6htlyn377gOpX9bYNq97mC32pPpyqFRi8N7+bVcUVXM9MKEVKReoPI8L58AIoOmgMlxQtX8cfGimbgdJ6zyMw57oE7ms1PJ1sGfpBUvXIYHZyXJ/unJ4A1HqPFMERa/jD5ModLHwYtEmJ/dzDjML9n/yCUMNDkCzs1yOWch3rsnDx5gJgMH45y+TJinkbV+sxnOOB0UwgzGtlHtn7Vy8n7Z62WPJahc9hFj+LGxcPz9y998KjLAM1dSJA4THj+Z9N4MXh8pWM4l/4+IffFvR/ArBaKow==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"RSA\";n=\"tE2hQ7RoXWIGUZIlGG0i748Sp0uG87X5ee96CqeMG11F2NCYFlueGn6lGB3xYC5A-QqeoUB3BP_b7lY54oRRfICD_KE5LF-D8bXS4JocdQfq9hO4QxBuVZG57oWs8bXICrws-Lj_Lmu-ZeZW5K4ooynqdzxfbx8_2-MP1SlmD3N_mOPzHiaVDSxelry0xH61YLh_0nUHrKw37wiIqwQZgsKDnTBMN1YMmNsdIt5AUdKlyWJzQBN9S0TCAKE47vJxZoqVTDBxc-w2jG1zif-2h_mwbzLnWQj0FebK_sI5jagVDEGn5_Zzzw3rXFhjYDhraWkqMGbmZdq0sd8Iw9jF5Q\";e=\"AQAB\";alg=\"PS256\""
       },

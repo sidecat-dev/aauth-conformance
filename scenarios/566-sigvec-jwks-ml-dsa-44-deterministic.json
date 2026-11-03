@@ -1,0 +1,134 @@
+{
+  "assertions": [
+    {
+      "id": "defined-result",
+      "clause": "sigvec.pq-deterministic",
+      "kind": "sigkey-pq",
+      "equals": "unsupported_algorithm"
+    }
+  ],
+  "given": "agent-identity",
+  "id": "sigvec.jwks-ml-dsa-44-deterministic",
+  "input": {
+    "source": {
+      "file": "vectors/signature-key/signature-key-vectors.json",
+      "sha256": "017013cc02433249f9e686df4743afd2cdb21025e41da4bbf339e0031dd616a4",
+      "index": 66
+    },
+    "vector": {
+      "id": "jwks-ml-dsa-44-deterministic",
+      "title": "jwks, ML-DSA-44, signed with the FIPS 204 deterministic variant (rnd all zeros) so the signature reproduces",
+      "category": 3,
+      "scheme": "jwks",
+      "alg": "ML-DSA-44",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=: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:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ml-dsa-44\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ml-dsa-44\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "ee08999ed9a9fdcfa7f75fc0275032b3dc842f2a8c5267e0c235240b92ce3c40",
+      "signature_base_length": 242,
+      "signing_key": "signer-ml-dsa-44",
+      "documents": [
+        {
+          "url": "https://keys.example/signer.jwks",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"ML-DSA-44\",\"kid\":\"signer-ml-dsa-44\",\"kty\":\"AKP\",\"pub\":\"vCWs7y8_K8ndKqvKsVninhAQnDuW8EK2hyhvbXRxohfBAtkRpeDnm26tuJ6yUmNRB_A7jgh46286BdSD17QWQzCd3Ntt6uVVQxeL4F2y89pkMMljKcn3_S9aWxS_9hQHo3amelEVlYoCJycvpNlpCaGo_a275c9nWjtvjotRTnq8ur8ZHppmsQDQnUcLoVBDwnn27sUNQZ6ChGqSZBuCozEH1LRhdxDXfmYg7mvFi8FWE68ci9P5BvwDIBukfSrelvWYy9jSi-VPkrXohFD1Ljk_U9FAkW7u6bVmToWWyXHRv-Z4ZPKSpe_1pIZNffIoXoQ0VgqrFb5g1AFcCL_jefp55D26cp-HGF4pE0zPtpUf-DHba-rUFkg4cfYJRwszgoD5JHMzBTl1xqLekeVpIgh135-Im0nvjJo_C6JYD-frkfiH3eh6QkJ9hkbRA7Ooy8G6ncGTB5La2mRFNavXtawiCHLKxfk9EShjh7VeV3iriCj0A4RQlAvaQlJIZELHISJJq1BvgCwRJ4kUjah3ksdOqXocg3nXIAExjO0S96KsvepJsx1v0Aoc0Dd33jrKmLS7PuoUmjDhQXoKrZidNIHLb_yKV84OSjJELtW76IbaJq3gNF9xMmSOhfX50I40N_clO2pG9WttRBHX_pfFwBw53ficYR8RVbycVYnaPc3WZhJtwkWOAVjld5jA84TOY49j-Xunoa7ZK5IvvGOOXi5QI_DXTiV_7c6PjvJOhMA1eOlXS8BvWcwZigCOCYKTyiqARb920hkgcSzzjDvS2ABeumg0LnNC6TRcZEL574zgX0O02Ij8xhvcUC8I__DrR0jOg_MVXxLqfYS6qXYNrJ01IUstFfJm-r-CFcYfWkB5I-MHik9DlF0Wu5iJvFZAD1DbjUWAq-AI-a4RZM29BFIud9B7GzKuLGFZRNv4NeshL0nSzsSG1ELOHXkMGsiuicfFnDlDlo2iR59zxVqno8su9E3mqILIXZeTzRw0L1_o1FO07QyXVCoEdAcVYjFPBbB6hTxHk9pEZc1J3gY4GsI8XIEhd5O8UIp5jilGY03sktuvWVA_LHzOThx2rP2Hu57dNHcywliVbfjNPQY_6u1pOPPToulQdOwnTfzs26wd96Z4SH_posjyWxFb6u8EfxkMlIZ3AM1dKNk3xb7CIXWvOjNSZg3fJoC4a_cjOO0a-C3RqbZDcZ-02tDeGSVbZehzzN8lm0-t0zD3-ThMF5odJCkgg1fbBbjRxNsGKUHZHV9NStJiKUGNVeX3rF_Vbu2xdjqt16uRx86c8PWafK0AVb1zcyBZSQk8R3gj8jgrkx9G4LZmuxbAXqIx5cw2TWtgeSBV_zf8eCeU5JsGTda8Wra-LE31BGoRtdq64W3vInZnuhxKb3mcjleE-1PJDSsFGLCY5ukelsP-U8Kd1OB9rukXGcqFyOnvvD7v7tq-41HmW4nU9-GTD23JX9fnjT-bo5m3nCYmaiFMpLXygS9Le_NPeaQ8cvbY7v-Y3bx_CLV7jSA9qzKCOXvQifWGvyFLwKJrs2L5zf7LMj79eGE9gIDr9AFfhNYf3WbAT0VlgDX8fFRz6PQTfz9dRH5tCDK5SYehbCl4dxwvhJZ922rjo5y99TL4WBV1AaKXw2Fs_voFm1C6yFmnMmn6L5UPGtxp4R5Cb8yJrvypgCyH-QvQs8pvsoZKgl9d0QPFJa4OlnBVnus7vIXse1MCls-Gd2md1eEyKlaJUay4RqDjaw\"}]}"
+        }
+      ],
+      "resolves": [
+        "https://keys.example/signer.jwks"
+      ],
+      "expect": {
+        "outcome": "verify-or-reject",
+        "error": "unsupported_algorithm",
+        "basis": "signature-key line 231: ML-DSA-44 is a fully-specified alg used as-is; line 233 and protocol Verification step 6: a verifier that does not implement the AKP key type MUST reject it with unsupported_algorithm and MUST NOT fail in an undefined manner; one that implements ML-DSA-44 verifies"
+      },
+      "optional": "reproducing the bytes needs ML-DSA-44 signing with the FIPS 204 deterministic variant (rnd all zeros, empty context); most libraries do not expose that option, so a signer without it may skip the byte comparison. Verification is graded as verify-or-reject either way",
+      "provenance": {
+        "signed_by": "harness",
+        "note": "Signed by the harness: neither library signs with ML-DSA-44."
+      }
+    },
+    "environment": {
+      "verifier": {
+        "resource": "https://resource.example/api/items",
+        "agent_provider": "https://agent-provider.example",
+        "self_jwt_typ": "vector-self+jwt",
+        "label": "sig",
+        "window_seconds": 60,
+        "schemes": [
+          "hwk",
+          "jwt",
+          "jkt-jwt",
+          "jwks_uri",
+          "jwks",
+          "self-jwt",
+          "x509",
+          "cached"
+        ],
+        "algorithms": [
+          "Ed25519",
+          "ES256",
+          "ES384",
+          "RS256",
+          "PS256"
+        ]
+      },
+      "documents": [
+        {
+          "url": "https://agent-provider.example/.well-known/aauth-agent.json",
+          "content_type": "application/json",
+          "body": "{\"issuer\":\"https://agent-provider.example\",\"jwks_uri\":\"https://agent-provider.example/.well-known/jwks.json\"}"
+        },
+        {
+          "url": "https://agent-provider.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"ap-ed25519\",\"kty\":\"OKP\",\"x\":\"9YIWN80tEjjl15PYCUMALnmQnFwualkJxWB9xKHb_tc\"}]}"
+        },
+        {
+          "url": "https://certs.example/x509-ed25519.pem",
+          "content_type": "application/pem-certificate-chain",
+          "body": "-----BEGIN CERTIFICATE-----\nMIIBRzCB+qADAgECAgECMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5\nIFRlc3QgVmVjdG9ycyBSb290MB4XDTI3MDExNDA4MDAwMFoXDTI4MDExNTA4MDAw\nMFowGTEXMBUGA1UEAxMOc2lnbmVyLmV4YW1wbGUwKjAFBgMrZXADIQAopB11rtRm\nquUBmuGFNTO79cMjEfBP9yq1d3v08oSOXqNWMFQwDgYDVR0PAQH/BAQDAgeAMBMG\nA1UdJQQMMAoGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU9xl1\nZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EAUePgKlSc6PuwbKPHBMH6L++k3Jpk\n+vyUK1ef0PhZYPQptFsBXs0EmFtsUgEbB6763doyD8FCGZzhvqhSswSOAQ==\n-----END CERTIFICATE-----\n"
+        },
+        {
+          "url": "https://certs.example/x509-es256.pem",
+          "content_type": "application/pem-certificate-chain",
+          "body": "-----BEGIN CERTIFICATE-----\nMIIBdzCCASmgAwIBAgIBAzAFBgMrZXAwKjEoMCYGA1UEAxMfU2lnbmF0dXJlLUtl\neSBUZXN0IFZlY3RvcnMgUm9vdDAeFw0yNzAxMTQwODAwMDBaFw0yODAxMTUwODAw\nMDBaMBkxFzAVBgNVBAMTDnNpZ25lci5leGFtcGxlMFkwEwYHKoZIzj0CAQYIKoZI\nzj0DAQcDQgAEooQulrtbZieXmZUQYIAUasssFpxOfc/YLagzXnXWtyRvUu6er8RC\nUIpAmTUUTNJ7b1iCKSc5CatjggAbPUV1zaNWMFQwDgYDVR0PAQH/BAQDAgeAMBMG\nA1UdJQQMMAoGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAU9xl1\nZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EA7nTnFZIscBqIga3YCOtswhIVZrkG\njvu86fk2HO+461VPwe3KocWjasUwxqRgcUZlfiic3EHbcFWKwz5ZsU3KAg==\n-----END CERTIFICATE-----\n"
+        },
+        {
+          "url": "https://keys.example/signer.jwks",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"ML-DSA-44\",\"kid\":\"signer-ml-dsa-44\",\"kty\":\"AKP\",\"pub\":\"vCWs7y8_K8ndKqvKsVninhAQnDuW8EK2hyhvbXRxohfBAtkRpeDnm26tuJ6yUmNRB_A7jgh46286BdSD17QWQzCd3Ntt6uVVQxeL4F2y89pkMMljKcn3_S9aWxS_9hQHo3amelEVlYoCJycvpNlpCaGo_a275c9nWjtvjotRTnq8ur8ZHppmsQDQnUcLoVBDwnn27sUNQZ6ChGqSZBuCozEH1LRhdxDXfmYg7mvFi8FWE68ci9P5BvwDIBukfSrelvWYy9jSi-VPkrXohFD1Ljk_U9FAkW7u6bVmToWWyXHRv-Z4ZPKSpe_1pIZNffIoXoQ0VgqrFb5g1AFcCL_jefp55D26cp-HGF4pE0zPtpUf-DHba-rUFkg4cfYJRwszgoD5JHMzBTl1xqLekeVpIgh135-Im0nvjJo_C6JYD-frkfiH3eh6QkJ9hkbRA7Ooy8G6ncGTB5La2mRFNavXtawiCHLKxfk9EShjh7VeV3iriCj0A4RQlAvaQlJIZELHISJJq1BvgCwRJ4kUjah3ksdOqXocg3nXIAExjO0S96KsvepJsx1v0Aoc0Dd33jrKmLS7PuoUmjDhQXoKrZidNIHLb_yKV84OSjJELtW76IbaJq3gNF9xMmSOhfX50I40N_clO2pG9WttRBHX_pfFwBw53ficYR8RVbycVYnaPc3WZhJtwkWOAVjld5jA84TOY49j-Xunoa7ZK5IvvGOOXi5QI_DXTiV_7c6PjvJOhMA1eOlXS8BvWcwZigCOCYKTyiqARb920hkgcSzzjDvS2ABeumg0LnNC6TRcZEL574zgX0O02Ij8xhvcUC8I__DrR0jOg_MVXxLqfYS6qXYNrJ01IUstFfJm-r-CFcYfWkB5I-MHik9DlF0Wu5iJvFZAD1DbjUWAq-AI-a4RZM29BFIud9B7GzKuLGFZRNv4NeshL0nSzsSG1ELOHXkMGsiuicfFnDlDlo2iR59zxVqno8su9E3mqILIXZeTzRw0L1_o1FO07QyXVCoEdAcVYjFPBbB6hTxHk9pEZc1J3gY4GsI8XIEhd5O8UIp5jilGY03sktuvWVA_LHzOThx2rP2Hu57dNHcywliVbfjNPQY_6u1pOPPToulQdOwnTfzs26wd96Z4SH_posjyWxFb6u8EfxkMlIZ3AM1dKNk3xb7CIXWvOjNSZg3fJoC4a_cjOO0a-C3RqbZDcZ-02tDeGSVbZehzzN8lm0-t0zD3-ThMF5odJCkgg1fbBbjRxNsGKUHZHV9NStJiKUGNVeX3rF_Vbu2xdjqt16uRx86c8PWafK0AVb1zcyBZSQk8R3gj8jgrkx9G4LZmuxbAXqIx5cw2TWtgeSBV_zf8eCeU5JsGTda8Wra-LE31BGoRtdq64W3vInZnuhxKb3mcjleE-1PJDSsFGLCY5ukelsP-U8Kd1OB9rukXGcqFyOnvvD7v7tq-41HmW4nU9-GTD23JX9fnjT-bo5m3nCYmaiFMpLXygS9Le_NPeaQ8cvbY7v-Y3bx_CLV7jSA9qzKCOXvQifWGvyFLwKJrs2L5zf7LMj79eGE9gIDr9AFfhNYf3WbAT0VlgDX8fFRz6PQTfz9dRH5tCDK5SYehbCl4dxwvhJZ922rjo5y99TL4WBV1AaKXw2Fs_voFm1C6yFmnMmn6L5UPGtxp4R5Cb8yJrvypgCyH-QvQs8pvsoZKgl9d0QPFJa4OlnBVnus7vIXse1MCls-Gd2md1eEyKlaJUay4RqDjaw\"}]}"
+        },
+        {
+          "url": "https://signer.example/.well-known/aauth-resource.json",
+          "content_type": "application/json",
+          "body": "{\"issuer\":\"https://signer.example\",\"jwks_uri\":\"https://signer.example/.well-known/jwks.json\"}"
+        },
+        {
+          "url": "https://signer.example/.well-known/jwks.json",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"Ed25519\",\"crv\":\"Ed25519\",\"kid\":\"signer-ed25519\",\"kty\":\"OKP\",\"x\":\"G655YZ6vyw20ekWtwpnVOuwF36y6CsxxmluRvwZamO4\"},{\"alg\":\"ES256\",\"crv\":\"P-256\",\"kid\":\"signer-es256\",\"kty\":\"EC\",\"x\":\"na6GJ2V2n70jCjzJF7H5rtXnUokY_90isxO3ny4iNLQ\",\"y\":\"5vt7nLlc92fzNn5baKytoofmPBukg5ikncT8hIWSQJs\"}]}"
+        }
+      ],
+      "x509": {
+        "trust_anchors_der_base64": [
+          "MIIBRzCB+qADAgECAgEBMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5IFRlc3QgVmVjdG9ycyBSb290MB4XDTI2MTIxNjA4MDAwMFoXDTM3MDExMjA4MDAwMFowKjEoMCYGA1UEAxMfU2lnbmF0dXJlLUtleSBUZXN0IFZlY3RvcnMgUm9vdDAqMAUGAytlcAMhAC1fS8gyIFdu2EjemO7sljJ3QH3RKffNd3+MlFw4vQEeo0UwQzAOBgNVHQ8BAf8EBAMCAQYwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQU9xl1ZI/GkdR6GXct2CifEuJ0CTMwBQYDK2VwA0EA+scmME9B+zvrxgiyrB2sn9rl879hME4cnWhy0noV90hE8UeKgTKEC20PKbpe+KXhMKkCJephtlc1ac5pvK+lCA=="
+        ],
+        "crls_der_base64": [
+          "MIHSMIGFAgEBMAUGAytlcDAqMSgwJgYDVQQDEx9TaWduYXR1cmUtS2V5IFRlc3QgVmVjdG9ycyBSb290Fw0yNzAxMTUwNzAwMDBaFw0yNzAxMjIwODAwMDBaoC8wLTAfBgNVHSMEGDAWgBT3GXVkj8aR1HoZdy3YKJ8S4nQJMzAKBgNVHRQEAwIBATAFBgMrZXADQQDwLqa0fp2PGPJYkGUzmUD89gFg+33kcNoMcJ2DwZxT1v6c1Hk/K7iWNh3cIySY1zLAN0AvUScKLIkVtm8h9aMO"
+        ]
+      }
+    }
+  },
+  "role_under_test": "vectors.signature-key",
+  "title": "Signature-Key vector jwks-ml-dsa-44-deterministic: jwks, ML-DSA-44, signed with the FIPS 204 deterministic variant (rnd all zeros) so the signature reproduces",
+  "version": 1
+}
