@@ -121,7 +121,11 @@ in automation. Missing targets never count as passes.
 ## Run against deployed servers
 
 Remote mode tests servers you have already deployed, over HTTPS, with no
-adapter. Name them in a deployment file and run:
+adapter. The servers must trust the agent the suite presents: the deployment
+file names the Agent Provider the suite plays, and your servers must accept it.
+A deployment that trusts only its own providers answers 401 to every request,
+and the report says so. Grading a deployment that does not trust the suite
+is not yet possible. Name the servers in a deployment file and run:
 
 ```sh
 build/aauth-conformance -remote deployment.json -out build/remote -tls-cert suite.pem -tls-key suite.key
