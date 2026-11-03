@@ -58,13 +58,12 @@ The harness uses no AAuth library to generate inputs or grade these roles.
 
 The first six Resource scenarios—unsigned request, accepted identity, tampered signature, expired
 token, uncovered Signature-Key and future `created`—produce 17 assertions per
-implementation. Every assertion names a pinned draft clause. The
-[example report](reports/first-slice.md) records a real Go/Rust run. Its counts
-cover these assertions, not entire draft sections or complete AAuth conformance.
+implementation. Every assertion names a pinned draft clause. The counts
+cover these assertions, not entire draft sections or complete AAuth conformance;
+`conformance-map.edn` records each library's result per clause.
 
 The first three Agent scenarios cover GET, empty POST to another path, and GET
-with query and Authorization: 16 assertions per implementation. The [Agent report](reports/agent-signing.md)
-records both native signers. Only valid AP-token inputs are supplied; this does
+with query and Authorization: 16 assertions per implementation. Only valid AP-token inputs are supplied; this does
 not test the Agent's rejection of bad AP tokens or its Person Server flows.
 
 ## Run against local checkouts
@@ -182,9 +181,7 @@ go run ./cmd/aauth-conformance -targets build/person/targets.json -report build/
 ```
 
 The slice currently has **12 scenarios and 109 assertions per implementation**.
-The [dual implementation report](reports/person-server-direct.md) records
-**218 passing assertions** against Go `d914b4f` and Rust `4bdfc6e`. Add
-`-rust-source /path/to/aauth-rust` to the build command to select both targets.
+Add `-rust-source /path/to/aauth-rust` to the build command to select both targets.
 The same scenario files and expected answers apply to both implementations.
 
 The positive fixture requests a 60-second Person token, a 180-second Auth grant
@@ -247,10 +244,7 @@ trailer is graded when present. Scenario 77 charges 1000 and grades the usage
 query as a delta from a baseline read. Scenario 78 spends 1500000 on each of
 two auth tokens, then refuses a further 1000000 on the first token without
 lowering its remaining 500000. The fixture amounts, paths, and assertion kinds
-are in `FORMAT.md`. The
-[four-party report](reports/four-party-authorization.md) records Go `831d55f` and
-Rust `843be82` for the original 28 scenarios. Select those revisions or
-compatible successors; older Rust checkouts without native AS/federation APIs
+are in `FORMAT.md`. Older Rust checkouts without native AS/federation APIs
 can still run the other roles. A checkout without the Budget authorization
 endpoint fails scenarios 73–78.
 
@@ -333,8 +327,7 @@ Five scenarios add 88 assertions for payment followed by approval, approval
 without payment, denial, an invalid returned grant, and a foreign pending URL.
 They observe native PS-to-AS signed polls, exact initial token forwarding,
 stable pending URLs, verified Agent delivery, protected Resource use and
-single terminal consumption. The [report](reports/deferred-authorization.md)
-records the Go baseline. Both native adapters can run this profile against
+single terminal consumption. Both native adapters can run this profile against
 source revisions that provide their deferred AS and PS APIs.
 
 ```sh
@@ -403,9 +396,7 @@ that distinction for a calling script. For example, a missing manifest is
 binary exit 2; verify `-targets` if the error names `build/targets.json` after
 you built into `build/subagent`.
 
-The slice has **18 scenarios and 191 assertions per implementation**. The
-[sub-agent report](reports/subagent-authorization.md) records both native
-implementations against the same expected answers. Select Go and Rust
+The slice has **18 scenarios and 191 assertions per implementation**. Select Go and Rust
 revisions that provide native sub-agent PS, AS and binding-revocation APIs;
 an older checkout fails to compile its launcher rather than passing. See
 [the adapter contract](ADAPTERS.md#parent-mediated-sub-agent-authorization)
