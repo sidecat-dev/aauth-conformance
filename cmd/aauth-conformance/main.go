@@ -219,8 +219,17 @@ func summary(report conformance.Report) string {
 		}
 	}
 	outcome := "failed or incomplete"
-	if report.Success() {
+	switch report.Execution {
+	case "passed":
 		outcome = "passed"
+	case "not_exercised":
+		outcome = "not exercised"
+	case "failed_or_incomplete":
+		outcome = "failed or incomplete"
+	default:
+		if report.Success() {
+			outcome = "passed"
+		}
 	}
 	return fmt.Sprintf("%s: %s; %d scenarios × %d implementations\nAssertions: %d passed, %d failed, %d errors, %d not exercised, %d not claimed",
 		report.Role, outcome, cases, len(report.Runs),
