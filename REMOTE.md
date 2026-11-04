@@ -202,16 +202,15 @@ blanket `invalid_resource_token` refusal does not prove mutation handling.
 
 Set `bootstrap_provider` in the deployment file, or pass `-agent-provider`,
 to an Agent Provider the servers under test trust. The suite enrolls once
-for each Person Server it grades. The refresh body names that server, and
-the provider copies it to the token's `ps` claim. A Person Server accepts
-the token only when `ps` is its own issuer. One provider is enough when it
-copies `ps` on every enrollment. The hosted provider
-`https://ap.aauth.sidecat.dev` does. `bootstrap_providers` maps a Person
-Server issuer to the provider that stamps that one server, for a deployment
-whose providers each stamp only their own. An entry wins over
-`bootstrap_provider`. `-agent-provider` overrides `bootstrap_provider` and
-not those entries. A scenario that needs an expired or shorter agent token
-is not exercised: this suite does not hold the provider's signing key.
+for each Person Server it grades. The refresh body names that server. A
+Person Server accepts the token only when `ps` is its own issuer, so one
+enrollment covers one Person Server. A provider that stamps only its
+configured Person Server covers that server. The hosted provider
+`https://ap.aauth.sidecat.dev` copies `ps`. `bootstrap_providers` maps a
+Person Server issuer to the provider that stamps that server. An entry wins
+over `bootstrap_provider`. `-agent-provider` overrides `bootstrap_provider`
+and not those entries. A scenario that needs an expired or shorter agent
+token is not exercised: this suite does not hold the provider's signing key.
 `supervision.server` still signs as the harness Person Server, so that role
 needs the callback receiver below. Enrollment does not publish that server.
 
