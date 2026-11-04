@@ -342,3 +342,67 @@ func TestPublishedPersonFixtureSeparatesThePresentedExpiryBound(t *testing.T) {
 		t.Fatalf("fault escaped targeted lifetime assertion: %+v %+v", observed, result)
 	}
 }
+
+func TestSuccessfulResponseWithoutAuthTokenIsStillAProtocolFailure(t *testing.T) {
+	suite, err := Load("../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	selected, err := suite.ForRole(PersonServerRole)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var scenario Scenario
+	for _, s := range selected.Scenarios {
+		if s.ID == "ps-valid" {
+			scenario = s
+		}
+	}
+	f := suite.Fixture
+	f.Now, f.Skew = time.Now().Unix(), 5
+	p := *f.Person
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/person") {
+			claims := map[string]any{
+				"iss": p.Issuer, "dwk": "aauth-person.json", "aud": f.Origin, "sub": p.Subject,
+				"jti": "person-1", "iat": f.Now, "exp": f.Now + 60,
+				"cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)},
+			}
+			token, err := mintJWT(p.Seed, p.Kid, "aa-person+jwt", claims)
+			if err != nil {
+				t.Error(err)
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]any{"person_token": token, "expires_in": int64(60)})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"expires_in":60}`))
+	}))
+	defer server.Close()
+	got := runPersonCase(context.Background(), f, scenario, Target{Claims: Claims(suite, PersonServerRole)}, server.URL, Options{Timeout: time.Second}, nil)
+	states := map[string]string{}
+	for _, result := range got.Results {
+		states[result.Assertion] = result.State
+	}
+	if states["auth-status"] != "pass" {
+		t.Fatalf("endpoint %s error %s", states["auth-status"], got.Error)
+	}
+	for _, id := range []string{"auth-signature", "auth-identity", "auth-key", "auth-lifetime", "auth-authorization"} {
+		if states[id] != "fail" {
+			t.Fatalf("%s is %s", id, states[id])
+		}
+	}
+	if states["person-status"] != "pass" {
+		t.Fatalf("person status %s %s", states["person-status"], got.Error)
+	}
+}
+
+func TestDeclaredScopesAreAnUnorderedSet(t *testing.T) {
+ f := fixture(); p := defaultPersonFixture(); p.PermittedScopes=[]string{"read", "records.read"}
+ claims:=map[string]any{"iss":p.Issuer,"dwk":"aauth-person.json","aud":f.Origin,"ps":p.Issuer,"sub":p.Subject,"jti":"auth-order","iat":f.Now,"exp":f.Now+60,"scope":"records.read read","cnf":map[string]any{"jwk":publicJWK(f.AgentSeed)}}
+ token,_:=mintJWT(p.Seed,p.Kid,"aa-auth+jwt",claims)
+ parent:=map[string]any{"sub":p.Subject,"exp":float64(f.Now+300)}
+ if !observePersonJWT(f,p,token,"auth",parent,f.Now+600).Scope {t.Fatal("scope ordering changed the declared grant")}
+}
