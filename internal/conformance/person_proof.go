@@ -26,8 +26,14 @@ type PersonFixture struct {
 	Lifetime        int64    `json:"person_lifetime"`
 	AuthLifetime    int64    `json:"auth_lifetime"`
 	PermittedScopes []string `json:"permitted_scopes"`
-	ResourceSeed    string   `json:"resource_seed_hex"`
-	ResourceKid     string   `json:"resource_kid"`
+	// ScopeDeclared is set when a remote deployment names permitted_scopes.
+	// Without it, remote mode does not grade the granted scope.
+	ScopeDeclared bool `json:"-"`
+	// DeniedScopes is the scope a remote deployment says it refuses.
+	// The denied-scope scenario asks for the first one.
+	DeniedScopes []string `json:"-"`
+	ResourceSeed string   `json:"resource_seed_hex"`
+	ResourceKid  string   `json:"resource_kid"`
 	// Published and ResourcePublished hold the keys a deployed Person Server
 	// or Resource publishes. Remote mode sets them; otherwise the fixture
 	// seeds are the signers.
@@ -38,6 +44,13 @@ type PersonFixture struct {
 	// from its metadata; otherwise the fixture Person Server's paths apply.
 	PersonEndpoint string `json:"-"`
 	TokenEndpoint  string `json:"-"`
+}
+
+func grantedScope(p PersonFixture) string {
+	if len(p.PermittedScopes) == 0 {
+		return "read"
+	}
+	return strings.Join(p.PermittedScopes, " ")
 }
 
 func (p PersonFixture) personURL() string {
@@ -161,7 +174,7 @@ func buildPersonExchange(f Fixture, p PersonFixture, s Scenario, stage, person s
 	body := map[string]any{"resource": f.Origin}
 	if stage == "token" {
 		endpoint = p.tokenURL()
-		resource := map[string]any{"iss": f.Origin, "dwk": "aauth-resource.json", "aud": p.Issuer, "ps": p.Issuer, "sub": claims["sub"], "presented_jti": claims["jti"], "agent_jkt": thumbprint(f.AgentSeed), "jti": s.ID + "-resource", "iat": f.Now - 1, "exp": f.Now + 120, "scope": "read"}
+		resource := map[string]any{"iss": f.Origin, "dwk": "aauth-resource.json", "aud": p.Issuer, "ps": p.Issuer, "sub": claims["sub"], "presented_jti": claims["jti"], "agent_jkt": thumbprint(f.AgentSeed), "jti": s.ID + "-resource", "iat": f.Now - 1, "exp": f.Now + 120, "scope": grantedScope(p)}
 		switch s.Person.Mutation {
 		case "wrong-aud":
 			resource["aud"] = "https://foreign.conformance.test"
@@ -185,7 +198,11 @@ func buildPersonExchange(f Fixture, p PersonFixture, s Scenario, stage, person s
 			expired["exp"] = f.Now - 1
 			person, _ = mintJWT(p.Seed, p.Kid, "aa-person+jwt", expired)
 		case "denied-scope":
-			resource["scope"] = "admin"
+			if len(p.DeniedScopes) > 0 {
+				resource["scope"] = p.DeniedScopes[0]
+			} else {
+				resource["scope"] = "admin"
+			}
 		}
 		token, _ := mintJWT(p.ResourceSeed, p.ResourceKid, "aa-resource+jwt", resource)
 		body = map[string]any{"resource_token": token, "presented_token": person}
@@ -225,7 +242,10 @@ func buildPersonExchange(f Fixture, p PersonFixture, s Scenario, stage, person s
 	req.Header.Set("Signature", "sig=:"+base64.StdEncoding.EncodeToString(signature)+":")
 	if stage == "person" && s.Person.Mutation == "tampered-body" {
 		// Equal-length, valid JSON mutation preserves framing and signature headers.
-		encoded = bytes.ReplaceAll(encoded, []byte("resource.conformance.test"), []byte("resource.conformance.tesX"))
+		needle := []byte(f.Origin)
+		swapped := bytes.Clone(needle)
+		swapped[len("https://")] ^= 1
+		encoded = bytes.ReplaceAll(encoded, needle, swapped)
 		req.Body = io.NopCloser(bytes.NewReader(encoded))
 		req.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(encoded)), nil }
 	}
@@ -286,7 +306,7 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 	o.Scope = true
 	if kind == "auth" {
 		scope, ok := c["scope"].(string)
-		o.Scope = ok && scope == "read"
+		o.Scope = ok && scope == grantedScope(p)
 		for _, s := range strings.Fields(scope) {
 			o.Scope = o.Scope && slices.Contains(p.PermittedScopes, s)
 		}

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strings"
 )
 
 type PersonExchange struct {
@@ -121,6 +122,8 @@ func runPersonCase(ctx context.Context, f Fixture, scenario Scenario, target Tar
 	if executionError != nil {
 		c.Error = executionError.Error()
 	}
+	issued := authTokenIssued(responses["token"])
+	unverified := resourceUnverified(responses["token"])
 	for _, a := range scenario.Assertions {
 		result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals}
 		response, exists := responses[a.Stage]
@@ -129,6 +132,7 @@ func runPersonCase(ctx context.Context, f Fixture, scenario Scenario, target Tar
 			result.State = "not_claimed"
 		case exists:
 			result = checkPerson(a, response, observations[a.Stage])
+			result = unexercisedIssuance(result, a, scenario, issued, unverified, remoteFrom(ctx) != nil && f.Person != nil && !f.Person.ScopeDeclared)
 		default:
 			result.State = "error"
 			result.Detail = c.Error
@@ -139,4 +143,41 @@ func runPersonCase(ctx context.Context, f Fixture, scenario Scenario, target Tar
 		c.Results = append(c.Results, result)
 	}
 	return c
+}
+
+func authTokenIssued(response Response) bool {
+	if response.Status != 200 || len(response.Body) == 0 {
+		return false
+	}
+	var body map[string]json.RawMessage
+	var token string
+	return json.Unmarshal(response.Body, &body) == nil && json.Unmarshal(body["auth_token"], &token) == nil && token != ""
+}
+
+func resourceUnverified(response Response) bool {
+	var body map[string]any
+	return json.Unmarshal(response.Body, &body) == nil && body["error"] == "invalid_resource_token"
+}
+
+// unexercisedIssuance keeps the token-endpoint result and does not grade
+// checks that need an Auth token, or a Resource token the server accepted.
+func unexercisedIssuance(result Result, a Assertion, scenario Scenario, issued, unverified, scopeUndeclared bool) Result {
+	if a.Stage != "token" {
+		return result
+	}
+	reason := ""
+	switch {
+	case strings.HasPrefix(a.Kind, "ps-jwt") && !issued:
+		reason = "no auth token was issued, so this check was not reached"
+	case scopeUndeclared && a.Kind == "ps-jwt-scope":
+		reason = "the deployment names no permitted scope"
+	case unverified && scenario.Person != nil && scenario.Person.Mutation == "expired-resource" && a.Kind == "json-member":
+		reason = "the resource token was not accepted, so expiry was not reached"
+	case unverified && scenario.Person != nil && scenario.Person.Mutation == "denied-scope" && (a.Kind == "status" || a.Kind == "json-member"):
+		reason = "the resource token was not accepted, so scope policy was not reached"
+	}
+	if reason == "" {
+		return result
+	}
+	return Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_exercised", Detail: reason}
 }

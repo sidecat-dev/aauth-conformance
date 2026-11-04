@@ -23,8 +23,13 @@ type Deployment struct {
 	// BootstrapProvider is the Agent Provider the suite enrolls its durable
 	// key at before presenting an agent token. The flag -agent-provider
 	// overrides it. Empty keeps the fixture provider.
-	BootstrapProvider string                `json:"bootstrap_provider,omitempty"`
-	Roles             map[string]RemoteRole `json:"roles"`
+	BootstrapProvider string `json:"bootstrap_provider,omitempty"`
+	// PermittedScopes and DeniedScopes are the deployment's scope profile.
+	// Omitted, remote mode does not assume that the server grants read or
+	// refuses admin.
+	PermittedScopes []string              `json:"permitted_scopes,omitempty"`
+	DeniedScopes    []string              `json:"denied_scopes,omitempty"`
+	Roles           map[string]RemoteRole `json:"roles"`
 }
 
 // RemoteRole names one suite role's deployed servers. Resource is the URL of
@@ -414,6 +419,9 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 		if driver.gap != nil {
 			reason = driver.gap(scenario, r)
 		}
+		if reason == "" && scenario.Person != nil && scenario.Person.Mutation == "denied-scope" && len(d.DeniedScopes) == 0 {
+			reason = "the deployment names no scope it denies"
+		}
 		if reason == "" && options.trust != nil && presentsSuiteAgent(role) {
 			reason = enrolledGap(scenario)
 		}
@@ -430,6 +438,15 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 			f = driver.fixture(s.Fixture, scenario, remote)
 		} else {
 			f = r.fixture(s.Fixture, scenario, published, endpoints, options.Skew)
+		}
+		if f.Person != nil {
+			person := *f.Person
+			person.DeniedScopes = append([]string(nil), d.DeniedScopes...)
+			if d.PermittedScopes != nil {
+				person.PermittedScopes = append([]string(nil), d.PermittedScopes...)
+				person.ScopeDeclared = true
+			}
+			f.Person = &person
 		}
 		if presentsSuiteAgent(role) {
 			f = presentEnrolled(f, options.trust[r.PersonServer])

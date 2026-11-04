@@ -186,6 +186,10 @@ name of the same shape. That name is not public DNS. Without `-public`, a run
 that still names it records `lookup ... no such host` and those assertions
 are errors.
 
+`permitted_scopes` and `denied_scopes` are the deployment's scope profile. Omitted, the suite does not assume that an Auth token carries `read` or that `admin` is refused, and those checks are `not_exercised`. A check that needs an Auth token is `not_exercised` when the token endpoint does not issue one. The endpoint status itself stays a failure.
+
+`-harness-domain aauth.sidecat.dev` publishes each harness party as `name-harness.aauth.sidecat.dev` instead of `name.conformance.test`. A third party can resolve those names and fetch them over a public certificate. The Person Server still has to trust `https://resource-harness.aauth.sidecat.dev`.
+
 Set `bootstrap_provider` in the deployment file, or pass `-agent-provider`,
 to an Agent Provider the servers under test trust. The suite enrolls its
 durable key there and refreshes an agent token whose `ps` is the Person

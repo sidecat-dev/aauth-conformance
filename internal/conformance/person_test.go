@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 // A valid-looking token signed by another key must fail the independent oracle;
@@ -131,6 +133,99 @@ func TestPersonRoleMissingAdapterIsNotARefusalPass(t *testing.T) {
 }
 
 // An unsigned refusal must not accidentally become successful JWT evidence.
+func TestDependentAuthChecksAreUnexercisedWhenTheResourceTokenIsRefused(t *testing.T) {
+	suite, err := Load("../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	selected, err := suite.ForRole(PersonServerRole)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var scenario Scenario
+	for _, s := range selected.Scenarios {
+		if s.ID == "ps-valid" {
+			scenario = s
+		}
+	}
+	f := suite.Fixture
+	f.Now, f.Skew = time.Now().Unix(), 5
+	p := *f.Person
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/person") {
+			claims := map[string]any{
+				"iss": p.Issuer, "dwk": "aauth-person.json", "aud": f.Origin, "sub": p.Subject,
+				"jti": "person-1", "iat": f.Now, "exp": f.Now + 60,
+				"cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)},
+			}
+			token, err := mintJWT(p.Seed, p.Kid, "aa-person+jwt", claims)
+			if err != nil {
+				t.Error(err)
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			json.NewEncoder(w).Encode(map[string]any{"person_token": token, "expires_in": int64(60)})
+			return
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error":"invalid_resource_token"}`))
+	}))
+	defer server.Close()
+	got := runPersonCase(context.Background(), f, scenario, Target{Claims: Claims(suite, PersonServerRole)}, server.URL, Options{Timeout: time.Second}, nil)
+	states := map[string]string{}
+	for _, result := range got.Results {
+		states[result.Assertion] = result.State
+	}
+	if states["auth-status"] != "fail" {
+		t.Fatalf("endpoint %s error %s", states["auth-status"], got.Error)
+	}
+	for _, id := range []string{"auth-signature", "auth-identity", "auth-key", "auth-lifetime", "auth-authorization"} {
+		if states[id] != "not_exercised" {
+			t.Fatalf("%s is %s", id, states[id])
+		}
+	}
+	if states["person-status"] != "pass" {
+		t.Fatalf("person status %s %s", states["person-status"], got.Error)
+	}
+}
+
+func TestScopeMutationsStayUnexercisedUntilTheResourceTokenVerifies(t *testing.T) {
+	refused := Response{Status: 400, Body: []byte(`{"error":"invalid_resource_token"}`)}
+	expired := unexercisedIssuance(Result{State: "fail"}, Assertion{ID: "token-error", Kind: "json-member", Stage: "token"}, Scenario{Person: &PersonSpec{Mutation: "expired-resource"}}, false, true, false)
+	if expired.State != "not_exercised" || !strings.Contains(expired.Detail, "expiry") {
+		t.Fatal(expired)
+	}
+	denied := unexercisedIssuance(Result{State: "fail"}, Assertion{ID: "token-refusal", Kind: "status", Stage: "token"}, Scenario{Person: &PersonSpec{Mutation: "denied-scope"}}, false, resourceUnverified(refused), false)
+	if denied.State != "not_exercised" || !strings.Contains(denied.Detail, "scope policy") {
+		t.Fatal(denied)
+	}
+	kept := unexercisedIssuance(Result{State: "pass"}, Assertion{ID: "token-error", Kind: "json-member", Stage: "token"}, Scenario{Person: &PersonSpec{Mutation: "wrong-aud"}}, false, true, false)
+	if kept.State != "pass" {
+		t.Fatal("wrong audience was dropped", kept)
+	}
+}
+
+func TestDeclaredScopeIsTheGrantTheAuthTokenMustCarry(t *testing.T) {
+	f := Fixture{Now: 1800000000, Origin: "https://resource.conformance.test", AgentSeed: strings.Repeat("02", 32), Skew: 5}
+	p := defaultPersonFixture()
+	p.PermittedScopes = []string{"records.read"}
+	p.ScopeDeclared = true
+	claims := map[string]any{"iss": p.Issuer, "dwk": "aauth-person.json", "aud": f.Origin, "ps": p.Issuer, "sub": p.Subject, "jti": "auth-1", "iat": f.Now, "exp": f.Now + 60, "scope": "records.read", "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}}
+	token, err := mintJWT(p.Seed, p.Kid, "aa-auth+jwt", claims)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parent := map[string]any{"sub": p.Subject, "exp": float64(f.Now + 300)}
+	if !observePersonJWT(f, p, token, "auth", parent, f.Now+3600).Scope {
+		t.Fatal("declared scope was not the expected grant")
+	}
+	claims["scope"] = "read"
+	other, _ := mintJWT(p.Seed, p.Kid, "aa-auth+jwt", claims)
+	if observePersonJWT(f, p, other, "auth", parent, f.Now+3600).Scope {
+		t.Fatal("read stood in for the declared scope")
+	}
+}
+
 func TestPersonAssertionRequiresVerifiedToken(t *testing.T) {
 	a := Assertion{ID: "jwt", Clause: "ps.person-structure", Kind: "ps-jwt", Equals: json.RawMessage(`true`)}
 	if checkPerson(a, Response{Status: http.StatusOK, Body: []byte(`{"person_token":"a.b.c"}`)}, PersonObservation{Error: "bad signature"}).State != "fail" {

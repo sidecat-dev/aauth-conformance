@@ -149,3 +149,24 @@ func TestRebaseExpectedRewritesExactIdentities(t *testing.T) {
 		t.Fatal("rebasing changed the suite's scenario")
 	}
 }
+
+func TestPublicHarnessUsesOneLabelUnderTheDomain(t *testing.T) {
+	suite := loadSuite(t)
+	out, err := PublicHarness(suite.Fixture, "aauth.sidecat.dev")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Origin != "https://resource-harness.aauth.sidecat.dev" || out.Issuer != "https://ap-harness.aauth.sidecat.dev" {
+		t.Fatalf("origin %s issuer %s", out.Origin, out.Issuer)
+	}
+	if out.Person == nil || out.Person.Issuer != "https://person-harness.aauth.sidecat.dev" {
+		t.Fatal(out.Person)
+	}
+	joined := strings.Join(HarnessNames(out), " ")
+	if !strings.Contains(joined, "resource-harness.aauth.sidecat.dev") || strings.Contains(joined, "resource.conformance.test") {
+		t.Fatal(joined)
+	}
+	if _, err := PublicHarness(suite.Fixture, ""); err == nil {
+		t.Fatal("empty domain accepted")
+	}
+}

@@ -55,6 +55,28 @@ func harnessParties(f Fixture) []harnessParty {
 	return parties
 }
 
+// PublicHarness rewrites every *.conformance.test name to a single-label
+// public host under domain: resource.conformance.test becomes
+// resource-harness.domain. A third party can resolve and trust those names
+// with an ordinary certificate. The fixture's private names stay for a
+// loopback grade.
+func PublicHarness(f Fixture, domain string) (Fixture, error) {
+	domain = strings.Trim(strings.ToLower(domain), ".")
+	if domain == "" || strings.ContainsAny(domain, "/ :") || strings.Contains(domain, "..") {
+		return f, fmt.Errorf("harness domain must be a DNS name, got %q", domain)
+	}
+	raw, err := json.Marshal(f)
+	if err != nil {
+		return f, err
+	}
+	raw = bytes.ReplaceAll(raw, []byte(".conformance.test"), []byte("-harness."+domain))
+	var out Fixture
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return f, err
+	}
+	return out, nil
+}
+
 // HarnessNames lists the host names the suite serves in remote mode. The
 // suite's certificate must cover all of them, and a deployment must route
 // each to the suite's listener on port 443.
