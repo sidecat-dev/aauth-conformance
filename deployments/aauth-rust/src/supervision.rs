@@ -118,11 +118,20 @@ pub fn routes(env: &Env) -> Result<Vec<Route>, Failure> {
                 }
                 if body["resolve"]["verdict"] == "allow" {
                     let sdi = body["resolve"]["sdi"].as_str().unwrap_or_default();
-                    return match accepted.iter().try_for_each(|ps| {
-                        server.decide_pending(ps, sdi, Verdict::Allow(Allowance::default()))
-                    }) {
-                        Ok(()) => answer(200, serde_json::json!({"resolved": true})),
-                        Err(error) => answer(409, serde_json::json!({"error": error.to_string()})),
+                    // The decision is pending under the one Person Server that
+                    // asked. Every accepted server is tried; one is enough.
+                    let mut refusal = String::from("no accepted Person Server");
+                    let mut resolved = false;
+                    for ps in accepted.iter() {
+                        match server.decide_pending(ps, sdi, Verdict::Allow(Allowance::default())) {
+                            Ok(()) => resolved = true,
+                            Err(error) => refusal = error.to_string(),
+                        }
+                    }
+                    return if resolved {
+                        answer(200, serde_json::json!({"resolved": true}))
+                    } else {
+                        answer(409, serde_json::json!({"error": refusal}))
                     };
                 }
                 answer(400, serde_json::json!({"error": "unknown host control"}))

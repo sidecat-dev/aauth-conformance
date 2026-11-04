@@ -90,12 +90,21 @@ func supervisionRole(e env) (map[string]http.Handler, error) {
 			limitNext.Store(true)
 			answer(http.StatusOK, map[string]bool{"rate_limited": true})
 		case body.Resolve != nil && body.Resolve.Verdict == "allow":
+			// The decision is pending under the one Person Server that
+			// asked. Every accepted server is tried; one is enough.
+			refusal := "no accepted Person Server"
+			resolved := false
 			for _, ps := range accepted {
 				result := supervisionserver.DecisionResult{Decision: &supervision.Decision{SDI: body.Resolve.SDI, Verdict: supervision.VerdictAllow}}
 				if err := server.ResolveDecision(r.Context(), ps, body.Resolve.SDI, result); err != nil {
-					answer(http.StatusConflict, map[string]string{"error": err.Error()})
-					return
+					refusal = err.Error()
+					continue
 				}
+				resolved = true
+			}
+			if !resolved {
+				answer(http.StatusConflict, map[string]string{"error": refusal})
+				return
 			}
 			answer(http.StatusOK, map[string]bool{"resolved": true})
 		default:
