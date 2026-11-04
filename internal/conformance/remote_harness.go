@@ -77,6 +77,28 @@ func PublicHarness(f Fixture, domain string) (Fixture, error) {
 	return out, nil
 }
 
+// PublicScenarios renames the suite's parties in the expected values of
+// scenario assertions, as PublicHarness renames them in the fixture. An
+// expectation such as the fixture agent "aauth:Agent@ap.conformance.test"
+// then still names the party the suite plays, and the substitutions remote
+// mode makes for a deployed or enrolled party still apply.
+func PublicScenarios(scenarios []Scenario, domain string) []Scenario {
+	domain = strings.Trim(strings.ToLower(domain), ".")
+	out := make([]Scenario, len(scenarios))
+	for i, scenario := range scenarios {
+		assertions := make([]Assertion, len(scenario.Assertions))
+		for j, a := range scenario.Assertions {
+			if len(a.Equals) > 0 {
+				a.Equals = bytes.ReplaceAll(a.Equals, []byte(".conformance.test"), []byte("."+domain))
+			}
+			assertions[j] = a
+		}
+		scenario.Assertions = assertions
+		out[i] = scenario
+	}
+	return out
+}
+
 // HarnessNames lists the host names the suite serves in remote mode. The
 // suite's certificate must cover all of them, and a deployment must route
 // each to the suite's listener on port 443.

@@ -173,6 +173,15 @@ func init() {
 	})
 }
 
+// suitePlaysPerson reports whether the suite is the Person Server, and so
+// the whole person side, of a scenario. The Access Server accepts an agent
+// token only when its ps is the Person Server that signs the request, so
+// such a scenario presents the suite's own agent token, not one enrolled
+// for the deployment's Person Server.
+func suitePlaysPerson(s Scenario) bool {
+	return s.Federated != nil && s.Federated.HarnessPS
+}
+
 func federatedGap(s Scenario, r RemoteRole) string {
 	m := s.Federated.Mutation
 	switch {
@@ -466,7 +475,8 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 		if reason == "" && scenario.Person != nil && scenario.Person.Mutation == "denied-scope" && len(d.DeniedScopes) == 0 {
 			reason = "the deployment names no scope it denies"
 		}
-		if reason == "" && options.trust != nil && presentsSuiteAgent(role) {
+		enrolled := options.trust != nil && presentsSuiteAgent(role) && !suitePlaysPerson(scenario)
+		if reason == "" && enrolled {
 			reason = enrolledGap(scenario)
 		}
 		if reason != "" {
@@ -492,7 +502,7 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 			}
 			f.Person = &person
 		}
-		if presentsSuiteAgent(role) {
+		if enrolled {
 			f = presentEnrolled(f, options.trust[r.PersonServer])
 		}
 		c := driver.run(ctx, f, scenario, target, Options{Timeout: options.Timeout})

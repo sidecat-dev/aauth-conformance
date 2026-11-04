@@ -67,6 +67,7 @@ func run() int {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
 		}
+		suite.Scenarios = conformance.PublicScenarios(suite.Scenarios, *harnessDomain)
 	}
 	if *names {
 		for _, name := range conformance.HarnessNames(suite.Fixture) {
