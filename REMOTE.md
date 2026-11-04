@@ -198,7 +198,7 @@ endpoint failure remains. A malformed HTTP 200 is still a failure. Resource
 mutation checks also require the unchanged Resource token to verify: a
 blanket `invalid_resource_token` refusal does not prove mutation handling.
 
-`-harness-domain aauth.sidecat.dev` publishes each harness party as `name-harness.aauth.sidecat.dev` instead of `name.conformance.test`. A third party can resolve those names and fetch them over a public certificate. The Person Server still has to trust `https://resource-harness.aauth.sidecat.dev`.
+`-harness-domain harness.aauth.sidecat.dev` publishes each harness party as `name.harness.aauth.sidecat.dev` instead of `name.conformance.test`. A third party can resolve those names and fetch them over a public certificate. The Person Server still has to trust `https://resource.harness.aauth.sidecat.dev`.
 
 Set `bootstrap_provider` in the deployment file, or pass `-agent-provider`,
 to an Agent Provider the servers under test trust. The suite enrolls its

@@ -57,7 +57,7 @@ func harnessParties(f Fixture) []harnessParty {
 
 // PublicHarness rewrites every *.conformance.test name to a single-label
 // public host under domain: resource.conformance.test becomes
-// resource-harness.domain. A third party can resolve and trust those names
+// resource.domain. A third party can resolve and trust those names
 // with an ordinary certificate. The fixture's private names stay for a
 // loopback grade.
 func PublicHarness(f Fixture, domain string) (Fixture, error) {
@@ -69,7 +69,7 @@ func PublicHarness(f Fixture, domain string) (Fixture, error) {
 	if err != nil {
 		return f, err
 	}
-	raw = bytes.ReplaceAll(raw, []byte(".conformance.test"), []byte("-harness."+domain))
+	raw = bytes.ReplaceAll(raw, []byte(".conformance.test"), []byte("."+domain))
 	var out Fixture
 	if err := json.Unmarshal(raw, &out); err != nil {
 		return f, err

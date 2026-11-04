@@ -53,7 +53,7 @@ func run() int {
 	flag.Var(resolve, "resolve", "remote mode: host:port=address to connect to instead of DNS (repeatable)")
 	public := flag.Bool("public", false, "remote mode: grade a deployment this suite does not operate; omit host controls and require a public callback listener")
 	agentProvider := flag.String("agent-provider", "", "remote mode: bootstrap Agent Provider to enroll the suite key at; overrides bootstrap_provider in the deployment file")
-	harnessDomain := flag.String("harness-domain", "", "remote mode: publish each harness party as name-harness.DOMAIN instead of name.conformance.test")
+	harnessDomain := flag.String("harness-domain", "", "remote mode: publish each harness party as name.DOMAIN instead of name.conformance.test")
 	names := flag.Bool("harness-names", false, "remote mode: print the host names the suite serves, one per line, and exit")
 	flag.Parse()
 	suite, err := conformance.Load(*suitePath)
