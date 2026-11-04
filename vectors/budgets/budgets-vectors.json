@@ -24,8 +24,8 @@
       },
       {
         "id": "aauth-rust",
-        "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-        "version": "0.1.0-alpha.28"
+        "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+        "version": "0.1.0-alpha.29"
       }
     ],
     "harness": "cmd/budget-vectors, driver-go against budgets and testutil.NewBudgetStore, driver-rust against aauth-rust-budgets"
@@ -57,8 +57,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -91,8 +91,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -125,8 +125,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -159,8 +159,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -193,8 +193,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -227,8 +227,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -261,8 +261,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -289,8 +289,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -317,8 +317,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -345,8 +345,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -373,8 +373,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -401,8 +401,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -429,8 +429,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -457,8 +457,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -485,8 +485,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -513,8 +513,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -541,8 +541,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -569,8 +569,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -597,8 +597,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -625,8 +625,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -653,8 +653,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -681,8 +681,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -709,8 +709,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -737,8 +737,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -765,8 +765,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -801,8 +801,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -837,8 +837,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -873,8 +873,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -910,8 +910,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -947,8 +947,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -984,8 +984,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1021,8 +1021,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1058,8 +1058,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1095,8 +1095,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1132,8 +1132,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1169,8 +1169,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1206,8 +1206,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1243,8 +1243,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1280,8 +1280,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1317,8 +1317,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1354,8 +1354,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1391,8 +1391,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1428,8 +1428,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1465,8 +1465,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1502,8 +1502,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1539,8 +1539,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1576,8 +1576,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1613,8 +1613,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1641,8 +1641,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1669,8 +1669,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1697,8 +1697,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1725,8 +1725,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1753,8 +1753,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1781,8 +1781,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1809,8 +1809,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1837,8 +1837,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1865,8 +1865,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1893,8 +1893,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1921,8 +1921,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1949,8 +1949,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -1977,8 +1977,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2014,12 +2014,124 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
         "basis": "Budgets line 621 and RFC 9651 dictionary keys."
+      }
+    },
+    {
+      "id": "header.required-equal",
+      "title": "Required equal to remaining",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, required=10, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 621, 624 and 743: required is the maximum cost of a refused insufficient-budget request, that maximum exceeds the remainder, and remaining is a floor."
+      }
+    },
+    {
+      "id": "header.required-below",
+      "title": "Required below remaining",
+      "kind": "header",
+      "input": {
+        "field": "remaining=11, required=10, unit=\"USD\", decimals=2",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 621, 624 and 743."
+      }
+    },
+    {
+      "id": "header.cost-and-required",
+      "title": "Cost and required together",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, cost=1, required=20",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 624, 724 and 795: required is sent only with a refusal, and a refusal carries no cost."
+      }
+    },
+    {
+      "id": "header.reserved-and-required",
+      "title": "Reserved and required together",
+      "kind": "header",
+      "input": {
+        "field": "remaining=10, reserved=5, required=20",
+        "op": "header-parse"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 624 and 795: a refusal carries no reserved, because nothing was held."
       }
     },
     {
@@ -2058,8 +2170,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2102,8 +2214,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2145,8 +2257,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2189,12 +2301,82 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
         "basis": "Budgets lines 724 and 755."
+      }
+    },
+    {
+      "id": "header.format-required-equal",
+      "title": "Format required equal to remaining",
+      "kind": "header",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "kind": "refusal",
+        "op": "header-format",
+        "remaining": 10,
+        "required": 10
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 621, 624 and 743."
+      }
+    },
+    {
+      "id": "header.format-over-grant",
+      "title": "Format cost and remaining above the grant",
+      "kind": "header",
+      "input": {
+        "cost": 200,
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "kind": "success",
+        "op": "header-format",
+        "remaining": 400
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 621, 909 and 913: remaining is net of everything committed and held, so remaining plus this request's cost is not above the grant."
       }
     },
     {
@@ -2221,8 +2403,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2253,8 +2435,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2281,8 +2463,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2309,8 +2491,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2338,8 +2520,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2370,12 +2552,41 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
         "basis": "Budgets lines 668-676 and 699."
+      }
+    },
+    {
+      "id": "trailer.cost-above-reserved",
+      "title": "Trailer cost above the reserved hold",
+      "kind": "trailer",
+      "input": {
+        "cost": 250,
+        "header": "remaining=300, reserved=200, unit=\"USD\", decimals=2",
+        "op": "trailer-restate"
+      },
+      "expect": {
+        "code": "malformed",
+        "outcome": "refuse"
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 676, 702 and 913: remaining is a floor only when remaining + reserved - cost is at least remaining, and the hold is the request's maximum."
       }
     },
     {
@@ -2491,8 +2702,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2567,8 +2778,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2630,8 +2841,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2707,8 +2918,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2797,8 +3008,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2892,8 +3103,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -2956,8 +3167,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -3006,8 +3217,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -3056,8 +3267,8 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
@@ -3106,12 +3317,62 @@
           },
           {
             "id": "aauth-rust",
-            "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd",
-            "version": "0.1.0-alpha.28"
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
           }
         ],
         "agreement": "both libraries returned this result",
         "basis": "Budgets line 909."
+      }
+    },
+    {
+      "id": "meter.hold-above-carrier",
+      "title": "Hold above 15 digits",
+      "kind": "meter",
+      "input": {
+        "grant": {
+          "amount": 500,
+          "decimals": 2,
+          "unit": "USD"
+        },
+        "op": "meter",
+        "steps": [
+          {
+            "hold": 1000000000000000,
+            "id": "h1",
+            "op": "reserve"
+          }
+        ]
+      },
+      "expect": {
+        "outcome": "accept",
+        "steps": [
+          {
+            "code": "insufficient",
+            "committed": 0,
+            "id": "h1",
+            "jti": "token-1",
+            "op": "reserve",
+            "outcome": "refuse",
+            "remaining": 500,
+            "reserved": 0
+          }
+        ]
+      },
+      "provenance": {
+        "produced_by": [
+          {
+            "id": "aauth-go",
+            "revision": "567e556af2bd7fc931143e679dd228b709111797"
+          },
+          {
+            "id": "aauth-rust",
+            "revision": "b60eac37fe686b7069e0d464254acf7564c071c5",
+            "version": "0.1.0-alpha.29"
+          }
+        ],
+        "agreement": "both libraries returned this result",
+        "basis": "Budgets lines 722 and 911: a maximum that exceeds a positive remainder is refused as insufficient-budget. Line 326 keeps grants inside the 15-digit carrier, so a larger maximum exceeds every remainder."
       }
     }
   ],
@@ -3124,197 +3385,19 @@
         "field": "remaining=10, cost=4, reserved=8, unit=\"USD\", decimals=2",
         "op": "header-parse"
       },
-      "basis": "Budgets line 623: reserved is meaningful where cost is not yet known. The draft does not forbid both on one field.",
+      "basis": "Budgets lines 623 and 702: a sender writes reserved only while cost is not yet known, and a recipient that merges a cost trailer into that header gets one Dictionary with both.",
       "aauth-go": {
-        "code": "both",
+        "code": "malformed",
         "outcome": "refuse"
       },
       "aauth-rust": {
         "cost": 4,
         "decimals": 2,
-        "field": "remaining=10, cost=4, reserved=8, unit=\"USD\", decimals=2",
         "outcome": "accept",
         "remaining": 10,
         "required": null,
         "reserved": 8,
         "unit": "USD"
-      }
-    },
-    {
-      "id": "header.required-equal",
-      "title": "Required equal to remaining",
-      "kind": "header",
-      "input": {
-        "field": "remaining=10, required=10, unit=\"USD\", decimals=2",
-        "op": "header-parse"
-      },
-      "basis": "Budgets line 624: required is the maximum cost of a request that did not fit. The draft does not say the member must be greater than remaining.",
-      "aauth-go": {
-        "code": "required",
-        "outcome": "refuse"
-      },
-      "aauth-rust": {
-        "cost": null,
-        "decimals": 2,
-        "field": "remaining=10, required=10, unit=\"USD\", decimals=2",
-        "outcome": "accept",
-        "remaining": 10,
-        "required": 10,
-        "reserved": null,
-        "unit": "USD"
-      }
-    },
-    {
-      "id": "header.required-below",
-      "title": "Required below remaining",
-      "kind": "header",
-      "input": {
-        "field": "remaining=11, required=10, unit=\"USD\", decimals=2",
-        "op": "header-parse"
-      },
-      "basis": "Budgets line 624.",
-      "aauth-go": {
-        "code": "required",
-        "outcome": "refuse"
-      },
-      "aauth-rust": {
-        "cost": null,
-        "decimals": 2,
-        "field": "remaining=11, required=10, unit=\"USD\", decimals=2",
-        "outcome": "accept",
-        "remaining": 11,
-        "required": 10,
-        "reserved": null,
-        "unit": "USD"
-      }
-    },
-    {
-      "id": "header.cost-and-required",
-      "title": "Cost and required together",
-      "kind": "header",
-      "input": {
-        "field": "remaining=10, cost=1, required=20",
-        "op": "header-parse"
-      },
-      "basis": "Budgets lines 622 and 624. A refusal carries no cost (line 724).",
-      "aauth-go": {
-        "code": "exclusive",
-        "outcome": "refuse"
-      },
-      "aauth-rust": {
-        "cost": 1,
-        "decimals": null,
-        "field": "remaining=10, cost=1, required=20",
-        "outcome": "accept",
-        "remaining": 10,
-        "required": 20,
-        "reserved": null,
-        "unit": null
-      }
-    },
-    {
-      "id": "header.reserved-and-required",
-      "title": "Reserved and required together",
-      "kind": "header",
-      "input": {
-        "field": "remaining=10, reserved=5, required=20",
-        "op": "header-parse"
-      },
-      "basis": "Budgets lines 623 and 624.",
-      "aauth-go": {
-        "code": "exclusive",
-        "outcome": "refuse"
-      },
-      "aauth-rust": {
-        "cost": null,
-        "decimals": null,
-        "field": "remaining=10, reserved=5, required=20",
-        "outcome": "accept",
-        "remaining": 10,
-        "required": 20,
-        "reserved": 5,
-        "unit": null
-      }
-    },
-    {
-      "id": "header.format-required-equal",
-      "title": "Format required equal to remaining",
-      "kind": "header",
-      "input": {
-        "grant": {
-          "amount": 500,
-          "decimals": 2,
-          "unit": "USD"
-        },
-        "kind": "refusal",
-        "op": "header-format",
-        "remaining": 10,
-        "required": 10
-      },
-      "basis": "Budgets line 624.",
-      "aauth-go": {
-        "code": "required",
-        "outcome": "refuse"
-      },
-      "aauth-rust": {
-        "cost": null,
-        "decimals": 2,
-        "field": "remaining=10, required=10, unit=\"USD\", decimals=2",
-        "outcome": "accept",
-        "remaining": 10,
-        "required": 10,
-        "reserved": null,
-        "unit": "USD"
-      }
-    },
-    {
-      "id": "header.format-over-grant",
-      "title": "Format cost and remaining above the grant",
-      "kind": "header",
-      "input": {
-        "cost": 200,
-        "grant": {
-          "amount": 500,
-          "decimals": 2,
-          "unit": "USD"
-        },
-        "kind": "success",
-        "op": "header-format",
-        "remaining": 400
-      },
-      "basis": "Budgets lines 621-622. The draft does not say a sender must reject a field whose figures sum above the grant.",
-      "aauth-go": {
-        "code": "malformed",
-        "outcome": "refuse"
-      },
-      "aauth-rust": {
-        "cost": 200,
-        "decimals": 2,
-        "field": "remaining=400, cost=200, unit=\"USD\", decimals=2",
-        "outcome": "accept",
-        "remaining": 400,
-        "required": null,
-        "reserved": null,
-        "unit": "USD"
-      }
-    },
-    {
-      "id": "trailer.cost-above-reserved",
-      "title": "Trailer cost above the reserved hold",
-      "kind": "trailer",
-      "input": {
-        "cost": 250,
-        "header": "remaining=300, reserved=200, unit=\"USD\", decimals=2",
-        "op": "trailer-restate"
-      },
-      "basis": "Budgets lines 676 and 909. The balance formula subtracts cost from remaining plus reserved. The draft does not say a trailer parser must reject cost above reserved.",
-      "aauth-go": {
-        "code": "malformed",
-        "outcome": "refuse"
-      },
-      "aauth-rust": {
-        "field": "cost=250",
-        "outcome": "accept"
       }
     },
     {
@@ -3336,7 +3419,7 @@
           }
         ]
       },
-      "basis": "Budgets line 623. The draft does not say whether a zero hold is a reservation.",
+      "basis": "Budgets lines 911 and 913. The draft refuses a maximum that exceeds the remainder and does not say whether a zero maximum is a reservation.",
       "aauth-go": {
         "outcome": "accept",
         "steps": [
@@ -3361,57 +3444,6 @@
             "jti": "token-1",
             "op": "reserve",
             "outcome": "accept",
-            "remaining": 500,
-            "reserved": 0
-          }
-        ]
-      }
-    },
-    {
-      "id": "meter.hold-above-carrier",
-      "title": "Hold above 15 digits",
-      "kind": "meter",
-      "input": {
-        "grant": {
-          "amount": 500,
-          "decimals": 2,
-          "unit": "USD"
-        },
-        "op": "meter",
-        "steps": [
-          {
-            "hold": 1000000000000000,
-            "id": "h1",
-            "op": "reserve"
-          }
-        ]
-      },
-      "basis": "Budgets line 323: derived figures stay inside the 15-digit carrier.",
-      "aauth-go": {
-        "outcome": "accept",
-        "steps": [
-          {
-            "code": "insufficient",
-            "committed": 0,
-            "id": "h1",
-            "jti": "token-1",
-            "op": "reserve",
-            "outcome": "refuse",
-            "remaining": 500,
-            "reserved": 0
-          }
-        ]
-      },
-      "aauth-rust": {
-        "outcome": "accept",
-        "steps": [
-          {
-            "code": "rejected",
-            "committed": 0,
-            "id": "h1",
-            "jti": "token-1",
-            "op": "reserve",
-            "outcome": "refuse",
             "remaining": 500,
             "reserved": 0
           }

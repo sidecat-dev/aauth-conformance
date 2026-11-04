@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "aauth-rust-budgets"
-version = "0.1.0-alpha.28"
+version = "0.1.0-alpha.29"
 dependencies = [
  "aauth-rust-jose",
  "base64",
@@ -17,7 +17,7 @@ dependencies = [
 
 [[package]]
 name = "aauth-rust-jose"
-version = "0.1.0-alpha.28"
+version = "0.1.0-alpha.29"
 dependencies = [
  "base64",
  "ed25519-dalek",

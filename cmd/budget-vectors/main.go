@@ -20,8 +20,8 @@ const (
 	draftSHA     = "f00d34c91576476cdb30b7aa1aa13a0bc9fc1d99fc43b4f0389ccb3e8bf2e150"
 	draftURL     = "https://github.com/dickhardt/AAuth/blob/70d67375deb0bb002af7da0711fc58f6e8926e7e/draft-hardt-aauth-budgets.md"
 	goRevision   = "567e556af2bd7fc931143e679dd228b709111797"
-	rustRevision = "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd"
-	rustVersion  = "0.1.0-alpha.28"
+	rustRevision = "b60eac37fe686b7069e0d464254acf7564c071c5"
+	rustVersion  = "0.1.0-alpha.29"
 )
 
 func main() {
