@@ -35,6 +35,7 @@ func runPersonServers(ctx context.Context, s Suite, targets Targets, options Opt
 		for _, scenario := range s.Scenarios {
 			run.Cases = append(run.Cases, runPersonCase(ctx, s.Fixture, scenario, target, ready.URL, options, startError))
 		}
+		applyPersonPrerequisite(run.Cases, s.Scenarios)
 		if stop != nil {
 			stop()
 		}
@@ -51,6 +52,7 @@ func runPersonServers(ctx context.Context, s Suite, targets Targets, options Opt
 // Person Server and grades them.
 func runPersonCase(ctx context.Context, f Fixture, scenario Scenario, target Target, physical string, options Options, startError error) Case {
 	p := *f.Person
+	undeclared := remoteFrom(ctx) != nil && !p.ScopeDeclared
 	c := Case{ID: scenario.ID}
 	executionError := startError
 	responses := map[string]Response{}
@@ -59,6 +61,9 @@ func runPersonCase(ctx context.Context, f Fixture, scenario Scenario, target Tar
 	var claims map[string]any
 	for _, stage := range []string{"person", "token"} {
 		if executionError != nil {
+			break
+		}
+		if stage == "token" && undeclared {
 			break
 		}
 		if stage == "token" && (scenario.Person.Mutation == "tampered-proof" || scenario.Person.Mutation == "tampered-body") {
@@ -122,17 +127,19 @@ func runPersonCase(ctx context.Context, f Fixture, scenario Scenario, target Tar
 	if executionError != nil {
 		c.Error = executionError.Error()
 	}
-	issued := authTokenIssued(responses["token"])
-	unverified := resourceUnverified(responses["token"])
+	// A 200 claiming issuance still gets graded when its token is malformed or missing.
+	issued := responses["token"].Status == http.StatusOK
 	for _, a := range scenario.Assertions {
 		result := Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals}
 		response, exists := responses[a.Stage]
 		switch {
 		case !slices.Contains(target.Claims, a.Clause):
 			result.State = "not_claimed"
+		case undeclared && a.Stage == "token":
+			result.State, result.Detail = "not_exercised", "the deployment names no permitted scope for the issuance prerequisite"
 		case exists:
 			result = checkPerson(a, response, observations[a.Stage])
-			result = unexercisedIssuance(result, a, scenario, issued, unverified, remoteFrom(ctx) != nil && f.Person != nil && !f.Person.ScopeDeclared)
+			result = unexercisedIssuance(result, a, issued)
 		default:
 			result.State = "error"
 			result.Detail = c.Error
@@ -145,39 +152,62 @@ func runPersonCase(ctx context.Context, f Fixture, scenario Scenario, target Tar
 	return c
 }
 
-func authTokenIssued(response Response) bool {
-	if response.Status != 200 || len(response.Body) == 0 {
-		return false
-	}
-	var body map[string]json.RawMessage
-	var token string
-	return json.Unmarshal(response.Body, &body) == nil && json.Unmarshal(body["auth_token"], &token) == nil && token != ""
-}
-
 func resourceUnverified(response Response) bool {
 	var body map[string]any
 	return json.Unmarshal(response.Body, &body) == nil && body["error"] == "invalid_resource_token"
 }
 
-// unexercisedIssuance keeps the token-endpoint result and does not grade
-// checks that need an Auth token, or a Resource token the server accepted.
-func unexercisedIssuance(result Result, a Assertion, scenario Scenario, issued, unverified, scopeUndeclared bool) Result {
-	if a.Stage != "token" {
-		return result
+// Failed issuance leaves token-dependent checks unexercised. A malformed
+// success remains a protocol failure, rather than being silently skipped.
+func unexercisedIssuance(result Result, a Assertion, issued bool) Result {
+	if a.Stage == "token" && strings.HasPrefix(a.Kind, "ps-jwt") && !issued {
+		return Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_exercised", Detail: "no auth token was issued, so this check was not reached"}
 	}
-	reason := ""
-	switch {
-	case strings.HasPrefix(a.Kind, "ps-jwt") && !issued:
-		reason = "no auth token was issued, so this check was not reached"
-	case scopeUndeclared && a.Kind == "ps-jwt-scope":
-		reason = "the deployment names no permitted scope"
-	case unverified && scenario.Person != nil && scenario.Person.Mutation == "expired-resource" && a.Kind == "json-member":
-		reason = "the resource token was not accepted, so expiry was not reached"
-	case unverified && scenario.Person != nil && scenario.Person.Mutation == "denied-scope" && (a.Kind == "status" || a.Kind == "json-member"):
-		reason = "the resource token was not accepted, so scope policy was not reached"
+	return result
+}
+
+// A negative Resource mutation is meaningful only after the unchanged
+// Resource was verified. Preserve exchanges and the failing positive control;
+// do not count a blanket refusal as verification of every mutated field.
+func applyPersonPrerequisite(cases []Case, scenarios []Scenario) {
+	blocked := false
+	for _, c := range cases {
+		if c.ID == "ps-valid" {
+			for _, e := range c.Exchanges {
+				if e.Stage == "token" && e.Response != nil && resourceUnverified(*e.Response) {
+					blocked = true
+				}
+			}
+		}
 	}
-	if reason == "" {
-		return result
+	if !blocked {
+		return
 	}
-	return Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_exercised", Detail: reason}
+	byID := map[string]Scenario{}
+	for _, s := range scenarios {
+		byID[s.ID] = s
+	}
+	for i := range cases {
+		c := &cases[i]
+		s := byID[c.ID]
+		if s.Person == nil || s.Person.Mutation == "none" || s.Person.Mutation == "" || s.Person.Mutation == "short-parent" {
+			continue
+		}
+		refused := false
+		for _, e := range c.Exchanges {
+			if e.Stage == "token" && e.Response != nil && resourceUnverified(*e.Response) {
+				refused = true
+			}
+		}
+		if !refused {
+			continue
+		}
+		for j := range c.Results {
+			for _, a := range s.Assertions {
+				if a.ID == c.Results[j].Assertion && a.Stage == "token" && c.Results[j].State != "not_claimed" {
+					c.Results[j] = Result{Assertion: a.ID, Clause: a.Clause, Expected: a.Equals, State: "not_exercised", Detail: "the unchanged Resource-token issuance prerequisite failed; this mutation was not isolated"}
+				}
+			}
+		}
+	}
 }

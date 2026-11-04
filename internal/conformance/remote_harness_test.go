@@ -170,3 +170,24 @@ func TestPublicHarnessUsesOneLabelUnderTheDomain(t *testing.T) {
 		t.Fatal("empty domain accepted")
 	}
 }
+
+func TestPublicHarnessIncludesEveryDerivedParty(t *testing.T) {
+	f := loadSuite(t).Fixture
+	public, err := PublicHarness(f, "aauth.sidecat.dev")
+	if err != nil {
+		t.Fatal(err)
+	}
+	names := HarnessNames(public)
+	for _, name := range HarnessNames(f) {
+		want := strings.ReplaceAll(name, ".conformance.test", "-harness.aauth.sidecat.dev")
+		found := false
+		for _, n := range names {
+			if n == want {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("public harness is missing %s", want)
+		}
+	}
+}

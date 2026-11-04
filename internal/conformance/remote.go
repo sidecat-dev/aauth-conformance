@@ -198,6 +198,23 @@ func ValidateDeployment(d Deployment, s Suite) error {
 	if d.Version != 1 || d.ID == "" || d.Revision == "" || len(d.Roles) == 0 {
 		return fmt.Errorf("deployment needs version 1, id, revision and at least one role")
 	}
+	seen := map[string]bool{}
+	for _, scopes := range [][]string{d.PermittedScopes, d.DeniedScopes} {
+		if scopes != nil && len(scopes) == 0 {
+			return fmt.Errorf("scope profiles must name at least one scope when supplied")
+		}
+		for _, scope := range scopes {
+			if scope == "" || seen[scope] {
+				return fmt.Errorf("scope profiles must contain distinct nonempty tokens")
+			}
+			for _, r := range scope {
+				if r < 0x21 || r > 0x7e || r == '"' || r == '\\' {
+					return fmt.Errorf("invalid scope token %q", scope)
+				}
+			}
+			seen[scope] = true
+		}
+	}
 	harness := map[string]bool{}
 	for _, name := range HarnessNames(s.Fixture) {
 		harness[name] = true
@@ -457,6 +474,9 @@ func runRemoteRole(ctx context.Context, s Suite, role string, d Deployment, opti
 			markUnobserved(&c, scenario, stages, why)
 		}
 		run.Cases = append(run.Cases, c)
+	}
+	if role == PersonServerRole {
+		applyPersonPrerequisite(run.Cases, s.Scenarios)
 	}
 	report.Runs = []Run{run}
 	switch {

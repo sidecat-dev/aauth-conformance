@@ -189,19 +189,17 @@ func TestDependentAuthChecksAreUnexercisedWhenTheResourceTokenIsRefused(t *testi
 	}
 }
 
-func TestScopeMutationsStayUnexercisedUntilTheResourceTokenVerifies(t *testing.T) {
-	refused := Response{Status: 400, Body: []byte(`{"error":"invalid_resource_token"}`)}
-	expired := unexercisedIssuance(Result{State: "fail"}, Assertion{ID: "token-error", Kind: "json-member", Stage: "token"}, Scenario{Person: &PersonSpec{Mutation: "expired-resource"}}, false, true, false)
-	if expired.State != "not_exercised" || !strings.Contains(expired.Detail, "expiry") {
-		t.Fatal(expired)
+func TestScopeMutationsNeedThePositiveControlBeforeTheyAreSkipped(t *testing.T) {
+	response := Response{Status: 400, Body: []byte(`{"error":"invalid_resource_token"}`)}
+	scenarios := []Scenario{{ID: "ps-valid", Person: &PersonSpec{Mutation: "none"}}, {ID: "ps-expired-resource", Person: &PersonSpec{Mutation: "expired-resource"}, Assertions: []Assertion{{ID: "error", Stage: "token", Kind: "json-member"}}}}
+	cases := []Case{{ID: "ps-valid", Exchanges: []PersonExchange{{Stage: "token", Response: &response}}}, {ID: "ps-expired-resource", Exchanges: []PersonExchange{{Stage: "token", Response: &response}}, Results: []Result{{Assertion: "error", State: "fail"}}}}
+	applyPersonPrerequisite(cases[1:], scenarios)
+	if cases[1].Results[0].State != "fail" {
+		t.Fatal("an unexpected expiry error was hidden without a failing positive control")
 	}
-	denied := unexercisedIssuance(Result{State: "fail"}, Assertion{ID: "token-refusal", Kind: "status", Stage: "token"}, Scenario{Person: &PersonSpec{Mutation: "denied-scope"}}, false, resourceUnverified(refused), false)
-	if denied.State != "not_exercised" || !strings.Contains(denied.Detail, "scope policy") {
-		t.Fatal(denied)
-	}
-	kept := unexercisedIssuance(Result{State: "pass"}, Assertion{ID: "token-error", Kind: "json-member", Stage: "token"}, Scenario{Person: &PersonSpec{Mutation: "wrong-aud"}}, false, true, false)
-	if kept.State != "pass" {
-		t.Fatal("wrong audience was dropped", kept)
+	applyPersonPrerequisite(cases, scenarios)
+	if cases[1].Results[0].State != "not_exercised" {
+		t.Fatal(cases[1])
 	}
 }
 
@@ -400,9 +398,13 @@ func TestSuccessfulResponseWithoutAuthTokenIsStillAProtocolFailure(t *testing.T)
 }
 
 func TestDeclaredScopesAreAnUnorderedSet(t *testing.T) {
- f := fixture(); p := defaultPersonFixture(); p.PermittedScopes=[]string{"read", "records.read"}
- claims:=map[string]any{"iss":p.Issuer,"dwk":"aauth-person.json","aud":f.Origin,"ps":p.Issuer,"sub":p.Subject,"jti":"auth-order","iat":f.Now,"exp":f.Now+60,"scope":"records.read read","cnf":map[string]any{"jwk":publicJWK(f.AgentSeed)}}
- token,_:=mintJWT(p.Seed,p.Kid,"aa-auth+jwt",claims)
- parent:=map[string]any{"sub":p.Subject,"exp":float64(f.Now+300)}
- if !observePersonJWT(f,p,token,"auth",parent,f.Now+600).Scope {t.Fatal("scope ordering changed the declared grant")}
+	f := fixture()
+	p := defaultPersonFixture()
+	p.PermittedScopes = []string{"read", "records.read"}
+	claims := map[string]any{"iss": p.Issuer, "dwk": "aauth-person.json", "aud": f.Origin, "ps": p.Issuer, "sub": p.Subject, "jti": "auth-order", "iat": f.Now, "exp": f.Now + 60, "scope": "records.read read", "cnf": map[string]any{"jwk": publicJWK(f.AgentSeed)}}
+	token, _ := mintJWT(p.Seed, p.Kid, "aa-auth+jwt", claims)
+	parent := map[string]any{"sub": p.Subject, "exp": float64(f.Now + 300)}
+	if !observePersonJWT(f, p, token, "auth", parent, f.Now+600).Scope {
+		t.Fatal("scope ordering changed the declared grant")
+	}
 }

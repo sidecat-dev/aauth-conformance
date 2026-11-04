@@ -46,6 +46,20 @@ type PersonFixture struct {
 	TokenEndpoint  string `json:"-"`
 }
 
+func sameScopes(got, want []string) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	seen := map[string]bool{}
+	for _, s := range got {
+		if seen[s] || !slices.Contains(want, s) {
+			return false
+		}
+		seen[s] = true
+	}
+	return true
+}
+
 func grantedScope(p PersonFixture) string {
 	if len(p.PermittedScopes) == 0 {
 		return "read"
@@ -306,7 +320,7 @@ func observePersonJWT(f Fixture, p PersonFixture, compact, kind string, parent m
 	o.Scope = true
 	if kind == "auth" {
 		scope, ok := c["scope"].(string)
-		o.Scope = ok && scope == grantedScope(p)
+		o.Scope = ok && sameScopes(strings.Fields(scope), p.PermittedScopes)
 		for _, s := range strings.Fields(scope) {
 			o.Scope = o.Scope && slices.Contains(p.PermittedScopes, s)
 		}

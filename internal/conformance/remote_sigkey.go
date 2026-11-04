@@ -45,7 +45,12 @@ func sigkeyVariantIssuer(issuer, variant string) string {
 		return issuer
 	}
 	first, rest, _ := strings.Cut(u.Host, ".")
-	return "https://" + first + "-" + variant + "." + rest
+	if strings.HasSuffix(first, "-harness") {
+		first = strings.TrimSuffix(first, "-harness") + "-" + variant + "-harness"
+	} else {
+		first += "-" + variant
+	}
+	return "https://" + first + "." + rest
 }
 
 // sigkeyVariantKeys is a variant key set: the classical key and, for mixed,
