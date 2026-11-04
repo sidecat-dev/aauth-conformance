@@ -344,3 +344,12 @@ func TestPublicCallbackRejectsLoopback(t *testing.T) {
 		t.Fatal("malformed listen accepted")
 	}
 }
+
+func TestSuitePlaysPersonOnlyInHarnessPersonScenarios(t *testing.T) {
+	if !suitePlaysPerson(Scenario{Federated: &FederatedSpec{HarnessPS: true}}) {
+		t.Fatal("a harness Person Server scenario presents an enrolled token")
+	}
+	if suitePlaysPerson(Scenario{Federated: &FederatedSpec{}}) || suitePlaysPerson(Scenario{}) {
+		t.Fatal("a deployment Person Server scenario does not present the enrolled token")
+	}
+}

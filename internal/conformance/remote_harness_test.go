@@ -171,6 +171,34 @@ func TestPublicHarnessUsesOneLabelUnderTheDomain(t *testing.T) {
 	}
 }
 
+func TestPublicScenariosRenameExpectedParties(t *testing.T) {
+	suite := loadSuite(t)
+	out := PublicScenarios(suite.Scenarios, "harness.aauth.sidecat.dev")
+	if len(out) != len(suite.Scenarios) {
+		t.Fatalf("%d scenarios, want %d", len(out), len(suite.Scenarios))
+	}
+	found := false
+	for i, scenario := range out {
+		for j, a := range scenario.Assertions {
+			if strings.Contains(string(a.Equals), ".conformance.test") {
+				t.Errorf("%s/%s still expects %s", scenario.ID, a.ID, a.Equals)
+			}
+			if string(a.Equals) == `"aauth:Agent@ap.harness.aauth.sidecat.dev"` {
+				found = true
+				if string(suite.Scenarios[i].Assertions[j].Equals) != `"aauth:Agent@ap.conformance.test"` {
+					t.Errorf("the loaded suite was changed: %s", suite.Scenarios[i].Assertions[j].Equals)
+				}
+			}
+			if len(suite.Scenarios[i].Assertions[j].Equals) == 0 && a.Equals != nil {
+				t.Errorf("%s/%s gained an expected value", scenario.ID, a.ID)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("no expectation names the public fixture agent")
+	}
+}
+
 func TestPublicHarnessIncludesEveryDerivedParty(t *testing.T) {
 	f := loadSuite(t).Fixture
 	public, err := PublicHarness(f, "harness.aauth.sidecat.dev")

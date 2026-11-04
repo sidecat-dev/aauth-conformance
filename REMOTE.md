@@ -213,6 +213,11 @@ and not those entries. A scenario that needs an expired or shorter agent
 token is not exercised: this suite does not hold the provider's signing key.
 `supervision.server` still signs as the harness Person Server, so that role
 needs the callback receiver below. Enrollment does not publish that server.
+In the `authorization.federated` scenarios where the suite is the Person
+Server, the suite presents its own agent token from `ap.conformance.test`,
+because an Access Server accepts an agent token only when its `ps` is the
+Person Server that signs the request. Your Resource and Access Server must
+trust the suite's Agent Provider for those scenarios.
 
 ## Name your servers
 
