@@ -202,10 +202,12 @@ func enrolledGap(s Scenario) string {
 	return "the agent token is issued by the named provider and this scenario needs a different lifetime"
 }
 
-// presentedSubject expects the enrolled agent identifier where a response
-// assertion names the fixture agent. Other subjects are left as written.
+// presentedSubject expects the enrolled agent identifier where an assertion
+// names the fixture agent: a response's sub, or a value a supervised Person
+// Server forwards to the suite's supervisor. Other values are left as written.
 func presentedSubject(f Fixture, a Assertion) Assertion {
-	if f.Enrolled == nil || a.Kind != "json-member" || a.Member != "sub" {
+	named := a.Kind == "json-member" && a.Member == "sub" || a.Kind == "ss-request-equals"
+	if f.Enrolled == nil || !named {
 		return a
 	}
 	var expected string

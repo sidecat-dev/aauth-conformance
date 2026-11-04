@@ -275,4 +275,12 @@ func TestPresentedSubjectFollowsTheEnrolledAgent(t *testing.T) {
 	if string(kept.Equals) != string(other) {
 		t.Fatal("person subject rewritten")
 	}
+	forwarded := presentedSubject(f, Assertion{Kind: "ss-request-equals", Member: "decision/agent", Equals: raw})
+	if json.Unmarshal(forwarded.Equals, &subject) != nil || subject != f.Enrolled.Agent {
+		t.Fatalf("forwarded agent %s", forwarded.Equals)
+	}
+	resource, _ := json.Marshal("https://resource.conformance.test")
+	if got := presentedSubject(f, Assertion{Kind: "ss-request-equals", Member: "decision/resource", Equals: resource}); string(got.Equals) != string(resource) {
+		t.Fatal("forwarded resource rewritten")
+	}
 }
