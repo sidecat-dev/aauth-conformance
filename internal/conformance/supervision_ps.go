@@ -542,6 +542,7 @@ func selectSSRequest(observed []SSRequest, selector string) (SSRequest, bool) {
 }
 
 func checkSupervisionPS(a Assertion, f Fixture, input SupervisionPSInput, exchange, mission *SupervisionPSExchange, tokenName, tokenType string, observed []SSRequest, presented map[string]string) Result {
+	a = presentedSubject(f, a)
 	p := *f.Person
 	switch a.Kind {
 	case "ps-credential", "ps-credential-exp":
