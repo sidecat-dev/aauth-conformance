@@ -1,6 +1,6 @@
 {:version 1
  :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"
- :reports-source "full run of all roles on suite f32d9ee, aauth-rust ed4671b and aauth-go ad34a9a, ended 2026-11-03T06:32:42Z"
+ :reports-source "full run of all roles on suite 6bf6576, aauth-rust 521f111 and aauth-go 567e556, ended 2026-11-04T06:01:23Z"
  :drafts
  [{:id "core" :file "draft-hardt-oauth-aauth-protocol.md" :commit "70d67375deb0bb002af7da0711fc58f6e8926e7e" :sha256 "99ef2430c7babec7ea9cb2e9af40e3c3c57d18bce5a6e8501e9748063cfd9ab0" :lines 3649}
   {:id "key" :file "draft-hardt-httpbis-signature-key.md" :commit "69f5ba2647be848feed043fb6d8b0790e43cd0b6" :sha256 "b2b43db67a1aa5249d1166589834d44f81e97ea2e6375a07b475115efa196b7d" :lines 1750}
@@ -10,54 +10,54 @@
   {:id "supervision" :file "draft-hardt-aauth-supervision.md" :commit "70d67375deb0bb002af7da0711fc58f6e8926e7e" :sha256 "9fd44f899e06bf2a1e903459799cccdd8c6365b5eb5fa1efe2ed5b23b1a6d1a3" :lines 740}
   {:id "bootstrap" :file "draft-hardt-aauth-bootstrap.md" :commit "70d67375deb0bb002af7da0711fc58f6e8926e7e" :sha256 "40ca9d052e942a78ef01a827a23bd0149d34a58f626e750949f3ddcd2601b82c" :lines 520}]
  :reports
- [{:role "agent.signing" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "agent.signing" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "authorization.deferred" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "authorization.deferred" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "authorization.federated" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "authorization.federated" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "authorization.subagent" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "authorization.subagent" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "bootstrap.agent" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "bootstrap.agent" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "bootstrap.agent-provider" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "bootstrap.agent-provider" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "bootstrap.self-hosted" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "bootstrap.self-hosted" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "events.agent" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "events.agent" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "events.agent-provider" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "events.agent-provider" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "events.delivery" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "events.delivery" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "events.subscription" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "events.subscription" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "mission.person-server" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "mission.person-server" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "mission.resource" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "mission.resource" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "person-server.direct" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "person-server.direct" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "r3.federated-issuer" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "r3.federated-issuer" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "r3.issuer" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "r3.issuer" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "r3.resource" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "r3.resource" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "resource.agent-identity" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "resource.agent-identity" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "sigkey.signer" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "sigkey.signer" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "sigkey.verifier" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "sigkey.verifier" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "supervision.person-server" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "supervision.person-server" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "supervision.server" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "supervision.server" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "vectors.library" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "vectors.library" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "vectors.signature-key" :library "aauth-go" :revision "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
-  {:role "vectors.signature-key" :library "aauth-rust" :revision "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}]
+ [{:role "agent.signing" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "agent.signing" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "authorization.deferred" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "authorization.deferred" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "authorization.federated" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "authorization.federated" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "authorization.subagent" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "authorization.subagent" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "bootstrap.agent" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "bootstrap.agent" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "bootstrap.agent-provider" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "bootstrap.agent-provider" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "bootstrap.self-hosted" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "bootstrap.self-hosted" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "events.agent" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "events.agent" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "events.agent-provider" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "events.agent-provider" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "events.delivery" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "events.delivery" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "events.subscription" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "events.subscription" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "mission.person-server" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "mission.person-server" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "mission.resource" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "mission.resource" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "person-server.direct" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "person-server.direct" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "r3.federated-issuer" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "r3.federated-issuer" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "r3.issuer" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "r3.issuer" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "r3.resource" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "r3.resource" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "resource.agent-identity" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "resource.agent-identity" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "sigkey.signer" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "sigkey.signer" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "sigkey.verifier" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "sigkey.verifier" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "supervision.person-server" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "supervision.person-server" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "supervision.server" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "supervision.server" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "vectors.library" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "vectors.library" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "vectors.signature-key" :library "aauth-go" :revision "567e556af2bd7fc931143e679dd228b709111797" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}
+  {:role "vectors.signature-key" :library "aauth-rust" :revision "521f111c1c038994771d7093025c2227c6fa3ce6" :execution :passed :suite-sha256 "33056ca8b0601972c16829eecf57e9d6eda7857fc80670a7a379c8f5f61f9da2"}]
  :scenarios
  [{:id "unsigned" :role "resource.agent-identity" :file "scenarios/01-unsigned.json"}
   {:id "valid" :role "resource.agent-identity" :file "scenarios/02-valid.json"}
