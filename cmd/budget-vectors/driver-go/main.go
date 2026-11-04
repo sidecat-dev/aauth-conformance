@@ -428,12 +428,6 @@ func code(err error) string {
 		return "denomination"
 	case strings.Contains(message, "exceeds the offer"):
 		return "exceeds"
-	case strings.Contains(message, "must not carry both"):
-		return "both"
-	case strings.Contains(message, "required amount must exceed"):
-		return "required"
-	case strings.Contains(message, "mutually exclusive"):
-		return "exclusive"
 	default:
 		return "malformed"
 	}

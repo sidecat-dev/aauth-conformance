@@ -81,11 +81,11 @@ func catalog() []caseDef {
 	header("header.parameter", "Parameter on remaining", "Budgets line 612: AAuth-Budget is a Dictionary of members, not a parameterized item.", `remaining=10;k=1`)
 	header("header.semicolons", "Members separated by semicolons", "Budgets line 615 separates members with commas. A semicolon starts structured-field parameters.", `remaining=10; cost=2`)
 	header("header.duplicate-remaining", "Duplicate remaining key", "Budgets line 621 and RFC 9651 dictionary keys.", `remaining=1, remaining=2`)
-	header("header.cost-and-reserved", "Cost and reserved together", "Budgets line 623: reserved is meaningful where cost is not yet known. The draft does not forbid both on one field.", `remaining=10, cost=4, reserved=8, unit="USD", decimals=2`)
-	header("header.required-equal", "Required equal to remaining", "Budgets line 624: required is the maximum cost of a request that did not fit. The draft does not say the member must be greater than remaining.", `remaining=10, required=10, unit="USD", decimals=2`)
-	header("header.required-below", "Required below remaining", "Budgets line 624.", `remaining=11, required=10, unit="USD", decimals=2`)
-	header("header.cost-and-required", "Cost and required together", "Budgets lines 622 and 624. A refusal carries no cost (line 724).", `remaining=10, cost=1, required=20`)
-	header("header.reserved-and-required", "Reserved and required together", "Budgets lines 623 and 624.", `remaining=10, reserved=5, required=20`)
+	header("header.cost-and-reserved", "Cost and reserved together", "Budgets lines 623 and 702: a sender writes reserved only while cost is not yet known, and a recipient that merges a cost trailer into that header gets one Dictionary with both.", `remaining=10, cost=4, reserved=8, unit="USD", decimals=2`)
+	header("header.required-equal", "Required equal to remaining", "Budgets lines 621, 624 and 743: required is the maximum cost of a refused insufficient-budget request, that maximum exceeds the remainder, and remaining is a floor.", `remaining=10, required=10, unit="USD", decimals=2`)
+	header("header.required-below", "Required below remaining", "Budgets lines 621, 624 and 743.", `remaining=11, required=10, unit="USD", decimals=2`)
+	header("header.cost-and-required", "Cost and required together", "Budgets lines 624, 724 and 795: required is sent only with a refusal, and a refusal carries no cost.", `remaining=10, cost=1, required=20`)
+	header("header.reserved-and-required", "Reserved and required together", "Budgets lines 624 and 795: a refusal carries no reserved, because nothing was held.", `remaining=10, reserved=5, required=20`)
 
 	format := func(id, title, basis, kind string, grant map[string]any, extra map[string]any) {
 		input := map[string]any{"kind": kind, "grant": grant}
@@ -100,8 +100,8 @@ func catalog() []caseDef {
 	format("header.format-stream", "Format a hold whose cost is not known yet", "Budgets lines 660-668.", "reserved", grant500, map[string]any{"remaining": int64(300), "reserved": int64(200)})
 	format("header.format-exhausted", "Format an exhausted refusal", "Budgets lines 724 and 737.", "refusal", grantBig, map[string]any{"remaining": int64(0)})
 	format("header.format-insufficient", "Format an insufficient-budget refusal", "Budgets lines 724 and 755.", "refusal", grantBig, map[string]any{"remaining": int64(150000), "required": int64(400000)})
-	format("header.format-required-equal", "Format required equal to remaining", "Budgets line 624.", "refusal", grant500, map[string]any{"remaining": int64(10), "required": int64(10)})
-	format("header.format-over-grant", "Format cost and remaining above the grant", "Budgets lines 621-622. The draft does not say a sender must reject a field whose figures sum above the grant.", "success", grant500, map[string]any{"remaining": int64(400), "cost": int64(200)})
+	format("header.format-required-equal", "Format required equal to remaining", "Budgets lines 621, 624 and 743.", "refusal", grant500, map[string]any{"remaining": int64(10), "required": int64(10)})
+	format("header.format-over-grant", "Format cost and remaining above the grant", "Budgets lines 621, 909 and 913: remaining is net of everything committed and held, so remaining plus this request's cost is not above the grant.", "success", grant500, map[string]any{"remaining": int64(400), "cost": int64(200)})
 
 	add("trailer.cost-example", "Cost-only trailer from the draft", "trailer", "Budgets lines 673 and 699: a trailer carries cost and nothing else.", "trailer-format", map[string]any{"cost": int64(221200)})
 	add("trailer.zero", "Trailer cost zero", "trailer", "Budgets line 622: cost is a non-negative integer.", "trailer-format", map[string]any{"cost": int64(0)})
@@ -109,7 +109,7 @@ func catalog() []caseDef {
 	add("trailer.above-carrier", "Trailer cost above 15 digits", "trailer", "Budgets line 323.", "trailer-format", map[string]any{"cost": int64(1000000000000000)})
 	add("trailer.restate-cost", "Trailer restates a header that already carried cost", "trailer", "Budgets line 699: a trailer MUST NOT restate a member the header carried.", "trailer-restate", map[string]any{"header": `remaining=375, cost=125, unit="USD", decimals=2`, "cost": int64(50)})
 	add("trailer.after-reserved", "Trailer cost within the hold", "trailer", "Budgets lines 668-676 and 699.", "trailer-restate", map[string]any{"header": `remaining=300, reserved=200, unit="USD", decimals=2`, "cost": int64(125)})
-	add("trailer.cost-above-reserved", "Trailer cost above the reserved hold", "trailer", "Budgets lines 676 and 909. The balance formula subtracts cost from remaining plus reserved. The draft does not say a trailer parser must reject cost above reserved.", "trailer-restate", map[string]any{"header": `remaining=300, reserved=200, unit="USD", decimals=2`, "cost": int64(250)})
+	add("trailer.cost-above-reserved", "Trailer cost above the reserved hold", "trailer", "Budgets lines 676, 702 and 913: remaining is a floor only when remaining + reserved - cost is at least remaining, and the hold is the request's maximum.", "trailer-restate", map[string]any{"header": `remaining=300, reserved=200, unit="USD", decimals=2`, "cost": int64(250)})
 
 	meter := func(id, title, basis string, grant map[string]any, steps []map[string]any) {
 		add(id, title, "meter", basis, "meter", map[string]any{"grant": grant, "steps": steps})
@@ -168,10 +168,10 @@ func catalog() []caseDef {
 	meter("meter.unknown-hold", "Commit a hold that was not reserved", "Budgets line 909.", grant500, []map[string]any{
 		step("commit", "missing", map[string]any{"cost": int64(1)}),
 	})
-	meter("meter.zero-hold", "Reserve a hold of zero", "Budgets line 623. The draft does not say whether a zero hold is a reservation.", grant500, []map[string]any{
+	meter("meter.zero-hold", "Reserve a hold of zero", "Budgets lines 911 and 913. The draft refuses a maximum that exceeds the remainder and does not say whether a zero maximum is a reservation.", grant500, []map[string]any{
 		step("reserve", "h1", map[string]any{"hold": int64(0)}),
 	})
-	meter("meter.hold-above-carrier", "Hold above 15 digits", "Budgets line 323: derived figures stay inside the 15-digit carrier.", grant500, []map[string]any{
+	meter("meter.hold-above-carrier", "Hold above 15 digits", "Budgets lines 722 and 911: a maximum that exceeds a positive remainder is refused as insufficient-budget. Line 326 keeps grants inside the 15-digit carrier, so a larger maximum exceeds every remainder.", grant500, []map[string]any{
 		step("reserve", "h1", map[string]any{"hold": int64(1000000000000000)}),
 	})
 	return cases

@@ -3,8 +3,9 @@ use std::collections::BTreeMap;
 use std::io::{self, Read};
 
 use aauth_rust_budgets::{
-    Budget, BudgetHeader, ChargeError, Error, Ledger, Refusal, Reservation, TokenAccount,
-    parse_budget_bytes, parse_header, sender_field, trailer_field, validate_narrowing,
+    Budget, BudgetHeader, ChargeError, Error, Ledger, MAX_AMOUNT, Refusal, Reservation,
+    TokenAccount, parse_budget_bytes, parse_header, sender_field, trailer_field,
+    validate_narrowing,
 };
 use serde_json::{Value, json};
 
@@ -59,10 +60,13 @@ fn header_parse(case: &Value) -> Result<Value, String> {
     match parse_header(field, None, None) {
         Ok(parsed) => {
             let served = parsed.header.cost.is_some() || parsed.header.reserved.is_some();
-            let formatted = sender_field(&parsed.header, served).map_err(|error| error.to_string())?;
             let mut value = header_value(&parsed.header);
             value["outcome"] = json!("accept");
-            value["field"] = json!(formatted);
+            // A merged header and trailer parses, but a sender writes it as two
+            // fields, so there is no single serialization to record.
+            if let Ok(formatted) = sender_field(&parsed.header, served) {
+                value["field"] = json!(formatted);
+            }
             Ok(value)
         }
         Err(error) => Ok(refused(code_error(&error))),
@@ -73,20 +77,15 @@ fn header_format(case: &Value) -> Result<Value, String> {
     let remaining = i64_field(case, "remaining")?;
     let grant = must_budget(&case["grant"])?;
     let built = match case["kind"].as_str().unwrap_or("") {
-        "success" => BudgetHeader::final_cost(remaining, i64_field(case, "cost")?, grant.unit(), grant.decimals()),
-        "reserved" => BudgetHeader::reserved_hold(
-            remaining,
-            i64_field(case, "reserved")?,
-            grant.unit(),
-            grant.decimals(),
-        ),
+        "success" => BudgetHeader::final_cost(&grant, remaining, i64_field(case, "cost")?),
+        "reserved" => BudgetHeader::reserved_hold(&grant, remaining, i64_field(case, "reserved")?),
         "refusal" => {
             let required = case.get("required").filter(|value| !value.is_null());
             let required = match required {
                 Some(_) => Some(i64_field(case, "required")?),
                 None => None,
             };
-            BudgetHeader::refusal(remaining, required, grant.unit(), grant.decimals())
+            BudgetHeader::refusal(&grant, remaining, required)
         }
         other => return Err(format!("unknown format kind {other}")),
     };
@@ -109,7 +108,11 @@ fn header_format(case: &Value) -> Result<Value, String> {
 
 fn trailer_format(case: &Value) -> Result<Value, String> {
     let cost = i64_field(case, "cost")?;
-    let prior = BudgetHeader::reserved_hold(0, 0, "USD", 0).map_err(|error| error.to_string())?;
+    // The header before the trailer held the request's whole maximum. The hold
+    // is clamped to the carrier, so the trailer itself refuses an out-of-range cost.
+    let hold = cost.clamp(0, MAX_AMOUNT);
+    let grant = Budget::new(MAX_AMOUNT, "USD", 0).map_err(|error| error.to_string())?;
+    let prior = BudgetHeader::reserved_hold(&grant, 0, hold).map_err(|error| error.to_string())?;
     match trailer_field(&prior, cost) {
         Ok(trailer) => Ok(json!({"outcome": "accept", "field": trailer.field, "listed": trailer.listed})),
         Err(error) => Ok(refused(code_error(&error))),
