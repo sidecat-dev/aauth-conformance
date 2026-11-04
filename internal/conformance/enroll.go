@@ -248,9 +248,34 @@ func trustTargets(d Deployment) map[string]struct{} {
 	return out
 }
 
-func enrollTrust(ctx context.Context, provider, durableSeed string, targets map[string]struct{}, now int64, timeout time.Duration) (map[string]*EnrolledAgent, error) {
+// providerFor is the Agent Provider that stamps ps. A map entry wins over
+// fallback. The empty ps is a role with no Person Server and uses fallback.
+// An empty fallback with no entry is an error. The suite does not invent one.
+func providerFor(fallback string, providers map[string]string, ps string) (string, error) {
+	if ps != "" {
+		if named := providers[ps]; named != "" {
+			return named, nil
+		}
+	}
+	if fallback != "" {
+		return fallback, nil
+	}
+	if ps == "" {
+		return "", fmt.Errorf("no bootstrap provider for a role with no Person Server")
+	}
+	return "", fmt.Errorf("no bootstrap provider for %s", ps)
+}
+
+// enrollTrust enrolls one agent token per person server. providers maps a
+// Person Server to the provider that stamps it. A server with no entry, and
+// the empty key, use fallback.
+func enrollTrust(ctx context.Context, fallback string, providers map[string]string, durableSeed string, targets map[string]struct{}, now int64, timeout time.Duration) (map[string]*EnrolledAgent, error) {
 	out := map[string]*EnrolledAgent{}
 	for ps := range targets {
+		provider, err := providerFor(fallback, providers, ps)
+		if err != nil {
+			return nil, err
+		}
 		enrolled, err := enrollAgent(ctx, provider, durableSeed, ps, now, timeout)
 		if err != nil {
 			label := ps

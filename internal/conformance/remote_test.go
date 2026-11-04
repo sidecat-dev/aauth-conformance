@@ -86,6 +86,25 @@ func TestValidateDeploymentRefusesUnusableServers(t *testing.T) {
 	}
 }
 
+func TestValidateDeploymentRequiresProviderMapEntriesToBeOrigins(t *testing.T) {
+	suite := loadSuite(t)
+	d := Deployment{Version: 1, ID: "impl", Revision: "v1",
+		BootstrapProviders: map[string]string{"https://ps.example": "https://ap.example"},
+		Roles:              map[string]RemoteRole{PersonServerRole: {PersonServer: "https://ps.example"}},
+	}
+	if err := ValidateDeployment(d, suite); err != nil {
+		t.Fatal(err)
+	}
+	d.BootstrapProviders = map[string]string{"ps.example": "https://ap.example"}
+	if err := ValidateDeployment(d, suite); err == nil || !strings.Contains(err.Error(), "bootstrap_providers") {
+		t.Fatalf("bad key: %v", err)
+	}
+	d.BootstrapProviders = map[string]string{"https://ps.example": "http://ap.example"}
+	if err := ValidateDeployment(d, suite); err == nil || !strings.Contains(err.Error(), "https") {
+		t.Fatalf("http provider: %v", err)
+	}
+}
+
 // Catches a rebased fixture that keeps a deployed role's fixture identity, or
 // that hands the harness Person Server's identity to the deployment.
 func TestRemoteFixtureRebasesOnlyDeployedRoles(t *testing.T) {

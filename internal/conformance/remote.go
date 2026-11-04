@@ -21,9 +21,16 @@ type Deployment struct {
 	ID       string `json:"id"`
 	Revision string `json:"revision"`
 	// BootstrapProvider is the Agent Provider the suite enrolls its durable
-	// key at before presenting an agent token. The flag -agent-provider
-	// overrides it. Empty keeps the fixture provider.
+	// key at for a Person Server that BootstrapProviders does not name, and
+	// for a role that has no Person Server. The flag -agent-provider
+	// overrides this field and not the map. Empty, with an empty map, keeps
+	// the fixture provider.
 	BootstrapProvider string `json:"bootstrap_provider,omitempty"`
+	// BootstrapProviders maps a Person Server issuer to the Agent Provider
+	// that stamps an agent token for that one server. An entry wins over
+	// BootstrapProvider. A provider that copies ps from the refresh body can
+	// be named once, in BootstrapProvider, and used for every server.
+	BootstrapProviders map[string]string `json:"bootstrap_providers,omitempty"`
 	// PermittedScopes and DeniedScopes are the deployment's scope profile.
 	// Omitted, remote mode does not assume that the server grants read or
 	// refuses admin.
@@ -60,9 +67,10 @@ type RemoteRole struct {
 // server's issued-at time may be from the suite's clock. Public grades a
 // deployment the suite does not operate: host controls are not dialed, and
 // scenarios that need one are not exercised. AgentProvider is the bootstrap
-// Agent Provider the suite enrolls its key at. Empty keeps the fixture
-// provider, which a deployment can verify only when it can fetch that
-// provider's keys.
+// Agent Provider for a Person Server the deployment's bootstrap_providers
+// map does not name. It overrides bootstrap_provider. Empty keeps that
+// field, and an empty field with an empty map keeps the fixture provider,
+// which a deployment can verify only when it can fetch that provider's keys.
 type RemoteOptions struct {
 	Timeout       time.Duration
 	Skew          int64
@@ -219,6 +227,14 @@ func ValidateDeployment(d Deployment, s Suite) error {
 	for _, name := range HarnessNames(s.Fixture) {
 		harness[name] = true
 	}
+	for ps, provider := range d.BootstrapProviders {
+		if !serverIdentifier(ps) {
+			return fmt.Errorf("bootstrap_providers key %q must be an HTTPS server identifier", ps)
+		}
+		if err := validateEnrollProvider(provider); err != nil {
+			return fmt.Errorf("bootstrap_providers %s: %w", ps, err)
+		}
+	}
 	for role, r := range d.Roles {
 		driver, ok := remoteDrivers[role]
 		if !ok {
@@ -319,18 +335,29 @@ func RunRemote(ctx context.Context, s Suite, d Deployment, options RemoteOptions
 	if options.Timeout <= 0 {
 		options.Timeout = 5 * time.Second
 	}
-	if options.AgentProvider == "" {
-		options.AgentProvider = d.BootstrapProvider
+	fallback := options.AgentProvider
+	if fallback == "" {
+		fallback = d.BootstrapProvider
 	}
-	if options.AgentProvider != "" {
-		trust, err := enrollTrust(ctx, options.AgentProvider, s.Fixture.AgentSeed, trustTargets(d), time.Now().Unix(), options.Timeout)
+	targets := trustTargets(d)
+	if len(targets) > 0 && (fallback != "" || len(d.BootstrapProviders) > 0) {
+		trust, err := enrollTrust(ctx, fallback, d.BootstrapProviders, s.Fixture.AgentSeed, targets, time.Now().Unix(), options.Timeout)
 		if err != nil {
 			return nil, err
 		}
 		options.trust = trust
-		for _, enrolled := range trust {
-			fmt.Printf("agent trust: %s enrolled at %s\n", enrolled.Agent, options.AgentProvider)
-			break
+		labels := make([]string, 0, len(trust))
+		for ps := range trust {
+			labels = append(labels, ps)
+		}
+		sort.Strings(labels)
+		for _, ps := range labels {
+			enrolled := trust[ps]
+			label := ps
+			if label == "" {
+				label = "a role with no Person Server"
+			}
+			fmt.Printf("agent trust: %s enrolled at %s for %s\n", enrolled.Agent, enrolled.Provider, label)
 		}
 	}
 	roles := []string{}

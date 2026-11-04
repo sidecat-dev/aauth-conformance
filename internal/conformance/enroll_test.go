@@ -154,6 +154,114 @@ func TestTrustTargetsAreThePersonServersTheSuiteAgentCalls(t *testing.T) {
 	}
 }
 
+// copyingProvider enrolls any durable key and stamps ps from the refresh body.
+// seen records that ps, including an empty one when the body omits it.
+func copyingProvider(t *testing.T, seen *[]string) *httptest.Server {
+	t.Helper()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		if r.URL.Path == "/bootstrap/enroll" {
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(map[string]string{"agent": "aauth:local@ap.example"})
+			return
+		}
+		if r.URL.Path != "/bootstrap/refresh" {
+			http.NotFound(w, r)
+			return
+		}
+		var payload map[string]any
+		_ = json.Unmarshal(body, &payload)
+		ps, _ := payload["ps"].(string)
+		*seen = append(*seen, ps)
+		claims := map[string]any{"iss": "https://ap.example", "sub": "aauth:local@ap.example"}
+		if ps != "" {
+			claims["ps"] = ps
+		}
+		token, err := mintJWT(strings.Repeat("03", 32), "ap", "aa-agent+jwt", claims)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"agent_token": token})
+	}))
+	t.Cleanup(server.Close)
+	return server
+}
+
+func TestEnrollTrustUsesTheProviderNamedForThatPersonServer(t *testing.T) {
+	var directPS, federatedPS, fallbackPS []string
+	direct := copyingProvider(t, &directPS)
+	federated := copyingProvider(t, &federatedPS)
+	fallback := copyingProvider(t, &fallbackPS)
+	seed := strings.Repeat("06", 32)
+	now := time.Now().Unix()
+	enrolled, err := enrollTrust(context.Background(), fallback.URL, map[string]string{
+		"https://ps.example":  direct.URL,
+		"https://fps.example": federated.URL,
+	}, seed, map[string]struct{}{
+		"https://ps.example": {}, "https://fps.example": {}, "": {},
+	}, now, time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enrolled["https://ps.example"].Provider != direct.URL || enrolled["https://ps.example"].PS != "https://ps.example" {
+		t.Fatalf("direct %+v", enrolled["https://ps.example"])
+	}
+	if enrolled["https://fps.example"].Provider != federated.URL || enrolled["https://fps.example"].PS != "https://fps.example" {
+		t.Fatalf("federated %+v", enrolled["https://fps.example"])
+	}
+	if enrolled[""].Provider != fallback.URL {
+		t.Fatalf("role with no Person Server used %+v", enrolled[""])
+	}
+	if len(directPS) != 1 || directPS[0] != "https://ps.example" {
+		t.Fatalf("direct provider saw %v", directPS)
+	}
+	if len(federatedPS) != 1 || federatedPS[0] != "https://fps.example" {
+		t.Fatalf("federated provider saw %v", federatedPS)
+	}
+	if len(fallbackPS) != 1 || fallbackPS[0] != "" {
+		t.Fatalf("fallback provider saw %v", fallbackPS)
+	}
+}
+
+func TestEnrollTrustUsesOneProviderForEveryPersonServerWhenNoneIsNamed(t *testing.T) {
+	var seen []string
+	server := copyingProvider(t, &seen)
+	seed := strings.Repeat("07", 32)
+	enrolled, err := enrollTrust(context.Background(), server.URL, nil, seed, map[string]struct{}{
+		"https://ps.example": {}, "https://fps.example": {},
+	}, time.Now().Unix(), time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if enrolled["https://ps.example"].Provider != server.URL || enrolled["https://ps.example"].PS != "https://ps.example" {
+		t.Fatalf("direct %+v", enrolled["https://ps.example"])
+	}
+	if enrolled["https://fps.example"].Provider != server.URL || enrolled["https://fps.example"].PS != "https://fps.example" {
+		t.Fatalf("federated %+v", enrolled["https://fps.example"])
+	}
+	got := map[string]bool{}
+	for _, ps := range seen {
+		got[ps] = true
+	}
+	if len(seen) != 2 || !got["https://ps.example"] || !got["https://fps.example"] {
+		t.Fatalf("provider saw %v", seen)
+	}
+}
+
+func TestEnrollTrustRefusesAPersonServerThatNamesNoProvider(t *testing.T) {
+	var seen []string
+	server := copyingProvider(t, &seen)
+	_, err := enrollTrust(context.Background(), "", map[string]string{
+		"https://ps.example": server.URL,
+	}, strings.Repeat("08", 32), map[string]struct{}{
+		"https://ps.example": {}, "https://fps.example": {},
+	}, time.Now().Unix(), time.Second)
+	if err == nil || !strings.Contains(err.Error(), "https://fps.example") {
+		t.Fatalf("error %v", err)
+	}
+}
+
 func TestPresentedSubjectFollowsTheEnrolledAgent(t *testing.T) {
 	f := Fixture{Subject: "aauth:Agent@ap.conformance.test", Enrolled: &EnrolledAgent{Agent: "aauth:local@ap.example"}}
 	raw, _ := json.Marshal(f.Subject)
