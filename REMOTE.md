@@ -113,9 +113,10 @@ The clauses scoped `adapter-contract` grade that policy:
   `directed-person-1` from your Person Server and from
   `https://person.conformance.test`, with the same answer.
 - **Person and Access Servers.** The Person Server binds every request to the
-  subject `directed-person-1`. It grants only the `read` scope and refuses
-  any other scope as a policy denial. The Access Server trusts both Person
-  Servers and grants only `read`.
+  subject `directed-person-1` in the reference profile. For remote direct
+  Person Server grades, declare `permitted_scopes` and `denied_scopes` in
+  the deployment file; scope policy is not inferred. The reference Access
+  Server trusts both Person Servers and grants only `read`.
 - **Agent Provider.** It serves one Agent, the one the role names as `agent`,
   whose signing key is the fixture's agent key. It trusts
   `resource.conformance.test` and `other-resource.conformance.test`.
@@ -186,7 +187,16 @@ name of the same shape. That name is not public DNS. Without `-public`, a run
 that still names it records `lookup ... no such host` and those assertions
 are errors.
 
-`permitted_scopes` and `denied_scopes` are the deployment's scope profile. Omitted, the suite does not assume that an Auth token carries `read` or that `admin` is refused, and those checks are `not_exercised`. A check that needs an Auth token is `not_exercised` when the token endpoint does not issue one. The endpoint status itself stays a failure.
+`permitted_scopes` and `denied_scopes` are distinct lists of scope tokens,
+for example `["read"]` and `["admin"]`. Without permitted scopes the suite
+does not attempt direct Auth-token issuance. Without denied scopes it
+does not test policy denial. These checks are `not_exercised`. Scope order
+is immaterial; the issued scope set must match the permitted set.
+
+If issuance fails, checks of the absent token are `not_exercised`; the
+endpoint failure remains. A malformed HTTP 200 is still a failure. Resource
+mutation checks also require the unchanged Resource token to verify: a
+blanket `invalid_resource_token` refusal does not prove mutation handling.
 
 `-harness-domain aauth.sidecat.dev` publishes each harness party as `name-harness.aauth.sidecat.dev` instead of `name.conformance.test`. A third party can resolve those names and fetch them over a public certificate. The Person Server still has to trust `https://resource-harness.aauth.sidecat.dev`.
 
