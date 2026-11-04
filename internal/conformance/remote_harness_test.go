@@ -152,18 +152,18 @@ func TestRebaseExpectedRewritesExactIdentities(t *testing.T) {
 
 func TestPublicHarnessUsesOneLabelUnderTheDomain(t *testing.T) {
 	suite := loadSuite(t)
-	out, err := PublicHarness(suite.Fixture, "aauth.sidecat.dev")
+	out, err := PublicHarness(suite.Fixture, "harness.aauth.sidecat.dev")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out.Origin != "https://resource-harness.aauth.sidecat.dev" || out.Issuer != "https://ap-harness.aauth.sidecat.dev" {
+	if out.Origin != "https://resource.harness.aauth.sidecat.dev" || out.Issuer != "https://ap.harness.aauth.sidecat.dev" {
 		t.Fatalf("origin %s issuer %s", out.Origin, out.Issuer)
 	}
-	if out.Person == nil || out.Person.Issuer != "https://person-harness.aauth.sidecat.dev" {
+	if out.Person == nil || out.Person.Issuer != "https://person.harness.aauth.sidecat.dev" {
 		t.Fatal(out.Person)
 	}
 	joined := strings.Join(HarnessNames(out), " ")
-	if !strings.Contains(joined, "resource-harness.aauth.sidecat.dev") || strings.Contains(joined, "resource.conformance.test") {
+	if !strings.Contains(joined, "resource.harness.aauth.sidecat.dev") || strings.Contains(joined, "resource.conformance.test") {
 		t.Fatal(joined)
 	}
 	if _, err := PublicHarness(suite.Fixture, ""); err == nil {
@@ -173,13 +173,13 @@ func TestPublicHarnessUsesOneLabelUnderTheDomain(t *testing.T) {
 
 func TestPublicHarnessIncludesEveryDerivedParty(t *testing.T) {
 	f := loadSuite(t).Fixture
-	public, err := PublicHarness(f, "aauth.sidecat.dev")
+	public, err := PublicHarness(f, "harness.aauth.sidecat.dev")
 	if err != nil {
 		t.Fatal(err)
 	}
 	names := HarnessNames(public)
 	for _, name := range HarnessNames(f) {
-		want := strings.ReplaceAll(name, ".conformance.test", "-harness.aauth.sidecat.dev")
+		want := strings.ReplaceAll(name, ".conformance.test", ".harness.aauth.sidecat.dev")
 		found := false
 		for _, n := range names {
 			if n == want {
