@@ -122,10 +122,12 @@ in automation. Missing targets never count as passes.
 
 Remote mode tests servers you have already deployed, over HTTPS, with no
 adapter. Pass `-agent-provider`, or set `bootstrap_provider` in the deployment
-file, to the Agent Provider those servers trust. The suite enrolls its durable
-key there and presents the agent token that provider returns. The hosted
-provider is `https://ap.aauth.sidecat.dev`. A deployment that trusts neither
-that provider nor the one you named answers 401, and the report says so.
+file, to the Agent Provider those servers trust. The suite enrolls once per
+Person Server and presents that provider's agent token. `bootstrap_providers`
+names a different provider for one Person Server, which is what a deployment
+needs when each provider stamps only one. The hosted provider is
+`https://ap.aauth.sidecat.dev`, and it copies `ps`. A deployment that trusts
+neither that provider nor the one you named answers 401, and the report says so.
 Name the servers in a deployment file and run:
 
 ```sh
